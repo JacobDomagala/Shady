@@ -3,7 +3,10 @@
 *.lo
 *.o
 *.obj
+<<<<<<< HEAD
 *.opensdf
+=======
+>>>>>>> 9394bc8d3e1faeaf19c0dbd68adbbec94154ddc6
 
 # Precompiled Headers
 *.gch

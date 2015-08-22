@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="3RD_PARTY\ObjLoader.cpp" />
+    <ClCompile Include="CLOCK\Clock.cpp" />
+    <ClCompile Include="MESH\Mesh.cpp" />
+    <ClCompile Include="MESH\Texture.cpp" />
+    <ClCompile Include="DISPLAY\Display.cpp" />
+    <ClCompile Include="DISPLAY\Movement.cpp" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="SHADERS\Shader.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="3RD_PARTY\ObjLoader.h" />
+    <ClInclude Include="CLOCK\Clock.h" />
+    <ClInclude Include="MESH\Mesh.h" />
+    <ClInclude Include="MESH\Texture.h" />
+    <ClInclude Include="DISPLAY\Display.h" />
+    <ClInclude Include="DISPLAY\Movement.h" />
+    <ClInclude Include="SHADERS\Shader.h" />
+  </ItemGroup>
+</Project>

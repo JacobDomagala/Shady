@@ -80,8 +80,8 @@ void Movement::SetCameraMode(int mode){
 		flyMode = false;
 }
 void Movement::Update(){
-	system("cls");
-	std::cout << position.x<<" "<<position.y<<" "<<position.z;
+	/*system("cls");
+	std::cout << position.x<<" "<<position.y<<" "<<position.z;*/
 	ComputeDelta();
 	if (flyMode){
 		

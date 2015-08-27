@@ -1,8 +1,8 @@
 #include "DISPLAY\Display.h"
 #include "SHADERS\Shader.h"
-#include "MESH\Mesh.h"
-#include "MESH\Texture.h"
-
+#include "Model.cpp"
+#include"DISPLAY\Movement.h"
+#include <gtc/type_ptr.hpp>
 
 int main(int , char**)
 {
@@ -23,38 +23,36 @@ int main(int , char**)
 	simpleProgram.LoadShaders("./SHADERS/SOURCE/SimpleShader.vs",
 							  "./SHADERS/SOURCE/SimpleShader.fs");
 
+	Model ourModel("D:/Studia/Projekty/C++/Resource/Assimp/assimp-3.1.1/test/models/BLEND/Suzanne_248.blend");
 
-
-
-	Mesh testMesh, cube;
-	testMesh.LoadShape("./Models/Floor.obj");
-	cube.InitCube();
-	
-
-	Texture testTexture;
-	testTexture.LoadTexture("./Models/Floor.png", &simpleProgram);
-	testTexture.SetTextureQuality(HIGH);
-	
 	
 	//-----------PETLA RENDEROWANIA--------------//
 	//------------------------------------------//
 	while (!mainWindow.IsClosed())
 	{
 		
-		testTexture.Use();
-		testMesh.Render(&simpleProgram, &camera,&mainWindow,15.0, glm::vec3(2.0, 2.0, 2.0), 
-						glm::vec3(0.0, -2.0, 0.0), 0.0, glm::vec3(1.0, 1.0, 1.0));
+		simpleProgram.UseProgram();   // <-- Don't forget this one!
+						// Transformation matrices
+		glm::mat4 projection = mainWindow.GetProjection();
+		glm::mat4 view = camera.GetWorldToViewMatrix();
+		glUniformMatrix4fv(glGetUniformLocation(simpleProgram.GetProgramID(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+		glUniformMatrix4fv(glGetUniformLocation(simpleProgram.GetProgramID(), "view"), 1, GL_FALSE, glm::value_ptr(view));
 
-		cube.Render(&simpleProgram, &camera, &mainWindow, 15.0, glm::vec3(20.0, 20.0, 20.0),
-			glm::vec3(5.0, 0.0, 0.0), 0.0, glm::vec3(1.0, 1.0, 1.0));
+		// Draw the loaded model
+		glm::mat4 model;
+		model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // Translate it down a bit so it's at the center of the scene
+		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// It's a bit too big for our scene, so scale it down
+		glUniformMatrix4fv(glGetUniformLocation(simpleProgram.GetProgramID(), "model"), 1, GL_FALSE, glm::value_ptr(model));
+	
+		ourModel.Draw(simpleProgram);
+		
 		
 		camera.Update();
 		mainWindow.Update();
 	
 
 	}
-	testMesh.Clean();
-	testTexture.CleanUp();
+	
 
 	return 0;
 }

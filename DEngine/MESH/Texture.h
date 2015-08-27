@@ -1,7 +1,7 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
-//#include"..\3RD_PARTY\stb_image.h"
+
 #include<SOIL.h>
 #include"..\SHADERS\Shader.h"
 
@@ -18,7 +18,7 @@ private:
 
 	unsigned char* data;
 	int width, height;
-	int numComponents;
+
 
 	unsigned int unit;
 	GLuint samplerLocation;

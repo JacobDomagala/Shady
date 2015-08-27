@@ -1,25 +1,17 @@
-#version 430 core
+#version 330 core
 
-uniform mat4 MVP;
-uniform mat4 modelMatrix;
+layout (location = 0) in vec3 position;
+layout (location = 1) in vec3 normal;
+layout (location = 2) in vec2 texCoords;
 
+out vec2 TexCoords;
 
-layout (location = 0) in vec3 inPosition;
-layout (location = 1) in vec2 inUv;
-layout (location = 2) in vec3 inNormal;
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
 
-
-out vec3 fPosition;
-out vec3 fNormal;
-out vec2 fUv;
 void main()
 {
-	
-	gl_Position = MVP*vec4(inPosition.x, inPosition.y , inPosition.z , 1.0);
-
-	fPosition = vec3 (modelMatrix * vec4(inPosition, 1.0));
-	fNormal = mat3(modelMatrix) * inNormal;
-	fUv = inUv;
-	
-	
+    gl_Position = projection * view * model * vec4(position, 1.0f);
+    TexCoords = texCoords;
 }

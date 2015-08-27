@@ -35,8 +35,8 @@ Display::Display(int width, int height, const std::string& title){
 		system("pause");
 	}
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	//glEnable(GL_CULL_FACE);
+	//glCullFace(GL_BACK);
 	
 	
 	m_IsClosed = false;
@@ -72,7 +72,7 @@ void Display::Update(){
 			}
 		}
 	}
-	Clear(0.04f, 0.04f, 0.08f, 0.0f);
+	Clear(1.04f, 1.04f, 1.08f, 0.0f);
 }
 
 void Display::Clear(float r, float g, float b, float a){

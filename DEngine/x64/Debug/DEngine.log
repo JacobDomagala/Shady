@@ -1,43 +1,34 @@
-﻿Build started 23.08.2015 15:34:16.
-     1>Project "D:\Studia\Projekty\C++\DEngine\DEngine\DEngine.vcxproj" on node 2 (Build target(s)).
+﻿Build started 27.08.2015 21:58:42.
+     1>Project "D:\Studia\Projekty\C++\DEngine\DEngine\DEngine.vcxproj" on node 2 (Rebuild target(s)).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /I"D:\Studia\Projekty\C++\Resource\Assimp\assimp-3.1.1\include\assimp" /I"D:\Studia\Projekty\C++\Resource\Simple OpenGL Image Library\src" /ID:\Studia\Projekty\C++\Resource\GLM\glm\glm /I"D:\Studia\Projekty\C++\Resource\GLEW\glew-1.12.0\include\GL" /ID:\Studia\Projekty\C++\Resource\SDL\include /ZI /nologo /W3 /WX- /Od /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"x64\Debug\\" /Fd"x64\Debug\vc140.pdb" /Gd /TP /errorReport:prompt 3RD_PARTY\ObjLoader.cpp CLOCK\Clock.cpp DISPLAY\Display.cpp DISPLAY\Movement.cpp Main.cpp MESH\Mesh.cpp MESH\Texture.cpp SHADERS\Shader.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /I"D:\Studia\Projekty\C++\Resource\Assimp\assimp-3.1.1\include\assimp" /I"D:\Studia\Projekty\C++\Resource\Simple OpenGL Image Library\src" /ID:\Studia\Projekty\C++\Resource\GLM\glm\glm /I"D:\Studia\Projekty\C++\Resource\GLEW\glew-1.12.0\include\GL" /ID:\Studia\Projekty\C++\Resource\SDL\include /ZI /nologo /W3 /WX- /Od /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"x64\Debug\\" /Fd"x64\Debug\vc140.pdb" /Gd /TP /errorReport:prompt CLOCK\Clock.cpp DISPLAY\Display.cpp DISPLAY\Movement.cpp Main.cpp MESH\Mesh.cpp MESH\Texture.cpp Model.cpp SHADERS\Shader.cpp
          Shader.cpp
+         Model.cpp
+     1>d:\studia\projekty\c++\dengine\dengine\mesh\mesh.h(78): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
          Texture.cpp
      1>d:\studia\projekty\c++\dengine\dengine\mesh\texture.cpp(59): warning C4244: 'argument': conversion from 'GLfloat' to 'GLint', possible loss of data
          Mesh.cpp
-     1>d:\studia\projekty\c++\dengine\dengine\mesh\mesh.cpp(176): warning C4267: '=': conversion from 'size_t' to 'GLuint', possible loss of data
          Main.cpp
+     1>d:\studia\projekty\c++\dengine\dengine\mesh\mesh.h(78): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
          Movement.cpp
      1>d:\studia\projekty\c++\dengine\dengine\display\movement.cpp(40): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
      1>d:\studia\projekty\c++\dengine\dengine\display\movement.cpp(42): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
          Display.cpp
      1>d:\studia\projekty\c++\dengine\dengine\display\display.cpp(12): warning C4305: '=': truncation from 'double' to 'float'
          Clock.cpp
-         ObjLoader.cpp
-     1>d:\studia\projekty\c++\dengine\dengine\3rd_party\objloader.cpp(27): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned int', possible loss of data
-     1>d:\studia\projekty\c++\dengine\dengine\3rd_party\objloader.cpp(85): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned int', possible loss of data
-     1>d:\studia\projekty\c++\dengine\dengine\3rd_party\objloader.cpp(122): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
-     1>d:\studia\projekty\c++\dengine\dengine\3rd_party\objloader.cpp(137): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
-     1>d:\studia\projekty\c++\dengine\dengine\3rd_party\objloader.cpp(165): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned int', possible loss of data
-     1>d:\studia\projekty\c++\dengine\dengine\3rd_party\objloader.cpp(264): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned int', possible loss of data
-     1>d:\studia\projekty\c++\dengine\dengine\3rd_party\objloader.cpp(298): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned int', possible loss of data
-     1>d:\studia\projekty\c++\dengine\dengine\3rd_party\objloader.cpp(331): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned int', possible loss of data
-     1>d:\studia\projekty\c++\dengine\dengine\3rd_party\objloader.cpp(380): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
-     1>d:\studia\projekty\c++\dengine\dengine\3rd_party\objloader.cpp(388): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned int', possible loss of data
          Generating Code...
        Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"D:\Studia\Projekty\C++\DEngine\x64\Debug\DEngine.exe" /INCREMENTAL /NOLOGO /LIBPATH:D:\Studia\Projekty\C++\Resource\SDL\lib /LIBPATH:"D:\Studia\Projekty\C++\Resource\Simple OpenGL Image Library\lib" /LIBPATH:"D:\Studia\Projekty\C++\Resource\GLEW\glew-1.12.0\lib\Release\x64" SOIL.lib opengl32.lib glew32s.lib glew32.lib SDL2.lib SDL2main.lib SDL2test.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /Debug /PDB:"D:\Studia\Projekty\C++\DEngine\x64\Debug\DEngine.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\Studia\Projekty\C++\DEngine\x64\Debug\DEngine.lib" /MACHINE:X64 x64\Debug\ObjLoader.obj
-         x64\Debug\Clock.obj
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"D:\Studia\Projekty\C++\DEngine\x64\Debug\DEngine.exe" /INCREMENTAL /NOLOGO /LIBPATH:"D:\Studia\Projekty\C++\Resource\Assimp\assimp-3.1.1\lib" /LIBPATH:D:\Studia\Projekty\C++\Resource\SDL\lib /LIBPATH:"D:\Studia\Projekty\C++\Resource\Simple OpenGL Image Library\lib" /LIBPATH:"D:\Studia\Projekty\C++\Resource\GLEW\glew-1.12.0\lib\Release\x64" assimpd.lib SOIL.lib opengl32.lib glew32s.lib glew32.lib SDL2.lib SDL2main.lib SDL2test.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /Debug /PDB:"D:\Studia\Projekty\C++\DEngine\x64\Debug\DEngine.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\Studia\Projekty\C++\DEngine\x64\Debug\DEngine.lib" /MACHINE:X64 x64\Debug\Clock.obj
          x64\Debug\Display.obj
          x64\Debug\Movement.obj
          x64\Debug\Main.obj
          x64\Debug\Mesh.obj
          x64\Debug\Texture.obj
+         x64\Debug\Model.obj
          x64\Debug\Shader.obj
          DEngine.vcxproj -> D:\Studia\Projekty\C++\DEngine\x64\Debug\DEngine.exe
-     1>Done Building Project "D:\Studia\Projekty\C++\DEngine\DEngine\DEngine.vcxproj" (Build target(s)).
+     1>Done Building Project "D:\Studia\Projekty\C++\DEngine\DEngine\DEngine.vcxproj" (Rebuild target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:12.35
+Time Elapsed 00:00:07.54

@@ -93,10 +93,7 @@ bool Shader::CheckStatus(GLuint object,
 	return true;
 }
 
-Shader::~Shader()
-{
-	
-	//glUseProgram(0);
+Shader::~Shader(){
 	glDeleteProgram(m_Program);
 }
 

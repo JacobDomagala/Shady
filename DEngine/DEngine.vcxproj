@@ -26,6 +26,7 @@
     <ClCompile Include="MESH\Mesh.cpp" />
     <ClCompile Include="MESH\Texture.cpp" />
     <ClCompile Include="Model.cpp" />
+    <ClCompile Include="Model.h" />
     <ClCompile Include="SHADERS\Shader.cpp" />
   </ItemGroup>
   <ItemGroup>

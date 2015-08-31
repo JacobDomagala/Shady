@@ -33,10 +33,6 @@ void Shader::LoadShaders(char* vertexFile, char* fragmentFile)
 		return;
 	}
 
-	
-	
-
-
 }
 
 char* Shader::ReadFile(char* fileName)
@@ -100,8 +96,8 @@ bool Shader::CheckStatus(GLuint object,
 Shader::~Shader()
 {
 	
-	glUseProgram(0);
-	glDeleteProgram;
+	//glUseProgram(0);
+	glDeleteProgram(m_Program);
 }
 
 GLuint Shader::GetProgramID(){

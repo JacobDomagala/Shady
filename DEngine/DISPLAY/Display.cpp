@@ -72,7 +72,7 @@ void Display::Update(){
 			}
 		}
 	}
-	Clear(1.04f, 1.04f, 1.08f, 0.0f);
+	Clear(0.04f, 0.04f, 0.08f, 0.0f);
 }
 
 void Display::Clear(float r, float g, float b, float a){

@@ -8,6 +8,7 @@
     <ClCompile Include="DISPLAY\Movement.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="SHADERS\Shader.cpp" />
+    <ClCompile Include="Model.h" />
     <ClCompile Include="Model.cpp" />
   </ItemGroup>
   <ItemGroup>

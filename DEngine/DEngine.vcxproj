@@ -23,18 +23,18 @@
     <ClCompile Include="DISPLAY\Display.cpp" />
     <ClCompile Include="DISPLAY\Movement.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="MESH\Mesh.cpp" />
-    <ClCompile Include="MESH\Texture.cpp" />
-    <ClCompile Include="Model.cpp" />
-    <ClCompile Include="Model.h" />
+    <ClCompile Include="MODEL\Mesh.cpp" />
+    <ClCompile Include="MODEL\Model.cpp" />
+    <ClCompile Include="MODEL\Texture.cpp" />
     <ClCompile Include="SHADERS\Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CLOCK\Clock.h" />
     <ClInclude Include="DISPLAY\Display.h" />
     <ClInclude Include="DISPLAY\Movement.h" />
-    <ClInclude Include="MESH\Mesh.h" />
-    <ClInclude Include="MESH\Texture.h" />
+    <ClInclude Include="MODEL\Mesh.h" />
+    <ClInclude Include="MODEL\Model.h" />
+    <ClInclude Include="MODEL\Texture.h" />
     <ClInclude Include="SHADERS\Shader.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

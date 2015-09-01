@@ -1,6 +1,6 @@
 #include "DISPLAY\Display.h"
 #include "SHADERS\Shader.h"
-#include "Model.h"
+#include "Model/Model.h"
 #include"DISPLAY\Movement.h"
 #include <gtc/type_ptr.hpp>
 

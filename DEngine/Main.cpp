@@ -1,7 +1,7 @@
-#include "DISPLAY\Display.h"
-#include "SHADERS\Shader.h"
+#include "DISPLAY/Display.h"
+#include "SHADERS/Shader.h"
 #include "Model/Model.h"
-#include"DISPLAY\Movement.h"
+#include"DISPLAY/Movement.h"
 #include <gtc/type_ptr.hpp>
 
 int main(int , char**)
@@ -10,7 +10,7 @@ int main(int , char**)
 	int width = 1024, height = 680;
 	Display mainWindow(width, height, "Projekt");
 	//mainWindow.ShowCursor(false);
-	//mainWindow.WrapMouse(true);
+	mainWindow.WrapMouse(false);
 
 	glm::vec3 lightPosition(0.0, 0.0, -10.0);
 	Movement camera(&mainWindow, &lightPosition);
@@ -30,7 +30,7 @@ int main(int , char**)
 	//------------------------------------------//
 	while (!mainWindow.IsClosed())
 	{
-		
+		//
 		simpleProgram.UseProgram();   // <-- Don't forget this one!
 						// Transformation matrices
 		glm::mat4 projection = mainWindow.GetProjection();
@@ -45,7 +45,7 @@ int main(int , char**)
 		glUniformMatrix4fv(glGetUniformLocation(simpleProgram.GetProgramID(), "model"), 1, GL_FALSE, glm::value_ptr(model));
 	
 		witcher.Draw(simpleProgram);
-		//ourModel.Draw(simpleProgram);
+	
 		
 		camera.Update();
 		mainWindow.Update();

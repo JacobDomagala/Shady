@@ -1,7 +1,7 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
-
+#include <postprocess.h>
 #include<SOIL.h>
 #include"..\SHADERS\Shader.h"
 
@@ -15,6 +15,7 @@ class Texture
 {
 private:
 	static unsigned short textureCount;
+	
 
 	unsigned char* data;
 	int width, height;
@@ -26,11 +27,16 @@ private:
 	GLuint samplerID;
 
 	void SetParameter(unsigned int uiSampler, int parameter, int value);
+	
+
 
 public:
+
+	GLuint id;
+	std::string type;
+	aiString path;
 	
-	Texture() {}
-	void LoadTexture(char* filePath, Shader* program);
+	 GLuint LoadTexture(const char* filePath, std::string directory, GLuint program);
 	void CleanUp(); 
 
 	

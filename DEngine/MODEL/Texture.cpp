@@ -1,9 +1,11 @@
 #include "Texture.h"
 
 unsigned short Texture::textureCount;
-void Texture::LoadTexture(char* filePath, Shader* program)
+GLuint Texture::LoadTexture(const char* filePath, std::string directory, GLuint program)
 {
-	 data = SOIL_load_image(filePath, &width, &height, 0, SOIL_LOAD_RGBA);
+	std::string filename = std::string(filePath);
+	filename = directory + '/' + filename;
+	 data = SOIL_load_image(filename.c_str(), &width, &height, 0, SOIL_LOAD_RGBA);
 
 	if (data == NULL){
 			std::cerr << "Blad wczytywania tekstury z pliku " << filePath<< std::endl;
@@ -11,7 +13,7 @@ void Texture::LoadTexture(char* filePath, Shader* program)
 		}
 	
 	
-	glGenTextures(1, &textureID);
+ 	glGenTextures(1, &textureID);
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	
 
@@ -22,10 +24,14 @@ void Texture::LoadTexture(char* filePath, Shader* program)
 
 	SOIL_free_image_data(data);
 	
-	samplerLocation = glGetUniformLocation(program->GetProgramID(), "sampler");
+	samplerLocation = glGetUniformLocation(program, "sampler");
 
 	unit = textureCount;
 	textureCount++;
+
+
+	SetTextureQuality(HIGH);
+	return textureID;
 
 }
 void Texture::SetParameter(unsigned int uiSampler, int parameter, int value){

@@ -9,7 +9,8 @@ using namespace std;
 
 #include <gtc/matrix_transform.hpp>
 #include"../SHADERS/Shader.h"
-#include <postprocess.h>
+#include"Texture.h"
+
 
 struct Vertex {
 
@@ -18,11 +19,11 @@ struct Vertex {
 	glm::vec2 TexCoords;
 };
 
-struct Texture {
-	GLuint id;
-	string type;
-	aiString path;
-};
+//struct Texture {
+//	GLuint id;
+//	string type;
+//	aiString path;
+//};
 
 class Mesh {
 public:
@@ -30,6 +31,7 @@ public:
 	vector<Vertex> vertices;
 	vector<GLuint> indices;
 	vector<Texture> textures;
+	GLuint programID;
 
 	/*  Functions  */
 	// Constructor

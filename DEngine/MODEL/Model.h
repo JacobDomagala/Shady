@@ -18,6 +18,7 @@
 
 
 #include "Mesh.h"
+#include"Texture.h"
 
 
 using std::string;
@@ -37,6 +38,7 @@ public:
 
 private:
 	/*  Model Data  */
+	GLuint programID;
 	vector<Mesh> meshes;
 	string directory;
 	vector<Texture> textures_loaded;	// Stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.

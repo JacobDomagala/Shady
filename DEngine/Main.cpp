@@ -25,6 +25,7 @@ int main(int , char**)
 
 	
 	Model witcher("./Models/nanosuit/nanosuit.obj");
+
 	
 	//-----------PETLA RENDEROWANIA--------------//
 	//------------------------------------------//

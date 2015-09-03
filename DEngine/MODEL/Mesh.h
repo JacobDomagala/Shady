@@ -19,12 +19,6 @@ struct Vertex {
 	glm::vec2 TexCoords;
 };
 
-//struct Texture {
-//	GLuint id;
-//	string type;
-//	aiString path;
-//};
-
 class Mesh {
 public:
 	/*  Mesh Data  */

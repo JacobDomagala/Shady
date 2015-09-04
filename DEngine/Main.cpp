@@ -1,19 +1,19 @@
 #include "DISPLAY/Display.h"
 #include "SHADERS/Shader.h"
 #include "Model/Model.h"
-#include"DISPLAY/Movement.h"
-#include <gtc/type_ptr.hpp>
+#include"DISPLAY/Camera.h"
+
 
 int main(int , char**)
 {
 	
 	int width = 1024, height = 680;
-	Display mainWindow(width, height, "Projekt");
+	Display mainWindow(width, height, "DEngine");
 	//mainWindow.ShowCursor(false);
 	mainWindow.WrapMouse(false);
 
 	glm::vec3 lightPosition(0.0, 0.0, -10.0);
-	Movement camera(&mainWindow, &lightPosition);
+	Camera camera(&mainWindow, &lightPosition);
 
 	camera.SetCameraMode(FLY);
 
@@ -24,28 +24,15 @@ int main(int , char**)
 							  "./SHADERS/SOURCE/SimpleShader.fs");
 
 	
-	Model witcher("./Models/nanosuit/nanosuit.obj");
+	Model test("./Models/Cottagemodel/Snow covered CottageOBJ.obj");
 
 	
 	//-----------PETLA RENDEROWANIA--------------//
 	//------------------------------------------//
 	while (!mainWindow.IsClosed())
 	{
-		//
-		simpleProgram.UseProgram();   // <-- Don't forget this one!
-						// Transformation matrices
-		glm::mat4 projection = mainWindow.GetProjection();
-		glm::mat4 view = camera.GetWorldToViewMatrix();
-		glUniformMatrix4fv(glGetUniformLocation(simpleProgram.GetProgramID(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-		glUniformMatrix4fv(glGetUniformLocation(simpleProgram.GetProgramID(), "view"), 1, GL_FALSE, glm::value_ptr(view));
-
-		// Draw the loaded model
-		glm::mat4 model;
-		model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // Translate it down a bit so it's at the center of the scene
-		model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	// It's a bit too big for our scene, so scale it down
-		glUniformMatrix4fv(glGetUniformLocation(simpleProgram.GetProgramID(), "model"), 1, GL_FALSE, glm::value_ptr(model));
-	
-		witcher.Draw(simpleProgram);
+		
+		test.Draw(&mainWindow, camera, simpleProgram);
 	
 		
 		camera.Update();

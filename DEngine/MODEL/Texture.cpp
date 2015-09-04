@@ -12,7 +12,6 @@ void Texture::LoadTexture(const char* filePath, std::string directory, GLuint pr
 			system("pause");
 		}
 	
-	
  	glGenTextures(1, &textureID);
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	
@@ -20,13 +19,7 @@ void Texture::LoadTexture(const char* filePath, std::string directory, GLuint pr
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	
-
-
-	
 	samplerLocation = glGetUniformLocation(program, "sampler");
-
-	
-
 
 	SetTextureQuality(HIGH);
 	SOIL_free_image_data(data);

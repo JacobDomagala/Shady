@@ -7,47 +7,42 @@ Mesh::Mesh(vector<Vertex>* vertices, vector<GLuint>* indices, vector<Texture>* t
 	this->textures = *textures;
 
 	// Now that we have all the required data, set the vertex buffers and its attribute pointers.
-	this->setupMesh();
+	SetupMesh();
 }
 
-void Mesh::Draw(Shader shader)
-{
-	// Bind appropriate textures
-	GLuint diffuseNr = 1;
-	GLuint specularNr = 1;
-	for (GLuint i = 0; i < this->textures.size(); i++)
-	{
+void Mesh::Draw(Shader shader){
+
+	for (GLuint i = 0; i < textures.size(); i++){
 		textures[i].Use(i);
 	}
 
 	// Draw mesh
-	glBindVertexArray(this->VAO);
-	glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
+	glBindVertexArray(VAO);
+	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 
 	// Always good practice to set everything back to defaults once configured.
-	for (GLuint i = 0; i < this->textures.size(); i++)
-	{
+	for (GLuint i = 0; i < textures.size(); i++){
 		glActiveTexture(GL_TEXTURE0 + i);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 }
-void Mesh::setupMesh(){
+void Mesh::SetupMesh(){
 	// Create buffers/arrays
-	glGenVertexArrays(1, &this->VAO);
-	glGenBuffers(1, &this->VBO);
-	glGenBuffers(1, &this->EBO);
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
 
-	glBindVertexArray(this->VAO);
+	glBindVertexArray(VAO);
 	// Load data into vertex buffers
-	glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	// A great thing about structs is that their memory layout is sequential for all its items.
 	// The effect is that we can simply pass a pointer to the struct and it translates perfectly to a glm::vec3/2 array which
 	// again translates to 3/2 floats which translates to a byte array.
-	glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(Vertex), &this->vertices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size() * sizeof(GLuint), &this->indices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), &indices[0], GL_STATIC_DRAW);
 
 	// Set the vertex attribute pointers
 	// Vertex Positions
@@ -61,4 +56,9 @@ void Mesh::setupMesh(){
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, TexCoords));
 
 	glBindVertexArray(0);
+}
+void Mesh::Delete() {
+	vertices.clear();
+	textures.clear();
+	indices.clear();
 }

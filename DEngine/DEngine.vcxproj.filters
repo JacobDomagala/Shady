@@ -3,20 +3,20 @@
   <ItemGroup>
     <ClCompile Include="CLOCK\Clock.cpp" />
     <ClCompile Include="DISPLAY\Display.cpp" />
-    <ClCompile Include="DISPLAY\Movement.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="SHADERS\Shader.cpp" />
     <ClCompile Include="MODEL\Mesh.cpp" />
     <ClCompile Include="MODEL\Model.cpp" />
     <ClCompile Include="MODEL\Texture.cpp" />
+    <ClCompile Include="DISPLAY\Camera.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CLOCK\Clock.h" />
     <ClInclude Include="DISPLAY\Display.h" />
-    <ClInclude Include="DISPLAY\Movement.h" />
     <ClInclude Include="SHADERS\Shader.h" />
     <ClInclude Include="MODEL\Mesh.h" />
     <ClInclude Include="MODEL\Model.h" />
     <ClInclude Include="MODEL\Texture.h" />
+    <ClInclude Include="DISPLAY\Camera.h" />
   </ItemGroup>
 </Project>

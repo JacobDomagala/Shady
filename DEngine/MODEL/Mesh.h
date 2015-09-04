@@ -33,7 +33,7 @@ public:
 
 	// Render the mesh
 	void Draw(Shader shader);
-
+	void Delete();
 
 private:
 	/*  Render data  */
@@ -41,7 +41,7 @@ private:
 
 	/*  Functions    */
 	// Initializes all the buffer objects/arrays
-	void setupMesh();
+	void SetupMesh();
 
 };
 

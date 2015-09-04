@@ -1,29 +1,5 @@
 #include"Model.h"
 
-GLint Model::TextureFromFile(const char* path, string directory){
-	
-	//Generate texture ID and load texture data 
-	string filename = string(path);
-	filename = directory + '/' + filename;
-	GLuint textureID;
-	glGenTextures(1, &textureID);
-	int width, height;
-	unsigned char* image = SOIL_load_image(filename.c_str(), &width, &height, 0, SOIL_LOAD_RGB);
-	// Assign texture to ID
-	glBindTexture(GL_TEXTURE_2D, textureID);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	// Parameters
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	SOIL_free_image_data(image);
-	return textureID;
-}
-
 Model::Model(GLchar* path) {
 	loadModel(path);
 }
@@ -122,7 +98,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 		// Normal: texture_normalN
 
 		// 1. Diffuse maps
-		vector<Texture> diffuseMaps = this->loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+		vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "diffuse_map");
 		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 		// 2. Specular maps
 		/*vector<Texture> specularMaps = this->loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
@@ -154,9 +130,8 @@ vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type,
 		if (!skip)
 		{   // If texture hasn't been loaded already, load it
 			Texture texture;
-			texture.id = texture.LoadTexture(str.C_Str(), directory, programID);
+			texture.LoadTexture(str.C_Str(), directory, programID);
 			texture.type = typeName;
-			
 			texture.path = str;
 			textures.push_back(texture);
 			textures_loaded.push_back(texture);  // Store it as texture loaded for entire model, to ensure we won't unnecesery load duplicate textures.

@@ -1,7 +1,7 @@
 #include "Texture.h"
 
-unsigned short Texture::textureCount;
-GLuint Texture::LoadTexture(const char* filePath, std::string directory, GLuint program)
+
+void Texture::LoadTexture(const char* filePath, std::string directory, GLuint program)
 {
 	std::string filename = std::string(filePath);
 	filename = directory + '/' + filename;
@@ -20,18 +20,16 @@ GLuint Texture::LoadTexture(const char* filePath, std::string directory, GLuint 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	
-	glGenSamplers(1, &samplerID);
 
-	SOIL_free_image_data(data);
+
 	
 	samplerLocation = glGetUniformLocation(program, "sampler");
 
-	unit = textureCount;
-	textureCount++;
+	
 
 
 	SetTextureQuality(HIGH);
-	return textureID;
+	SOIL_free_image_data(data);
 
 }
 void Texture::SetParameter(unsigned int uiSampler, int parameter, int value){
@@ -39,12 +37,10 @@ void Texture::SetParameter(unsigned int uiSampler, int parameter, int value){
 }
 
 
-void Texture::Use(){
+void Texture::Use(unsigned short unit){
 	glActiveTexture(GL_TEXTURE0 + unit);
-	glBindTexture(GL_TEXTURE_2D, textureID);
-	glBindSampler(unit, samplerID);
 	glUniform1i(samplerLocation, unit);
-	
+	glBindTexture(GL_TEXTURE_2D, textureID);
 }
 void Texture::CleanUp(){
 	glDeleteSamplers(1, &samplerID);

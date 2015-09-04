@@ -17,11 +17,8 @@ void Mesh::Draw(Shader shader)
 	GLuint specularNr = 1;
 	for (GLuint i = 0; i < this->textures.size(); i++)
 	{
-		textures[i].Use();
+		textures[i].Use(i);
 	}
-
-	// Also set each mesh's shininess property to a default value (if you want you could extend this to another mesh property and possibly change this value)
-	glUniform1f(glGetUniformLocation(shader.GetProgramID(), "material.shininess"), 16.0f);
 
 	// Draw mesh
 	glBindVertexArray(this->VAO);

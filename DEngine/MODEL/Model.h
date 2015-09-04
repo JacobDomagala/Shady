@@ -29,7 +29,6 @@ class Model
 public:
 	
 
-	GLint TextureFromFile(const char* path, string directory);
 
 	Model(GLchar* path);
 

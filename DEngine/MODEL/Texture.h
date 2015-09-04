@@ -14,36 +14,28 @@ enum TextureQuality{
 class Texture
 {
 private:
-	static unsigned short textureCount;
 	
-
 	unsigned char* data;
 	int width, height;
 
-
-	unsigned int unit;
-	GLuint samplerLocation;
-	GLuint textureID;
-	GLuint samplerID;
 
 	void SetParameter(unsigned int uiSampler, int parameter, int value);
 	
 
 
 public:
-
-	GLuint id;
+	
+	GLuint samplerLocation;
+	GLuint textureID;
+	GLuint samplerID;
+	
 	std::string type;
 	aiString path;
 	
-	 GLuint LoadTexture(const char* filePath, std::string directory, GLuint program);
-	void CleanUp(); 
-
-	
-	void Use();
-
-	unsigned int GetUnit() { return unit; }
+	void LoadTexture(const char* filePath, std::string directory, GLuint program);
+	void Use(unsigned short unit);	
 	void SetTextureQuality(int quality);
+	void CleanUp();
 };
 
 #endif

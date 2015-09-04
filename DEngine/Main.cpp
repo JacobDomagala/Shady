@@ -12,7 +12,7 @@ int main(int , char**)
 	//mainWindow.ShowCursor(false);
 	mainWindow.WrapMouse(false);
 
-	glm::vec3 lightPosition(0.0, 0.0, -10.0);
+	glm::vec3 lightPosition(0.0, 14.0, 8.0);
 	Camera camera(&mainWindow, &lightPosition);
 
 	camera.SetCameraMode(FLY);
@@ -24,7 +24,7 @@ int main(int , char**)
 							  "./SHADERS/SOURCE/SimpleShader.fs");
 
 	
-	Model test("./Models/Cottagemodel/Snow covered CottageOBJ.obj");
+	Model test("./Models/Nanosuit/nanosuit.obj");//("./Models/Cottagemodel/Snow covered CottageOBJ.obj");
 
 	
 	//-----------PETLA RENDEROWANIA--------------//

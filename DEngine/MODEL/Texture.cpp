@@ -35,6 +35,7 @@ void Texture::Use(unsigned short unit){
 	glUniform1i(samplerLocation, unit);
 	glBindTexture(GL_TEXTURE_2D, textureID);
 }
+
 void Texture::CleanUp(){
 	glDeleteSamplers(1, &samplerID);
 	glDeleteTextures(1, &textureID);

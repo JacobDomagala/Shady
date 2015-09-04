@@ -6,6 +6,7 @@ Model::Model(GLchar* path) {
 void Model::Draw(Display* window, Camera camera, Shader shader, vec3 translate,	vec3 rotate, float angle, vec3 scale){
 
 	shader.UseProgram();  
+	vec3 tmp = camera.GetLightPosition();
 
 	mat4 projection = window->GetProjection();
 	mat4 view = camera.GetWorldToViewMatrix();
@@ -17,6 +18,7 @@ void Model::Draw(Display* window, Camera camera, Shader shader, vec3 translate,	
 	glUniformMatrix4fv(glGetUniformLocation(shader.GetProgramID(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 	glUniformMatrix4fv(glGetUniformLocation(shader.GetProgramID(), "view"), 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(glGetUniformLocation(shader.GetProgramID(), "model"), 1, GL_FALSE, glm::value_ptr(model));
+	glUniform3fv(glGetUniformLocation(shader.GetProgramID(), "lightPosition"),  GL_FALSE, glm::value_ptr(tmp));
 	
 	
 	for (GLuint i = 0; i < meshes.size(); i++) {
@@ -107,8 +109,8 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene){
 		vector<Texture> diffuseMaps = LoadMaterialTextures(material, aiTextureType_DIFFUSE, "diffuse_map");
 		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 		// 2. Specular maps
-		/*vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
-		textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());*/
+		vector<Texture> specularMaps = LoadMaterialTextures(material, aiTextureType_SPECULAR, "specular_map");
+		textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 	}
 
 	// Return a mesh object created from the extracted mesh data

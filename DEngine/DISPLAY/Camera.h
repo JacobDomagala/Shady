@@ -8,6 +8,10 @@
 #include"Display.h"
 #include"..\CLOCK\Clock.h"
 
+using glm::vec2;
+using glm::vec3;
+using glm::mat4;
+
 class Display;
 enum cameraMode{
 	FLY,
@@ -18,25 +22,25 @@ class Camera
 protected:
 	Display* windowHandle;
 
-	glm::mat4 viewMatrix;
+	mat4 viewMatrix;
 
-	glm::vec2 oldMousePosition;
-	glm::vec2 windowSize;
+	vec2 oldMousePosition;
+	vec2 windowSize;
 	
-	glm::vec3 viewDirection;
+	vec3 viewDirection;
 
-	glm::vec3 position;
-	glm::vec3 velocity;
+	vec3 position;
+	vec3 velocity;
 	
 
 	
-	glm::vec3 lightPos;
+	vec3 lightPos;
 	
 	float deltaTime;
 	Clock clock;
 	
 
-	glm::vec3 upVector;
+	vec3 upVector;
 	float MOUSE_SENSITIVITY;
 	float MOVEMENT_SPEED;
 	
@@ -49,11 +53,11 @@ public:
 	
 	
 	
-	Camera(Display* windowHandle, glm::vec3* light);
+	Camera(Display* windowHandle, vec3* light);
 	
 
-	glm::mat4 GetWorldToViewMatrix() const;
-	glm::vec3 GetPosition() const;
+	mat4 GetWorldToViewMatrix() const;
+	vec3 GetPosition() const;
 	void mouseUpdate();
 	
 	void ComputeDelta();
@@ -68,10 +72,10 @@ public:
 	void KeyEvent();
 	void IsOtherKeyPressed(int vKey);
 
-	glm::vec3 GetLightPosition();
-	void SetLightPosition(glm::vec3 lightPos);
+	vec3 GetLightPosition();
+	void SetLightPosition(vec3 lightPos);
 
-	virtual void SetCamera(glm::vec3 cameraPosition, glm::vec3 viewDirection);
+	virtual void SetCamera(vec3 cameraPosition, vec3 viewDirection);
 };
 
 #endif

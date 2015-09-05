@@ -33,8 +33,8 @@ void Camera::mouseUpdate()
 {
 	int x, y;
 	SDL_GetMouseState(&x, &y);
-	glm::vec2 mousePosition(x,y);
-	windowSize = glm::vec2(windowHandle->GetWindowSize().x, windowHandle->GetWindowSize().y);
+	vec2 mousePosition(x,y);
+	windowSize = vec2(windowHandle->GetWindowSize().x, windowHandle->GetWindowSize().y);
 	
 	if (x > windowSize.x - 20 || x < 10)
 		SDL_WarpMouseInWindow(windowHandle->m_Window, windowSize.x / 2, windowSize.y / 2);
@@ -42,15 +42,15 @@ void Camera::mouseUpdate()
 		SDL_WarpMouseInWindow(windowHandle->m_Window, windowSize.x / 2, windowSize.y / 2);
 	
 
-	glm::vec2 mouseDelta = oldMousePosition - mousePosition;
+	vec2 mouseDelta = oldMousePosition - mousePosition;
 	float lenght = glm::length(mouseDelta);
 	if (lenght > windowSize.y/3){
 		oldMousePosition = mousePosition;
 		return;
 	}
 	
-	glm::vec3 rotateAround = glm::cross(viewDirection, upVector);
-	glm::mat4 rotation = glm::rotate(mouseDelta.x * MOUSE_SENSITIVITY, upVector) *
+	vec3 rotateAround = glm::cross(viewDirection, upVector);
+	mat4 rotation = glm::rotate(mouseDelta.x * MOUSE_SENSITIVITY, upVector) *
 		                 glm::rotate(mouseDelta.y * MOUSE_SENSITIVITY, rotateAround);
 
 
@@ -69,9 +69,9 @@ void Camera::ComputeDelta(){
 
 
 void Camera::Reset(){
-	position = glm::vec3(0.0f, -1.5f, 0.0f);
-	viewDirection = glm::vec3(1.0f, 0.0f, 0.0f);
-	upVector = glm::vec3(0.0, 1.0, 0.0);
+	position = vec3(0.0f, -1.5f, 0.0f);
+	viewDirection = vec3(1.0f, 0.0f, 0.0f);
+	upVector = vec3(0.0, 1.0, 0.0);
 }
 void Camera::SetCameraMode(int mode){
 	if (mode == FLY)
@@ -81,7 +81,8 @@ void Camera::SetCameraMode(int mode){
 }
 void Camera::Update(){
 	system("cls");
-	std::cout << position.x<<" "<<position.y<<" "<<position.z;
+	std::cout << position.x<<" "<<position.y<<" "<<position.z<<"\n\n";
+	std::cout << lightPos.x << " " << lightPos.y << " " << lightPos.z;
 	ComputeDelta();
 	if (flyMode){
 		
@@ -106,59 +107,52 @@ void Camera::KeyEvent(){
 	if (!GetAsyncKeyState(0x57) && !GetAsyncKeyState(0x53) && !GetAsyncKeyState(0x41) &&
 		!GetAsyncKeyState(0x44) && !GetAsyncKeyState(VK_SPACE))
 			velocity *= 0.0f;
-		
 	
-
-
+	//Move forward (W)
 	if (GetAsyncKeyState(0x57))	{
-		
-		
 		velocity = viewDirection;
-
 			IsOtherKeyPressed(0x57);
 			if (GetAsyncKeyState(VK_SHIFT)) 
 				velocity *= speedValue;
-		
 	}
-
+	//Move backward (S)
 	if (GetAsyncKeyState(0x53)){
-		
-		
 		velocity = -viewDirection;
-
 			IsOtherKeyPressed(0x53);
 			if (GetAsyncKeyState(VK_SHIFT))  
 				velocity *= speedValue;
-		
 	}
 
+	//Move left (A)
+	if (GetAsyncKeyState(0x41)) {
 
-
-	if (GetAsyncKeyState(0x41)){
-		
-		glm::vec3 tmp = glm::cross(viewDirection, upVector);
-		
+		vec3 tmp = glm::cross(viewDirection, upVector);
 		velocity = tmp * -2.0f;
-
-			IsOtherKeyPressed(0x41);
-		
+		IsOtherKeyPressed(0x41);
 	}
-
-	if (GetAsyncKeyState(0x44)){      //D
-		
-		glm::vec3 tmp = glm::cross(viewDirection, upVector);
-		
-		velocity = tmp * 2.0f;
-
-			IsOtherKeyPressed(0x44);
-			
-	}
-
-	if (GetAsyncKeyState(0x52))  //R
-		Reset();
 	
+	//Move right (D)
+	if (GetAsyncKeyState(0x44)){      
+		
+		vec3 tmp = glm::cross(viewDirection, upVector);
+		velocity = tmp * 2.0f;
+		IsOtherKeyPressed(0x44);
+	}
 
+	//Reset camera to default (R)
+	if (GetAsyncKeyState(0x52)) 
+		position = vec3(5.0f, -1.5f, 0.0f);
+	
+	//Move light forward (T)
+	if (GetAsyncKeyState(0x54)) {
 
+		lightPos += vec3(1.0, 0.0, 1.0);
+	}
+	//Move light backward (G)
+	if (GetAsyncKeyState(0x47)) {
+
+		lightPos -= vec3(1.0, 0.0, 1.0);
+	}
 }
 
 void Camera::IsOtherKeyPressed(int vKey){
@@ -193,16 +187,16 @@ void Camera::IsOtherKeyPressed(int vKey){
 	
 	
 }
-glm::vec3 Camera::GetLightPosition(){
+vec3 Camera::GetLightPosition(){
 	return lightPos;
 }
-void Camera::SetLightPosition(glm::vec3 lightPos){
+void Camera::SetLightPosition(vec3 lightPos){
 	this->lightPos = lightPos;
 }
 float Camera::GetDelta(){
 	return deltaTime;
 }
-void Camera::SetCamera(glm::vec3 cameraPosition, glm::vec3 viewDirection){
+void Camera::SetCamera(vec3 cameraPosition, vec3 viewDirection){
 	position = cameraPosition;
 	this->viewDirection = glm::normalize(viewDirection);
 

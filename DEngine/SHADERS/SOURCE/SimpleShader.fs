@@ -1,30 +1,29 @@
-#version 330 core
+#version 430 core
 
 in VS_OUT{
-	vec3 position;
-	vec3 normal;
-	vec2 texCoord;
+	vec3 fPosition;
+	vec3 fNormal;
+	vec2 fTexCoord;
 }fs_in;
 
-out vec4 color;
+out vec4 outputColor;
 
-const int diff = 2;
-const int spec = 2;
-uniform sampler2D [diff]diffuse_map;
-uniform sampler2D [spec]specular_map;
+
+uniform sampler2D [2]diffuse_map;
+uniform sampler2D [2]specular_map;
 uniform vec3 lightPosition;
 uniform vec3 cameraPosition;
 
 void main()
 {    
-	               //AMBIENT
-    vec3 ambientLight = vec3(0.3, 0.3, 0.3);
+	              //AMBIENT
+    vec3 ambientLight =  vec3(0.03, 0.03, 0.03);
 
                 //DIFFUSE
-    vec3 lightVector = lightPosition - fs_in.position;
+    vec3 lightVector = lightPosition - fs_in.fPosition;
     
     vec3 normalizedLight = normalize(lightVector);
-    vec3 normalizedNormal = normalize(fs_in.normal);
+    vec3 normalizedNormal = normalize(fs_in.fNormal);
 
     float dotDiffuse = dot(normalizedLight, normalizedNormal);
     float clampedDiffuse = max(dotDiffuse, 0.0);
@@ -33,16 +32,19 @@ void main()
     diffuseLight.x = clampedDiffuse;
     diffuseLight.y = clampedDiffuse;
     diffuseLight.z = clampedDiffuse;
+	
+	
+	diffuseLight *= vec3(texture2D(diffuse_map[0], fs_in.fTexCoord));
     
 
                 //SPECULAR
     
     vec3 reflectedLight = reflect(-normalizedLight,normalizedNormal);
   
-    vec3 cameraVector = cameraPosition - fs_in.position;
+    vec3 cameraVector = cameraPosition - fs_in.fPosition;
     vec3 normalizedCamera = normalize(cameraVector);
   
-    float dotSpecular = dot(reflectedLight, normalizedCamera);
+    float dotSpecular = dot(normalizedCamera, reflectedLight);
     float clampedSpecular = max(dotSpecular, 0.0);
 
     float brightness = pow(clampedSpecular, 16);
@@ -52,18 +54,15 @@ void main()
     specularLight.x = brightness;
     specularLight.y = brightness;
     specularLight.z = brightness;
+	
    
-
-   
-    
-                //PHONG'S LIGHTINING
-
-    vec3 finalLight = ambientLight + diffuseLight + specularLight;
+    specularLight *= vec3(texture2D(specular_map[0], fs_in.fTexCoord));
+	vec3 phongLight = specularLight + diffuseLight + ambientLight;
 //KONIEC OBLICZEN SWIATLA
    
    
 
-	color = texture2D(diffuse_map[0], fs_in.texCoord) * vec4(finalLight, 1.0) ;
+	outputColor = vec4(phongLight, 1.0);// + specularLight;
 
   
 }

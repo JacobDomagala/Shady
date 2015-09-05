@@ -6,7 +6,8 @@ Model::Model(GLchar* path) {
 void Model::Draw(Display* window, Camera camera, Shader shader, vec3 translate,	vec3 rotate, float angle, vec3 scale){
 
 	shader.UseProgram();  
-	vec3 tmp = camera.GetLightPosition();
+	glm::vec3 lightPos = camera.GetLightPosition();
+	glm::vec3 camPos = camera.GetPosition();
 
 	mat4 projection = window->GetProjection();
 	mat4 view = camera.GetWorldToViewMatrix();
@@ -18,7 +19,8 @@ void Model::Draw(Display* window, Camera camera, Shader shader, vec3 translate,	
 	glUniformMatrix4fv(glGetUniformLocation(shader.GetProgramID(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 	glUniformMatrix4fv(glGetUniformLocation(shader.GetProgramID(), "view"), 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(glGetUniformLocation(shader.GetProgramID(), "model"), 1, GL_FALSE, glm::value_ptr(model));
-	glUniform3fv(glGetUniformLocation(shader.GetProgramID(), "lightPosition"),  GL_FALSE, glm::value_ptr(tmp));
+	glUniform3fv(glGetUniformLocation(shader.GetProgramID(), "lightPosition"),  1, &lightPos[0]);
+	glUniform3fv(glGetUniformLocation(shader.GetProgramID(), "cameraPosition"), 1, &camPos[0]);
 	
 	
 	for (GLuint i = 0; i < meshes.size(); i++) {
@@ -71,10 +73,13 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene){
 		vector.z = mesh->mVertices[i].z;
 		vertex.Position = vector;
 		// Normals
-		vector.x = mesh->mNormals[i].x;
-		vector.y = mesh->mNormals[i].y;
-		vector.z = mesh->mNormals[i].z;
-		vertex.Normal = vector;
+		if (mesh->HasNormals()) {
+			vector.x = mesh->mNormals[i].x;
+			vector.y = mesh->mNormals[i].y;
+			vector.z = mesh->mNormals[i].z;
+			vertex.Normal = vector;
+		}
+		
 		// Texture Coordinates
 		if (mesh->mTextureCoords[0]) {
 			glm::vec2 vec;

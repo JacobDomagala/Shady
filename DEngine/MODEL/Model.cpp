@@ -24,7 +24,7 @@ void Model::Draw(Display* window, Camera camera, Shader shader, vec3 translate,	
 	
 	
 	for (GLuint i = 0; i < meshes.size(); i++) {
-		meshes[i].Draw(shader);
+		meshes[i].Draw(shader.GetProgramID());
 	}
 }
 void Model::LoadModel(string path){
@@ -109,20 +109,24 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene){
 		// Diffuse: texture_diffuseN
 		// Specular: texture_specularN
 		// Normal: texture_normalN
-
+	
 		// 1. Diffuse maps
 		vector<Texture> diffuseMaps = LoadMaterialTextures(material, aiTextureType_DIFFUSE, "diffuse_map");
 		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 		// 2. Specular maps
 		vector<Texture> specularMaps = LoadMaterialTextures(material, aiTextureType_SPECULAR, "specular_map");
 		textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+		// 3. Normal maps
+		vector<Texture> normalMaps = LoadMaterialTextures(material, aiTextureType_HEIGHT, "normal_map");
+		textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+	
 	}
 
 	// Return a mesh object created from the extracted mesh data
 	return Mesh(&vertices, &indices, &textures);
 }
 
-vector<Texture> Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName){
+vector<Texture> Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type, char* typeName){
 	vector<Texture> textures;
 	for (GLuint i = 0; i < mat->GetTextureCount(type); i++){
 		aiString str;
@@ -139,7 +143,7 @@ vector<Texture> Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type,
 		if (!skip){   
 			// If texture hasn't been loaded already, load it
 			Texture texture;
-			texture.LoadTexture(str.C_Str(), directory, programID);
+			texture.LoadTexture(str.C_Str(), directory, programID, typeName);
 			texture.type = typeName;
 			texture.path = str;
 			textures.push_back(texture);

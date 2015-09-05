@@ -9,8 +9,10 @@ in VS_OUT{
 out vec4 outputColor;
 
 
-uniform sampler2D [2]diffuse_map;
-uniform sampler2D [2]specular_map;
+uniform sampler2D diffuse_map;
+uniform sampler2D specular_map;
+uniform sampler2D normal_map;
+
 uniform vec3 lightPosition;
 uniform vec3 cameraPosition;
 
@@ -34,7 +36,7 @@ void main()
     diffuseLight.z = clampedDiffuse;
 	
 	
-	diffuseLight *= vec3(texture2D(diffuse_map[0], fs_in.fTexCoord));
+	diffuseLight *= vec3(texture2D(diffuse_map, fs_in.fTexCoord));
     
 
                 //SPECULAR
@@ -56,7 +58,7 @@ void main()
     specularLight.z = brightness;
 	
    
-    specularLight *= vec3(texture2D(specular_map[0], fs_in.fTexCoord));
+    specularLight *= vec3(texture2D(specular_map, fs_in.fTexCoord));
 	vec3 phongLight = specularLight + diffuseLight + ambientLight;
 //KONIEC OBLICZEN SWIATLA
    

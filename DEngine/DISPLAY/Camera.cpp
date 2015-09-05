@@ -80,9 +80,9 @@ void Camera::SetCameraMode(int mode){
 		flyMode = false;
 }
 void Camera::Update(){
-	system("cls");
-	std::cout << position.x<<" "<<position.y<<" "<<position.z<<"\n\n";
-	std::cout << lightPos.x << " " << lightPos.y << " " << lightPos.z;
+	//system("cls");
+	//std::cout << position.x<<" "<<position.y<<" "<<position.z<<"\n\n";
+	//std::cout << lightPos.x << " " << lightPos.y << " " << lightPos.z;
 	ComputeDelta();
 	if (flyMode){
 		
@@ -146,12 +146,12 @@ void Camera::KeyEvent(){
 	//Move light forward (T)
 	if (GetAsyncKeyState(0x54)) {
 
-		lightPos += vec3(1.0, 0.0, 1.0);
+		lightPos += vec3(0.2, 0.0, 0.2);
 	}
 	//Move light backward (G)
 	if (GetAsyncKeyState(0x47)) {
 
-		lightPos -= vec3(1.0, 0.0, 1.0);
+		lightPos -= vec3(0.2, 0.0, 0.2);
 	}
 }
 

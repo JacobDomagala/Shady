@@ -1,8 +1,9 @@
 #include "Texture.h"
 
 
-void Texture::LoadTexture(const char* filePath, std::string directory, GLuint program)
+void Texture::LoadTexture(const char* filePath, std::string directory, GLuint program, char* name)
 {
+	samplerName = name;
 	std::string filename = std::string(filePath);
 	filename = directory + '/' + filename;
 	 data = SOIL_load_image(filename.c_str(), &width, &height, 0, SOIL_LOAD_RGBA);
@@ -19,7 +20,7 @@ void Texture::LoadTexture(const char* filePath, std::string directory, GLuint pr
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	
-	samplerLocation = glGetUniformLocation(program, "sampler");
+
 
 	SetTextureQuality(HIGH);
 	SOIL_free_image_data(data);
@@ -30,10 +31,12 @@ void Texture::SetParameter(unsigned int uiSampler, int parameter, int value){
 }
 
 
-void Texture::Use(unsigned short unit){
+void Texture::Use(GLuint programID, unsigned short unit){
+	samplerLocation = glGetUniformLocation(programID, samplerName);
 	glActiveTexture(GL_TEXTURE0 + unit);
-	glUniform1i(samplerLocation, unit);
 	glBindTexture(GL_TEXTURE_2D, textureID);
+	glUniform1i(samplerLocation, unit);
+	
 }
 
 void Texture::CleanUp(){

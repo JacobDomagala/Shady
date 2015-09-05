@@ -10,10 +10,11 @@ Mesh::Mesh(vector<Vertex>* vertices, vector<GLuint>* indices, vector<Texture>* t
 	SetupMesh();
 }
 
-void Mesh::Draw(Shader shader){
+void Mesh::Draw(GLuint programID){
 
+	
 	for (GLuint i = 0; i < textures.size(); i++){
-		textures[i].Use(i);
+		textures[i].Use(programID, i);
 	}
 
 	// Draw mesh

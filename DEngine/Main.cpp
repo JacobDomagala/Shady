@@ -33,7 +33,7 @@ int main(int , char**)
 	{
 		
 		test.Draw(&mainWindow, camera, simpleProgram);
-		box.Draw(&mainWindow, camera, simpleProgram, lightPosition);
+		box.Draw(&mainWindow, camera, simpleProgram, camera.GetLightPosition());
 		
 		camera.Update();
 		mainWindow.Update();

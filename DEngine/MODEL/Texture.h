@@ -21,7 +21,7 @@ private:
 
 	void SetParameter(unsigned int uiSampler, int parameter, int value);
 	
-
+	char* samplerName;
 
 public:
 	
@@ -32,8 +32,8 @@ public:
 	std::string type;
 	aiString path;
 	
-	void LoadTexture(const char* filePath, std::string directory, GLuint program);
-	void Use(unsigned short unit);	
+	void LoadTexture(const char* filePath, std::string directory, GLuint program, char* name);
+	void Use(GLuint programID, unsigned short unit);
 	void SetTextureQuality(int quality);
 	void CleanUp();
 };

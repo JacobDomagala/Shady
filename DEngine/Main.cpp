@@ -23,9 +23,13 @@ int main(int , char**)
 	simpleProgram.LoadShaders("./SHADERS/SOURCE/SimpleShader.vs",
 							  "./SHADERS/SOURCE/SimpleShader.fs");
 
-	
-	Model test("./Models/Nanosuit/nanosuit.obj");//("./Models/Cottagemodel/Snow covered CottageOBJ.obj");
-	Model box("D:/Studia/Projekty/C++/Resource/Assimp/assimp-3.1.1/test/models/OBJ/box.obj");
+	//simpleProgram.LoadShaders("./SHADERS/SOURCE/noTan.vs",
+	//	"./SHADERS/SOURCE/noTan.fs");
+
+	//Model test("./Models/armchair/armchair.obj");    
+	//Model test("./Models/Cottagemodel/Snow covered CottageOBJ.obj");   
+	Model test("./Models/Nanosuit/nanosuit.obj");
+	//Model box("D:/Studia/Projekty/C++/Resource/Assimp/assimp-3.1.1/test/models/OBJ/box.obj");
 	
 	//-----------PETLA RENDEROWANIA--------------//
 	//------------------------------------------//
@@ -33,7 +37,7 @@ int main(int , char**)
 	{
 		
 		test.Draw(&mainWindow, camera, simpleProgram);
-		box.Draw(&mainWindow, camera, simpleProgram, camera.GetLightPosition());
+		//box.Draw(&mainWindow, camera, simpleProgram, camera.GetLightPosition());
 		
 		camera.Update();
 		mainWindow.Update();

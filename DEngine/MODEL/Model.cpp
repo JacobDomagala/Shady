@@ -19,8 +19,8 @@ void Model::Draw(Display* window, Camera camera, Shader shader, vec3 translate,	
 	glUniformMatrix4fv(glGetUniformLocation(shader.GetProgramID(), "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 	glUniformMatrix4fv(glGetUniformLocation(shader.GetProgramID(), "view"), 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(glGetUniformLocation(shader.GetProgramID(), "model"), 1, GL_FALSE, glm::value_ptr(model));
-	glUniform3fv(glGetUniformLocation(shader.GetProgramID(), "lightPosition"),  1, &lightPos[0]);
-	glUniform3fv(glGetUniformLocation(shader.GetProgramID(), "cameraPosition"), 1, &camPos[0]);
+	glUniform3fv(glGetUniformLocation(shader.GetProgramID(), "vLightPosition"),  1, &lightPos[0]);
+	glUniform3fv(glGetUniformLocation(shader.GetProgramID(), "vCameraPosition"), 1, &camPos[0]);
 	
 	
 	for (GLuint i = 0; i < meshes.size(); i++) {
@@ -30,10 +30,10 @@ void Model::Draw(Display* window, Camera camera, Shader shader, vec3 translate,	
 void Model::LoadModel(string path){
 	// Read file via ASSIMP
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	// Check for errors
 	if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-		cout << "ERROR::ASSIMP:: " << importer.GetErrorString() << endl;
+		std::cout << "ERROR::ASSIMP:: " << importer.GetErrorString() << std::endl;
 		return;
 	}
 	// Retrieve the directory path of the filepath
@@ -67,17 +67,17 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene){
 	for (GLuint i = 0; i < mesh->mNumVertices; i++){
 		Vertex vertex;
 		glm::vec3 vector; // We declare a placeholder vector since assimp uses its own vector class that doesn't directly convert to glm's vec3 class so we transfer the data to this placeholder glm::vec3 first.
-						  // Positions
+						  // positions
 		vector.x = mesh->mVertices[i].x;
 		vector.y = mesh->mVertices[i].y;
 		vector.z = mesh->mVertices[i].z;
-		vertex.Position = vector;
+		vertex.position = vector;
 		// Normals
 		if (mesh->HasNormals()) {
 			vector.x = mesh->mNormals[i].x;
 			vector.y = mesh->mNormals[i].y;
 			vector.z = mesh->mNormals[i].z;
-			vertex.Normal = vector;
+			vertex.normal = vector;
 		}
 		
 		// Texture Coordinates
@@ -87,10 +87,22 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene){
 			// use models where a vertex can have multiple texture coordinates so we always take the first set (0).
 			vec.x = mesh->mTextureCoords[0][i].x;
 			vec.y = mesh->mTextureCoords[0][i].y;
-			vertex.TexCoords = vec;
+			vertex.texCoords = vec;
 		}
 		else
-			vertex.TexCoords = glm::vec2(0.0f, 0.0f);
+			vertex.texCoords = glm::vec2(0.0f, 0.0f);
+
+		vector.x = mesh->mTangents[i].x;
+		vector.y = mesh->mTangents[i].y;
+		vector.z = mesh->mTangents[i].z;
+		vertex.tangent = vector;
+		
+
+		vector.x = mesh->mBitangents[i].x;
+		vector.y = mesh->mBitangents[i].y;
+		vector.z = mesh->mBitangents[i].z;
+		vertex.bTangent = vector;
+		
 		vertices.push_back(vertex);
 	}
 	// Now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.

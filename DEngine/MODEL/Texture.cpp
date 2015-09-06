@@ -9,7 +9,7 @@ void Texture::LoadTexture(const char* filePath, std::string directory, GLuint pr
 	 data = SOIL_load_image(filename.c_str(), &width, &height, 0, SOIL_LOAD_RGBA);
 
 	if (data == NULL){
-			std::cerr << "Blad wczytywania tekstury z pliku " << filePath<< std::endl;
+			std::cerr << "Error loading texture from file  " << filePath<< std::endl;
 			system("pause");
 		}
 	

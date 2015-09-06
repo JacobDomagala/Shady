@@ -4,7 +4,7 @@
 
 #include <sstream>
 #include <vector>
-using namespace std;
+
 // GL Includes
 
 #include <gtc/matrix_transform.hpp>
@@ -12,11 +12,17 @@ using namespace std;
 #include"Texture.h"
 
 
-struct Vertex {
+using std::vector;
+using std::string;
+using glm::vec2;
+using glm::vec3;
 
-	glm::vec3 Position;
-	glm::vec3 Normal;
-	glm::vec2 TexCoords;
+struct Vertex {
+	vec3 position;
+	vec3 normal;
+	vec2 texCoords;
+	vec3 tangent;
+	vec3 bTangent;
 };
 
 class Mesh {

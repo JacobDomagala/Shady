@@ -1,7 +1,7 @@
 #include"Mesh.h"
 
-Mesh::Mesh(vector<Vertex>* vertices, vector<GLuint>* indices, vector<Texture>* textures){
-	
+Mesh::Mesh(vector<Vertex>* vertices, vector<GLuint>* indices, vector<Texture>* textures)
+{
 	this->vertices = *vertices;
 	this->indices = *indices;
 	this->textures = *textures;
@@ -10,25 +10,51 @@ Mesh::Mesh(vector<Vertex>* vertices, vector<GLuint>* indices, vector<Texture>* t
 	SetupMesh();
 }
 
-void Mesh::Draw(GLuint programID){
+void Mesh::AddTexture(char* filePath, textureType textureType)
+{
+	Texture tmp;
+	switch (textureType) 
+	{
+		case 0:
+		{
+			tmp.LoadTexture(filePath, "diffuse_map");
+			break;
+		}
+		case 1:
+		{
+			tmp.LoadTexture(filePath, "specular_map");
+			break;
+		}
+		case 2:
+		{
+			tmp.LoadTexture(filePath, "normal_map");
+			break;
+		}
+	}
+	textures.push_back(tmp);
 
-	
-	for (GLuint i = 0; i < textures.size(); i++){
+}
+
+void Mesh::Draw(GLuint programID)
+{	
+	for (GLuint i = 0; i < textures.size(); i++)
+	{
 		textures[i].Use(programID, i);
 	}
-
 	// Draw mesh
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 
 	// Always good practice to set everything back to defaults once configured.
-	for (GLuint i = 0; i < textures.size(); i++){
+	for (GLuint i = 0; i < textures.size(); i++)
+	{
 		glActiveTexture(GL_TEXTURE0 + i);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 }
-void Mesh::SetupMesh(){
+void Mesh::SetupMesh()
+{
 	// Create buffers/arrays
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
@@ -64,7 +90,8 @@ void Mesh::SetupMesh(){
 
 	glBindVertexArray(0);
 }
-void Mesh::Delete() {
+void Mesh::Delete()
+{
 	vertices.clear();
 	textures.clear();
 	indices.clear();

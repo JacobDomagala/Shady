@@ -23,28 +23,28 @@ int main(int , char**)
 	simpleProgram.LoadShaders("./SHADERS/SOURCE/SimpleShader.vs",
 							  "./SHADERS/SOURCE/SimpleShader.fs");
 
-	//simpleProgram.LoadShaders("./SHADERS/SOURCE/noTan.vs",
-	//	"./SHADERS/SOURCE/noTan.fs");
-
-	//Model test("./Models/armchair/armchair.obj");    
-	//Model test("./Models/Cottagemodel/Snow covered CottageOBJ.obj");   
-	Model test("./Models/Nanosuit/nanosuit.obj");
-	//Model box("D:/Studia/Projekty/C++/Resource/Assimp/assimp-3.1.1/test/models/OBJ/box.obj");
+	/*simpleProgram.LoadShaders("./SHADERS/SOURCE/noTan.vs",
+		"./SHADERS/SOURCE/noTan.fs");
+*/
 	
+	Model test("./Models/Cobblestones2/CobbleStones2.obj");    
+
+	//Model test("./Models/Cottagemodel/Snow covered CottageOBJ.obj");   
+	//Model test("./Models/Nanosuit/nanosuit.obj");
+	
+	test.ScaleModel(glm::vec3(0.5f, 0.5f, 0.5f));
+	test.TranslateModel(glm::vec3(2.0f, -4.0f, 2.0f));
 	//-----------PETLA RENDEROWANIA--------------//
 	//------------------------------------------//
 	while (!mainWindow.IsClosed())
 	{
 		
 		test.Draw(&mainWindow, camera, simpleProgram);
-		//box.Draw(&mainWindow, camera, simpleProgram, camera.GetLightPosition());
+		
 		
 		camera.Update();
 		mainWindow.Update();
-	
-
 	}
-	
 
 	return 0;
 }

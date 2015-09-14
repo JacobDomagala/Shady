@@ -42,7 +42,8 @@ char* Shader::ReadFile(char* fileName)
 	unsigned int size;
 	
 	fopen_s(&file,fileName, "rb");
-	if (!file) {
+	if (!file)
+	{
 		std::cerr << "Shader file" << fileName << "couldn't be opened\n";
 		system("pause");
 	}
@@ -52,7 +53,8 @@ char* Shader::ReadFile(char* fileName)
 	rewind(file);
 
 	unsigned int offset = 0;
-	while (!feof(file)) {
+	while (!feof(file))
+	{
 		fgets(buffer + offset, size, file);
 		offset = ftell(file);
 	}
@@ -93,13 +95,16 @@ bool Shader::CheckStatus(GLuint object,
 	return true;
 }
 
-Shader::~Shader(){
+Shader::~Shader()
+{
 	glDeleteProgram(m_Program);
 }
 
-GLuint Shader::GetProgramID(){
+GLuint Shader::GetProgramID()
+{
 	return m_Program;
 }
-void Shader::UseProgram(){
+void Shader::UseProgram()
+{
 	glUseProgram(m_Program);
 }

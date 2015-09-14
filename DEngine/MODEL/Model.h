@@ -32,21 +32,28 @@ class Model
 {
 public:
 	
+	mat4 modelMatrix;
+	mat4 viewMatrix;
+	mat4 projectionMatrix;
 
+	vec3 translateValue;
+	vec3 rotateValue;
+	vec3 scaleValue;
+	float rotateAngle;
+
+	void ScaleModel(vec3 scale);
+	void TranslateModel(vec3 translate);
+	void RotateModel(vec3 rotate, float angle);
 
 	Model(GLchar* path);
 
 	// Draws the model, and thus all its meshes
-	void Draw(Display* window, Camera camera, Shader shader,
-			  vec3 translate = vec3(0.0, 0.0, 0.0),
-			  vec3 rotate =    vec3(1.0, 1.0, 1.0),
-			  float angle =    0.0,
-		      vec3 scale =     vec3(1.0, 1.0, 1.0));
+	void Draw(Display* window, Camera camera, Shader shader);
 
-private:
+
 	/*  Model Data  */
 
-	mat4 modelMatrix;
+
 	GLuint modelMatrixUniformLocation;
 
 	GLuint programID;

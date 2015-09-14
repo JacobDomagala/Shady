@@ -1,6 +1,7 @@
 #include "Clock.h"
 
-int Clock::Initialize(){
+int Clock::Initialize()
+{
 	int result = QueryPerformanceFrequency(&clockFreq);
 	if (!result)
 		return false;
@@ -9,7 +10,8 @@ int Clock::Initialize(){
 	time = (float)ticksLastFrame.QuadPart / clockFreq.QuadPart;
 }
 
-void Clock::NewFrame(){
+void Clock::NewFrame()
+{
 	LARGE_INTEGER tmp;
 	QueryPerformanceCounter(&tmp);
 	deltaTicks.QuadPart = tmp.QuadPart - ticksLastFrame.QuadPart;
@@ -18,15 +20,18 @@ void Clock::NewFrame(){
 	time += deltaTime;
 	ticksLastFrame = tmp;
 }
-float Clock::GetDelta() const{
-	
-	return deltaTime;
-	
-}
-void Clock::Wait(int ms){
-	Sleep(ms);
 
+float Clock::GetDelta() const
+{	
+	return deltaTime;	
 }
-float Clock::GetFps(){
+
+void Clock::Wait(int ms)
+{
+	Sleep(ms);
+}
+
+float Clock::GetFps()
+{
 	return (float)clockFreq.QuadPart / deltaTicks.QuadPart;
 }

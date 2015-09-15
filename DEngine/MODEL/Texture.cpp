@@ -28,10 +28,12 @@ void Texture::LoadTexture(const char* filePath, char* name, std::string director
 	glGenerateMipmap(GL_TEXTURE_2D);
 	
 
-	SetTextureQuality(LOW);
+	SetTextureQuality(HIGH);
+	quality = HIGH;
 	SOIL_free_image_data(data);
 
 }
+
 void Texture::SetParameter(unsigned int uiSampler, int parameter, int value)
 {
 	glSamplerParameteri(uiSampler, parameter, value);
@@ -57,11 +59,13 @@ void Texture::SetTextureQuality(int quality)
 	{
 		glSamplerParameteri(samplerID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glSamplerParameteri(samplerID, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		this->quality = LOW;
 	}
 	else if (quality == MEDIUM)
 	{
 		glSamplerParameteri(samplerID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glSamplerParameteri(samplerID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		this->quality = MEDIUM;
 	}
 	else if (quality == HIGH)
 	{
@@ -69,6 +73,7 @@ void Texture::SetTextureQuality(int quality)
 		glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &fLargest);
 		glSamplerParameteri(samplerID, GL_TEXTURE_MAX_ANISOTROPY_EXT, fLargest);
 		glSamplerParameteri(samplerID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		this->quality = HIGH;
 	}
 	SetParameter(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	SetParameter(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);

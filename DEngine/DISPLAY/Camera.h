@@ -23,17 +23,11 @@ protected:
 	Display* windowHandle;
 
 	mat4 viewMatrix;
-
 	vec2 oldMousePosition;
 	vec2 windowSize;
-	
 	vec3 viewDirection;
-
 	vec3 position;
 	vec3 velocity;
-	
-
-	
 	vec3 lightPos;
 	
 	float deltaTime;

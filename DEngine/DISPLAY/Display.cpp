@@ -31,6 +31,7 @@ Display::Display(int width, int height, const std::string& title)
 		std::cerr << "Wystapil problem z inicjalizacja Opengl(glew)!" << std::endl;
 		system("pause");
 	}
+	
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
@@ -73,7 +74,7 @@ void Display::Update()
 			}
 		}
 	}
-	Clear(0.2f, 0.2f, 0.2f, 0.0f);
+	//Clear(0.2f, 0.2f, 0.2f, 0.0f);
 }
 
 void Display::Clear(float r, float g, float b, float a)

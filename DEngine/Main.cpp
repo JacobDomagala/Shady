@@ -2,6 +2,7 @@
 #include "SHADERS/Shader.h"
 #include "Model/Model.h"
 #include"DISPLAY/Camera.h"
+#include"SkyBox.h"
 
 
 int main(int , char**)
@@ -18,32 +19,29 @@ int main(int , char**)
 	camera.SetCameraMode(FLY);
 
 	
+	SkyBox sky;
+	sky.LoadCubeMap(".");
 
 	Shader simpleProgram;
 	simpleProgram.LoadShaders("./SHADERS/SOURCE/SimpleShader.vs",
 							  "./SHADERS/SOURCE/SimpleShader.fs");
 
-	/*simpleProgram.LoadShaders("./SHADERS/SOURCE/noTan.vs",
-		"./SHADERS/SOURCE/noTan.fs");
-*/
 	
-	Model test("./Models/Cobblestones2/CobbleStones2.obj");    
+	Model test("./Models/Plane/plane.obj");    
+	test.meshes[0].AddTexture("./Models/textures/154.png", DIFFUSE);
+	test.meshes[0].AddTexture("./Models/textures/154_norm.png", NORMAL);
 
-	//Model test("./Models/Cottagemodel/Snow covered CottageOBJ.obj");   
-	//Model test("./Models/Nanosuit/nanosuit.obj");
 	
-	test.ScaleModel(glm::vec3(0.5f, 0.5f, 0.5f));
-	test.TranslateModel(glm::vec3(2.0f, -4.0f, 2.0f));
-	//-----------PETLA RENDEROWANIA--------------//
-	//------------------------------------------//
 	while (!mainWindow.IsClosed())
 	{
-		
-		test.Draw(&mainWindow, camera, simpleProgram);
-		
-		
-		camera.Update();
+
+	
+		//test.Draw(&mainWindow, camera, simpleProgram);
+		sky.Draw(&mainWindow, camera);
 		mainWindow.Update();
+		mainWindow.Clear(0.2f, 0.2f, 0.2f, 0.0f);
+		camera.Update();
+		
 	}
 
 	return 0;

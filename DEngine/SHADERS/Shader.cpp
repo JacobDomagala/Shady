@@ -60,7 +60,6 @@ char* Shader::ReadFile(char* fileName)
 	}
 	fclose(file);
 	return buffer;
-	
 }
 
 bool Shader::CheckShaderStatus(GLuint shader)
@@ -72,10 +71,8 @@ bool Shader::CheckProgramStatus(GLuint program)
 	return CheckStatus(program, glGetProgramiv, glGetProgramInfoLog, GL_LINK_STATUS);
 }
 
-bool Shader::CheckStatus(GLuint object, 
-	PFNGLGETSHADERIVPROC objectPropertyGetterFunc,
-	PFNGLGETSHADERINFOLOGPROC getInfoLogFunc,
-	GLenum statusType)
+bool Shader::CheckStatus(GLuint object, PFNGLGETSHADERIVPROC objectPropertyGetterFunc,
+						 PFNGLGETSHADERINFOLOGPROC getInfoLogFunc, GLenum statusType)
 {
 	GLint Status;
 	objectPropertyGetterFunc(object, statusType, &Status);
@@ -106,5 +103,6 @@ GLuint Shader::GetProgramID()
 }
 void Shader::UseProgram()
 {
+	
 	glUseProgram(m_Program);
 }

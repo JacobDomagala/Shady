@@ -64,7 +64,7 @@ void Model::LoadModel(string path)
 {
 	// Read file via ASSIMP
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(path, aiProcess_GenNormals| aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+	const aiScene* scene = importer.ReadFile(path, aiProcess_GenSmoothNormals | aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	// Check for errors
 	if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) 
 	{
@@ -122,7 +122,7 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 		}
 		
 		// Texture Coordinates
-		if (mesh->mTextureCoords[0])
+		if (mesh->HasTextureCoords(0))
 		{
 			vec2 vec;
 			// A vertex can contain up to 8 different texture coordinates. We thus make the assumption that we won't 
@@ -139,12 +139,7 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 		vector.y = mesh->mTangents[i].y;
 		vector.z = mesh->mTangents[i].z;
 		vertex.tangent = vector;
-		
-		//BiTangents
-		vector.x = mesh->mBitangents[i].x;
-		vector.y = mesh->mBitangents[i].y;
-		vector.z = mesh->mBitangents[i].z;
-		vertex.bTangent = vector;
+	
 		
 		vertices.push_back(vertex);
 	}

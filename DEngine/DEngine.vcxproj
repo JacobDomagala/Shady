@@ -27,6 +27,7 @@
     <ClCompile Include="MODEL\Model.cpp" />
     <ClCompile Include="MODEL\Texture.cpp" />
     <ClCompile Include="SHADERS\Shader.cpp" />
+    <ClCompile Include="SkyBox.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CLOCK\Clock.h" />
@@ -36,6 +37,7 @@
     <ClInclude Include="MODEL\Model.h" />
     <ClInclude Include="MODEL\Texture.h" />
     <ClInclude Include="SHADERS\Shader.h" />
+    <ClInclude Include="SkyBox.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A97E412D-8440-4C07-AF96-FEC63423E2B9}</ProjectGuid>

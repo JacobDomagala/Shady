@@ -5,6 +5,7 @@ in VS_OUT{
 	vec2 fTexCoord;
 	vec3 fCameraPosition;
 	vec3 fLightPosition;
+	mat3 TBN;
 }fs_in;
 
 out vec4 outputColor;
@@ -18,7 +19,7 @@ uniform sampler2D normal_map;
 void main()
 {    
 	vec3 fNormal = texture(normal_map, fs_in.fTexCoord).rgb;
-	fNormal = normalize(fNormal * 2.0 - 1.0);  
+	fNormal = normalize(fs_in.TBN * (fNormal * (255.0/128.0) - 1.0));  
 	
 //AMBIENT
     vec3 ambientLight =  vec3(0.03, 0.03, 0.03);

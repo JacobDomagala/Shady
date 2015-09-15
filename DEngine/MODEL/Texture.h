@@ -1,6 +1,8 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
+
+#include<vector>
 #include <postprocess.h>
 #include<SOIL.h>
 #include"..\SHADERS\Shader.h"
@@ -15,6 +17,7 @@ class Texture
 {
 private:
 	
+	TextureQuality quality;
 	unsigned char* data;
 	int width, height;
 	char* samplerName;
@@ -31,6 +34,7 @@ public:
 	aiString path;
 	
 	void LoadTexture(const char* filePath, char* textureType, std::string directory = "\0");
+	
 	void Use(GLuint programID, unsigned short unit);
 	void SetTextureQuality(int quality);
 	void CleanUp();

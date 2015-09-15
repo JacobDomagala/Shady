@@ -19,6 +19,7 @@ enum cameraMode{
 };
 class Camera
 {
+	friend class KeyListener;
 protected:
 	Display* windowHandle;
 
@@ -45,8 +46,6 @@ protected:
 public:
 
 	
-	
-	
 	Camera(Display* windowHandle, vec3* light);
 	
 
@@ -63,8 +62,7 @@ public:
 
 	void SetCameraMode(int mode);
 	void Update();
-	void KeyEvent();
-	void IsOtherKeyPressed(int vKey);
+
 
 	vec3 GetLightPosition();
 	void SetLightPosition(vec3 lightPos);

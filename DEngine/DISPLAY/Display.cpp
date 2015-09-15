@@ -19,11 +19,11 @@ Display::Display(int width, int height, const std::string& title)
 	SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-	m_Window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED,
+	window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED,
 						        SDL_WINDOWPOS_CENTERED, width, height,
 						        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
-	m_GLContext = SDL_GL_CreateContext(m_Window);
+	gLContext = SDL_GL_CreateContext(window);
 	
 	GLenum status = glewInit();
 	if (status != GLEW_OK)
@@ -37,36 +37,33 @@ Display::Display(int width, int height, const std::string& title)
 	glCullFace(GL_BACK);
 	
 	
-	m_IsClosed = false;
+	isClosed = false;
 }
 bool Display::IsClosed()
 {
-	return m_IsClosed;
+	return isClosed;
 }
 
 void Display::Update()
 {
-	SDL_GL_SwapWindow(m_Window);
+	SDL_GL_SwapWindow(window);
 
-	if (GetAsyncKeyState(VK_ESCAPE))
+	
+	while (SDL_PollEvent(&event))
 	{
-		m_IsClosed = true;
-	}
-	while (SDL_PollEvent(&m_Event))
-	{
-		if (m_Event.type == SDL_QUIT)
+		if (event.type == SDL_QUIT)
 		{
-			m_IsClosed = true;
+			isClosed = true;
 		}
 	
-		else if (m_Event.type == SDL_WINDOWEVENT)
+		else if (event.type == SDL_WINDOWEVENT)
 		{
-			switch (m_Event.window.event)
+			switch (event.window.event)
 			{
 				case SDL_WINDOWEVENT_RESIZED:
 				{
-					width = m_Event.window.data1;
-					height = m_Event.window.data2;
+					width = event.window.data1;
+					height = event.window.data2;
 					projectionMatrix = glm::perspective(fov, aspectRatio, nClip, fClip);
 					glViewport(0, 0, width, height);
 					break;
@@ -85,8 +82,8 @@ void Display::Clear(float r, float g, float b, float a)
 
 Display::~Display()
 {
-	SDL_GL_DeleteContext(m_GLContext);
-	SDL_DestroyWindow(m_Window);
+	SDL_GL_DeleteContext(gLContext);
+	SDL_DestroyWindow(window);
 	SDL_Quit();
 }
 
@@ -95,7 +92,7 @@ glm::vec2 Display::GetWindowSize()
 	int tmpHeight;
 	int tmpWidth;
 	
-	SDL_GetWindowSize(m_Window, &tmpWidth, &tmpHeight);
+	SDL_GetWindowSize(window, &tmpWidth, &tmpHeight);
 	
 	return glm::vec2(tmpWidth, tmpHeight);
 }

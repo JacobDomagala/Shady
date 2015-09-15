@@ -3,6 +3,7 @@
 #include "Model/Model.h"
 #include"DISPLAY/Camera.h"
 #include"SkyBox.h"
+#include"KeyListener.h"
 
 
 int main(int , char**)
@@ -18,7 +19,7 @@ int main(int , char**)
 
 	camera.SetCameraMode(FLY);
 
-	
+	KeyListener keyListener(&mainWindow, &camera);
 	SkyBox sky;
 	sky.LoadCubeMap(".");
 
@@ -35,9 +36,9 @@ int main(int , char**)
 	while (!mainWindow.IsClosed())
 	{
 
-	
-		//test.Draw(&mainWindow, camera, simpleProgram);
-		sky.Draw(&mainWindow, camera);
+		keyListener.KeyEvent();
+		test.Draw(&mainWindow, camera, simpleProgram);
+		//ky.Draw(&mainWindow, camera);
 		mainWindow.Update();
 		mainWindow.Clear(0.2f, 0.2f, 0.2f, 0.0f);
 		camera.Update();

@@ -17,12 +17,12 @@ public:
 	void Clear(float r, float g, float b, float a);
 	
 	void Update();
-	bool m_IsClosed;
+	bool isClosed;
 	
 	glm::vec2 GetWindowSize();
-	SDL_Window* m_Window;
+	SDL_Window* window;
 
-	void WrapMouse(bool choice){ SDL_SetWindowGrab(m_Window, (SDL_bool)choice); }
+	void WrapMouse(bool choice){ SDL_SetWindowGrab(window, (SDL_bool)choice); }
 	void ShowCursor(bool choice){ SDL_ShowCursor(choice); }
 	glm::mat4 GetProjection() { return projectionMatrix; }
 protected:
@@ -31,9 +31,9 @@ private:
 	float fov, aspectRatio, fClip, nClip;
 	glm::mat4 projectionMatrix;
 	
-	SDL_Event m_Event;
+	SDL_Event event;
 	
-	SDL_GLContext m_GLContext;
+	SDL_GLContext gLContext;
 
 	
 };

@@ -5,7 +5,6 @@
 #include"SkyBox.h"
 #include"KeyListener.h"
 
-
 int main(int , char**)
 {
 	
@@ -20,27 +19,33 @@ int main(int , char**)
 	camera.SetCameraMode(FLY);
 
 	KeyListener keyListener(&mainWindow, &camera);
-	SkyBox sky;
-	sky.LoadCubeMap(".");
+	
 
 	Shader simpleProgram;
 	simpleProgram.LoadShaders("./SHADERS/SOURCE/SimpleShader.vs",
 							  "./SHADERS/SOURCE/SimpleShader.fs");
-
+	Shader skyBoxShaders; 
+	skyBoxShaders.LoadShaders("./SHADERS/SOURCE/skyBox.vs", 
+							  "./SHADERS/SOURCE/skyBox.fs");
 	
+	SkyBox sky;
+	sky.LoadCubeMap("./Models/skybox");
 	Model test("./Models/Plane/plane.obj");    
 	test.meshes[0].AddTexture("./Models/textures/154.png", DIFFUSE);
 	test.meshes[0].AddTexture("./Models/textures/154_norm.png", NORMAL);
 
+
 	
 	while (!mainWindow.IsClosed())
 	{
-
+		mainWindow.Clear(0.2f, 0.2f, 0.2f, 1.0f);
 		keyListener.KeyEvent();
+
+
 		test.Draw(&mainWindow, camera, simpleProgram);
-		//ky.Draw(&mainWindow, camera);
+		sky.Draw(&mainWindow, camera, skyBoxShaders);
 		mainWindow.Update();
-		mainWindow.Clear(0.2f, 0.2f, 0.2f, 0.0f);
+	
 		camera.Update();
 		
 	}

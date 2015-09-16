@@ -8,14 +8,14 @@
 #include <gtc/type_ptr.hpp>
 
 class SkyBox{
-private:
-	std::vector<const GLchar*> faces;
+public:
+	std::vector<std::string> faces;
 	GLuint textureID;
 	Shader skyBoxShaders;
 	GLuint skyboxVAO, skyboxVBO;
-public:
-	void LoadCubeMap(const char* filePath);
-	void Draw(Display* window, Camera camera);
+
+	void LoadCubeMap(std::string folderPath);
+	void Draw(Display* window, Camera camera, Shader shader);
 };
 
 #endif

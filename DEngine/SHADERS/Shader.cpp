@@ -94,7 +94,7 @@ bool Shader::CheckStatus(GLuint object, PFNGLGETSHADERIVPROC objectPropertyGette
 
 Shader::~Shader()
 {
-	glDeleteProgram(m_Program);
+	
 }
 
 GLuint Shader::GetProgramID()

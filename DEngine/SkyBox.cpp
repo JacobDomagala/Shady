@@ -1,9 +1,9 @@
 #include "SkyBox.h"
 
 
-void SkyBox::LoadCubeMap(const char* filePath)
+void SkyBox::LoadCubeMap(std::string folderPath)
 {
-	skyBoxShaders.LoadShaders("SHADERS/SOURCE/skyBox.vs", "SHADERS/SOURCE/skyBox.fs");
+	
 	GLfloat skyboxVertices[] = {
 		// Positions          
 		-1.0f,  1.0f, -1.0f,
@@ -61,12 +61,12 @@ void SkyBox::LoadCubeMap(const char* filePath)
 
 	// Cubemap (Skybox)
 	
-	faces.push_back("./Models/skybox/right.jpg");
-	faces.push_back("./Models/skybox/left.jpg");
-	faces.push_back("./Models/skybox/top.jpg");
-	faces.push_back("./Models/skybox/bottom.jpg");
-	faces.push_back("./Models/skybox/back.jpg");
-	faces.push_back("./Models/skybox/front.jpg");
+	faces.push_back(folderPath + "/right.jpg");
+	faces.push_back(folderPath + "/left.jpg");
+	faces.push_back(folderPath + "/top.jpg");
+	faces.push_back(folderPath + "/bottom.jpg");
+	faces.push_back(folderPath + "/back.jpg");
+	faces.push_back(folderPath + "/front.jpg");
 
 	glGenTextures(1, &textureID);
 
@@ -75,7 +75,7 @@ void SkyBox::LoadCubeMap(const char* filePath)
 	for (GLuint i = 0; i < faces.size(); i++)
 	{
 		int width, height;
-		unsigned char* data = SOIL_load_image(faces[i], &width, &height, 0, SOIL_LOAD_RGB);
+		unsigned char* data = SOIL_load_image(faces[i].c_str(), &width, &height, 0, SOIL_LOAD_RGB);
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 		SOIL_free_image_data(data);
 	}
@@ -88,20 +88,20 @@ void SkyBox::LoadCubeMap(const char* filePath)
 
 }
 
-void SkyBox::Draw(Display* window, Camera camera)
+void SkyBox::Draw(Display* window, Camera camera, Shader shader)
 {
-	skyBoxShaders.UseProgram(); 
-
+	
+	shader.UseProgram();
 	glDepthFunc(GL_LEQUAL);
 	glm::mat4 view = glm::mat4(glm::mat3(camera.GetWorldToViewMatrix()));	
 	glm::mat4 projection = window->GetProjection();
-	glUniformMatrix4fv(glGetUniformLocation(skyBoxShaders.GetProgramID(), "view"),
+	glUniformMatrix4fv(glGetUniformLocation(shader.m_Program, "view"),
 												1, GL_FALSE, glm::value_ptr(view));
-	glUniformMatrix4fv(glGetUniformLocation(skyBoxShaders.GetProgramID(), "projection"),
+	glUniformMatrix4fv(glGetUniformLocation(shader.m_Program, "projection"),
 												1, GL_FALSE, glm::value_ptr(projection));
 	glBindVertexArray(skyboxVAO);
 	glActiveTexture(GL_TEXTURE0);
-	glUniform1i(glGetUniformLocation(skyBoxShaders.GetProgramID(), "skybox"), 0);
+	glUniform1i(glGetUniformLocation(shader.GetProgramID(), "skybox"), 0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindVertexArray(0);

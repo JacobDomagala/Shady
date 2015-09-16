@@ -6,7 +6,7 @@ Display::Display(int width, int height, const std::string& title)
 	this->width = width;
 	aspectRatio = (float)width / height;
 	fov = 45.0;
-	nClip = 0.05f;
+	nClip = 0.1f;
 	fClip = 100;
 	SDL_Init(SDL_INIT_EVERYTHING);
 	projectionMatrix = glm::perspective(fov,aspectRatio, nClip, fClip);
@@ -33,9 +33,10 @@ Display::Display(int width, int height, const std::string& title)
 	}
 	
 	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
-	
+
 	
 	isClosed = false;
 }

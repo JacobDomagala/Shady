@@ -10,7 +10,7 @@
 class Shader
 {
 public:
-	Shader() {}
+	GLuint m_Program;
 	void LoadShaders(char* vertexFile, char* fragmentFile);
 	~Shader();
 
@@ -18,7 +18,7 @@ public:
 	void UseProgram();
 private:
 	
-	GLuint m_Program;
+	
 
 	bool CheckStatus(GLuint, PFNGLGETSHADERIVPROC, PFNGLGETSHADERINFOLOGPROC, GLenum);
 	bool CheckShaderStatus(GLuint);

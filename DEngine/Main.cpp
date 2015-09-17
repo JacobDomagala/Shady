@@ -30,19 +30,22 @@ int main(int , char**)
 	
 	SkyBox sky;
 	sky.LoadCubeMap("./Models/skybox");
-	Model test("./Models/Plane/plane.obj");    
-	test.meshes[0].AddTexture("./Models/textures/154.png", DIFFUSE);
-	test.meshes[0].AddTexture("./Models/textures/154_norm.png", NORMAL);
-
-
-	
+	Model floor("./Models/Plane/plane.obj");    
+	floor.meshes[0].AddTexture("./Models/calinou/ice1.jpg", DIFFUSE);
+	floor.meshes[0].AddTexture("./Models/calinou/ice1_n.jpg", NORMAL);
+	floor.meshes[0].AddTexture("./Models/calinou/ice1_s.jpg", SPECULAR);
+	Model nanosuit("./Models/nanosuit/nanosuit.obj");
+	nanosuit.ScaleModel(glm::vec3(0.2f, 0.2f, 0.2f));
+	nanosuit.RotateModel(glm::vec3(0.0f, 1.0f, 0.0f), -90.0f);
 	while (!mainWindow.IsClosed())
 	{
 		mainWindow.Clear(0.2f, 0.2f, 0.2f, 1.0f);
 		keyListener.KeyEvent();
 
-
-		test.Draw(&mainWindow, camera, simpleProgram);
+		
+		nanosuit.Draw(&mainWindow, camera, simpleProgram);
+		floor.Draw(&mainWindow, camera, simpleProgram);
+		
 		sky.Draw(&mainWindow, camera, skyBoxShaders);
 		mainWindow.Update();
 	

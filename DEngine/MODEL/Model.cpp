@@ -3,29 +3,17 @@
 void Model::ScaleModel(vec3 scale)
 {
 	scaleValue = scale;
-
-	modelMatrix = glm::scale(modelMatrix, scaleValue);
-	modelMatrix = glm::rotate(modelMatrix, rotateAngle, rotateValue);
-	modelMatrix = glm::translate(modelMatrix, translateValue);
 }
 
 void Model::TranslateModel(vec3 translate)
 {
 	translateValue = translate;
-
-	modelMatrix = glm::scale(modelMatrix, scaleValue);
-	modelMatrix = glm::rotate(modelMatrix, rotateAngle, rotateValue);
-	modelMatrix = glm::translate(modelMatrix, translateValue);
 }
 
 void Model::RotateModel(vec3 rotate, float angle)
 {
 	rotateAngle = angle;
 	rotateValue = rotate;
-
-	modelMatrix = glm::scale(modelMatrix, scaleValue);
-	modelMatrix = glm::rotate(modelMatrix, rotateAngle, rotateValue);
-	modelMatrix = glm::translate(modelMatrix, translateValue);
 }
 
 Model::Model(GLchar* path):
@@ -45,7 +33,7 @@ void Model::Draw(Display* window, Camera camera, Shader shader)
 
 	projectionMatrix = window->GetProjection();
 	viewMatrix = camera.GetWorldToViewMatrix();
-
+	modelMatrix = glm::translate(translateValue) * glm::rotate(rotateAngle, rotateValue) * glm::scale(scaleValue);
 	
 	glUniformMatrix4fv(glGetUniformLocation(shader.GetProgramID(), "projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 	glUniformMatrix4fv(glGetUniformLocation(shader.GetProgramID(), "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));

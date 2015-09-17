@@ -63,19 +63,20 @@ void KeyListener::KeyEvent()
 	//Reset camera to default (R)
 	if (GetAsyncKeyState(0x52))
 	{
-		camera->position = vec3(5.0f, -1.5f, 0.0f);
+		camera->position = vec3(0.0f, 0.0f, 0.0f);
 	}
 	//Move light forward (T)
 	if (GetAsyncKeyState(0x54))
 	{
-		camera->lightPos += vec3(0.2, 0.0, 0.2);
+		camera->lightPos += vec3(0.2f, 0.0f, 0.2f);
 	}
 	//Move light backward (G)
 	if (GetAsyncKeyState(0x47))
 	{
-		camera->lightPos -= vec3(0.2, 0.0, 0.2);
+		camera->lightPos -= vec3(0.2f, 0.0f, 0.2f);
 	}
 }
+
 void KeyListener::IsOtherKeyPressed(int vKey)
 {
 	//W

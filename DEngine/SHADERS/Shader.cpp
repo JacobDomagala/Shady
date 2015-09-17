@@ -103,6 +103,6 @@ GLuint Shader::GetProgramID()
 }
 void Shader::UseProgram()
 {
-	
+	glUseProgram(0);
 	glUseProgram(m_Program);
 }

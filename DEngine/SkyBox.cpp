@@ -93,7 +93,7 @@ void SkyBox::Draw(Display* window, Camera camera, Shader shader)
 	
 	shader.UseProgram();
 	glDepthFunc(GL_LEQUAL);
-	glm::mat4 view = glm::mat4(glm::mat3(camera.GetWorldToViewMatrix()));	
+	glm::mat4 view = glm::mat4(glm::mat3(camera.GetWorldToViewMatrix()));
 	glm::mat4 projection = window->GetProjection();
 	glUniformMatrix4fv(glGetUniformLocation(shader.m_Program, "view"),
 												1, GL_FALSE, glm::value_ptr(view));

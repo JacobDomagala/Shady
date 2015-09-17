@@ -36,10 +36,10 @@ void Camera::mouseUpdate()
 	vec2 mousePosition(x,y);
 	windowSize = vec2(windowHandle->GetWindowSize().x, windowHandle->GetWindowSize().y);
 	
-	if (x > windowSize.x - 20 || x < 10)
-		SDL_WarpMouseInWindow(windowHandle->window, windowSize.x / 2, windowSize.y / 2);
-	if (y > windowSize.y - 20 || y < 10)
-		SDL_WarpMouseInWindow(windowHandle->window, windowSize.x / 2, windowSize.y / 2);
+	//if (x > windowSize.x - 20 || x < 10)
+	//	SDL_WarpMouseInWindow(windowHandle->window, windowSize.x / 2, windowSize.y / 2);
+	//if (y > windowSize.y - 20 || y < 10)
+	//	SDL_WarpMouseInWindow(windowHandle->window, windowSize.x / 2, windowSize.y / 2);
 	
 
 	vec2 mouseDelta = oldMousePosition - mousePosition;

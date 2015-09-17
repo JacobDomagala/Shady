@@ -63,6 +63,7 @@ void main()
     specularLight *= vec3(texture2D(specular_map, fs_in.fTexCoord));
 	vec3 phongLight = specularLight + diffuseLight + ambientLight;
 
+	 
 	outputColor = vec4(phongLight, 1.0);// + specularLight;
-
+	
 }

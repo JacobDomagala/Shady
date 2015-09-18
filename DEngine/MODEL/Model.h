@@ -28,8 +28,7 @@ using std::vector;
 using glm::mat4;
 using glm::vec3;
 
-class Model
-{
+class Model{
 public:
 	
 	mat4 modelMatrix;

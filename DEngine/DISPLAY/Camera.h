@@ -17,48 +17,38 @@ enum cameraMode{
 	FLY,
 	STATIC
 };
-class Camera
-{
-	friend class KeyListener;
+class Camera{
+	friend class EventListener;
 protected:
-	Display* windowHandle;
+	Clock clock;
 
 	mat4 viewMatrix;
-	vec2 oldMousePosition;
-	vec2 windowSize;
 	vec3 viewDirection;
 	vec3 position;
 	vec3 velocity;
 	vec3 lightPos;
 	
 	float deltaTime;
-	Clock clock;
-	
-
 	vec3 upVector;
-	float MOUSE_SENSITIVITY;
-	float MOVEMENT_SPEED;
 	
-
-	void Reset();
+	float MOVEMENT_SPEED;
 	float speedValue;
 	bool flyMode;
+	void Reset();
 public:
 
 	
-	Camera(Display* windowHandle, vec3* light);
+	Camera(vec3* light);
 	
 
 	mat4 GetWorldToViewMatrix() const;
 	vec3 GetPosition() const;
-	void mouseUpdate();
+	
 	
 	void ComputeDelta();
 	float GetDelta();
 	float GetTime() { return clock.GetTime(); }
 
-
-	
 
 	void SetCameraMode(int mode);
 	void Update();

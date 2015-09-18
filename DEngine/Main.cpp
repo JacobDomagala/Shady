@@ -3,7 +3,7 @@
 #include "Model/Model.h"
 #include"DISPLAY/Camera.h"
 #include"SkyBox.h"
-#include"KeyListener.h"
+#include"EventListener.h"
 
 int main(int , char**)
 {
@@ -14,11 +14,11 @@ int main(int , char**)
 	mainWindow.WrapMouse(false);
 
 	glm::vec3 lightPosition(0.0, 12.0, 5.0);
-	Camera camera(&mainWindow, &lightPosition);
+	Camera camera(&lightPosition);
 
 	camera.SetCameraMode(FLY);
 
-	KeyListener keyListener(&mainWindow, &camera);
+	EventListener eventListener(&mainWindow, &camera);
 	
 
 	Shader simpleProgram;
@@ -40,13 +40,12 @@ int main(int , char**)
 	while (!mainWindow.IsClosed())
 	{
 		mainWindow.Clear(0.2f, 0.2f, 0.2f, 1.0f);
-		keyListener.KeyEvent();
-
+		eventListener.Listen();
 		
-		nanosuit.Draw(&mainWindow, camera, simpleProgram);
+		//nanosuit.Draw(&mainWindow, camera, simpleProgram);
 		floor.Draw(&mainWindow, camera, simpleProgram);
 		
-		sky.Draw(&mainWindow, camera, skyBoxShaders);
+	//	sky.Draw(&mainWindow, camera, skyBoxShaders);
 		mainWindow.Update();
 	
 		camera.Update();

@@ -53,30 +53,6 @@ bool Display::IsClosed()
 void Display::Update()
 {
 	SDL_GL_SwapWindow(window);
-
-	
-	while (SDL_PollEvent(&event))
-	{
-		if (event.type == SDL_QUIT)
-		{
-			isClosed = true;
-		}
-	
-		else if (event.type == SDL_WINDOWEVENT)
-		{
-			switch (event.window.event)
-			{
-				case SDL_WINDOWEVENT_RESIZED:
-				{
-					width = event.window.data1;
-					height = event.window.data2;
-					projectionMatrix = glm::perspective(fov, aspectRatio, nClip, fClip);
-					glViewport(0, 0, width, height);
-					break;
-				}
-			}
-		}
-	}
 }
 
 void Display::Clear(float r, float g, float b, float a)

@@ -7,8 +7,7 @@
 #include<glew.h>
 #include<glm.hpp>
 
-class Shader
-{
+class Shader{
 public:
 	GLuint m_Program;
 	void LoadShaders(char* vertexFile, char* fragmentFile);

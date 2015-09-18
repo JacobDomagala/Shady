@@ -53,12 +53,10 @@ void main()
     float dotSpecular = dot(normalizedNormal, reflectedLight);
     float clampedSpecular = max(dotSpecular, 0.0);
 
-    float brightness = pow(clampedSpecular, 32);
+    float brightness = pow(clampedSpecular, 160);
        
-    vec3 specularLight;
-    specularLight.x = brightness;
-    specularLight.y = brightness;
-    specularLight.z = brightness;
+    vec3 specularLight = vec3(brightness);
+    
 	
     specularLight *= vec3(texture2D(specular_map, fs_in.fTexCoord));
 	vec3 phongLight = specularLight + diffuseLight + ambientLight;

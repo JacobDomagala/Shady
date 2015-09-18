@@ -6,8 +6,8 @@
 #include<gtx\transform.hpp>
 #include"..\SHADERS\Shader.h"
 
-class Display
-{
+class Display{
+	friend class EventListener;
 public:
 	
 	Display(int width, int height, const std::string& title);
@@ -30,8 +30,6 @@ private:
 	int width, height;
 	float fov, aspectRatio, fClip, nClip;
 	glm::mat4 projectionMatrix;
-	
-	SDL_Event event;
 	
 	SDL_GLContext gLContext;
 

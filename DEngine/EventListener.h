@@ -8,13 +8,16 @@
 class EventListener{
 
 private:
-	SDL_MouseButtonEvent mouseEvent;
+
 	SDL_Event event;
 	Display* windowHandle;
 	Camera* camera;
 	float MOUSE_SENSITIVITY;
 	vec2 oldMousePosition;
 	vec2 windowSize;
+	
+	vec2 mousePosition;
+
 
 	void KeyEvent();
 	void MouseEvent();

@@ -22,6 +22,16 @@ class Camera{
 protected:
 	Clock clock;
 
+	vec3 upVector;
+	vec3 rightVector;
+	vec3 worldUp;
+	// Eular Angles
+	GLfloat yaw;
+	GLfloat pitch;
+	// Camera options
+	
+	GLfloat mouseSensitivity;
+
 	mat4 viewMatrix;
 	vec3 viewDirection;
 	vec3 position;
@@ -29,7 +39,7 @@ protected:
 	vec3 lightPos;
 	
 	float deltaTime;
-	vec3 upVector;
+
 	
 	float MOVEMENT_SPEED;
 	float speedValue;
@@ -39,7 +49,7 @@ public:
 
 	
 	Camera(vec3* light);
-	
+	void ProcessMouseMovement(GLfloat xoffset, GLfloat yoffset, GLboolean constrainPitch = true);
 
 	mat4 GetWorldToViewMatrix() const;
 	vec3 GetPosition() const;

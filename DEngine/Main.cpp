@@ -8,7 +8,7 @@
 int main(int , char**)
 {
 	
-	int width = 1024, height = 680;
+	int width = 1280, height = 720;
 	Display mainWindow(width, height, "DEngine");
 	//mainWindow.ShowCursor(false);
 	mainWindow.WrapMouse(false);
@@ -34,9 +34,9 @@ int main(int , char**)
 	floor.meshes[0].AddTexture("./Models/calinou/ice1.jpg", DIFFUSE);
 	floor.meshes[0].AddTexture("./Models/calinou/ice1_n.jpg", NORMAL);
 	floor.meshes[0].AddTexture("./Models/calinou/ice1_s.jpg", SPECULAR);
-	Model nanosuit("./Models/nanosuit/nanosuit.obj");
-	nanosuit.ScaleModel(glm::vec3(0.2f, 0.2f, 0.2f));
-	nanosuit.RotateModel(glm::vec3(0.0f, 1.0f, 0.0f), -90.0f);
+	//Model nanosuit("./Models/nanosuit/nanosuit.obj");
+	//nanosuit.ScaleModel(glm::vec3(0.2f, 0.2f, 0.2f));
+	//nanosuit.RotateModel(glm::vec3(0.0f, 1.0f, 0.0f), -90.0f);
 	while (!mainWindow.IsClosed())
 	{
 		mainWindow.Clear(0.2f, 0.2f, 0.2f, 1.0f);
@@ -45,7 +45,7 @@ int main(int , char**)
 		//nanosuit.Draw(&mainWindow, camera, simpleProgram);
 		floor.Draw(&mainWindow, camera, simpleProgram);
 		
-	//	sky.Draw(&mainWindow, camera, skyBoxShaders);
+		sky.Draw(&mainWindow, camera, skyBoxShaders);
 		mainWindow.Update();
 	
 		camera.Update();

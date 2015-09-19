@@ -4,7 +4,6 @@ EventListener::EventListener(Display* windowHandle, Camera* camera):
 	camera(camera),
 	windowSize(windowHandle->GetWindowSize().x, windowHandle->GetWindowSize().y),
 	windowHandle(windowHandle),
-	MOUSE_SENSITIVITY(0.001f),
 	oldMousePosition(windowHandle->GetWindowSize().x / 2, windowHandle->GetWindowSize().y / 2)
 {
 
@@ -78,18 +77,24 @@ void EventListener::KeyEvent()
 	{
 		camera->lightPos -= vec3(0.2f, 0.0f, 0.2f);
 	}
+	//Reset position
+	if (GetAsyncKeyState(0x52))
+	{
+		camera->Reset();
+	}
+
 }
 
 void EventListener::SDLEvent()
 {
 	while (SDL_PollEvent(&this->event))
 	{
-		
+	
 		if (this->event.type == SDL_QUIT)
 		{
 			windowHandle->isClosed = true;
 		}
-		else if (this->event.type == SDL_WINDOWEVENT)
+		if (this->event.type == SDL_WINDOWEVENT)
 		{
 			switch (this->event.window.event)
 			{
@@ -138,40 +143,30 @@ void EventListener::IsOtherKeyPressed(int vKey)
 
 void EventListener::MouseEvent()
 {
-	
 	int x, y;
 	SDL_GetMouseState(&x, &y);
-	vec2 mousePosition(x, y);
-	windowSize = vec2(windowHandle->GetWindowSize().x, windowHandle->GetWindowSize().y);
+	mousePosition = vec2(x, y);
 
+	vec2 mouseDelta;
+	mouseDelta.x = mousePosition.x - oldMousePosition.x;
+	mouseDelta.y = oldMousePosition.y - mousePosition.y;
 
-	if (x > windowSize.x - 20 || x < 10)
-		SDL_WarpMouseInWindow(windowHandle->window, windowSize.x / 2, windowSize.y / 2);
-	if (y > windowSize.y - 20 || y < 10)
-		SDL_WarpMouseInWindow(windowHandle->window, windowSize.x / 2, windowSize.y / 2);
+	float mouseDeltaLenght = glm::length(mouseDelta);
+	if (mouseDeltaLenght > 100.0f)
+		{
+			oldMousePosition = mousePosition;
+			return;
+		}
 
-	vec2 mouseDelta = oldMousePosition - mousePosition;
-	float lenght = glm::length(mouseDelta);
-	if (lenght > windowSize.y / 3)
-	{
-		oldMousePosition = mousePosition;
-		return;
-	}
+	
 
-	vec3 rotateAround = glm::cross(camera->viewDirection, camera->upVector);
-	mat4 rotation = glm::rotate(mouseDelta.x * MOUSE_SENSITIVITY, camera->upVector) *
-		glm::rotate(mouseDelta.y * MOUSE_SENSITIVITY, rotateAround);
-
-
-	camera->viewDirection = glm::normalize(glm::mat3(rotation) * camera->viewDirection);
-
-
+	camera->ProcessMouseMovement(mouseDelta.x, mouseDelta.y);
 	oldMousePosition = mousePosition;
 }
 
 void EventListener::Listen()
 {
-	KeyEvent();
 	MouseEvent();
+	KeyEvent();
 	SDLEvent();
 }

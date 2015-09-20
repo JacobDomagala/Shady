@@ -12,6 +12,7 @@ private:
 	SDL_Event event;
 	Display* windowHandle;
 	Camera* camera;
+	Shader* shaders;
 	float MOUSE_SENSITIVITY;
 	vec2 oldMousePosition;
 	vec2 windowSize;
@@ -24,7 +25,7 @@ private:
 	void SDLEvent();
 	void IsOtherKeyPressed(int vKey);
 public:
-	EventListener(Display* windowHandle, Camera* camera);
+	EventListener(Display* windowHandle, Camera* camera, Shader* shaders);
 	void Listen();
 	
 };

@@ -53,7 +53,7 @@ void main()
     float dotSpecular = dot(normalizedNormal, reflectedLight);
     float clampedSpecular = max(dotSpecular, 0.0);
 
-    float brightness = pow(clampedSpecular, 160);
+    float brightness = pow(clampedSpecular, 32);
        
     vec3 specularLight = vec3(brightness);
     

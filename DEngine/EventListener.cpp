@@ -1,10 +1,11 @@
 #include "EventListener.h"
 
-EventListener::EventListener(Display* windowHandle, Camera* camera):
+EventListener::EventListener(Display* windowHandle, Camera* camera, Shader* shaders):
 	camera(camera),
 	windowSize(windowHandle->GetWindowSize().x, windowHandle->GetWindowSize().y),
 	windowHandle(windowHandle),
-	oldMousePosition(windowHandle->GetWindowSize().x / 2, windowHandle->GetWindowSize().y / 2)
+	oldMousePosition(windowHandle->GetWindowSize().x / 2, windowHandle->GetWindowSize().y / 2),
+	shaders(shaders)
 {
 
 }
@@ -83,6 +84,25 @@ void EventListener::KeyEvent()
 		camera->Reset();
 	}
 
+	//DEBUG
+	if (GetAsyncKeyState(0x31))
+	{
+		shaders->LoadShaders("./SHADERS/SOURCE/SimpleShader.vs",
+			"./SHADERS/SOURCE/SimpleShader.fs");
+	}
+	if (GetAsyncKeyState(0x32))
+	{
+		shaders->LoadShaders("./SHADERS/SOURCE/noTan.vs",
+			"./SHADERS/SOURCE/noTan.fs");
+	}
+	if (GetAsyncKeyState(0x33))
+	{
+		glDisable(GL_MULTISAMPLE);
+	}
+	if (GetAsyncKeyState(0x34))
+	{
+		glEnable(GL_MULTISAMPLE);
+	}
 }
 
 void EventListener::SDLEvent()

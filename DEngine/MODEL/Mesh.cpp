@@ -37,9 +37,12 @@ void Mesh::AddTexture(char* filePath, textureType textureType)
 
 void Mesh::Draw(GLuint programID)
 {	
-	for (GLuint i = 0; i < textures.size(); i++)
+	if (programID != NULL)
 	{
-		textures[i].Use(programID, i);
+		for (GLuint i = 0; i < textures.size(); i++)
+		{
+			textures[i].Use(programID, i);
+		}
 	}
 	// Draw mesh
 	glBindVertexArray(VAO);
@@ -47,10 +50,13 @@ void Mesh::Draw(GLuint programID)
 	glBindVertexArray(0);
 
 	// Always good practice to set everything back to defaults once configured.
-	for (GLuint i = 0; i < textures.size(); i++)
+	if (programID != NULL)
 	{
-		glActiveTexture(GL_TEXTURE0 + i);
-		glBindTexture(GL_TEXTURE_2D, 0);
+		for (GLuint i = 0; i < textures.size(); i++)
+		{
+			glActiveTexture(GL_TEXTURE0 + i);
+			glBindTexture(GL_TEXTURE_2D, 0);
+		}
 	}
 }
 void Mesh::SetupMesh()

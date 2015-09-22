@@ -9,9 +9,10 @@ layout (location = 3) in vec3 vTangent;
 uniform vec3 vLightPosition;
 uniform vec3 vCameraPosition;
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
+uniform mat4 modelMatrix;
+uniform mat4 viewMatrix;
+uniform mat4 projectionMatrix;
+uniform mat4 lightSpaceMatrix;
 
 out VS_OUT{
 	vec3 fPosition;
@@ -19,15 +20,16 @@ out VS_OUT{
 	vec3 fCameraPosition;
 	vec3 fLightPosition;
 	mat3 TBN;
+	vec4 fLightSpacePosition;
 } vs_out;
 
 
 void main()
 {
-    gl_Position = projection * view * model * vec4(vPosition, 1.0f);
+    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(vPosition, 1.0f);
 	
 	
-	mat3 normalMatrix = transpose(inverse(mat3(model)));
+	mat3 normalMatrix = transpose(inverse(mat3(modelMatrix)));
 	vec3 T = normalize(normalMatrix * vTangent);
 	vec3 N = normalize(normalMatrix * vNormal);
 	T = normalize(T - (dot(T, N) * N));
@@ -35,11 +37,11 @@ void main()
 	vec3 B = normalize(cross(T, N));
 	vs_out.TBN = mat3(T,B,N);
 	
-	vs_out.fPosition = vec3(model * vec4(vPosition, 1.0f));
+	vs_out.fPosition = vec3(modelMatrix * vec4(vPosition, 1.0f));
 	vs_out.fTexCoord = vTexCoord;
 	vs_out.fCameraPosition = vCameraPosition;
 	vs_out.fLightPosition = vLightPosition;
-	
+	vs_out.fLightSpacePosition = lightSpaceMatrix * vec4(vs_out.fPosition, 1.0f);
 	
 	
 }

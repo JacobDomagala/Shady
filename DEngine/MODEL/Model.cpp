@@ -23,28 +23,39 @@ scaleValue(1.0, 1.0, 1.0),
 rotateAngle(0.0)
 {
 	LoadModel(path);
+	
 }
 
-void Model::Draw(Display* window, Camera camera, Shader shader)
+void Model::Draw(Display* window, Camera camera, Shader normalShaders)
 {
-	shader.UseProgram();  
+	modelMatrix = glm::translate(translateValue) * glm::rotate(rotateAngle, rotateValue) * glm::scale(scaleValue);
+	
+
+
+	
+	normalShaders.UseProgram();
+	
+
+
+
+	
 	glm::vec3 lightPos = camera.GetLightPosition();
 	glm::vec3 camPos = camera.GetPosition();
 
 	projectionMatrix = window->GetProjection();
 	viewMatrix = camera.GetWorldToViewMatrix();
-	modelMatrix = glm::translate(translateValue) * glm::rotate(rotateAngle, rotateValue) * glm::scale(scaleValue);
 	
-	glUniformMatrix4fv(glGetUniformLocation(shader.GetProgramID(), "projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-	glUniformMatrix4fv(glGetUniformLocation(shader.GetProgramID(), "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
-	glUniformMatrix4fv(glGetUniformLocation(shader.GetProgramID(), "model"), 1, GL_FALSE, glm::value_ptr(modelMatrix));
-	glUniform3fv(glGetUniformLocation(shader.GetProgramID(), "vLightPosition"),  1, &lightPos[0]);
-	glUniform3fv(glGetUniformLocation(shader.GetProgramID(), "vCameraPosition"), 1, &camPos[0]);
+	
+	glUniformMatrix4fv(glGetUniformLocation(normalShaders.GetProgramID(), "projectionMatrix"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	glUniformMatrix4fv(glGetUniformLocation(normalShaders.GetProgramID(), "viewMatrix"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
+	glUniformMatrix4fv(glGetUniformLocation(normalShaders.GetProgramID(), "modelMatrix"), 1, GL_FALSE, glm::value_ptr(modelMatrix));
+	glUniform3fv(glGetUniformLocation(normalShaders.GetProgramID(), "vLightPosition"),  1, &lightPos[0]);
+	glUniform3fv(glGetUniformLocation(normalShaders.GetProgramID(), "vCameraPosition"), 1, &camPos[0]);
 	
 	
 	for (GLuint i = 0; i < meshes.size(); i++) 
 	{
-		meshes[i].Draw(shader.GetProgramID());
+		meshes[i].Draw(normalShaders.GetProgramID());
 	}
 }
 

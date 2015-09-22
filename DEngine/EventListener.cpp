@@ -92,8 +92,8 @@ void EventListener::KeyEvent()
 	}
 	if (GetAsyncKeyState(0x32))
 	{
-		shaders->LoadShaders("./SHADERS/SOURCE/noTan.vs",
-			"./SHADERS/SOURCE/noTan.fs");
+		shaders->LoadShaders("./SHADERS/SOURCE/NoNormal.vs",
+			"./SHADERS/SOURCE/NoNormal.fs");
 	}
 	if (GetAsyncKeyState(0x33))
 	{
@@ -118,14 +118,14 @@ void EventListener::SDLEvent()
 		{
 			switch (this->event.window.event)
 			{
-			case SDL_WINDOWEVENT_RESIZED:
-			{
-				windowHandle->width = this->event.window.data1;
-				windowHandle->height = this->event.window.data2;
-				windowHandle->projectionMatrix = glm::perspective(windowHandle->fov, windowHandle->aspectRatio, windowHandle->nClip, windowHandle->fClip);
-				glViewport(0, 0, windowHandle->width, windowHandle->height);
-				break;
-			}
+				case SDL_WINDOWEVENT_RESIZED:
+				{
+					windowHandle->width = this->event.window.data1;
+					windowHandle->height = this->event.window.data2;
+					windowHandle->projectionMatrix = glm::perspective(windowHandle->fov, windowHandle->aspectRatio, windowHandle->nClip, windowHandle->fClip);
+					glViewport(0, 0, windowHandle->width, windowHandle->height);
+					break;
+				}
 			}
 		}
 	}

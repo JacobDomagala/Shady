@@ -3,7 +3,7 @@
 
 Camera::Camera(vec3* light) :
 	viewDirection(0.0f, 0.0f, 1.0f),
-	position(0.0f,0.0f,0.0f),
+	position(0.0f, 0.0f, 0.0f),
 	MOVEMENT_SPEED(10.0f),
 	velocity(0.0f, 0.0f, 0.0f),
 	lightPos(*light), 

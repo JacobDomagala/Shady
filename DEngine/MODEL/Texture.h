@@ -29,12 +29,14 @@ public:
 	GLuint samplerLocation;
 	GLuint textureID;
 	GLuint samplerID;
-	
+	GLuint frameBufferID;
+
 	std::string type;
 	aiString path;
 	
 	void LoadTexture(const char* filePath, char* textureType, std::string directory = "\0");
-	
+	void CreateTexture(int width, int height);
+
 	void Use(GLuint programID, unsigned short unit);
 	void SetTextureQuality(int quality);
 	void CleanUp();

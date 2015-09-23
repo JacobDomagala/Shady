@@ -4,22 +4,25 @@ layout (location = 0) in vec3 vPosition;
 layout (location = 1) in vec3 vNormal;
 layout (location = 2) in vec2 vTexCoord;
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
+uniform mat4 modelMatrix;
+uniform mat4 viewMatrix;
+uniform mat4 projectionMatrix;
+uniform mat4 lightSpaceMatrix;
 
 out VS_OUT{
 	vec3 fPosition;
 	vec3 fNormal;
 	vec2 fTexCoord;
+	vec4 fLightSpacePosition;
 } vs_out;
 
 
 void main()
 {
-    gl_Position = projection * view * model * vec4(vPosition, 1.0f);
+    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(vPosition, 1.0f);
 	
-	vs_out.fPosition = vec3(model * vec4(vPosition, 1.0f));
+	vs_out.fPosition = vec3(modelMatrix * vec4(vPosition, 1.0f));
     vs_out.fTexCoord = vTexCoord;
-	vs_out.fNormal = mat3(model) * vNormal;
+	vs_out.fNormal = mat3(modelMatrix) * vNormal;
+	vs_out.fLightSpacePosition = lightSpaceMatrix * vec4(vs_out.fPosition, 1.0f);
 }

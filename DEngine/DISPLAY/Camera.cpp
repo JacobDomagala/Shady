@@ -55,9 +55,7 @@ void Camera::Update()
 	ComputeDelta();
 	if (flyMode)
 	{	
-		system("cls");
-		std::cout << viewDirection.x << "   " << viewDirection.y << "\n";
-
+	
 		position += velocity * deltaTime * MOVEMENT_SPEED;
 		viewMatrix = glm::lookAt(position, position + viewDirection, upVector);
 		

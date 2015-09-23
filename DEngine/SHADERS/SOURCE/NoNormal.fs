@@ -4,6 +4,7 @@ in VS_OUT{
 	vec3 fPosition;
 	vec3 fNormal;
 	vec2 fTexCoord;
+	vec4 fLightSpacePosition;
 }fs_in;
 
 out vec4 outputColor;
@@ -11,10 +12,28 @@ out vec4 outputColor;
 
 uniform sampler2D diffuse_map;
 uniform sampler2D specular_map;
-uniform sampler2D normal_map;
+uniform sampler2D depth_map;
 
 uniform vec3 vLightPosition;
 uniform vec3 vCameraPosition;
+
+
+float ShadowCalculation(vec4 fragment)
+{
+	vec3 projCoords = fragment.xyz / fragment.w;
+	projCoords = projCoords * 0.5f + 0.5f;
+	
+
+	float closestDepth = texture(depth_map, projCoords.xy).r; 
+	
+    // Get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+	
+    // Check whether current frag pos is in shadow
+    float shadow = currentDepth > closestDepth  ? 1.0 : 0.0;
+
+    return shadow;
+}
 
 void main()
 {    
@@ -59,12 +78,15 @@ void main()
 	
    
     specularLight *= vec3(texture2D(specular_map, fs_in.fTexCoord));
-	vec3 phongLight = specularLight + diffuseLight + ambientLight;
+	
 //KONIEC OBLICZEN SWIATLA
    
    
-
-	outputColor = vec4(phongLight, 1.0);// + specularLight;
+	//vec3 lighting = ambientLight + specularLight + diffuseLight;
+	float shadow = ShadowCalculation(fs_in.fLightSpacePosition);       
+    vec3 lighting = (ambientLight + (1.0 - shadow) * (diffuseLight + specularLight));
+	 
+	outputColor = vec4(lighting, 1.0);
 
   
 }

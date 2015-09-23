@@ -10,7 +10,7 @@ Display::Display(int width, int height, const std::string& title)
 	fClip = 100.0f;
 	SDL_Init(SDL_INIT_EVERYTHING);
 	projectionMatrix = glm::perspective(fov,aspectRatio, nClip, fClip);
-	
+	//projectionMatrix = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 7.5f);
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
@@ -40,11 +40,11 @@ Display::Display(int width, int height, const std::string& title)
 	glEnable(GL_MULTISAMPLE);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE); 
-	glEnable(GL_STENCIL_TEST);
+	//glEnable(GL_STENCIL_TEST);
 
-	glDepthFunc(GL_LESS);
-	glCullFace(GL_BACK);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+	//glDepthFunc(GL_LESS);
+	//glCullFace(GL_BACK);
+	//glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 	//SDL_SetRelativeMouseMode(SDL_TRUE);
 	isClosed = false;
 }
@@ -61,7 +61,7 @@ void Display::Update()
 void Display::Clear(float r, float g, float b, float a)
 {
 	glClearColor(r, g, b, a);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 }
 
 Display::~Display()

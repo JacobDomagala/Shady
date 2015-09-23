@@ -28,23 +28,14 @@ rotateAngle(0.0)
 
 void Model::Draw(Display* window, Camera camera, Shader normalShaders)
 {
-	modelMatrix = glm::translate(translateValue) * glm::rotate(rotateAngle, rotateValue) * glm::scale(scaleValue);
-	
-
-
-	
 	normalShaders.UseProgram();
-	
-
-
-
 	
 	glm::vec3 lightPos = camera.GetLightPosition();
 	glm::vec3 camPos = camera.GetPosition();
 
 	projectionMatrix = window->GetProjection();
 	viewMatrix = camera.GetWorldToViewMatrix();
-	
+	modelMatrix = glm::translate(translateValue) * glm::rotate(rotateAngle, rotateValue) * glm::scale(scaleValue);
 	
 	glUniformMatrix4fv(glGetUniformLocation(normalShaders.GetProgramID(), "projectionMatrix"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
 	glUniformMatrix4fv(glGetUniformLocation(normalShaders.GetProgramID(), "viewMatrix"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
@@ -56,6 +47,18 @@ void Model::Draw(Display* window, Camera camera, Shader normalShaders)
 	for (GLuint i = 0; i < meshes.size(); i++) 
 	{
 		meshes[i].Draw(normalShaders.GetProgramID());
+	}
+}
+
+void Model::DrawToDepthBuffer(Display* window, vec3 lightPos, Shader shadowShader)
+{
+	shadowShader.UseProgram();
+	modelMatrix = glm::translate(translateValue) * glm::rotate(rotateAngle, rotateValue) * glm::scale(scaleValue);
+	glUniformMatrix4fv(glGetUniformLocation(shadowShader.GetProgramID(), "modelMatrix"), 1, GL_FALSE, glm::value_ptr(modelMatrix));
+
+	for (GLuint i = 0; i < meshes.size(); i++)
+	{
+		meshes[i].Draw(NULL);
 	}
 }
 

@@ -51,7 +51,7 @@ public:
 
 
 	void Draw(Display* window, Camera camera, Shader normalShader);
-
+	void DrawToDepthBuffer(Display* window, vec3 lightPos, Shader shadowShader);
 
 	GLuint modelMatrixUniformLocation;
 

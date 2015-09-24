@@ -90,7 +90,6 @@ void SkyBox::LoadCubeMap(std::string folderPath)
 
 void SkyBox::Draw(Display* window, Camera camera, Shader shader)
 {
-	
 	shader.UseProgram();
 	glDepthFunc(GL_LEQUAL);
 	glm::mat4 view = glm::mat4(glm::mat3(camera.GetWorldToViewMatrix()));

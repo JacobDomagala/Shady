@@ -28,7 +28,6 @@ void main()
 {
     gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(vPosition, 1.0f);
 	
-	
 	mat3 normalMatrix = transpose(inverse(mat3(modelMatrix)));
 	vec3 T = normalize(normalMatrix * vTangent);
 	vec3 N = normalize(normalMatrix * vNormal);
@@ -42,6 +41,4 @@ void main()
 	vs_out.fCameraPosition = vCameraPosition;
 	vs_out.fLightPosition = vLightPosition;
 	vs_out.fLightSpacePosition = lightSpaceMatrix * vec4(vs_out.fPosition, 1.0f);
-	
-	
 }

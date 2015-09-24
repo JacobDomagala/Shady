@@ -11,17 +11,15 @@ in VS_OUT{
 
 out vec4 outputColor;
 
-
 uniform sampler2D diffuse_map;
 uniform sampler2D specular_map;
 uniform sampler2D normal_map;
 uniform sampler2D depth_map;
 
-float ShadowCalculation(vec4 fragment)
+float ShadowCalculation(vec4 fragment, vec3 normal)
 {
 	vec3 projCoords = fragment.xyz / fragment.w;
 	projCoords = projCoords * 0.5f + 0.5f;
-	
 
 	float closestDepth = texture(depth_map, projCoords.xy).r; 
 	
@@ -29,8 +27,23 @@ float ShadowCalculation(vec4 fragment)
     float currentDepth = projCoords.z;
 	
     // Check whether current frag pos is in shadow
-    float shadow = currentDepth > closestDepth  ? 1.0 : 0.0;
+	float bias = max(0.05f * (1.0 - dot(normal, fs_in.fLightPosition)), 0.005f);
+    float shadow = 0.0;
+	vec2 texelSize = 1.0 / textureSize(depth_map, 0);
+	for(int x = -1; x <= 1; ++x)
+	{
+		for(int y = -1; y <= 1; ++y)
+		{
+			float pcfDepth = texture(depth_map, projCoords.xy + vec2(x, y) * texelSize).r; 
+			shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
+		}    
+	}
+	shadow /= 9.0;
 
+	if(projCoords.z > 1.0)
+        shadow = 0.0;
+    
+    
     return shadow;
 }
 
@@ -79,7 +92,7 @@ void main()
     specularLight *= vec3(texture2D(specular_map, fs_in.fTexCoord));
 	
  
-	float shadow = ShadowCalculation(fs_in.fLightSpacePosition);       
+	float shadow = ShadowCalculation(fs_in.fLightSpacePosition, fNormal);       
     vec3 lighting = (ambientLight + (1.0 - shadow) * (diffuseLight + specularLight));
 	 
 	outputColor = vec4(lighting, 1.0);

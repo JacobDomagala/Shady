@@ -5,6 +5,8 @@ in VS_OUT{
 	vec3 fNormal;
 	vec2 fTexCoord;
 	vec4 fLightSpacePosition;
+	vec3 fLightPosition;
+	vec3 fCameraPosition;
 }fs_in;
 
 out vec4 outputColor;
@@ -14,15 +16,13 @@ uniform sampler2D diffuse_map;
 uniform sampler2D specular_map;
 uniform sampler2D depth_map;
 
-uniform vec3 vLightPosition;
-uniform vec3 vCameraPosition;
 
 
-float ShadowCalculation(vec4 fragment)
+
+float ShadowCalculation(vec4 fragment, vec3 normal)
 {
 	vec3 projCoords = fragment.xyz / fragment.w;
 	projCoords = projCoords * 0.5f + 0.5f;
-	
 
 	float closestDepth = texture(depth_map, projCoords.xy).r; 
 	
@@ -30,8 +30,23 @@ float ShadowCalculation(vec4 fragment)
     float currentDepth = projCoords.z;
 	
     // Check whether current frag pos is in shadow
-    float shadow = currentDepth > closestDepth  ? 1.0 : 0.0;
+	float bias = max(0.05f * (1.0 - dot(normal, fs_in.fLightPosition)), 0.005f);
+    float shadow = 0.0;
+	vec2 texelSize = 1.0 / textureSize(depth_map, 0);
+	for(int x = -1; x <= 1; ++x)
+	{
+		for(int y = -1; y <= 1; ++y)
+		{
+			float pcfDepth = texture(depth_map, projCoords.xy + vec2(x, y) * texelSize).r; 
+			shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
+		}    
+	}
+	shadow /= 9.0;
 
+	if(projCoords.z > 1.0)
+        shadow = 0.0;
+    
+    
     return shadow;
 }
 
@@ -41,7 +56,7 @@ void main()
     vec3 ambientLight =  vec3(0.03, 0.03, 0.03);
 
                 //DIFFUSE
-    vec3 lightVector = vLightPosition - fs_in.fPosition;
+    vec3 lightVector = fs_in.fLightPosition - fs_in.fPosition;
     
     vec3 normalizedLight = normalize(lightVector);
     vec3 normalizedNormal = normalize(fs_in.fNormal);
@@ -62,7 +77,7 @@ void main()
     
     vec3 reflectedLight = reflect(-normalizedLight,normalizedNormal);
   
-    vec3 cameraVector = vCameraPosition - fs_in.fPosition;
+    vec3 cameraVector = fs_in.fCameraPosition - fs_in.fPosition;
     vec3 normalizedCamera = normalize(cameraVector);
   
     float dotSpecular = dot(normalizedCamera, reflectedLight);
@@ -83,7 +98,7 @@ void main()
    
    
 	//vec3 lighting = ambientLight + specularLight + diffuseLight;
-	float shadow = ShadowCalculation(fs_in.fLightSpacePosition);       
+	float shadow = ShadowCalculation(fs_in.fLightSpacePosition, fs_in.fNormal);       
     vec3 lighting = (ambientLight + (1.0 - shadow) * (diffuseLight + specularLight));
 	 
 	outputColor = vec4(lighting, 1.0);

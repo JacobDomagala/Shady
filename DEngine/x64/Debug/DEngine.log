@@ -1,4 +1,4 @@
-﻿Build started 24.09.2015 18:51:24.
+﻿Build started 25.09.2015 20:17:39.
      1>Project "D:\Studia\Projekty\C++\DEngine\DEngine\DEngine.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /I"D:\Studia\Projekty\C++\Resource\Assimp\assimp-3.1.1\include\assimp" /I"D:\Studia\Projekty\C++\Resource\Simple OpenGL Image Library\src" /ID:\Studia\Projekty\C++\Resource\GLM\glm\glm /I"D:\Studia\Projekty\C++\Resource\GLEW\glew-1.12.0\include\GL" /ID:\Studia\Projekty\C++\Resource\SDL\include /ZI /nologo /W3 /WX- /Od /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"x64\Debug\\" /Fd"x64\Debug\vc140.pdb" /Gd /TP /errorReport:prompt Main.cpp
@@ -19,4 +19,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:01.66
+Time Elapsed 00:00:02.17

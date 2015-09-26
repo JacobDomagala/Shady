@@ -21,6 +21,7 @@
 #include "Mesh.h"
 #include"Texture.h"
 #include"../DISPLAY/Camera.h"
+#include"../Light.h"
 
 
 using std::string;
@@ -50,7 +51,7 @@ public:
 
 
 
-	void Draw(Display* window, Camera camera, Shader normalShader);
+	void Draw(Display* window, Camera camera, Light* lights, Shader normalShader);
 	void DrawToDepthBuffer(Display* window, vec3 lightPos, Shader shadowShader);
 
 	GLuint modelMatrixUniformLocation;

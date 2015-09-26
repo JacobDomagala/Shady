@@ -11,6 +11,7 @@
     <ClCompile Include="DISPLAY\Camera.cpp" />
     <ClCompile Include="SkyBox.cpp" />
     <ClCompile Include="EventListener.cpp" />
+    <ClCompile Include="Light.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CLOCK\Clock.h" />
@@ -22,5 +23,6 @@
     <ClInclude Include="DISPLAY\Camera.h" />
     <ClInclude Include="SkyBox.h" />
     <ClInclude Include="EventListener.h" />
+    <ClInclude Include="Light.h" />
   </ItemGroup>
 </Project>

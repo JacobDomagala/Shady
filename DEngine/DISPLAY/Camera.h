@@ -36,7 +36,6 @@ protected:
 	vec3 viewDirection;
 	vec3 position;
 	vec3 velocity;
-	vec3 lightPos;
 	
 	float deltaTime;
 
@@ -48,7 +47,7 @@ protected:
 public:
 
 	
-	Camera(vec3* light);
+	Camera(vec3 position);
 	void ProcessMouseMovement(GLfloat xoffset, GLfloat yoffset, GLboolean constrainPitch = true);
 
 	mat4 GetWorldToViewMatrix() const;
@@ -63,9 +62,6 @@ public:
 	void SetCameraMode(int mode);
 	void Update();
 
-
-	vec3 GetLightPosition();
-	void SetLightPosition(vec3 lightPos);
 
 	virtual void SetCamera(vec3 cameraPosition, vec3 viewDirection);
 };

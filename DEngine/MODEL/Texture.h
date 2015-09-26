@@ -35,7 +35,7 @@ public:
 	aiString path;
 	
 	void LoadTexture(const char* filePath, char* textureType, std::string directory = "\0");
-	void CreateTexture(int width, int height);
+	void CreateDepthBuffer(int width, int height);
 
 	void Use(GLuint programID, unsigned short unit);
 	void SetTextureQuality(int quality);

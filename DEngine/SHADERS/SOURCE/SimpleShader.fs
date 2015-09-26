@@ -18,6 +18,7 @@ uniform sampler2D depth_map;
 
 float ShadowCalculation(vec4 fragment, vec3 normal)
 {
+	
 	vec3 projCoords = fragment.xyz / fragment.w;
 	projCoords = projCoords * 0.5f + 0.5f;
 

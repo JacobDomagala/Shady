@@ -1,12 +1,11 @@
 #include "Camera.h"
 
 
-Camera::Camera(vec3* light) :
-	viewDirection(0.0f, 0.0f, 1.0f),
-	position(0.0f, 0.0f, 0.0f),
+Camera::Camera(vec3 position) :
+	viewDirection(0.0f, 0.0f, 0.0f),
+	position(position),//(0.0f, 0.0f, 0.0f),
 	MOVEMENT_SPEED(10.0f),
 	velocity(0.0f, 0.0f, 0.0f),
-	lightPos(*light), 
 	worldUp(0.0f, 1.0f, 0.0f),
 	flyMode(false),
 	speedValue(4.0f),
@@ -55,21 +54,9 @@ void Camera::Update()
 	ComputeDelta();
 	if (flyMode)
 	{	
-	
 		position += velocity * deltaTime * MOVEMENT_SPEED;
 		viewMatrix = glm::lookAt(position, position + viewDirection, upVector);
-		
 	}
-}
-
-vec3 Camera::GetLightPosition()
-{
-	return lightPos;
-}
-
-void Camera::SetLightPosition(vec3 lightPos)
-{
-	this->lightPos = lightPos;
 }
 
 float Camera::GetDelta()

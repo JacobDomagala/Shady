@@ -23,6 +23,7 @@
     <ClCompile Include="DISPLAY\Display.cpp" />
     <ClCompile Include="DISPLAY\Camera.cpp" />
     <ClCompile Include="EventListener.cpp" />
+    <ClCompile Include="Light.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MODEL\Mesh.cpp" />
     <ClCompile Include="MODEL\Model.cpp" />
@@ -35,6 +36,7 @@
     <ClInclude Include="DISPLAY\Display.h" />
     <ClInclude Include="DISPLAY\Camera.h" />
     <ClInclude Include="EventListener.h" />
+    <ClInclude Include="Light.h" />
     <ClInclude Include="MODEL\Mesh.h" />
     <ClInclude Include="MODEL\Model.h" />
     <ClInclude Include="MODEL\Texture.h" />

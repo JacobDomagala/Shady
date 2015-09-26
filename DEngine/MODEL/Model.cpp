@@ -23,14 +23,13 @@ scaleValue(1.0, 1.0, 1.0),
 rotateAngle(0.0)
 {
 	LoadModel(path);
-	
 }
 
-void Model::Draw(Display* window, Camera camera, Shader normalShaders)
+void Model::Draw(Display* window, Camera camera, Light* lights, Shader normalShaders)
 {
 	normalShaders.UseProgram();
 	
-	glm::vec3 lightPos = camera.GetLightPosition();
+	glm::vec3 lightPos = lights->GetLightPosition();
 	glm::vec3 camPos = camera.GetPosition();
 
 	projectionMatrix = window->GetProjection();

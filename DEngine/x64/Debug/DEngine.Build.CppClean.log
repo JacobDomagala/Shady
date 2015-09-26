@@ -4,10 +4,14 @@ d:\studia\projekty\c++\dengine\dengine\x64\debug\clock.obj
 d:\studia\projekty\c++\dengine\dengine\x64\debug\display.obj
 d:\studia\projekty\c++\dengine\dengine\x64\debug\camera.obj
 d:\studia\projekty\c++\dengine\dengine\x64\debug\main.obj
-d:\studia\projekty\c++\dengine\dengine\x64\debug\mesh.obj
-d:\studia\projekty\c++\dengine\dengine\x64\debug\model.obj
 d:\studia\projekty\c++\dengine\dengine\x64\debug\texture.obj
 d:\studia\projekty\c++\dengine\dengine\x64\debug\shader.obj
+d:\studia\projekty\c++\dengine\dengine\x64\debug\mesh.obj
+d:\studia\projekty\c++\dengine\dengine\x64\debug\model.obj
+d:\studia\projekty\c++\dengine\dengine\x64\debug\skybox.obj
+d:\studia\projekty\c++\dengine\dengine\x64\debug\keylistener.obj
+d:\studia\projekty\c++\dengine\dengine\x64\debug\eventlistener.obj
+d:\studia\projekty\c++\dengine\dengine\x64\debug\light.obj
 d:\studia\projekty\c++\dengine\x64\debug\dengine.ilk
 d:\studia\projekty\c++\dengine\x64\debug\dengine.exe
 d:\studia\projekty\c++\dengine\x64\debug\dengine.pdb

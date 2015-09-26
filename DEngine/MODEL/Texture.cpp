@@ -39,7 +39,7 @@ void Texture::SetParameter(unsigned int uiSampler, int parameter, int value)
 	glSamplerParameteri(uiSampler, parameter, value);
 }
 
-void Texture::CreateTexture(int width, int height)
+void Texture::CreateDepthBuffer(int width, int height)
 {
 	this->width = width;
 	this->height = height;

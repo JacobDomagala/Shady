@@ -71,12 +71,12 @@ void EventListener::KeyEvent()
 	//Move light forward (T)
 	if (GetAsyncKeyState(0x54))
 	{
-		camera->lightPos += vec3(0.2f, 0.0f, 0.2f);
+		//camera->lightPos += vec3(0.2f, 0.0f, 0.2f);
 	}
 	//Move light backward (G)
 	if (GetAsyncKeyState(0x47))
 	{
-		camera->lightPos -= vec3(0.2f, 0.0f, 0.2f);
+		//camera->lightPos -= vec3(0.2f, 0.0f, 0.2f);
 	}
 	//Reset position
 	if (GetAsyncKeyState(0x52))

@@ -39,13 +39,12 @@ Light::Light(glm::vec3 position, glm::vec3 color, lightType type)
 void Light::StartDrawingShadows(GLuint programID)
 {
 	glUseProgram(programID);
-
-	glViewport(0, 0, 2048, 2048);
-	glClear(GL_DEPTH_BUFFER_BIT);
-
 	glUniformMatrix4fv(glGetUniformLocation(programID, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
 
+	glViewport(0, 0, 2048, 2048);
+
 	glBindFramebuffer(GL_FRAMEBUFFER, shadowTexture.frameBufferID);
+	glClear(GL_DEPTH_BUFFER_BIT);
 }
 
 void Light::StopDrawingShadows()

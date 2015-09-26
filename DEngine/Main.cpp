@@ -46,14 +46,12 @@ int main(int , char**)
 
 	while (!mainWindow.IsClosed())
 	{
-		
 		//mainWindow.Clear(0.2f, 0.2f, 0.2f, 1.0f);
 		eventListener.Listen();
-
 		
 		sun.StartDrawingShadows(shadowShaders.GetProgramID());
-		nanosuit.Draw(&mainWindow, camera, &sun,simpleProgram);
-		floor.Draw(&mainWindow, camera, &sun,simpleProgram);
+		nanosuit.Draw(&mainWindow, camera, &sun, shadowShaders);
+		floor.Draw(&mainWindow, camera, &sun, shadowShaders);
 		sun.StopDrawingShadows();
 		
 		glViewport(0, 0, width, height);

@@ -13,6 +13,12 @@ enum TextureQuality{
 	HIGH
 };
 
+enum textureType {
+	DIFFUSE,
+	SPECULAR,
+	NORMAL
+};
+
 class Texture
 {
 private:

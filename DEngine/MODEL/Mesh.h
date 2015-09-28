@@ -15,14 +15,6 @@ using std::string;
 using glm::vec2;
 using glm::vec3;
 
-enum textureType {
-	DIFFUSE,
-	SPECULAR,
-	NORMAL
-};
-
-
-
 struct Vertex {
 	vec3 position;
 	vec3 normal;

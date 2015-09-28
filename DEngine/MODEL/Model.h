@@ -49,10 +49,7 @@ public:
 	void TranslateModel(vec3 translate);
 	void RotateModel(vec3 rotate, float angle);
 
-
-
 	void Draw(Display* window, Camera camera, Light* lights, Shader normalShader);
-	void DrawToDepthBuffer(Display* window, vec3 lightPos, Shader shadowShader);
 
 	GLuint modelMatrixUniformLocation;
 

@@ -49,17 +49,6 @@ void Model::Draw(Display* window, Camera camera, Light* lights, Shader normalSha
 	}
 }
 
-void Model::DrawToDepthBuffer(Display* window, vec3 lightPos, Shader shadowShader)
-{
-	shadowShader.UseProgram();
-	modelMatrix = glm::translate(translateValue) * glm::rotate(rotateAngle, rotateValue) * glm::scale(scaleValue);
-	glUniformMatrix4fv(glGetUniformLocation(shadowShader.GetProgramID(), "modelMatrix"), 1, GL_FALSE, glm::value_ptr(modelMatrix));
-
-	for (GLuint i = 0; i < meshes.size(); i++)
-	{
-		meshes[i].Draw(NULL);
-	}
-}
 
 void Model::LoadModel(string path)
 {

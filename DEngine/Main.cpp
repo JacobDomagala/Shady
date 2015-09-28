@@ -37,20 +37,21 @@ int main(int , char**)
 	SkyBox sky;
 	sky.LoadCubeMap("./Models/skybox");
 	Model floor("./Models/Plane/plane.obj");    
-	floor.meshes[0].AddTexture("./Models/textures/179.png", DIFFUSE);
+	floor.meshes[0].AddTexture("./Models/textures/177.png", DIFFUSE);
 	//floor.meshes[0].textures[0].textureID = shadowMap.textureID;
-	floor.meshes[0].AddTexture("./Models/textures/179_norm.png", NORMAL);
-	floor.meshes[0].AddTexture("./Models/textures/179.png", SPECULAR);
+	floor.meshes[0].AddTexture("./Models/textures/177_norm.png", NORMAL);
+	floor.meshes[0].AddTexture("./Models/textures/177.png", SPECULAR);
 	Model nanosuit("./Models/nanosuit/nanosuit.obj");
 	nanosuit.ScaleModel(glm::vec3(0.2f, 0.2f, 0.2f));
 
 	while (!mainWindow.IsClosed())
 	{
-		//mainWindow.Clear(0.2f, 0.2f, 0.2f, 1.0f);
 		eventListener.Listen();
 		
 		sun.StartDrawingShadows(shadowShaders.GetProgramID());
+		glCullFace(GL_FRONT);
 		nanosuit.Draw(&mainWindow, camera, &sun, shadowShaders);
+		glCullFace(GL_BACK);
 		floor.Draw(&mainWindow, camera, &sun, shadowShaders);
 		sun.StopDrawingShadows();
 		

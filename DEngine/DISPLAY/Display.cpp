@@ -43,7 +43,7 @@ Display::Display(int width, int height, const std::string& title)
 	//glEnable(GL_STENCIL_TEST);
 
 	//glDepthFunc(GL_LESS);
-	glCullFace(GL_BACK);
+	//glCullFace(GL_BACK);
 	//glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 	//SDL_SetRelativeMouseMode(SDL_TRUE);
 	isClosed = false;

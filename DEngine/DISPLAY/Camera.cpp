@@ -54,6 +54,8 @@ void Camera::Update()
 	ComputeDelta();
 	if (flyMode)
 	{	
+		system("cls");
+		std::cout << position.x << "  " << position.y << "  " << position.z << "\n";
 		position += velocity * deltaTime * MOVEMENT_SPEED;
 		viewMatrix = glm::lookAt(position, position + viewDirection, upVector);
 	}
@@ -77,7 +79,6 @@ void Camera::ProcessMouseMovement(GLfloat xoffset, GLfloat yoffset, GLboolean co
 	yaw += xoffset;
 	pitch += yoffset;
 
-	// Make sure that when pitch is out of bounds, screen doesn't get flipped
 	if (constrainPitch)
 	{
 		if (pitch > 89.0f)
@@ -86,13 +87,13 @@ void Camera::ProcessMouseMovement(GLfloat xoffset, GLfloat yoffset, GLboolean co
 			pitch = -89.0f;
 	}
 
-	// Update Front, Right and Up Vectors using the updated Eular angles
+
 	glm::vec3 front;
 	viewDirection.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
 	viewDirection.y = sin(glm::radians(pitch));
 	viewDirection.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
 	viewDirection = glm::normalize(viewDirection);
-	// Also re-calculate the Right and Up vector
-	rightVector = glm::normalize(glm::cross(viewDirection, worldUp));  // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
+
+	rightVector = glm::normalize(glm::cross(viewDirection, worldUp)); 
 	upVector = glm::normalize(glm::cross(rightVector, viewDirection));
 }

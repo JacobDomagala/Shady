@@ -15,7 +15,7 @@ int main(int , char**)
 	//mainWindow.ShowCursor(false);
 	mainWindow.WrapMouse(false);
 
-	glm::vec3 lightPosition(-2.0f, 4.0f, -1.0f);
+	glm::vec3 lightPosition(-4.0f, 8.0f, -6.0f);
 	Light sun(lightPosition, glm::vec3(1.0f, 1.0f, 1.0f), DIRECTIONAL_LIGHT);
 	
 	Camera camera(lightPosition);
@@ -36,9 +36,14 @@ int main(int , char**)
 
 	SkyBox sky;
 	sky.LoadCubeMap("./Models/skybox");
+	Model box("./Models/box.obj");
+	box.meshes[0].AddTexture("./Models/textures/154.png", DIFFUSE);
+	box.meshes[0].AddTexture("./Models/textures/154_norm.png", NORMAL);
+	box.meshes[0].AddTexture("./Models/textures/154.png", SPECULAR);
+	box.TranslateModel(glm::vec3(-2.0f, 0.5f, -1.0f));
 	Model floor("./Models/Plane/plane.obj");    
 	floor.meshes[0].AddTexture("./Models/textures/177.png", DIFFUSE);
-	//floor.meshes[0].textures[0].textureID = shadowMap.textureID;
+	//floor.meshes[0].textures[0].textureID = sun.GetShadowMapID();
 	floor.meshes[0].AddTexture("./Models/textures/177_norm.png", NORMAL);
 	floor.meshes[0].AddTexture("./Models/textures/177.png", SPECULAR);
 	Model nanosuit("./Models/nanosuit/nanosuit.obj");
@@ -48,16 +53,18 @@ int main(int , char**)
 	{
 		eventListener.Listen();
 		
+		
 		sun.StartDrawingShadows(shadowShaders.GetProgramID());
 		glCullFace(GL_FRONT);
 		nanosuit.Draw(&mainWindow, camera, &sun, shadowShaders);
-		glCullFace(GL_BACK);
+		box.Draw(&mainWindow, camera, &sun, shadowShaders);
 		floor.Draw(&mainWindow, camera, &sun, shadowShaders);
 		sun.StopDrawingShadows();
-		
+		glCullFace(GL_BACK);
 		glViewport(0, 0, width, height);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
+	
 		simpleProgram.UseProgram();
 		glUniformMatrix4fv(glGetUniformLocation(simpleProgram.GetProgramID(), "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(sun.GetLightMatrix()));
 		
@@ -68,7 +75,8 @@ int main(int , char**)
 			
 		
 		nanosuit.Draw(&mainWindow, camera,&sun, simpleProgram);
-		floor.Draw(&mainWindow, camera, &sun,simpleProgram);
+		floor.Draw(&mainWindow, camera, &sun, simpleProgram);
+		box.Draw(&mainWindow, camera, &sun, simpleProgram);
 		sky.Draw(&mainWindow, camera, skyBoxShaders);
 		camera.Update();
 		mainWindow.Update();

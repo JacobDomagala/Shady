@@ -14,43 +14,20 @@ out vec4 outputColor;
 uniform sampler2D diffuse_map;
 uniform sampler2D specular_map;
 uniform sampler2D normal_map;
-uniform sampler2D depth_map;
+uniform sampler2DShadow depth_map;
 
 float ShadowCalculation(vec4 fragment, vec3 normal)
 {
-	vec3 projCoords = fragment.xyz / fragment.w;
-	projCoords = projCoords.xyz * 0.5f + 0.5f;
+	float shadow = 0.0f;
 
-	
-	float closestDepth = texture(depth_map, projCoords.xy).r; 
-	
-    // Get depth of current fragment from light's perspective
-    float currentDepth = projCoords.z;
-	float bias = max(0.05f * (1.0 - dot(normal, fs_in.fLightPosition)), 0.005f);
-/*
-    // Check whether current frag pos is in shadow
-	
-    float shadow = 0.0;
-	vec2 texelSize = 1.0 / textureSize(depth_map, 0);
-	for(int x = -1; x <= 1; ++x)
+	for(int i = -1; i < 2; i++)
 	{
-		for(int y = -1; y <= 1; ++y)
+		for(int j = -1; j < 2; j++)
 		{
-			float pcfDepth = texture(depth_map, projCoords.xy + vec2(x, y) * texelSize).r; 
-			shadow += currentDepth - bias > pcfDepth ? 0.0 : 1.0;        
-		}    
+			shadow += textureProjOffset(depth_map, fragment, ivec2(i,j));
+		}
 	}
-	shadow /= 9.0;
-*/
-	float shadow;
-	if(currentDepth - bias > closestDepth)
-	shadow = 0.0f;
-	else 
-	shadow = 1.0f;
-	if(projCoords.z > 1.0)
-        shadow = 1.0;
-    
-    
+	shadow /= 9.0f;
     return shadow;
 }
 

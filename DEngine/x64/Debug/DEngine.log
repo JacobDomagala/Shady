@@ -1,9 +1,8 @@
-﻿Build started 01.10.2015 17:12:36.
+﻿Build started 10.10.2015 17:10:19.
      1>Project "D:\Studia\Projekty\C++\DEngine\DEngine\DEngine.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /I"D:\Studia\Projekty\C++\Resource\Assimp\assimp-3.1.1\include\assimp" /I"D:\Studia\Projekty\C++\Resource\Simple OpenGL Image Library\src" /ID:\Studia\Projekty\C++\Resource\GLM\glm\glm /I"D:\Studia\Projekty\C++\Resource\GLEW\glew-1.12.0\include\GL" /ID:\Studia\Projekty\C++\Resource\SDL\include /ZI /nologo /W3 /WX- /Od /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"x64\Debug\\" /Fd"x64\Debug\vc140.pdb" /Gd /TP /errorReport:prompt MODEL\Texture.cpp
-         Texture.cpp
-     1>d:\studia\projekty\c++\dengine\dengine\model\texture.cpp(103): warning C4244: 'argument': conversion from 'GLfloat' to 'GLint', possible loss of data
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /I"D:\Studia\Projekty\C++\Resource\Assimp\assimp-3.1.1\include\assimp" /I"D:\Studia\Projekty\C++\Resource\Simple OpenGL Image Library\src" /ID:\Studia\Projekty\C++\Resource\GLM\glm\glm /I"D:\Studia\Projekty\C++\Resource\GLEW\glew-1.12.0\include\GL" /ID:\Studia\Projekty\C++\Resource\SDL\include /ZI /nologo /W3 /WX- /Od /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"x64\Debug\\" /Fd"x64\Debug\vc140.pdb" /Gd /TP /errorReport:prompt Main.cpp
+         Main.cpp
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"D:\Studia\Projekty\C++\DEngine\x64\Debug\DEngine.exe" /INCREMENTAL /NOLOGO /LIBPATH:"D:\Studia\Projekty\C++\Resource\Assimp\assimp-3.1.1\lib" /LIBPATH:D:\Studia\Projekty\C++\Resource\SDL\lib /LIBPATH:"D:\Studia\Projekty\C++\Resource\Simple OpenGL Image Library\lib" /LIBPATH:"D:\Studia\Projekty\C++\Resource\GLEW\glew-1.12.0\lib\Release\x64" assimpd.lib SOIL.lib opengl32.lib glew32s.lib glew32.lib SDL2.lib SDL2main.lib SDL2test.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /Debug /PDB:"D:\Studia\Projekty\C++\DEngine\x64\Debug\DEngine.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\Studia\Projekty\C++\DEngine\x64\Debug\DEngine.lib" /MACHINE:X64 x64\Debug\Clock.obj
          x64\Debug\Display.obj
@@ -21,4 +20,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:01.11
+Time Elapsed 00:00:01.71

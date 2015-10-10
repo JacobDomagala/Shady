@@ -17,7 +17,7 @@ int main(int , char**)
 
 	glm::vec3 lightPosition(-4.0f, 8.0f, -6.0f);
 	Light sun(lightPosition, glm::vec3(1.0f, 1.0f, 1.0f), DIRECTIONAL_LIGHT);
-	
+
 	Camera camera(lightPosition);
 	camera.SetCameraMode(FLY);
 
@@ -37,48 +37,54 @@ int main(int , char**)
 	SkyBox sky;
 	sky.LoadCubeMap("./Models/skybox");
 	Model box("./Models/box.obj");
-	box.meshes[0].AddTexture("./Models/textures/154.png", DIFFUSE);
-	box.meshes[0].AddTexture("./Models/textures/154_norm.png", NORMAL);
-	box.meshes[0].AddTexture("./Models/textures/154.png", SPECULAR);
+	box.meshes[0].AddTexture("./Models/textures/154.png", DIFFUSE_MAP);
+	box.meshes[0].AddTexture("./Models/textures/154_norm.png", NORMAL_MAP);
+	box.meshes[0].AddTexture("./Models/textures/154.png", SPECULAR_MAP);
 	box.TranslateModel(glm::vec3(-2.0f, 0.5f, -1.0f));
 	Model floor("./Models/Plane/plane.obj");    
-	floor.meshes[0].AddTexture("./Models/textures/177.png", DIFFUSE);
+	floor.meshes[0].AddTexture("./Models/textures/177.png", DIFFUSE_MAP);
 	//floor.meshes[0].textures[0].textureID = sun.GetShadowMapID();
-	floor.meshes[0].AddTexture("./Models/textures/177_norm.png", NORMAL);
-	floor.meshes[0].AddTexture("./Models/textures/177.png", SPECULAR);
+	floor.meshes[0].AddTexture("./Models/textures/177_norm.png", NORMAL_MAP);
+	floor.meshes[0].AddTexture("./Models/textures/177.png", SPECULAR_MAP);
 	Model nanosuit("./Models/nanosuit/nanosuit.obj");
 	nanosuit.ScaleModel(glm::vec3(0.2f, 0.2f, 0.2f));
+
+	Clock clock;
 
 	while (!mainWindow.IsClosed())
 	{
 		eventListener.Listen();
+		clock.NewFrame();
 		
-		
-		sun.StartDrawingShadows(shadowShaders.GetProgramID());
+		sun.StartDrawingShadows(shadowShaders.programID);
+	
 		glCullFace(GL_FRONT);
 		nanosuit.Draw(&mainWindow, camera, &sun, shadowShaders);
 		box.Draw(&mainWindow, camera, &sun, shadowShaders);
 		floor.Draw(&mainWindow, camera, &sun, shadowShaders);
+
 		sun.StopDrawingShadows();
+		
 		glCullFace(GL_BACK);
 		glViewport(0, 0, width, height);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 	
 		simpleProgram.UseProgram();
-		glUniformMatrix4fv(glGetUniformLocation(simpleProgram.GetProgramID(), "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(sun.GetLightMatrix()));
-		
+		glUniformMatrix4fv(glGetUniformLocation(simpleProgram.programID, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(sun.shadowMatrix));
+		glUniform1f(glGetUniformLocation(simpleProgram.programID, "time"), clock.time);
 		
 		glActiveTexture(GL_TEXTURE15);
-		glBindTexture(GL_TEXTURE_2D, sun.GetShadowMapID());
-		glUniform1i(glGetUniformLocation(simpleProgram.GetProgramID(), "depth_map"), 15);
+		glBindTexture(GL_TEXTURE_2D, sun.shadowTexture.textureID);
+		glUniform1i(glGetUniformLocation(simpleProgram.programID, "depth_map"), 15);
 			
 		
 		nanosuit.Draw(&mainWindow, camera,&sun, simpleProgram);
 		floor.Draw(&mainWindow, camera, &sun, simpleProgram);
 		box.Draw(&mainWindow, camera, &sun, simpleProgram);
 		sky.Draw(&mainWindow, camera, skyBoxShaders);
-		camera.Update();
+
+		camera.Update(clock.deltaTime);
 		mainWindow.Update();
 		
 	}

@@ -71,12 +71,3 @@ Display::~Display()
 	SDL_Quit();
 }
 
-glm::vec2 Display::GetWindowSize()
-{
-	int tmpHeight;
-	int tmpWidth;
-	
-	SDL_GetWindowSize(window, &tmpWidth, &tmpHeight);
-	
-	return glm::vec2(tmpWidth, tmpHeight);
-}

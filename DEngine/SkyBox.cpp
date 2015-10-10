@@ -92,15 +92,15 @@ void SkyBox::Draw(Display* window, Camera camera, Shader shader)
 {
 	shader.UseProgram();
 	glDepthFunc(GL_LEQUAL);
-	glm::mat4 view = glm::mat4(glm::mat3(camera.GetWorldToViewMatrix()));
-	glm::mat4 projection = window->GetProjection();
-	glUniformMatrix4fv(glGetUniformLocation(shader.m_Program, "view"),
+	glm::mat4 view = glm::mat4(glm::mat3(camera.viewMatrix));
+	glm::mat4 projection = window->projectionMatrix;
+	glUniformMatrix4fv(glGetUniformLocation(shader.programID, "view"),
 												1, GL_FALSE, glm::value_ptr(view));
-	glUniformMatrix4fv(glGetUniformLocation(shader.m_Program, "projection"),
+	glUniformMatrix4fv(glGetUniformLocation(shader.programID, "projection"),
 												1, GL_FALSE, glm::value_ptr(projection));
 	glBindVertexArray(skyboxVAO);
 	glActiveTexture(GL_TEXTURE0);
-	glUniform1i(glGetUniformLocation(shader.GetProgramID(), "skybox"), 0);
+	glUniform1i(glGetUniformLocation(shader.programID, "skybox"), 0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindVertexArray(0);

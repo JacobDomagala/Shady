@@ -2,9 +2,9 @@
 
 EventListener::EventListener(Display* windowHandle, Camera* camera, Shader* shaders):
 	camera(camera),
-	windowSize(windowHandle->GetWindowSize().x, windowHandle->GetWindowSize().y),
+	windowSize(windowHandle->width, windowHandle->height),
 	windowHandle(windowHandle),
-	oldMousePosition(windowHandle->GetWindowSize().x / 2, windowHandle->GetWindowSize().y / 2),
+	oldMousePosition(windowHandle->width / 2, windowHandle->height / 2),
 	shaders(shaders)
 {
 
@@ -107,21 +107,21 @@ void EventListener::KeyEvent()
 
 void EventListener::SDLEvent()
 {
-	while (SDL_PollEvent(&this->event))
+	while (SDL_PollEvent(&event))
 	{
 	
-		if (this->event.type == SDL_QUIT)
+		if (event.type == SDL_QUIT)
 		{
 			windowHandle->isClosed = true;
 		}
-		if (this->event.type == SDL_WINDOWEVENT)
+		if (event.type == SDL_WINDOWEVENT)
 		{
-			switch (this->event.window.event)
+			switch (event.window.event)
 			{
 				case SDL_WINDOWEVENT_RESIZED:
 				{
-					windowHandle->width = this->event.window.data1;
-					windowHandle->height = this->event.window.data2;
+					windowHandle->width = event.window.data1;
+					windowHandle->height = event.window.data2;
 					windowHandle->projectionMatrix = glm::perspective(windowHandle->fov, windowHandle->aspectRatio, windowHandle->nClip, windowHandle->fClip);
 					glViewport(0, 0, windowHandle->width, windowHandle->height);
 					break;
@@ -173,13 +173,10 @@ void EventListener::MouseEvent()
 
 	float mouseDeltaLenght = glm::length(mouseDelta);
 	if (mouseDeltaLenght > 100.0f)
-		{
-			oldMousePosition = mousePosition;
-			return;
-		}
-
-	
-
+	{
+		oldMousePosition = mousePosition;
+		return;
+	}
 	camera->ProcessMouseMovement(mouseDelta.x, mouseDelta.y);
 	oldMousePosition = mousePosition;
 }

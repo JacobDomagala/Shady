@@ -22,9 +22,7 @@ struct Vertex {
 	vec3 tangent;
 };
 
-class Mesh {
-public:
-	
+struct Mesh {
 	vector<Vertex> vertices;
 	vector<GLuint> indices;
 	vector<Texture> textures;
@@ -36,13 +34,10 @@ public:
 
 	void Draw(GLuint programID);
 	void Delete();
-
-private:
 	
 	GLuint VAO, VBO, EBO;
 
 	void SetupMesh();
-
 };
 
 

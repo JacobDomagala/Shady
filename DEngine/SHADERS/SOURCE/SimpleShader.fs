@@ -16,6 +16,8 @@ uniform sampler2D specular_map;
 uniform sampler2D normal_map;
 uniform sampler2DShadow depth_map;
 
+uniform float time;
+
 float ShadowCalculation(vec4 fragment, vec3 normal)
 {
 	float shadow = 0.0f;
@@ -79,6 +81,6 @@ void main()
 	float shadow = ShadowCalculation(fs_in.fLightSpacePosition, fNormal);       
     vec3 lighting = (ambientLight + (shadow) * (diffuseLight + specularLight));
 	 
-	outputColor = vec4(lighting, 1.0);
+	outputColor = vec4(lighting, 1.0f);
 	
 }

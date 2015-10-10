@@ -12,15 +12,13 @@ using glm::vec2;
 using glm::vec3;
 using glm::mat4;
 
-class Display;
+struct Display;
 enum cameraMode{
 	FLY,
 	STATIC
 };
-class Camera{
-	friend class EventListener;
-protected:
-	Clock clock;
+struct Camera{
+	friend struct EventListener;
 
 	vec3 upVector;
 	vec3 rightVector;
@@ -37,33 +35,17 @@ protected:
 	vec3 position;
 	vec3 velocity;
 	
-	float deltaTime;
-
-	
 	float MOVEMENT_SPEED;
 	float speedValue;
 	bool flyMode;
 	void Reset();
-public:
 
-	
 	Camera(vec3 position);
+	void SetCamera(vec3 cameraPosition, vec3 viewDirection);
 	void ProcessMouseMovement(GLfloat xoffset, GLfloat yoffset, GLboolean constrainPitch = true);
-
-	mat4 GetWorldToViewMatrix() const;
-	vec3 GetPosition() const;
 	
-	
-	void ComputeDelta();
-	float GetDelta();
-	float GetTime() { return clock.GetTime(); }
-
-
 	void SetCameraMode(int mode);
-	void Update();
-
-
-	virtual void SetCamera(vec3 cameraPosition, vec3 viewDirection);
+	void Update(float deltaTime);
 };
 
 #endif

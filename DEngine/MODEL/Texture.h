@@ -14,33 +14,32 @@ enum TextureQuality{
 };
 
 enum textureType {
-	DIFFUSE,
-	SPECULAR,
-	NORMAL
+	DIFFUSE_MAP,
+	SPECULAR_MAP,
+	NORMAL_MAP,
+	SHADOW_MAP
 };
 
-class Texture
+struct Texture
 {
-private:
-	
+
+	textureType type;
 	TextureQuality quality;
 	unsigned char* data;
 	int width, height;
-	char* samplerName;
+	const char* samplerName;
 
 	void SetParameter(unsigned int uiSampler, int parameter, int value);
 	
-public:
-	
+
 	GLuint samplerLocation;
 	GLuint textureID;
 	GLuint samplerID;
 	GLuint frameBufferID;
 
-	std::string type;
 	aiString path;
 	
-	void LoadTexture(const char* filePath, char* textureType, std::string directory = "\0");
+	void LoadTexture(const char* filePath, const char* samplerName, std::string directory = "\0");
 	void CreateDepthBuffer(int width, int height);
 
 	void Use(GLuint programID, unsigned short unit);

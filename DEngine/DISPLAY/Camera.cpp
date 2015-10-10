@@ -13,26 +13,9 @@ Camera::Camera(vec3 position) :
 	pitch(0.0f),
 	mouseSensitivity(0.55f)
 {
-	clock.Initialize();
-	deltaTime = clock.GetDelta();
 	viewMatrix = glm::lookAt(position, position + viewDirection, upVector);
 }
 
-vec3 Camera::GetPosition() const
-{
-	return position;
-}
-
-mat4 Camera::GetWorldToViewMatrix() const
-{
-	return viewMatrix;
-}
-
-void Camera::ComputeDelta()
-{
-	clock.NewFrame();
-	deltaTime = clock.GetDelta();
-}
 
 void Camera::Reset()
 {
@@ -49,9 +32,8 @@ void Camera::SetCameraMode(int mode)
 		flyMode = false;
 }
 
-void Camera::Update()
+void Camera::Update(float deltaTime)
 {
-	ComputeDelta();
 	if (flyMode)
 	{	
 		system("cls");
@@ -59,11 +41,6 @@ void Camera::Update()
 		position += velocity * deltaTime * MOVEMENT_SPEED;
 		viewMatrix = glm::lookAt(position, position + viewDirection, upVector);
 	}
-}
-
-float Camera::GetDelta()
-{
-	return deltaTime;
 }
 
 void Camera::SetCamera(vec3 cameraPosition, vec3 viewDirection)

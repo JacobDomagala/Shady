@@ -25,30 +25,29 @@ rotateAngle(0.0)
 	LoadModel(path);
 }
 
-void Model::Draw(Display* window, Camera camera, Light* lights, Shader normalShaders)
+void Model::Draw(Display* window, Camera camera, Light* lights, Shader shader)
 {
-	normalShaders.UseProgram();
+	shader.UseProgram();
 	
-	glm::vec3 lightPos = lights->GetLightPosition();
-	glm::vec3 camPos = camera.GetPosition();
+	glm::vec3 lightPos = lights->position;
+	glm::vec3 camPos = camera.position;
 
-	projectionMatrix = window->GetProjection();
-	viewMatrix = camera.GetWorldToViewMatrix();
+	projectionMatrix = window->projectionMatrix;
+	viewMatrix = camera.viewMatrix;
 	modelMatrix = glm::translate(translateValue) * glm::rotate(rotateAngle, rotateValue) * glm::scale(scaleValue);
 	
-	glUniformMatrix4fv(glGetUniformLocation(normalShaders.GetProgramID(), "projectionMatrix"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-	glUniformMatrix4fv(glGetUniformLocation(normalShaders.GetProgramID(), "viewMatrix"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
-	glUniformMatrix4fv(glGetUniformLocation(normalShaders.GetProgramID(), "modelMatrix"), 1, GL_FALSE, glm::value_ptr(modelMatrix));
-	glUniform3fv(glGetUniformLocation(normalShaders.GetProgramID(), "vLightPosition"),  1, &lightPos[0]);
-	glUniform3fv(glGetUniformLocation(normalShaders.GetProgramID(), "vCameraPosition"), 1, &camPos[0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader.programID, "projectionMatrix"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+	glUniformMatrix4fv(glGetUniformLocation(shader.programID, "viewMatrix"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
+	glUniformMatrix4fv(glGetUniformLocation(shader.programID, "modelMatrix"), 1, GL_FALSE, glm::value_ptr(modelMatrix));
+	glUniform3fv(glGetUniformLocation(shader.programID, "vLightPosition"),  1, &lightPos[0]);
+	glUniform3fv(glGetUniformLocation(shader.programID, "vCameraPosition"), 1, &camPos[0]);
 	
 	
 	for (GLuint i = 0; i < meshes.size(); i++) 
 	{
-		meshes[i].Draw(normalShaders.GetProgramID());
+		meshes[i].Draw(shader.programID);
 	}
 }
-
 
 void Model::LoadModel(string path)
 {
@@ -185,7 +184,6 @@ vector<Texture> Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type,
 			// If texture hasn't been loaded already, load it
 			Texture texture;
 			texture.LoadTexture(str.C_Str(), typeName, directory);
-			texture.type = typeName;
 			texture.path = str;
 			textures.push_back(texture);
 			textures_loaded.push_back(texture);  
@@ -193,3 +191,39 @@ vector<Texture> Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type,
 	}
 	return textures;
 }
+
+void Model::CreateCube(int size)
+{
+	Vertex verticies[] = 
+	{
+		vec3(0.0f, 0.0f, 0.0f), vec3(),vec2(),vec3(),
+		vec3(),vec3(),vec2(),vec3(),
+		vec3(),vec3(),vec2(),vec3(),
+		vec3(),vec3(),vec2(),vec3(),
+
+		vec3(),vec3(),vec2(),vec3(),
+		vec3(),vec3(),vec2(),vec3(),
+		vec3(),vec3(),vec2(),vec3(),
+		vec3(),vec3(),vec2(),vec3(),
+
+		vec3(),vec3(),vec2(),vec3(),
+		vec3(),vec3(),vec2(),vec3(),
+		vec3(),vec3(),vec2(),vec3(),
+		vec3(),vec3(),vec2(),vec3(),
+
+		vec3(),vec3(),vec2(),vec3(),
+		vec3(),vec3(),vec2(),vec3(),
+		vec3(),vec3(),vec2(),vec3(),
+		vec3(),vec3(),vec2(),vec3(),
+
+		vec3(),vec3(),vec2(),vec3(),
+		vec3(),vec3(),vec2(),vec3(),
+		vec3(),vec3(),vec2(),vec3(),
+		vec3(),vec3(),vec2(),vec3(),
+
+		vec3(),vec3(),vec2(),vec3(),
+		vec3(),vec3(),vec2(),vec3(),
+		vec3(),vec3(),vec2(),vec3(),
+		vec3(),vec3(),vec2(),vec3()
+	};	
+}		

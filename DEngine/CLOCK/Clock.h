@@ -5,27 +5,17 @@
 #include<iostream>
 
 
-class Clock
+struct Clock
 {
-private:
+	Clock();
 	LARGE_INTEGER clockFreq;
 	LARGE_INTEGER ticksLastFrame; //time elapsed durning last frame
 	LARGE_INTEGER deltaTicks;
 	float deltaTime;
 	float time;
-
-public:
-
-	
-
-	
-	int Initialize();
 	
 	void NewFrame();
-	float GetDelta() const;
 	void Wait(int ms);
-	float GetFps();
-	float GetTime() { return time; }
 };
 
 #endif

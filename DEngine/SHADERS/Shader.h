@@ -7,17 +7,12 @@
 #include<glew.h>
 #include<glm.hpp>
 
-class Shader{
-public:
-	GLuint m_Program;
-	void LoadShaders(char* vertexFile, char* fragmentFile);
-	~Shader();
+struct Shader{
 
-	GLuint GetProgramID();
+	GLuint programID;;
+	void LoadShaders(char* vertexFile, char* fragmentFile);
+
 	void UseProgram();
-private:
-	
-	
 
 	bool CheckStatus(GLuint, PFNGLGETSHADERIVPROC, PFNGLGETSHADERINFOLOGPROC, GLenum);
 	bool CheckShaderStatus(GLuint);

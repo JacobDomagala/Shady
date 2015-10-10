@@ -7,8 +7,7 @@
 #include<SOIL.h>
 #include <gtc/type_ptr.hpp>
 
-class SkyBox{
-public:
+struct SkyBox{
 	std::vector<std::string> faces;
 	GLuint textureID;
 	Shader skyBoxShaders;

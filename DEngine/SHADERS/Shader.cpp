@@ -21,14 +21,14 @@ void Shader::LoadShaders(char* vertexFile, char* fragmentFile)
 		system("pause");
 	}
 
-	m_Program = glCreateProgram();
+	programID = glCreateProgram();
 
-	glAttachShader(m_Program, vertexShader);
-	glAttachShader(m_Program, fragmentShader);
+	glAttachShader(programID, vertexShader);
+	glAttachShader(programID, fragmentShader);
 
-	glLinkProgram(m_Program);
+	glLinkProgram(programID);
 
-	if (!CheckProgramStatus(m_Program))
+	if (!CheckProgramStatus(programID))
 	{
 		return;
 	}
@@ -92,17 +92,8 @@ bool Shader::CheckStatus(GLuint object, PFNGLGETSHADERIVPROC objectPropertyGette
 	return true;
 }
 
-Shader::~Shader()
-{
-	
-}
-
-GLuint Shader::GetProgramID()
-{
-	return m_Program;
-}
 void Shader::UseProgram()
 {
 	glUseProgram(0);
-	glUseProgram(m_Program);
+	glUseProgram(programID);
 }

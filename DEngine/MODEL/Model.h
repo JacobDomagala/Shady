@@ -29,19 +29,17 @@ using std::vector;
 using glm::mat4;
 using glm::vec3;
 
-class Model{
-public:
-	
+struct Model{
+//Model View Projection matrices
 	mat4 modelMatrix;
 	mat4 viewMatrix;
 	mat4 projectionMatrix;
-	
 
+//Model matrix data
 	vec3 translateValue;
-	vec3 rotateValue;
 	vec3 scaleValue;
+	vec3 rotateValue;
 	float rotateAngle;
-
 
 
 	Model(GLchar* path);
@@ -49,27 +47,23 @@ public:
 	void TranslateModel(vec3 translate);
 	void RotateModel(vec3 rotate, float angle);
 
-	void Draw(Display* window, Camera camera, Light* lights, Shader normalShader);
+	void Draw(Display* window, Camera camera, Light* lights, Shader shader);
 
 	GLuint modelMatrixUniformLocation;
 
 	GLuint programID;
 	vector<Mesh> meshes;
 	string directory;
-	vector<Texture> textures_loaded;	// Stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
-
-										/*  Functions   */
-										// Loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
+	vector<Texture> textures_loaded;	
+										
 	void LoadModel(string path);
-	// Processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
+	
 	void ProcessNode(aiNode* node, const aiScene* scene);
-
 	Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene);
 
-
-	// Checks all material textures of a given type and loads the textures if they're not loaded yet.
-	// The required info is returned as a Texture struct.
 	vector<Texture> LoadMaterialTextures(aiMaterial* mat, aiTextureType type, char* typeName);
+
+	void CreateCube(int size);
 };
 
 

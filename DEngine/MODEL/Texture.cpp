@@ -1,9 +1,9 @@
 #include "Texture.h"
 
 
-void Texture::LoadTexture(const char* filePath, char* textureType, std::string directory)
+void Texture::LoadTexture(const char* filePath, const char* samplerName, std::string directory)
 {
-	samplerName = textureType;
+	this->samplerName = samplerName;
 	if (!directory.empty())
 	{
 		std::string filename = std::string(filePath);

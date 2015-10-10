@@ -5,9 +5,9 @@
 #include"DISPLAY\Display.h"
 #include"DISPLAY\Camera.h"
 
-class EventListener{
+struct EventListener{
 
-private:
+
 
 	SDL_Event event;
 	Display* windowHandle;
@@ -24,7 +24,7 @@ private:
 	void MouseEvent();
 	void SDLEvent();
 	void IsOtherKeyPressed(int vKey);
-public:
+
 	EventListener(Display* windowHandle, Camera* camera, Shader* shaders);
 	void Listen();
 	

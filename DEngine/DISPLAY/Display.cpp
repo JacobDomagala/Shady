@@ -48,10 +48,6 @@ Display::Display(int width, int height, const std::string& title)
 	//SDL_SetRelativeMouseMode(SDL_TRUE);
 	isClosed = false;
 }
-bool Display::IsClosed()
-{
-	return isClosed;
-}
 
 void Display::Update()
 {

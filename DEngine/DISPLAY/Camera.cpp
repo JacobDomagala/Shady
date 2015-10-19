@@ -36,8 +36,8 @@ void Camera::Update(float deltaTime)
 {
 	if (flyMode)
 	{	
-		system("cls");
-		std::cout << position.x << "  " << position.y << "  " << position.z << "\n";
+	/*	system("cls");
+		std::cout << position.x << "  " << position.y << "  " << position.z << "\n";*/
 		position += velocity * deltaTime * MOVEMENT_SPEED;
 		viewMatrix = glm::lookAt(position, position + viewDirection, upVector);
 	}
@@ -63,7 +63,6 @@ void Camera::ProcessMouseMovement(GLfloat xoffset, GLfloat yoffset, GLboolean co
 		if (pitch < -89.0f)
 			pitch = -89.0f;
 	}
-
 
 	glm::vec3 front;
 	viewDirection.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));

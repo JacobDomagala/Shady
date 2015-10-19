@@ -8,7 +8,6 @@
 #include <map>
 #include <vector>
 
-
 #include <glew.h> 
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
@@ -41,8 +40,8 @@ struct Model{
 	vec3 rotateValue;
 	float rotateAngle;
 
-
-	Model(GLchar* path);
+	Model();
+	void LoadModelFromFile(GLchar* path);
 	void ScaleModel(vec3 scale);
 	void TranslateModel(vec3 translate);
 	void RotateModel(vec3 rotate, float angle);

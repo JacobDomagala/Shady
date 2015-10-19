@@ -8,7 +8,6 @@
 #include<glm.hpp>
 
 struct Shader{
-
 	GLuint programID;;
 	void LoadShaders(char* vertexFile, char* fragmentFile);
 
@@ -19,6 +18,7 @@ struct Shader{
 	bool CheckProgramStatus(GLuint);
 	
 	char* ReadFile(char* fileName);
+	void AddTess();
 };
 
 #endif

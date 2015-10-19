@@ -1,9 +1,28 @@
 #include "Shader.h"
+void Shader::AddTess()
+{
+	const char* shaderSource;
+	GLuint tessControlShader = glCreateShader(GL_TESS_CONTROL_SHADER);
+	GLuint tessEvalShader = glCreateShader(GL_TESS_EVALUATION_SHADER);
 
+	shaderSource = ReadFile("./box.tcs");
+	glShaderSource(tessControlShader, 1, &shaderSource, 0);
+
+	shaderSource = ReadFile("./box.tes");
+	glShaderSource(tessEvalShader, 1, &shaderSource, 0);
+
+	glCompileShader(tessControlShader);
+	glCompileShader(tessEvalShader);
+
+	glAttachShader(programID, tessControlShader);
+	glAttachShader(programID, tessEvalShader);
+	glLinkProgram(programID);
+}
 void Shader::LoadShaders(char* vertexFile, char* fragmentFile)
 {
 	GLuint vertexShader=glCreateShader(GL_VERTEX_SHADER);
 	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	
 
 	const char* shaderSource;
 	shaderSource = ReadFile(vertexFile);
@@ -12,7 +31,7 @@ void Shader::LoadShaders(char* vertexFile, char* fragmentFile)
 	
 	shaderSource = ReadFile(fragmentFile);
 	glShaderSource(fragmentShader, 1, &shaderSource, 0);
-
+	
 	glCompileShader(vertexShader);
 	glCompileShader(fragmentShader);
 

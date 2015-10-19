@@ -24,6 +24,7 @@ int main(int , char**)
 	Shader simpleProgram;
 	simpleProgram.LoadShaders("./SHADERS/SOURCE/SimpleShader.vs",
 		"./SHADERS/SOURCE/SimpleShader.fs");
+
 	Shader skyBoxShaders;
 	skyBoxShaders.LoadShaders("./SHADERS/SOURCE/skyBox.vs",
 		"./SHADERS/SOURCE/skyBox.fs");
@@ -36,33 +37,36 @@ int main(int , char**)
 
 	SkyBox sky;
 	sky.LoadCubeMap("./Models/skybox");
-	Model box("./Models/box.obj");
-	box.meshes[0].AddTexture("./Models/textures/154.png", DIFFUSE_MAP);
-	box.meshes[0].AddTexture("./Models/textures/154_norm.png", NORMAL_MAP);
-	box.meshes[0].AddTexture("./Models/textures/154.png", SPECULAR_MAP);
-	box.TranslateModel(glm::vec3(-2.0f, 0.5f, -1.0f));
-	Model floor("./Models/Plane/plane.obj");    
+	Model box;
+
+	box.TranslateModel(glm::vec3(3.0f, 2.0f, 0.0f));
+	box.CreateCube(2);
+	
+	Model floor;
+	floor.LoadModelFromFile("./Models/Plane/plane.obj");
 	floor.meshes[0].AddTexture("./Models/textures/177.png", DIFFUSE_MAP);
 	//floor.meshes[0].textures[0].textureID = sun.GetShadowMapID();
 	floor.meshes[0].AddTexture("./Models/textures/177_norm.png", NORMAL_MAP);
 	floor.meshes[0].AddTexture("./Models/textures/177.png", SPECULAR_MAP);
-	Model nanosuit("./Models/nanosuit/nanosuit.obj");
-	nanosuit.ScaleModel(glm::vec3(0.2f, 0.2f, 0.2f));
+	//Model nanosuit;
+	//nanosuit.LoadModelFromFile("./Models/nanosuit/nanosuit.obj");
+	//nanosuit.ScaleModel(glm::vec3(0.2f, 0.2f, 0.2f));
 
 	Clock clock;
+	
 
-	while (!mainWindow.IsClosed())
+	while (!mainWindow.isClosed)
 	{
 		eventListener.Listen();
 		clock.NewFrame();
 		
 		sun.StartDrawingShadows(shadowShaders.programID);
-	
+		
 		glCullFace(GL_FRONT);
-		nanosuit.Draw(&mainWindow, camera, &sun, shadowShaders);
+		//nanosuit.Draw(&mainWindow, camera, &sun, shadowShaders);
 		box.Draw(&mainWindow, camera, &sun, shadowShaders);
 		floor.Draw(&mainWindow, camera, &sun, shadowShaders);
-
+		
 		sun.StopDrawingShadows();
 		
 		glCullFace(GL_BACK);
@@ -79,7 +83,7 @@ int main(int , char**)
 		glUniform1i(glGetUniformLocation(simpleProgram.programID, "depth_map"), 15);
 			
 		
-		nanosuit.Draw(&mainWindow, camera,&sun, simpleProgram);
+		//nanosuit.Draw(&mainWindow, camera,&sun, simpleProgram);
 		floor.Draw(&mainWindow, camera, &sun, simpleProgram);
 		box.Draw(&mainWindow, camera, &sun, simpleProgram);
 		sky.Draw(&mainWindow, camera, skyBoxShaders);

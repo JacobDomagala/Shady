@@ -1,5 +1,12 @@
 #include"Model.h"
+Model::Model():
+translateValue(0.0, 0.0, 0.0),
+rotateValue(1.0, 1.0, 1.0),
+scaleValue(1.0, 1.0, 1.0),
+rotateAngle(0.0)
+{
 
+}
 void Model::ScaleModel(vec3 scale)
 {
 	scaleValue = scale;
@@ -16,11 +23,7 @@ void Model::RotateModel(vec3 rotate, float angle)
 	rotateValue = rotate;
 }
 
-Model::Model(GLchar* path):
-translateValue(0.0, 0.0, 0.0),
-rotateValue(1.0, 1.0, 1.0),
-scaleValue(1.0, 1.0, 1.0),
-rotateAngle(0.0)
+void Model::LoadModelFromFile(GLchar* path)
 {
 	LoadModel(path);
 }
@@ -194,36 +197,65 @@ vector<Texture> Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type,
 
 void Model::CreateCube(int size)
 {
+	Mesh cube(NULL, NULL, 0);
+
 	Vertex verticies[] = 
 	{
-		vec3(0.0f, 0.0f, 0.0f), vec3(),vec2(),vec3(),
-		vec3(),vec3(),vec2(),vec3(),
-		vec3(),vec3(),vec2(),vec3(),
-		vec3(),vec3(),vec2(),vec3(),
-
-		vec3(),vec3(),vec2(),vec3(),
-		vec3(),vec3(),vec2(),vec3(),
-		vec3(),vec3(),vec2(),vec3(),
-		vec3(),vec3(),vec2(),vec3(),
-
-		vec3(),vec3(),vec2(),vec3(),
-		vec3(),vec3(),vec2(),vec3(),
-		vec3(),vec3(),vec2(),vec3(),
-		vec3(),vec3(),vec2(),vec3(),
-
-		vec3(),vec3(),vec2(),vec3(),
-		vec3(),vec3(),vec2(),vec3(),
-		vec3(),vec3(),vec2(),vec3(),
-		vec3(),vec3(),vec2(),vec3(),
-
-		vec3(),vec3(),vec2(),vec3(),
-		vec3(),vec3(),vec2(),vec3(),
-		vec3(),vec3(),vec2(),vec3(),
-		vec3(),vec3(),vec2(),vec3(),
-
-		vec3(),vec3(),vec2(),vec3(),
-		vec3(),vec3(),vec2(),vec3(),
-		vec3(),vec3(),vec2(),vec3(),
-		vec3(),vec3(),vec2(),vec3()
+		vec3(0.0f, 0.0f, 0.0f),  vec3(0.0f, 0.0f, -1.0f), vec2(1.0f, 1.0f),vec3(),
+		vec3(size, 0.0f, 0.0f),  vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 1.0f),vec3(),
+		vec3(size, -size, 0.0f), vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 0.0f),vec3(),
+		vec3(0.0f, -size, 0.0f), vec3(0.0f, 0.0f, -1.0f), vec2(1.0f, 0.0f),vec3(),
+		
+		vec3(size, 0.0f, 0.0f),  vec3(1.0f, 0.0f, 0.0f), vec2(1.0f, 1.0f),vec3(),
+		vec3(size, 0.0f, size),  vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 1.0f),vec3(),
+		vec3(size, -size, size), vec3(1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f),vec3(),
+		vec3(size, -size, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec2(1.0f, 0.0f),vec3(),
+														  
+		vec3(size, 0.0f, size),  vec3(0.0f, 0.0f, 1.0f), vec2(1.0f, 1.0f),vec3(),
+		vec3(0.0f, 0.0f, size),  vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 1.0f),vec3(),
+		vec3(0.0f, -size, size), vec3(0.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f),vec3(),
+		vec3(size, -size, size), vec3(0.0f, 0.0f, 1.0f), vec2(1.0f, 0.0f),vec3(),
+		//												  
+		vec3(0.0f, 0.0f, size),  vec3(-1.0f, 0.0f, 0.0f), vec2(1.0f, 1.0f),vec3(),
+		vec3(0.0f, 0.0f, 0.0f),  vec3(-1.0f, 0.0f, 0.0f), vec2(0.0f, 1.0f),vec3(),
+		vec3(0.0f, -size, 0.0f), vec3(-1.0f, 0.0f, 0.0f), vec2(0.0f, 0.0f),vec3(),
+		vec3(0.0f, -size, size), vec3(-1.0f, 0.0f, 0.0f), vec2(1.0f, 0.0f),vec3(),
+														  
+		vec3(0.0f, 0.0f, size),  vec3(0.0f, 1.0f, 0.0f), vec2(1.0f, 1.0f),vec3(),
+		vec3(size, 0.0f, size),  vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 1.0f),vec3(),
+		vec3(size, 0.0f, 0.0f),  vec3(0.0f, 1.0f, 0.0f), vec2(0.0f, 0.0f),vec3(),
+		vec3(0.0f, 0.0f, 0.0f),  vec3(0.0f, 1.0f, 0.0f), vec2(1.0f, 0.0f),vec3(),
+														  
+		vec3(size, -size, size), vec3(0.0f, -1.0f, 0.0f), vec2(1.0f, 1.0f),vec3(),
+		vec3(0.0f, -size, size), vec3(0.0f, -1.0f, 0.0f), vec2(0.0f, 1.0f),vec3(),
+		vec3(0.0f, -size, 0.0f), vec3(0.0f, -1.0f, 0.0f), vec2(0.0f, 0.0f),vec3(),
+		vec3(size, -size, 0.0f), vec3(0.0f, -1.0f, 0.0f), vec2(1.0f, 0.0f),vec3()
 	};	
+
+	for (unsigned int i = 0; i < 24; i++)
+	{
+		cube.vertices.push_back(verticies[i]);
+	}
+	
+
+	GLushort indieces[] = 
+	{
+		0,1,2,0,2,3,
+		4,5,6,4,6,7,
+		8,9,10,8,10,11,
+		12,13,14,12,14,15,
+		16,17,18,16,18,19,
+		20,21,22,20,22,23
+	};
+	for (unsigned int i = 0; i < 36; i++)
+	{
+		cube.indices.push_back(indieces[i]);
+	}
+	Texture tmp[2];
+	tmp[0].LoadTexture("./Models/textures/177.png", "diffuse_map");
+	tmp[1].LoadTexture("./Models/textures/177_norm.png", "depth_map");
+	cube.textures.push_back(tmp[0]);
+	cube.textures.push_back(tmp[1]);
+	cube.SetupMesh();
+	meshes.push_back(cube);
 }		

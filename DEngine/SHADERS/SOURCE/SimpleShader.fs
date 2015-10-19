@@ -9,7 +9,7 @@ in VS_OUT{
 	vec4 fLightSpacePosition;
 }fs_in;
 
-out vec4 outputColor;
+out vec4 fColor;
 
 uniform sampler2D diffuse_map;
 uniform sampler2D specular_map;
@@ -36,10 +36,10 @@ float ShadowCalculation(vec4 fragment, vec3 normal)
 void main()
 {    
 	vec3 fNormal = texture(normal_map, fs_in.fTexCoord).rgb;
-	fNormal = normalize(fs_in.TBN * (fNormal * (255.0/128.0) - 1.0));  
+	fNormal = normalize(fs_in.TBN * (fNormal * (255.0f/128.0f) - 1.0f));  
 	
 //AMBIENT
-    vec3 ambientLight =  vec3(0.03, 0.03, 0.03);
+    vec3 ambientLight =  vec3(0.03f, 0.03f, 0.03f);
 
 //DIFFUSE
     vec3 lightVector = fs_in.fLightPosition - fs_in.fPosition;
@@ -48,21 +48,13 @@ void main()
     vec3 normalizedNormal = normalize(fNormal);
 
     float dotDiffuse = dot(normalizedLight, normalizedNormal);
-    float clampedDiffuse = max(dotDiffuse, 0.0);
+    float clampedDiffuse = max(dotDiffuse, 0.0f);
     
-    vec3 diffuseLight;
-    diffuseLight.x = clampedDiffuse;
-    diffuseLight.y = clampedDiffuse;
-    diffuseLight.z = clampedDiffuse;
-	
+    vec3 diffuseLight = vec3(clampedDiffuse);
 	
 	diffuseLight *= vec3(texture2D(diffuse_map, fs_in.fTexCoord));
-    
-
+   
 //SPECULAR				
-    //vec3 reflectedLight = reflect(-normalizedLight,normalizedNormal);
-	
-	
     vec3 cameraVector = fs_in.fCameraPosition - fs_in.fPosition;
     vec3 normalizedCamera = normalize(cameraVector);
 	vec3 reflectedLight = normalize(normalizedLight + normalizedCamera);
@@ -74,13 +66,12 @@ void main()
        
     vec3 specularLight = vec3(brightness);
     
-	
     specularLight *= vec3(texture2D(specular_map, fs_in.fTexCoord));
 	
- 
+//SHADOWS 
 	float shadow = ShadowCalculation(fs_in.fLightSpacePosition, fNormal);       
-    vec3 lighting = (ambientLight + (shadow) * (diffuseLight + specularLight));
+    vec3 lighting = (ambientLight + shadow * (diffuseLight + specularLight));
 	 
-	outputColor = vec4(lighting, 1.0f);
+	fColor = vec4(lighting, 1.0f);
 	
 }

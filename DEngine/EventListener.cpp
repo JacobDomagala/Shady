@@ -154,7 +154,7 @@ void EventListener::IsOtherKeyPressed(int vKey)
 		glm::vec3 tmp = glm::cross(camera->viewDirection, camera->upVector);
 		camera->velocity += -tmp;
 	}
-	//ESC
+	
 	if (vKey != VK_SPACE && GetAsyncKeyState(VK_SPACE))
 	{
 		camera->velocity.y = 1.0f;

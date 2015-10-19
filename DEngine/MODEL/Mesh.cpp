@@ -2,12 +2,15 @@
 
 Mesh::Mesh(vector<Vertex>* vertices, vector<GLuint>* indices, vector<Texture>* textures)
 {
-	this->vertices = *vertices;
-	this->indices = *indices;
-	this->textures = *textures;
+	if (vertices != NULL)
+	{
+		this->vertices = *vertices;
+		this->indices = *indices;
+		this->textures = *textures;
 
-	// Now that we have all the required data, set the vertex buffers and its attribute pointers.
-	SetupMesh();
+		// Now that we have all the required data, set the vertex buffers and its attribute pointers.
+		SetupMesh();
+	}
 }
 
 void Mesh::AddTexture(char* filePath, textureType textureType)
@@ -37,7 +40,7 @@ void Mesh::AddTexture(char* filePath, textureType textureType)
 
 void Mesh::Draw(GLuint programID)
 {	
-	if (programID != NULL)
+	if (textures.size())
 	{
 		for (GLuint i = 0; i < textures.size(); i++)
 		{
@@ -46,11 +49,12 @@ void Mesh::Draw(GLuint programID)
 	}
 	// Draw mesh
 	glBindVertexArray(VAO);
+
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
-
+	
 	// Always good practice to set everything back to defaults once configured.
-	if (programID != NULL)
+	if (textures.size())
 	{
 		for (GLuint i = 0; i < textures.size(); i++)
 		{

@@ -20,9 +20,7 @@ enum textureType {
 	SHADOW_MAP
 };
 
-struct Texture
-{
-
+struct Texture{
 	textureType type;
 	TextureQuality quality;
 	unsigned char* data;

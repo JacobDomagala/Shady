@@ -7,18 +7,17 @@
 
 struct EventListener{
 
-
-
 	SDL_Event event;
 	Display* windowHandle;
 	Camera* camera;
 	Shader* shaders;
-	float MOUSE_SENSITIVITY;
-	vec2 oldMousePosition;
+
+	
 	vec2 windowSize;
 	
+	vec2 oldMousePosition;
 	vec2 mousePosition;
-
+	float MOUSE_SENSITIVITY;
 
 	void KeyEvent();
 	void MouseEvent();
@@ -26,8 +25,7 @@ struct EventListener{
 	void IsOtherKeyPressed(int vKey);
 
 	EventListener(Display* windowHandle, Camera* camera, Shader* shaders);
-	void Listen();
-	
+	void Listen();	
 };
 
 #endif			

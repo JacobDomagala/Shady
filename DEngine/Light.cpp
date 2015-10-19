@@ -34,7 +34,6 @@ Light::Light(glm::vec3 position, glm::vec3 color, lightType type)
 	shadowMatrix = biasMatrix * lightSpaceMatrix;
 
 	shadowTexture.CreateDepthBuffer(shadowTextureWidth, shadowTextureHeight);
-
 }
 
 void Light::StartDrawingShadows(GLuint programID)
@@ -46,7 +45,6 @@ void Light::StartDrawingShadows(GLuint programID)
 
 	glBindFramebuffer(GL_FRAMEBUFFER, shadowTexture.frameBufferID);
 	glClear(GL_DEPTH_BUFFER_BIT);
-	
 }
 
 void Light::StopDrawingShadows()

@@ -24,59 +24,59 @@ void EventListener::KeyEvent()
 	{
 		camera->velocity.y = camera->speedValue;
 	}
-	if (!GetAsyncKeyState(0x57) && !GetAsyncKeyState(0x53) && !GetAsyncKeyState(0x41) &&
-		!GetAsyncKeyState(0x44) && !GetAsyncKeyState(VK_SPACE))
+	if (!GetAsyncKeyState('W') && !GetAsyncKeyState('S') && !GetAsyncKeyState('A') &&
+		!GetAsyncKeyState('D') && !GetAsyncKeyState(VK_SPACE))
 	{
 		camera->velocity *= 0.0f;
 	}
 	//Move forward (W)
-	if (GetAsyncKeyState(0x57))
+	if (GetAsyncKeyState('W'))
 	{
 		camera->velocity = camera->viewDirection;
-		IsOtherKeyPressed(0x57);
+		IsOtherKeyPressed('W');
 		if (GetAsyncKeyState(VK_SHIFT))
 		{
 			camera->velocity *= camera->speedValue;
 		}
 	}
 	//Move backward (S)
-	if (GetAsyncKeyState(0x53))
+	if (GetAsyncKeyState('S'))
 	{
 		camera->velocity = -camera->viewDirection;
-		IsOtherKeyPressed(0x53);
+		IsOtherKeyPressed('S');
 		if (GetAsyncKeyState(VK_SHIFT))
 		{
 			camera->velocity *= camera->speedValue;
 		}
 	}
 	//Move left (A)
-	if (GetAsyncKeyState(0x41))
+	if (GetAsyncKeyState('A'))
 	{
 		vec3 tmp = glm::cross(camera->viewDirection, camera->upVector);
 		camera->velocity = tmp * -2.0f;
-		IsOtherKeyPressed(0x41);
+		IsOtherKeyPressed('A');
 	}
 	//Move right (D)
-	if (GetAsyncKeyState(0x44))
+	if (GetAsyncKeyState('D'))
 	{
 		vec3 tmp = glm::cross(camera->viewDirection, camera->upVector);
 		camera->velocity = tmp * 2.0f;
-		IsOtherKeyPressed(0x44);
+		IsOtherKeyPressed('D');
 	}
 	//Reset camera to default (R)
-	if (GetAsyncKeyState(0x52))
+	if (GetAsyncKeyState('R'))
 	{
 		camera->position = vec3(0.0f, 0.0f, 0.0f);
 	}
 	//Move light forward (T)
-	if (GetAsyncKeyState(0x54))
+	if (GetAsyncKeyState('T'))
 	{
-		//camera->lightPos += vec3(0.2f, 0.0f, 0.2f);
+		
 	}
 	//Move light backward (G)
-	if (GetAsyncKeyState(0x47))
+	if (GetAsyncKeyState('G'))
 	{
-		//camera->lightPos -= vec3(0.2f, 0.0f, 0.2f);
+		
 	}
 	//Reset position
 	if (GetAsyncKeyState(0x52))
@@ -85,15 +85,15 @@ void EventListener::KeyEvent()
 	}
 
 	//DEBUG
-	if (GetAsyncKeyState(0x31))
+	if (GetAsyncKeyState('1'))
 	{
-		shaders->LoadShaders("./SHADERS/SOURCE/SimpleShader.vs",
-			"./SHADERS/SOURCE/SimpleShader.fs");
+		//shaders->LoadShaders("./SHADERS/SOURCE/SimpleShader_vs.glsl",
+		//	"./SHADERS/SOURCE/SimpleShader_fs.glsl");
 	}
-	if (GetAsyncKeyState(0x32))
+	if (GetAsyncKeyState('2'))
 	{
-		shaders->LoadShaders("./SHADERS/SOURCE/NoNormal.vs",
-			"./SHADERS/SOURCE/NoNormal.fs");
+		shaders->LoadShaders("./SHADERS/SOURCE/NoNormal_vs.glsl",
+			"./SHADERS/SOURCE/NoNormal_fs.glsl");
 	}
 	if (GetAsyncKeyState(0x33))
 	{

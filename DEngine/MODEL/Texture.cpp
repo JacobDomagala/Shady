@@ -8,7 +8,7 @@ void Texture::LoadTexture(const char* filePath, const char* samplerName, std::st
 	{
 		std::string filename = std::string(filePath);
 		filename = directory + '/' + filename;
-		data = SOIL_load_image(filename.c_str(), &width, &height, 0, SOIL_LOAD_RGBA);
+		data = SOIL_load_image(filename.c_str(), &width, &height, 0, SOIL_LOAD_AUTO);
 	}
 	else
 	{
@@ -28,10 +28,9 @@ void Texture::LoadTexture(const char* filePath, const char* samplerName, std::st
 	glGenerateMipmap(GL_TEXTURE_2D);
 	
 
-	SetTextureQuality(HIGH);
-	quality = HIGH;
+	SetTextureQuality(TextureQuality::HIGH);
+	quality = TextureQuality::HIGH;
 	SOIL_free_image_data(data);
-
 }
 
 void Texture::SetParameter(unsigned int uiSampler, int parameter, int value)
@@ -53,8 +52,6 @@ void Texture::CreateDepthBuffer(int width, int height)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
@@ -82,27 +79,27 @@ void Texture::Use(GLuint programID, unsigned short unit)
 }
 
 
-void Texture::SetTextureQuality(int quality)
+void Texture::SetTextureQuality(TextureQuality quality)
 {
-	if (quality == LOW)
+	if (quality == TextureQuality::LOW)
 	{
 		glSamplerParameteri(samplerID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glSamplerParameteri(samplerID, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		this->quality = LOW;
+		this->quality = TextureQuality::LOW;
 	}
-	else if (quality == MEDIUM)
+	else if (quality == TextureQuality::MEDIUM)
 	{
 		glSamplerParameteri(samplerID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glSamplerParameteri(samplerID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		this->quality = MEDIUM;
+		this->quality = TextureQuality::MEDIUM;
 	}
-	else if (quality == HIGH)
+	else if (quality == TextureQuality::HIGH)
 	{
 		GLfloat fLargest;
 		glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &fLargest);
 		glSamplerParameteri(samplerID, GL_TEXTURE_MAX_ANISOTROPY_EXT, fLargest);
 		glSamplerParameteri(samplerID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		this->quality = HIGH;
+		this->quality = TextureQuality::HIGH;
 	}
 	SetParameter(samplerID, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	SetParameter(samplerID, GL_TEXTURE_WRAP_T, GL_REPEAT);

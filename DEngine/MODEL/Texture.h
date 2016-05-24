@@ -7,13 +7,13 @@
 #include<SOIL.h>
 #include"..\SHADERS\Shader.h"
 
-enum TextureQuality{
+enum class TextureQuality : char{
 	LOW,
 	MEDIUM,
 	HIGH
 };
 
-enum textureType {
+enum class textureType : char {
 	DIFFUSE_MAP,
 	SPECULAR_MAP,
 	NORMAL_MAP,
@@ -42,6 +42,7 @@ struct Texture{
 
 	void Use(GLuint programID, unsigned short unit);
 	void SetTextureQuality(int quality);
+	void SetTextureQuality(TextureQuality quality);
 	void CleanUp();
 };
 

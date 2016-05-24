@@ -12,7 +12,6 @@ struct EventListener{
 	Camera* camera;
 	Shader* shaders;
 
-	
 	vec2 windowSize;
 	
 	vec2 oldMousePosition;

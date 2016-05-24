@@ -18,17 +18,17 @@ void Mesh::AddTexture(char* filePath, textureType textureType)
 	Texture tmp;
 	switch (textureType) 
 	{
-		case 0:
+	case textureType::DIFFUSE_MAP:
 		{
 			tmp.LoadTexture(filePath, "diffuse_map");
 			break;
 		}
-		case 1:
+		case textureType::SPECULAR_MAP:
 		{
 			tmp.LoadTexture(filePath, "specular_map");
 			break;
 		}
-		case 2:
+		case textureType::NORMAL_MAP:
 		{
 			tmp.LoadTexture(filePath, "normal_map");
 			break;

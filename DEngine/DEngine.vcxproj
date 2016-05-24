@@ -43,6 +43,16 @@
     <ClInclude Include="SHADERS\Shader.h" />
     <ClInclude Include="SkyBox.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="SHADERS\SOURCE\NoNormal_fs.glsl" />
+    <None Include="SHADERS\SOURCE\NoNormal_vs.glsl" />
+    <None Include="SHADERS\SOURCE\ShadowDepth_fs.glsl" />
+    <None Include="SHADERS\SOURCE\ShadowDepth_vs.glsl" />
+    <None Include="SHADERS\SOURCE\SimpleShader_fs.glsl" />
+    <None Include="SHADERS\SOURCE\SimpleShader_vs.glsl" />
+    <None Include="SHADERS\SOURCE\Skybox_fs.glsl" />
+    <None Include="SHADERS\SOURCE\Skybox_vs.glsl" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A97E412D-8440-4C07-AF96-FEC63423E2B9}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -126,12 +136,12 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>D:\Studia\Projekty\C++\Resource\Assimp\assimp-3.1.1\include\assimp;D:\Studia\Projekty\C++\Resource\Simple OpenGL Image Library\src;D:\Studia\Projekty\C++\Resource\GLM\glm\glm;D:\Studia\Projekty\C++\Resource\GLEW\glew-1.12.0\include\GL;D:\Studia\Projekty\C++\Resource\SDL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Res\GLEW\include\GL;$(SolutionDir)Res\SDL\include;$(SolutionDir)Res\SOIL\src;$(SolutionDir)Res\GLM\glm;$(SolutionDir)Res\Assimp\assimp-3.1.1\include\assimp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\Studia\Projekty\C++\Resource\Assimp\assimp-3.1.1\lib;D:\Studia\Projekty\C++\Resource\SDL\lib;D:\Studia\Projekty\C++\Resource\Simple OpenGL Image Library\lib;D:\Studia\Projekty\C++\Resource\GLEW\glew-1.12.0\lib\Release\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)Res\Assimp\assimp-3.1.1\lib;$(SolutionDir)Res\SDL\lib;$(SolutionDir)Res\SOIL\lib;$(SolutionDir)Res\GLEW\lib\Release\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>assimpd.lib;SOIL.lib;opengl32.lib;glew32s.lib;glew32.lib;SDL2.lib;SDL2main.lib;SDL2test.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -161,6 +171,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\Studia\Projekty\C++\DEngine\Res\GLEW\include;D:\Studia\Projekty\C++\DEngine\Res\SDL\include;D:\Studia\Projekty\C++\DEngine\Res\SOIL\src;.\DEngine\Res\GLM\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

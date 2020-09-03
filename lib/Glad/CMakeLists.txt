@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 
-set(HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/include/glad/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/include/KHR/*.h")
-set(SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
+set(HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/include/glad/glad.h" "${CMAKE_CURRENT_SOURCE_DIR}/include/KHR/khrplatform.h")
+set(SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/glad.c")
 
 add_library(GLAD INTERFACE IMPORTED GLOBAL )
 target_sources(GLAD INTERFACE ${HEADERS} ${SOURCES})

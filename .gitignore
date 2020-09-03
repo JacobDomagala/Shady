@@ -282,7 +282,6 @@ paket-files/
 *.slo
 *.lo
 *.o
-*.obj
 
 # Precompiled Headers
 *.gch
@@ -291,7 +290,6 @@ paket-files/
 # Compiled Dynamic libraries
 *.so
 *.dylib
-*.dll
 
 # Fortran module files
 *.mod
@@ -306,3 +304,10 @@ paket-files/
 *.exe
 *.out
 *.app
+
+# Project specific folders
+build
+.vscode
+dependencies/GLM/GLM*
+dependencies/STB_IMAGE/STB_IMAGE*
+dependencies/glfw/GLFW*

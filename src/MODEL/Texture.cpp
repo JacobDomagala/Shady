@@ -8,11 +8,11 @@ void Texture::LoadTexture(const char* filePath, const char* samplerName, std::st
 	{
 		std::string filename = std::string(filePath);
 		filename = directory + '/' + filename;
-		data = SOIL_load_image(filename.c_str(), &width, &height, 0, SOIL_LOAD_AUTO);
+		//data = SOIL_load_image(filename.c_str(), &width, &height, 0, SOIL_LOAD_AUTO);
 	}
 	else
 	{
-		data = SOIL_load_image(filePath, &width, &height, 0, SOIL_LOAD_RGBA);
+		//data = SOIL_load_image(filePath, &width, &height, 0, SOIL_LOAD_RGBA);
 	}
 	if (data == NULL)
 	{
@@ -30,7 +30,7 @@ void Texture::LoadTexture(const char* filePath, const char* samplerName, std::st
 
 	SetTextureQuality(TextureQuality::HIGH);
 	quality = TextureQuality::HIGH;
-	SOIL_free_image_data(data);
+	//SOIL_free_image_data(data);
 }
 
 void Texture::SetParameter(unsigned int uiSampler, int parameter, int value)
@@ -96,8 +96,8 @@ void Texture::SetTextureQuality(TextureQuality quality)
 	else if (quality == TextureQuality::HIGH)
 	{
 		GLfloat fLargest;
-		glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &fLargest);
-		glSamplerParameteri(samplerID, GL_TEXTURE_MAX_ANISOTROPY_EXT, fLargest);
+		//glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &fLargest);
+		//glSamplerParameteri(samplerID, GL_TEXTURE_MAX_ANISOTROPY_EXT, fLargest);
 		glSamplerParameteri(samplerID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		this->quality = TextureQuality::HIGH;
 	}

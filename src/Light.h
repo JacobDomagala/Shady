@@ -3,7 +3,7 @@
 
 #include"DISPLAY\Camera.h"
 #include"MODEL\Texture.h"
-#include <gtc/type_ptr.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 enum lightType {
 	DIRECTIONAL_LIGHT, 

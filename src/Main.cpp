@@ -5,14 +5,15 @@
 #include"SkyBox.h"
 #include"EventListener.h"
 #include"Light.h"
-#include <gtc/type_ptr.hpp>
+
+#include <glm/gtc/type_ptr.hpp>
 
 int main(int , char**)
 {
 	int width = 1280, height = 760;
 	Display mainWindow(width, height, "DEngine");
 	//mainWindow.ShowCursor(false);
-	mainWindow.WrapMouse(false);
+	//mainWindow.WrapMouse(false);
 
 	glm::vec3 lightPosition(-4.0f, 8.0f, -6.0f);
 	Light sun(lightPosition, glm::vec3(1.0f, 1.0f, 1.0f), DIRECTIONAL_LIGHT);

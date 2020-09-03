@@ -107,28 +107,28 @@ void EventListener::KeyEvent()
 
 void EventListener::SDLEvent()
 {
-	while (SDL_PollEvent(&event))
-	{
-	
-		if (event.type == SDL_QUIT)
-		{
-			windowHandle->isClosed = true;
-		}
-		if (event.type == SDL_WINDOWEVENT)
-		{
-			switch (event.window.event)
-			{
-				case SDL_WINDOWEVENT_RESIZED:
-				{
-					windowHandle->width = event.window.data1;
-					windowHandle->height = event.window.data2;
-					windowHandle->projectionMatrix = glm::perspective(windowHandle->fov, windowHandle->aspectRatio, windowHandle->nClip, windowHandle->fClip);
-					glViewport(0, 0, windowHandle->width, windowHandle->height);
-					break;
-				}
-			}
-		}
-	}
+	//while (SDL_PollEvent(&event))
+	//{
+	//
+	//	if (event.type == SDL_QUIT)
+	//	{
+	//		windowHandle->isClosed = true;
+	//	}
+	//	if (event.type == SDL_WINDOWEVENT)
+	//	{
+	//		switch (event.window.event)
+	//		{
+	//			case SDL_WINDOWEVENT_RESIZED:
+	//			{
+	//				windowHandle->width = event.window.data1;
+	//				windowHandle->height = event.window.data2;
+	//				windowHandle->projectionMatrix = glm::perspective(windowHandle->fov, windowHandle->aspectRatio, windowHandle->nClip, windowHandle->fClip);
+	//				glViewport(0, 0, windowHandle->width, windowHandle->height);
+	//				break;
+	//			}
+	//		}
+	//	}
+	//}
 }
 void EventListener::IsOtherKeyPressed(int vKey)
 {
@@ -163,22 +163,22 @@ void EventListener::IsOtherKeyPressed(int vKey)
 
 void EventListener::MouseEvent()
 {
-	int x, y;
-	SDL_GetMouseState(&x, &y);
-	mousePosition = vec2(x, y);
+	//int x, y;
+	//SDL_GetMouseState(&x, &y);
+	//mousePosition = vec2(x, y);
 
-	vec2 mouseDelta;
-	mouseDelta.x = mousePosition.x - oldMousePosition.x;
-	mouseDelta.y = oldMousePosition.y - mousePosition.y;
+	//vec2 mouseDelta;
+	//mouseDelta.x = mousePosition.x - oldMousePosition.x;
+	//mouseDelta.y = oldMousePosition.y - mousePosition.y;
 
-	float mouseDeltaLenght = glm::length(mouseDelta);
-	if (mouseDeltaLenght > 100.0f)
-	{
-		oldMousePosition = mousePosition;
-		return;
-	}
-	camera->ProcessMouseMovement(mouseDelta.x, mouseDelta.y);
-	oldMousePosition = mousePosition;
+	//float mouseDeltaLenght = glm::length(mouseDelta);
+	//if (mouseDeltaLenght > 100.0f)
+	//{
+	//	oldMousePosition = mousePosition;
+	//	return;
+	//}
+	//camera->ProcessMouseMovement(mouseDelta.x, mouseDelta.y);
+	//oldMousePosition = mousePosition;
 }
 
 void EventListener::Listen()

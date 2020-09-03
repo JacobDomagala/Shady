@@ -4,8 +4,7 @@
 #include"DISPLAY\Camera.h"
 #include"SHADERS\Shader.h"
 #include<vector>
-#include<SOIL.h>
-#include <gtc/type_ptr.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 struct SkyBox{
 	std::vector<std::string> faces;

@@ -3,8 +3,7 @@
 
 
 #include<vector>
-#include <postprocess.h>
-#include<SOIL.h>
+#include <assimp/postprocess.h>
 #include"..\SHADERS\Shader.h"
 
 enum class TextureQuality : char{

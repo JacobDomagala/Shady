@@ -16,6 +16,14 @@ struct Clock
 	
 	void NewFrame();
 	void Wait(int ms);
+
+	float GetTime() {
+		return time;
+	}
+
+	float GetDelta() {
+		return deltaTime;
+	}
 };
 
 #endif

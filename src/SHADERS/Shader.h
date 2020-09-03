@@ -3,8 +3,9 @@
 
 #include<string>
 #include<iostream>
-#include<glew.h>
-#include<glm.hpp>
+#include<glm/glm.hpp>
+
+#include <Display.h>
 
 struct Shader{
 	GLuint programID;;

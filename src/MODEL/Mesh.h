@@ -5,9 +5,10 @@
 #include <sstream>
 #include <vector>
 
-#include <gtc/matrix_transform.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include"../SHADERS/Shader.h"
 #include"Texture.h"
+#include <Display.h>
 
 
 using std::vector;

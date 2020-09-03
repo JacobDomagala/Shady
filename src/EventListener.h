@@ -7,7 +7,7 @@
 
 struct EventListener{
 
-	SDL_Event event;
+	/*SDL_Event event;*/
 	Display* windowHandle;
 	Camera* camera;
 	Shader* shaders;

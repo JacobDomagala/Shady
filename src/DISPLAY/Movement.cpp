@@ -2,10 +2,10 @@
 
 
 Movement::Movement(Display* windowHandle, glm::vec3* light) :
-	windowSize(windowHandle->GetWindowSize().x, windowHandle->GetWindowSize().y),
+	//windowSize(windowHandle->GetWindowSize().x, windowHandle->GetWindowSize().y),
 	viewDirection(0.0f, 0.0f, 1.0f),
 	position(5.0f,-1.5f,0.0f),
-	oldMousePosition(windowHandle->GetWindowSize().x / 2, windowHandle->GetWindowSize().y / 2),
+	//oldMousePosition(windowHandle->GetWindowSize().x / 2, windowHandle->GetWindowSize().y / 2),
 	MOUSE_SENSITIVITY(0.001f),
 	MOVEMENT_SPEED(2.0f),
 	velocity(0.0, 0.0, 0.0),
@@ -15,7 +15,7 @@ Movement::Movement(Display* windowHandle, glm::vec3* light) :
 	flyMode(false),
 	speedValue(4.0)
 {
-clock.Initialize();
+//clock.Initialize();
 deltaTime = clock.GetDelta();
 viewMatrix = glm::lookAt(position, position + viewDirection, upVector);
 }
@@ -31,33 +31,33 @@ glm::mat4 Movement::GetWorldToViewMatrix() const
 
 void Movement::mouseUpdate()
 {
-	int x, y;
-	SDL_GetMouseState(&x, &y);
-	glm::vec2 mousePosition(x,y);
-	windowSize = glm::vec2(windowHandle->GetWindowSize().x, windowHandle->GetWindowSize().y);
-	
-	if (x > windowSize.x - 20 || x < 10)
-		SDL_WarpMouseInWindow(windowHandle->m_Window, windowSize.x / 2, windowSize.y / 2);
-	if (y > windowSize.y - 20 || y < 10)
-		SDL_WarpMouseInWindow(windowHandle->m_Window, windowSize.x / 2, windowSize.y / 2);
-	
+	//int x, y;
+	//SDL_GetMouseState(&x, &y);
+	//glm::vec2 mousePosition(x,y);
+	//windowSize = glm::vec2(windowHandle->GetWindowSize().x, windowHandle->GetWindowSize().y);
+	//
+	//if (x > windowSize.x - 20 || x < 10)
+	//	SDL_WarpMouseInWindow(windowHandle->m_Window, windowSize.x / 2, windowSize.y / 2);
+	//if (y > windowSize.y - 20 || y < 10)
+	//	SDL_WarpMouseInWindow(windowHandle->m_Window, windowSize.x / 2, windowSize.y / 2);
+	//
 
-	glm::vec2 mouseDelta = oldMousePosition - mousePosition;
-	float lenght = glm::length(mouseDelta);
-	if (lenght > windowSize.y/3){
-		oldMousePosition = mousePosition;
-		return;
-	}
-	
-	glm::vec3 rotateAround = glm::cross(viewDirection, upVector);
-	glm::mat4 rotation = glm::rotate(mouseDelta.x * MOUSE_SENSITIVITY, upVector) *
-		                 glm::rotate(mouseDelta.y * MOUSE_SENSITIVITY, rotateAround);
+	//glm::vec2 mouseDelta = oldMousePosition - mousePosition;
+	//float lenght = glm::length(mouseDelta);
+	//if (lenght > windowSize.y/3){
+	//	oldMousePosition = mousePosition;
+	//	return;
+	//}
+	//
+	//glm::vec3 rotateAround = glm::cross(viewDirection, upVector);
+	//glm::mat4 rotation = glm::rotate(mouseDelta.x * MOUSE_SENSITIVITY, upVector) *
+	//	                 glm::rotate(mouseDelta.y * MOUSE_SENSITIVITY, rotateAround);
 
 
-	viewDirection = glm::normalize(glm::mat3(rotation) * viewDirection);
-	
-	
-	oldMousePosition = mousePosition;
+	//viewDirection = glm::normalize(glm::mat3(rotation) * viewDirection);
+	//
+	//
+	//oldMousePosition = mousePosition;
 }
 
 void Movement::ComputeDelta(){

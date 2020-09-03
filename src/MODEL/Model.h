@@ -8,13 +8,12 @@
 #include <map>
 #include <vector>
 
-#include <glew.h> 
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
-#include <SOIL.h>
-#include <Importer.hpp>
-#include <scene.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <stb_image.h>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
 
 
 #include "Mesh.h"

@@ -1,4 +1,4 @@
-#include "DISPLAY/Display.h"
+#include "app/window.hpp"
 #include "SHADERS/Shader.h"
 #include "Model/Model.h"
 #include"DISPLAY/Camera.h"
@@ -11,7 +11,7 @@
 int main(int , char**)
 {
 	int width = 1280, height = 760;
-	Display mainWindow(width, height, "DEngine");
+	shady::app::Window mainWindow(width, height, "DEngine");
 	//mainWindow.ShowCursor(false);
 	//mainWindow.WrapMouse(false);
 
@@ -54,7 +54,7 @@ int main(int , char**)
 	floor.TranslateModel(glm::vec3(0.0f, -2.0f, 0.0f));
 	Clock clock;
 	
-	while (!mainWindow.isClosed)
+	while (true)
 	{
 		eventListener.Listen();
 		clock.NewFrame();
@@ -88,7 +88,7 @@ int main(int , char**)
 		//sky.Draw(&mainWindow, camera, skyBoxShaders);
 
 		camera.Update(clock.deltaTime);
-		mainWindow.Update();
+		mainWindow.SwapBuffers();
 	}
 
 	return 0;

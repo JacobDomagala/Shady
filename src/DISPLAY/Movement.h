@@ -5,7 +5,7 @@
 #include<iomanip>
 #include<glm/gtx/transform.hpp>
 
-#include"Display.h"
+#include "app/window.hpp"
 #include"..\CLOCK\Clock.h"
 
 class Display;
@@ -22,46 +22,46 @@ protected:
 
 	glm::vec2 oldMousePosition;
 	glm::vec2 windowSize;
-	
+
 	glm::vec3 viewDirection;
 
 	glm::vec3 position;
 	glm::vec3 velocity;
-	
 
-	
+
+
 	glm::vec3 lightPos;
-	
+
 	float deltaTime;
 	Clock clock;
-	
+
 
 	glm::vec3 upVector;
 	float MOUSE_SENSITIVITY;
 	float MOVEMENT_SPEED;
-	
+
 
 	void Reset();
 	float speedValue;
 	bool flyMode;
 public:
 
-	
-	
-	
+
+
+
 	Movement(Display* windowHandle, glm::vec3* light);
-	
+
 
 	glm::mat4 GetWorldToViewMatrix() const;
 	glm::vec3 GetPosition() const;
 	void mouseUpdate();
-	
+
 	void ComputeDelta();
 	float GetDelta();
 	float GetTime() { return clock.GetTime(); }
 
 
-	
+
 
 	void SetCameraMode(int mode);
 	void Update();

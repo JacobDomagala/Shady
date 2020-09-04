@@ -28,14 +28,14 @@ void Model::LoadModelFromFile(GLchar* path)
 	LoadModel(path);
 }
 
-void Model::Draw(Display* window, Camera camera, Light* lights, Shader shader)
+void Model::Draw(shady::app::Window* window, Camera camera, Light* lights, Shader shader)
 {
 	shader.UseProgram();
 	
 	glm::vec3 lightPos = lights->position;
 	glm::vec3 camPos = camera.position;
 
-	projectionMatrix = window->projectionMatrix;
+	//projectionMatrix = window->projectionMatrix;
 	viewMatrix = camera.viewMatrix;
 	modelMatrix = glm::translate(translateValue) * glm::rotate(rotateAngle, rotateValue) * glm::scale(scaleValue);
 	

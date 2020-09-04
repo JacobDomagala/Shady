@@ -13,7 +13,7 @@ struct SkyBox{
 	GLuint skyboxVAO, skyboxVBO;
 
 	void LoadCubeMap(std::string folderPath);
-	void Draw(Display* window, Camera camera, Shader shader);
+	void Draw(shady::app::Window* window, Camera camera, Shader shader);
 };
 
 #endif

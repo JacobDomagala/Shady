@@ -2,13 +2,14 @@
 #define EVENTLISTENER_H
 
 #include<Windows.h>
-#include"DISPLAY\Display.h"
+#include "app/window.hpp"
 #include"DISPLAY\Camera.h"
+#include "Shader.h"
 
 struct EventListener{
 
 	/*SDL_Event event;*/
-	Display* windowHandle;
+	shady::app::Window* windowHandle;
 	Camera* camera;
 	Shader* shaders;
 
@@ -23,7 +24,7 @@ struct EventListener{
 	void SDLEvent();
 	void IsOtherKeyPressed(int vKey);
 
-	EventListener(Display* windowHandle, Camera* camera, Shader* shaders);
+	EventListener(shady::app::Window* windowHandle, Camera* camera, Shader* shaders);
 	void Listen();	
 };
 

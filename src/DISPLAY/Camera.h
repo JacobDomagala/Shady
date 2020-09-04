@@ -5,7 +5,7 @@
 #include<iomanip>
 #include<glm/gtx\transform.hpp>
 
-#include"Display.h"
+#include "app/window.hpp"
 #include"..\CLOCK\Clock.h"
 
 using glm::vec2;
@@ -27,14 +27,14 @@ struct Camera{
 	GLfloat yaw;
 	GLfloat pitch;
 	// Camera options
-	
+
 	GLfloat mouseSensitivity;
 
 	mat4 viewMatrix;
 	vec3 viewDirection;
 	vec3 position;
 	vec3 velocity;
-	
+
 	float MOVEMENT_SPEED;
 	float speedValue;
 	bool flyMode;
@@ -43,7 +43,7 @@ struct Camera{
 	Camera(vec3 position);
 	void SetCamera(vec3 cameraPosition, vec3 viewDirection);
 	void ProcessMouseMovement(GLfloat xoffset, GLfloat yoffset, GLboolean constrainPitch = true);
-	
+
 	void SetCameraMode(int mode);
 	void Update(float deltaTime);
 };

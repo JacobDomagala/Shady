@@ -45,7 +45,7 @@ struct Model{
 	void TranslateModel(vec3 translate);
 	void RotateModel(vec3 rotate, float angle);
 
-	void Draw(Display* window, Camera camera, Light* lights, Shader shader);
+	void Draw(shady::app::Window* window, Camera camera, Light* lights, Shader shader);
 
 	GLuint modelMatrixUniformLocation;
 

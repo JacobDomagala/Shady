@@ -5,7 +5,7 @@
 #include<iostream>
 #include<glm/glm.hpp>
 
-#include <Display.h>
+#include "app/window.hpp"
 
 struct Shader{
 	GLuint programID;;

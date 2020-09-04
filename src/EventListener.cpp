@@ -1,10 +1,10 @@
 #include "EventListener.h"
 
-EventListener::EventListener(Display* windowHandle, Camera* camera, Shader* shaders):
+EventListener::EventListener(shady::app::Window* windowHandle, Camera* camera, Shader* shaders):
 	camera(camera),
-	windowSize(windowHandle->width, windowHandle->height),
+	//windowSize(windowHandle->width, windowHandle->height),
 	windowHandle(windowHandle),
-	oldMousePosition(windowHandle->width / 2, windowHandle->height / 2),
+	//oldMousePosition(windowHandle->width / 2, windowHandle->height / 2),
 	shaders(shaders)
 {
 
@@ -14,7 +14,7 @@ void EventListener::KeyEvent()
 {
 	if (GetAsyncKeyState(VK_ESCAPE))
 	{
-		windowHandle->isClosed = true;
+		//windowHandle->isClosed = true;
 	}
 	if (GetAsyncKeyState(VK_SHIFT))
 	{

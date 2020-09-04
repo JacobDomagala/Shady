@@ -12,13 +12,14 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_PATH})
 set(SOURCES src/Main.cpp src/SkyBox.h src/SkyBox.cpp src/Light.h src/Light.cpp src/EventListener.h src/EventListener.cpp
             src/SHADERS/Shader.h src/SHADERS/Shader.cpp
             src/MODEL/Mesh.h src/MODEL/Mesh.cpp src/MODEL/Model.h src/MODEL/Model.cpp src/MODEL/Texture.h src/MODEL/Texture.cpp
-            src/DISPLAY/Camera.h src/DISPLAY/Camera.cpp src/DISPLAY/Display.h src/DISPLAY/Display.cpp src/DISPLAY/Movement.h src/DISPLAY/Movement.cpp
-            src/CLOCK/Clock.h src/CLOCK/Clock.cpp)
+            src/DISPLAY/Camera.h src/DISPLAY/Camera.cpp src/DISPLAY/Movement.h src/DISPLAY/Movement.cpp
+            src/CLOCK/Clock.h src/CLOCK/Clock.cpp
+            src/app/window.hpp src/app/window.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 add_subdirectory(lib)
 
-target_include_directories(${PROJECT_NAME} PRIVATE src src/MODEL src/CLOCK src/DISPLAY src/SHADERS)
+target_include_directories(${PROJECT_NAME} PRIVATE src src/app src/MODEL src/CLOCK src/DISPLAY src/SHADERS)
 target_link_libraries (${PROJECT_NAME} PRIVATE glm glfw GLAD STB_IMAGE assimp)
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 

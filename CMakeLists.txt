@@ -20,11 +20,11 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 add_subdirectory(lib)
 
 target_include_directories(${PROJECT_NAME} PRIVATE src src/app src/MODEL src/CLOCK src/DISPLAY src/SHADERS)
-target_link_libraries (${PROJECT_NAME} PRIVATE glm glfw GLAD STB_IMAGE assimp)
+target_link_libraries (${PROJECT_NAME} PRIVATE glm glfw glad stb_image assimp)
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 
 # TODO: Is there a way to do it other way?
 # Copy assimp .dll file to build dir
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E copy_directory
-                   ${OUTPUT_PATH}/lib/Assimp/Assimp/bin ${OUTPUT_PATH})
+                   ${OUTPUT_PATH}/lib/assimp/assimp/bin ${OUTPUT_PATH})

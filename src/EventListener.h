@@ -1,31 +1,37 @@
 #ifndef EVENTLISTENER_H
 #define EVENTLISTENER_H
 
-#include<Windows.h>
+#include <Windows.h>
 #include "app/window.hpp"
-#include"DISPLAY\Camera.h"
+#include "DISPLAY\Camera.h"
 #include "Shader.h"
 
-struct EventListener{
+struct EventListener
+{
 
-	/*SDL_Event event;*/
-	shady::app::Window* windowHandle;
-	Camera* camera;
-	Shader* shaders;
+  /*SDL_Event event;*/
+  shady::app::Window *windowHandle;
+  Camera *camera;
+  Shader *shaders;
 
-	vec2 windowSize;
-	
-	vec2 oldMousePosition;
-	vec2 mousePosition;
-	float MOUSE_SENSITIVITY;
+  vec2 windowSize;
 
-	void KeyEvent();
-	void MouseEvent();
-	void SDLEvent();
-	void IsOtherKeyPressed(int vKey);
+  vec2 oldMousePosition;
+  vec2 mousePosition;
+  float MOUSE_SENSITIVITY;
 
-	EventListener(shady::app::Window* windowHandle, Camera* camera, Shader* shaders);
-	void Listen();	
+  void
+  KeyEvent();
+  void
+  MouseEvent();
+  void
+  SDLEvent();
+  void
+  IsOtherKeyPressed(int vKey);
+
+  EventListener(shady::app::Window *windowHandle, Camera *camera, Shader *shaders);
+  void
+  Listen();
 };
 
-#endif			
+#endif

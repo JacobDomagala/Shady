@@ -2,76 +2,88 @@
 #define MOVEMENT_H
 
 
-#include<iomanip>
-#include<glm/gtx/transform.hpp>
+#include <iomanip>
+#include <glm/gtx/transform.hpp>
 
 #include "app/window.hpp"
-#include"..\CLOCK\Clock.h"
+#include "..\CLOCK\Clock.h"
 
 class Display;
-enum cameraMode{
-	FLY,
-	STATIC
+enum cameraMode
+{
+  FLY,
+  STATIC
 };
 class Movement
 {
 protected:
-	Display* windowHandle;
+  Display *windowHandle;
 
-	glm::mat4 viewMatrix;
+  glm::mat4 viewMatrix;
 
-	glm::vec2 oldMousePosition;
-	glm::vec2 windowSize;
+  glm::vec2 oldMousePosition;
+  glm::vec2 windowSize;
 
-	glm::vec3 viewDirection;
+  glm::vec3 viewDirection;
 
-	glm::vec3 position;
-	glm::vec3 velocity;
-
-
-
-	glm::vec3 lightPos;
-
-	float deltaTime;
-	Clock clock;
+  glm::vec3 position;
+  glm::vec3 velocity;
 
 
-	glm::vec3 upVector;
-	float MOUSE_SENSITIVITY;
-	float MOVEMENT_SPEED;
+  glm::vec3 lightPos;
+
+  float deltaTime;
+  Clock clock;
 
 
-	void Reset();
-	float speedValue;
-	bool flyMode;
+  glm::vec3 upVector;
+  float MOUSE_SENSITIVITY;
+  float MOVEMENT_SPEED;
+
+
+  void
+  Reset();
+  float speedValue;
+  bool flyMode;
+
 public:
+  Movement(Display *windowHandle, glm::vec3 *light);
 
 
+  glm::mat4
+  GetWorldToViewMatrix() const;
+  glm::vec3
+  GetPosition() const;
+  void
+  mouseUpdate();
+
+  void
+  ComputeDelta();
+  float
+  GetDelta();
+  float
+  GetTime()
+  {
+    return clock.GetTime();
+  }
 
 
-	Movement(Display* windowHandle, glm::vec3* light);
+  void
+  SetCameraMode(int mode);
+  void
+  Update();
+  void
+  KeyEvent();
+  void
+  IsOtherKeyPressed(int vKey);
 
+  glm::vec3
+  GetLightPosition();
+  void
+  SetLightPosition(glm::vec3 lightPos);
 
-	glm::mat4 GetWorldToViewMatrix() const;
-	glm::vec3 GetPosition() const;
-	void mouseUpdate();
-
-	void ComputeDelta();
-	float GetDelta();
-	float GetTime() { return clock.GetTime(); }
-
-
-
-
-	void SetCameraMode(int mode);
-	void Update();
-	void KeyEvent();
-	void IsOtherKeyPressed(int vKey);
-
-	glm::vec3 GetLightPosition();
-	void SetLightPosition(glm::vec3 lightPos);
-
-	virtual void SetCamera(glm::vec3 cameraPosition, glm::vec3 viewDirection);
+  virtual void
+  SetCamera(glm::vec3 cameraPosition, glm::vec3 viewDirection);
 };
 
 #endif

@@ -17,9 +17,9 @@
 
 
 #include "Mesh.h"
-#include"Texture.h"
-#include"../DISPLAY/Camera.h"
-#include"../Light.h"
+#include "Texture.h"
+#include "../DISPLAY/Camera.h"
+#include "../Light.h"
 
 
 using std::string;
@@ -27,44 +27,53 @@ using std::vector;
 using glm::mat4;
 using glm::vec3;
 
-struct Model{
-//Model View Projection matrices
-	mat4 modelMatrix;
-	mat4 viewMatrix;
-	mat4 projectionMatrix;
+struct Model
+{
+  // Model View Projection matrices
+  mat4 modelMatrix;
+  mat4 viewMatrix;
+  mat4 projectionMatrix;
 
-//Model matrix data
-	vec3 translateValue;
-	vec3 scaleValue;
-	vec3 rotateValue;
-	float rotateAngle;
+  // Model matrix data
+  vec3 translateValue;
+  vec3 scaleValue;
+  vec3 rotateValue;
+  float rotateAngle;
 
-	Model();
-	void LoadModelFromFile(GLchar* path);
-	void ScaleModel(vec3 scale);
-	void TranslateModel(vec3 translate);
-	void RotateModel(vec3 rotate, float angle);
+  Model();
+  void
+  LoadModelFromFile(GLchar *path);
+  void
+  ScaleModel(vec3 scale);
+  void
+  TranslateModel(vec3 translate);
+  void
+  RotateModel(vec3 rotate, float angle);
 
-	void Draw(shady::app::Window* window, Camera camera, Light* lights, Shader shader);
+  void
+  Draw(shady::app::Window *window, Camera camera, Light *lights, Shader shader);
 
-	GLuint modelMatrixUniformLocation;
+  GLuint modelMatrixUniformLocation;
 
-	GLuint programID;
-	vector<Mesh> meshes;
-	string directory;
-	vector<Texture> textures_loaded;	
-										
-	void LoadModel(string path);
-	
-	void ProcessNode(aiNode* node, const aiScene* scene);
-	Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene);
+  GLuint programID;
+  vector<Mesh> meshes;
+  string directory;
+  vector<Texture> textures_loaded;
 
-	vector<Texture> LoadMaterialTextures(aiMaterial* mat, aiTextureType type, char* typeName);
+  void
+  LoadModel(string path);
 
-	void CreateCube(int size);
+  void
+  ProcessNode(aiNode *node, const aiScene *scene);
+  Mesh
+  ProcessMesh(aiMesh *mesh, const aiScene *scene);
+
+  vector<Texture>
+  LoadMaterialTextures(aiMaterial *mat, aiTextureType type, char *typeName);
+
+  void
+  CreateCube(int size);
 };
-
-
 
 
 #endif

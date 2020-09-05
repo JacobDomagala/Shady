@@ -1,4 +1,5 @@
 #include "window.hpp"
+#include "trace/logger.hpp"
 
 #include <functional>
 #include <glfw/glfw3.h>
@@ -9,14 +10,13 @@ namespace shady::app {
 Window::Window(int32_t width, int32_t height, const std::string& title)
    : m_width(width), m_height(height), m_title(title)
 {
-   //m_logger.Init("Window");
-
-   // TODO: use logger here
-   glfwSetErrorCallback([](int error, const char* description) { fprintf(stderr, "Error: %s\n", description); });
+  glfwSetErrorCallback([](int error, const char *description) {
+    trace::Logger::Fatal("GLFW Error={}: {}", error, description);
+  });
 
    if (GLFW_TRUE != glfwInit())
    {
-      //m_logger.Log(Logger::TYPE::FATAL, "GLFW_TRUE != glfwInit()");
+      trace::Logger::Fatal("GLFW Init failed!");
    }
 
    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -26,7 +26,8 @@ Window::Window(int32_t width, int32_t height, const std::string& title)
    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
    m_pWindow = glfwCreateWindow(m_width, m_height, title.c_str(), nullptr, nullptr);
-   //m_logger.Log(Logger::TYPE::DEBUG, "GLFW Window created - \n" + std::string(*this));
+   trace::Logger::Debug(
+     "GLFW Window created! Name:{} Width:{} Height:{}", m_title, m_width, m_height);
 
    glfwMakeContextCurrent(m_pWindow);
 

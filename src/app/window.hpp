@@ -62,8 +62,6 @@ class Window
    std::string m_title = "title";
 
    GLFWwindow* m_pWindow = nullptr;
-
-   //Logger m_logger;
 };
 
 } // namespace shady::app

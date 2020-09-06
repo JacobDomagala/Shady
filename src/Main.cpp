@@ -1,5 +1,5 @@
 #include "app/window.hpp"
-#include "time/utils.hpp"
+#include "time/timer.hpp"
 #include "SHADERS/Shader.h"
 #include "Model/Model.h"
 #include "DISPLAY/Camera.h"

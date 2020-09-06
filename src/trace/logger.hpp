@@ -1,6 +1,6 @@
 #pragma once
 
-//#include "Timer.hpp"
+#include "time/utils.hpp"
 
 #include <fmt/format.h>
 #include <string>
@@ -59,8 +59,9 @@ public:
   Log(std::string &&buffer, const Args &... args)
   {
     if (LogLevel >= s_currentLogType) {
-      fmt::print("{} {}\n",
-        /*Timer::GetCurrentTime(),*/ ToString(LogLevel),
+      fmt::print("[{}]{} {}\n",
+        time::GetTime(),
+        ToString(LogLevel),
         fmt::format(std::move(buffer), args...));
     }
   }

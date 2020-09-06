@@ -6,7 +6,7 @@
 #include <glm/gtx/transform.hpp>
 
 #include "app/window.hpp"
-#include "..\CLOCK\Clock.h"
+#include "time/timer.hpp"
 
 class Display;
 enum cameraMode
@@ -33,7 +33,7 @@ protected:
   glm::vec3 lightPos;
 
   float deltaTime;
-  Clock clock;
+  shady::time::Timer clock;
 
 
   glm::vec3 upVector;
@@ -61,12 +61,6 @@ public:
   ComputeDelta();
   float
   GetDelta();
-  float
-  GetTime()
-  {
-    return clock.GetTime();
-  }
-
 
   void
   SetCameraMode(int mode);

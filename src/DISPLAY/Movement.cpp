@@ -8,8 +8,6 @@ Movement::Movement(Display *windowHandle, glm::vec3 *light)
     MOUSE_SENSITIVITY(0.001f), MOVEMENT_SPEED(2.0f), velocity(0.0, 0.0, 0.0), lightPos(*light),
     upVector(0.0, 1.0, 0.0), windowHandle(windowHandle), flyMode(false), speedValue(4.0)
 {
-  // clock.Initialize();
-  deltaTime = clock.GetDelta();
   viewMatrix = glm::lookAt(position, position + viewDirection, upVector);
 }
 
@@ -59,9 +57,7 @@ Movement::mouseUpdate()
 void
 Movement::ComputeDelta()
 {
-
-  clock.NewFrame();
-  deltaTime = clock.GetDelta();
+  deltaTime = clock.ToggleTimer().GetMilliseconds().count();
 }
 
 

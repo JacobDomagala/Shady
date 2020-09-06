@@ -5,7 +5,6 @@
 #include <glm/gtx\transform.hpp>
 
 #include "app/window.hpp"
-#include "..\CLOCK\Clock.h"
 
 using glm::vec2;
 using glm::vec3;

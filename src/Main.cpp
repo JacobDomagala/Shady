@@ -1,4 +1,5 @@
 #include "app/window.hpp"
+#include "time/timer.hpp"
 #include "SHADERS/Shader.h"
 #include "Model/Model.h"
 #include "DISPLAY/Camera.h"
@@ -52,11 +53,10 @@ main(int, char **)
   floor.meshes[0].AddTexture("./Models/textures/196_norm.png", textureType::NORMAL_MAP);
   floor.meshes[0].AddTexture("./Models/textures/196s.png", textureType::SPECULAR_MAP);
   floor.TranslateModel(glm::vec3(0.0f, -2.0f, 0.0f));
-  Clock clock;
+  shady::time::Timer clock;
 
   while (true) {
     eventListener.Listen();
-    clock.NewFrame();
 
     // DRAWING SCENE TO SHADOWMAP
     // sun.StartDrawingShadows(shadowShaders.programID);
@@ -78,7 +78,7 @@ main(int, char **)
       1,
       GL_FALSE,
       glm::value_ptr(sun.shadowMatrix));
-    glUniform1f(glGetUniformLocation(simpleProgram.programID, "time"), clock.time);
+    //glUniform1f(glGetUniformLocation(simpleProgram.programID, "time"), clock.time);
 
     // glActiveTexture(GL_TEXTURE15);
     // glBindTexture(GL_TEXTURE_2D, sun.shadowTexture.textureID);
@@ -89,7 +89,7 @@ main(int, char **)
     box.Draw(&mainWindow, camera, &sun, simpleProgram);
     // sky.Draw(&mainWindow, camera, skyBoxShaders);
 
-    camera.Update(clock.deltaTime);
+    camera.Update(clock.ToggleTimer().GetMilliseconds().count());
     mainWindow.SwapBuffers();
   }
 

@@ -13,16 +13,16 @@ set(SOURCES src/Main.cpp src/SkyBox.h src/SkyBox.cpp src/Light.h src/Light.cpp s
             src/SHADERS/Shader.h src/SHADERS/Shader.cpp
             src/MODEL/Mesh.h src/MODEL/Mesh.cpp src/MODEL/Model.h src/MODEL/Model.cpp src/MODEL/Texture.h src/MODEL/Texture.cpp
             src/DISPLAY/Camera.h src/DISPLAY/Camera.cpp src/DISPLAY/Movement.h src/DISPLAY/Movement.cpp
-            src/CLOCK/Clock.h src/CLOCK/Clock.cpp
             src/app/window.hpp src/app/window.cpp
-            src/trace/logger.hpp)
+            src/trace/logger.hpp
+            src/time/timer.hpp src/time/timer.cpp src/time/scopedTimer.hpp src/time/scopedTimer.cpp src/time/utils.hpp src/time/utils.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 add_subdirectory(lib)
 
-target_include_directories(${PROJECT_NAME} PRIVATE src src/app src/trace src/MODEL src/CLOCK src/DISPLAY src/SHADERS)
+target_include_directories(${PROJECT_NAME} PRIVATE src src/app src/trace src/MODEL src/time src/DISPLAY src/SHADERS)
 target_link_libraries (${PROJECT_NAME} PRIVATE glm glfw glad stb_image assimp fmt)
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 # TODO: Is there a way to do it other way?
 # Copy assimp .dll file to build dir

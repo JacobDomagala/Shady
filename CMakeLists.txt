@@ -15,12 +15,13 @@ set(SOURCES src/Main.cpp src/SkyBox.h src/SkyBox.cpp src/Light.h src/Light.cpp s
             src/DISPLAY/Camera.h src/DISPLAY/Camera.cpp src/DISPLAY/Movement.h src/DISPLAY/Movement.cpp
             src/app/window.hpp src/app/window.cpp
             src/trace/logger.hpp
-            src/time/timer.hpp src/time/timer.cpp src/time/scoped_timer.hpp src/time/scoped_timer.cpp src/time/utils.hpp src/time/utils.cpp)
+            src/time/timer.hpp src/time/timer.cpp src/time/scoped_timer.hpp src/time/scoped_timer.cpp src/time/utils.hpp src/time/utils.cpp
+            src/render/render_command.hpp src/render/render_command.cpp src/render/renderer_api.hpp src/render/renderer_api.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 add_subdirectory(lib)
 
-target_include_directories(${PROJECT_NAME} PRIVATE src src/app src/trace src/MODEL src/time src/DISPLAY src/SHADERS)
+target_include_directories(${PROJECT_NAME} PRIVATE src src/app src/trace src/render src/MODEL src/time src/DISPLAY src/SHADERS)
 target_link_libraries (${PROJECT_NAME} PRIVATE glm glfw glad stb_image assimp fmt)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 target_compile_definitions(${PROJECT_NAME} PRIVATE ASSIMP_BUILD_TESTS=0 ASSIMP_BUILD_ASSIMP_TOOLS=0 BUILD_SHARED_LIBS=0)

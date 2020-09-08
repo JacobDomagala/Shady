@@ -15,7 +15,7 @@ set(SOURCES src/Main.cpp src/SkyBox.h src/SkyBox.cpp src/Light.h src/Light.cpp s
             src/DISPLAY/Camera.h src/DISPLAY/Camera.cpp src/DISPLAY/Movement.h src/DISPLAY/Movement.cpp
             src/app/window.hpp src/app/window.cpp
             src/trace/logger.hpp
-            src/time/timer.hpp src/time/timer.cpp src/time/scopedTimer.hpp src/time/scopedTimer.cpp src/time/utils.hpp src/time/utils.cpp)
+            src/time/timer.hpp src/time/timer.cpp src/time/scoped_timer.hpp src/time/scoped_timer.cpp src/time/utils.hpp src/time/utils.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 add_subdirectory(lib)

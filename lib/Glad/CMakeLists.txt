@@ -6,5 +6,7 @@ set(SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/glad.c")
 add_library(glad INTERFACE IMPORTED GLOBAL )
 target_sources(glad INTERFACE ${HEADERS} ${SOURCES})
 target_include_directories(glad INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include/")
-# For linux we may need to add -ldl
-#target_link_libraries (glad INTERFACE opengl32)
+
+if(UNIX)
+    target_link_libraries (glad INTERFACE dl)
+endif()

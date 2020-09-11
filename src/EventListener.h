@@ -1,9 +1,9 @@
 #ifndef EVENTLISTENER_H
 #define EVENTLISTENER_H
 
-#include <Windows.h>
+//#include <Windows.h>
 #include "app/window.hpp"
-#include "DISPLAY\Camera.h"
+#include "DISPLAY/Camera.h"
 #include "Shader.h"
 
 struct EventListener

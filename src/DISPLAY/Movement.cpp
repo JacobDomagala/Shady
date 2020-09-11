@@ -97,80 +97,80 @@ void
 Movement::KeyEvent()
 {
 
-  if (GetAsyncKeyState(VK_SHIFT)) velocity *= speedValue;
+  // if (GetAsyncKeyState(VK_SHIFT)) velocity *= speedValue;
 
-  if (GetAsyncKeyState(VK_SPACE)) velocity.y = speedValue;
+  // if (GetAsyncKeyState(VK_SPACE)) velocity.y = speedValue;
 
-  if (!GetAsyncKeyState(0x57) && !GetAsyncKeyState(0x53) && !GetAsyncKeyState(0x41)
-      && !GetAsyncKeyState(0x44) && !GetAsyncKeyState(VK_SPACE))
-    velocity *= 0.0f;
-
-
-  if (GetAsyncKeyState(0x57)) {
+  // if (!GetAsyncKeyState(0x57) && !GetAsyncKeyState(0x53) && !GetAsyncKeyState(0x41)
+  //     && !GetAsyncKeyState(0x44) && !GetAsyncKeyState(VK_SPACE))
+  //   velocity *= 0.0f;
 
 
-    velocity = viewDirection;
-
-    IsOtherKeyPressed(0x57);
-    if (GetAsyncKeyState(VK_SHIFT)) velocity *= speedValue;
-  }
-
-  if (GetAsyncKeyState(0x53)) {
+  // if (GetAsyncKeyState(0x57)) {
 
 
-    velocity = -viewDirection;
+  //   velocity = viewDirection;
 
-    IsOtherKeyPressed(0x53);
-    if (GetAsyncKeyState(VK_SHIFT)) velocity *= speedValue;
-  }
+  //   IsOtherKeyPressed(0x57);
+  //   if (GetAsyncKeyState(VK_SHIFT)) velocity *= speedValue;
+  // }
+
+  // if (GetAsyncKeyState(0x53)) {
 
 
-  if (GetAsyncKeyState(0x41)) {
+  //   velocity = -viewDirection;
 
-    glm::vec3 tmp = glm::cross(viewDirection, upVector);
+  //   IsOtherKeyPressed(0x53);
+  //   if (GetAsyncKeyState(VK_SHIFT)) velocity *= speedValue;
+  // }
 
-    velocity = tmp * -2.0f;
 
-    IsOtherKeyPressed(0x41);
-  }
+  // if (GetAsyncKeyState(0x41)) {
 
-  if (GetAsyncKeyState(0x44)) {// D
+  //   glm::vec3 tmp = glm::cross(viewDirection, upVector);
 
-    glm::vec3 tmp = glm::cross(viewDirection, upVector);
+  //   velocity = tmp * -2.0f;
 
-    velocity = tmp * 2.0f;
+  //   IsOtherKeyPressed(0x41);
+  // }
 
-    IsOtherKeyPressed(0x44);
-  }
+  // if (GetAsyncKeyState(0x44)) {// D
 
-  if (GetAsyncKeyState(0x52))// R
-    Reset();
+  //   glm::vec3 tmp = glm::cross(viewDirection, upVector);
+
+  //   velocity = tmp * 2.0f;
+
+  //   IsOtherKeyPressed(0x44);
+  // }
+
+  // if (GetAsyncKeyState(0x52))// R
+  //   Reset();
 }
 
 void
 Movement::IsOtherKeyPressed(int vKey)
 {
 
-  // W
-  if (vKey != 0x57 && GetAsyncKeyState(0x57)) velocity += viewDirection;
+  // // W
+  // if (vKey != 0x57 && GetAsyncKeyState(0x57)) velocity += viewDirection;
 
 
-  // S
-  if (vKey != 0x53 && GetAsyncKeyState(0x53)) velocity += -viewDirection;
+  // // S
+  // if (vKey != 0x53 && GetAsyncKeyState(0x53)) velocity += -viewDirection;
 
 
-  // A
-  if (vKey != 0x41 && GetAsyncKeyState(0x41)) {
-    glm::vec3 tmp = glm::cross(viewDirection, upVector);
-    velocity += tmp;
-  }
+  // // A
+  // if (vKey != 0x41 && GetAsyncKeyState(0x41)) {
+  //   glm::vec3 tmp = glm::cross(viewDirection, upVector);
+  //   velocity += tmp;
+  // }
 
-  // D
-  if (vKey != 0x44 && GetAsyncKeyState(0x44)) {
-    glm::vec3 tmp = glm::cross(viewDirection, upVector);
-    velocity += -tmp;
-  }
-  if (vKey != VK_SPACE && GetAsyncKeyState(VK_SPACE)) velocity.y = 1.0f;
+  // // D
+  // if (vKey != 0x44 && GetAsyncKeyState(0x44)) {
+  //   glm::vec3 tmp = glm::cross(viewDirection, upVector);
+  //   velocity += -tmp;
+  // }
+  // if (vKey != VK_SPACE && GetAsyncKeyState(VK_SPACE)) velocity.y = 1.0f;
 }
 glm::vec3
 Movement::GetLightPosition()

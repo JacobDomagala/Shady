@@ -1,8 +1,8 @@
 #ifndef LIGHT_H
 #define LIGHT_H
 
-#include "DISPLAY\Camera.h"
-#include "MODEL\Texture.h"
+#include "DISPLAY/Camera.h"
+#include "MODEL/Texture.h"
 #include <glm/gtc/type_ptr.hpp>
 
 enum lightType

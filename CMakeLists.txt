@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 
 set(PROJECT_NAME Shady)
-project(${PROJECT_NAME} VERSION 0.0.1 LANGUAGES CXX)
+project(${PROJECT_NAME} VERSION 0.0.1)
 
 set(OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/build)
 
@@ -23,9 +23,4 @@ add_subdirectory(lib)
 target_include_directories(${PROJECT_NAME} PRIVATE src src/app src/trace src/MODEL src/time src/DISPLAY src/SHADERS)
 target_link_libraries (${PROJECT_NAME} PRIVATE glm glfw glad stb_image assimp fmt)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
-
-# TODO: Is there a way to do it other way?
-# Copy assimp .dll file to build dir
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory
-                   ${OUTPUT_PATH}/lib/assimp/assimp/bin ${OUTPUT_PATH})
+target_compile_definitions(${PROJECT_NAME} PRIVATE ASSIMP_BUILD_TESTS=0 ASSIMP_BUILD_ASSIMP_TOOLS=0 BUILD_SHARED_LIBS=0)

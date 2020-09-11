@@ -1,7 +1,7 @@
 #include "app/window.hpp"
 #include "time/timer.hpp"
 #include "SHADERS/Shader.h"
-#include "Model/Model.h"
+#include "MODEL/Model.h"
 #include "DISPLAY/Camera.h"
 #include "SkyBox.h"
 #include "EventListener.h"

@@ -2,7 +2,7 @@
 #define CAMERA_H
 
 #include <iomanip>
-#include <glm/gtx\transform.hpp>
+#include <glm/gtx/transform.hpp>
 
 #include "app/window.hpp"
 

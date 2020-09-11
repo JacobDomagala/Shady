@@ -1,8 +1,8 @@
 #ifndef SKYBOX_H
 #define SKYBOX_H
 
-#include "DISPLAY\Camera.h"
-#include "SHADERS\Shader.h"
+#include "DISPLAY/Camera.h"
+#include "SHADERS/Shader.h"
 #include <vector>
 #include <glm/gtc/type_ptr.hpp>
 

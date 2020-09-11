@@ -2,7 +2,7 @@
 #include "trace/logger.hpp"
 
 #include <functional>
-#include <glfw/glfw3.h>
+#include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace shady::app {

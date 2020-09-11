@@ -56,7 +56,7 @@ Shader::ReadFile(char *fileName)
   char *buffer;
   unsigned int size;
 
-  fopen_s(&file, fileName, "rb");
+  file = fopen(fileName, "rb");
   if (!file) {
     std::cerr << "Shader file" << fileName << "couldn't be opened\n";
     system("pause");

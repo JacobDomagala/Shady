@@ -4,7 +4,7 @@
 
 #include <vector>
 #include <assimp/postprocess.h>
-#include "..\SHADERS\Shader.h"
+#include "SHADERS/Shader.h"
 
 enum class TextureQuality : char
 {

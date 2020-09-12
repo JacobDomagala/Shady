@@ -42,7 +42,7 @@ struct Model
 
    Model();
    void
-   LoadModelFromFile(GLchar* path);
+   LoadModelFromFile(char* path);
    void
    ScaleModel(vec3 scale);
    void
@@ -53,9 +53,9 @@ struct Model
    void
    Draw(shady::app::Window* window, Camera camera, Light* lights, Shader shader);
 
-   GLuint modelMatrixUniformLocation;
+   uint32_t modelMatrixUniformLocation;
 
-   GLuint programID;
+   uint32_t programID;
    vector< Mesh > meshes;
    string directory;
    vector< Texture > textures_loaded;

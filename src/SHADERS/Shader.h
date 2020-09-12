@@ -9,7 +9,7 @@
 
 struct Shader
 {
-   GLuint programID;
+   uint32_t programID;
 
    void
    LoadShaders(char* vertexFile, char* fragmentFile);
@@ -17,9 +17,9 @@ struct Shader
    void
    UseProgram();
 
-   bool CheckStatus(GLuint, PFNGLGETSHADERIVPROC, PFNGLGETSHADERINFOLOGPROC, GLenum);
-   bool CheckShaderStatus(GLuint);
-   bool CheckProgramStatus(GLuint);
+   //bool CheckStatus(GLuint, PFNGLGETSHADERIVPROC, PFNGLGETSHADERINFOLOGPROC, GLenum);
+   //bool CheckShaderStatus(uint32_t);
+   //bool CheckProgramStatus(uint32_t);
 
    char*
    ReadFile(char* fileName);

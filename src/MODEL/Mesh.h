@@ -27,21 +27,21 @@ struct Vertex
 struct Mesh
 {
    vector< Vertex > vertices;
-   vector< GLuint > indices;
+   vector< uint32_t > indices;
    vector< Texture > textures;
-   GLuint programID;
+   uint32_t programID;
 
 
-   Mesh(vector< Vertex >* vertices, vector< GLuint >* indices, vector< Texture >* textures);
+   Mesh(vector< Vertex >* vertices, vector< uint32_t >* indices, vector< Texture >* textures);
    void
    AddTexture(char* filePath, textureType textureType);
 
    void
-   Draw(GLuint programID);
+   Draw(uint32_t programID);
    void
    Delete();
 
-   GLuint VAO, VBO, EBO;
+   uint32_t VAO, VBO, EBO;
 
    void
    SetupMesh();

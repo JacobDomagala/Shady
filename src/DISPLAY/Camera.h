@@ -26,11 +26,11 @@ struct Camera
   vec3 rightVector;
   vec3 worldUp;
   // Eular Angles
-  GLfloat yaw;
-  GLfloat pitch;
+  float_t yaw;
+  float_t pitch;
   // Camera options
 
-  GLfloat mouseSensitivity;
+  float_t mouseSensitivity;
 
   mat4 viewMatrix;
   vec3 viewDirection;
@@ -47,7 +47,7 @@ struct Camera
   void
   SetCamera(vec3 cameraPosition, vec3 viewDirection);
   void
-  ProcessMouseMovement(GLfloat xoffset, GLfloat yoffset, GLboolean constrainPitch = true);
+  ProcessMouseMovement(float_t xoffset, float_t yoffset, bool constrainPitch = true);
 
   void
   SetCameraMode(int mode);

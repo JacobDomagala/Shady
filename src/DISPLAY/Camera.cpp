@@ -53,7 +53,7 @@ Camera::SetCamera(vec3 cameraPosition, vec3 viewDirection)
    this->viewDirection = glm::normalize(viewDirection);
 }
 void
-Camera::ProcessMouseMovement(GLfloat xoffset, GLfloat yoffset, GLboolean constrainPitch)
+Camera::ProcessMouseMovement(float_t xoffset, float_t yoffset, bool constrainPitch)
 {
    xoffset *= mouseSensitivity;
    yoffset *= mouseSensitivity;

@@ -10,9 +10,9 @@
 struct SkyBox
 {
    std::vector< std::string > faces;
-   GLuint textureID;
+   uint32_t textureID;
    Shader skyBoxShaders;
-   GLuint skyboxVAO, skyboxVBO;
+   uint32_t skyboxVAO, skyboxVBO;
 
    void
    LoadCubeMap(std::string folderPath);

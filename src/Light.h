@@ -29,7 +29,7 @@ struct Light
 
    Light(glm::vec3 position, glm::vec3 color, lightType type);
    void
-   StartDrawingShadows(GLuint programID);
+   StartDrawingShadows(uint32_t programID);
    void
    StopDrawingShadows();
 };

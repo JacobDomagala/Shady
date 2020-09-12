@@ -33,10 +33,10 @@ struct Texture
    SetParameter(unsigned int uiSampler, int parameter, int value);
 
 
-   GLuint samplerLocation;
-   GLuint textureID;
-   GLuint samplerID;
-   GLuint frameBufferID;
+   uint32_t samplerLocation;
+   uint32_t textureID;
+   uint32_t samplerID;
+   uint32_t frameBufferID;
 
    aiString path;
 
@@ -46,7 +46,7 @@ struct Texture
    CreateDepthBuffer(int width, int height);
 
    void
-   Use(GLuint programID, unsigned short unit);
+   Use(uint32_t programID, unsigned short unit);
    void
    SetTextureQuality(int quality);
    void

@@ -1,4 +1,4 @@
-#include "scopedTimer.hpp"
+#include "scoped_timer.hpp"
 #include "trace/logger.hpp"
 
 namespace shady::time {

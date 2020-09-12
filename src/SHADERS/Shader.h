@@ -5,12 +5,12 @@
 #include <iostream>
 #include <glm/glm.hpp>
 
-#include "app/window.hpp"
+#include "render/renderer.hpp"
 
 struct Shader
 {
   GLuint programID;
-  ;
+  
   void
   LoadShaders(char *vertexFile, char *fragmentFile);
 

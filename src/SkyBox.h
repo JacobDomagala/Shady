@@ -5,6 +5,7 @@
 #include "SHADERS/Shader.h"
 #include <vector>
 #include <glm/gtc/type_ptr.hpp>
+#include "app/window.hpp"
 
 struct SkyBox
 {

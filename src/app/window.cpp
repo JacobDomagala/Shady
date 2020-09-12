@@ -1,5 +1,6 @@
 #include "window.hpp"
 #include "trace/logger.hpp"
+#include "render/render_command.hpp"
 
 #include <functional>
 #include <GLFW/glfw3.h>
@@ -65,7 +66,7 @@ Window::Clear()
 {
   glfwMakeContextCurrent(m_pWindow);
 
-  // RenderCommand::Clear();
+  render::RenderCommand::Clear();
 }
 
 void

@@ -8,13 +8,13 @@ namespace shady::time {
 
 class ScopedTimer
 {
-public:
-  ScopedTimer(std::string &&logMsg);
-  ~ScopedTimer();
+ public:
+   ScopedTimer(std::string&& logMsg);
+   ~ScopedTimer();
 
-private:
-  std::string m_logMsg;
-  Timer m_timer;
+ private:
+   std::string m_logMsg;
+   Timer m_timer;
 };
 
-}// namespace shady::time
+} // namespace shady::time

@@ -5,46 +5,46 @@
 #include <sstream>
 #include <vector>
 
-#include <glm/gtc/matrix_transform.hpp>
 #include "../SHADERS/Shader.h"
 #include "Texture.h"
 #include "render/renderer.hpp"
+#include <glm/gtc/matrix_transform.hpp>
 
 
-using std::vector;
-using std::string;
 using glm::vec2;
 using glm::vec3;
+using std::string;
+using std::vector;
 
 struct Vertex
 {
-  vec3 position;
-  vec3 normal;
-  vec2 texCoords;
-  vec3 tangent;
+   vec3 position;
+   vec3 normal;
+   vec2 texCoords;
+   vec3 tangent;
 };
 
 struct Mesh
 {
-  vector<Vertex> vertices;
-  vector<GLuint> indices;
-  vector<Texture> textures;
-  GLuint programID;
+   vector< Vertex > vertices;
+   vector< GLuint > indices;
+   vector< Texture > textures;
+   GLuint programID;
 
 
-  Mesh(vector<Vertex> *vertices, vector<GLuint> *indices, vector<Texture> *textures);
-  void
-  AddTexture(char *filePath, textureType textureType);
+   Mesh(vector< Vertex >* vertices, vector< GLuint >* indices, vector< Texture >* textures);
+   void
+   AddTexture(char* filePath, textureType textureType);
 
-  void
-  Draw(GLuint programID);
-  void
-  Delete();
+   void
+   Draw(GLuint programID);
+   void
+   Delete();
 
-  GLuint VAO, VBO, EBO;
+   GLuint VAO, VBO, EBO;
 
-  void
-  SetupMesh();
+   void
+   SetupMesh();
 };
 
 

@@ -3,14 +3,14 @@
 
 namespace shady::time {
 
-ScopedTimer::ScopedTimer(std::string &&logMsg) : m_logMsg(std::move(logMsg))
+ScopedTimer::ScopedTimer(std::string&& logMsg) : m_logMsg(std::move(logMsg))
 {
-  m_timer.ToggleTimer();
+   m_timer.ToggleTimer();
 }
 
 ScopedTimer::~ScopedTimer()
 {
-  trace::Logger::Info("{} took {}", m_logMsg, m_timer.ToggleTimer().ToString());
+   trace::Logger::Info("{} took {}", m_logMsg, m_timer.ToggleTimer().ToString());
 }
 
-}// namespace shady::time
+} // namespace shady::time

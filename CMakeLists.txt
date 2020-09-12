@@ -18,7 +18,10 @@ set(SOURCES src/Main.cpp src/SkyBox.h src/SkyBox.cpp src/Light.h src/Light.cpp s
             src/time/timer.hpp src/time/timer.cpp src/time/scoped_timer.hpp src/time/scoped_timer.cpp src/time/utils.hpp src/time/utils.cpp
             src/render/render_command.hpp src/render/render_command.cpp src/render/renderer_api.hpp src/render/renderer_api.cpp
             src/render/vertex_array.hpp src/render/vertex_array.cpp src/render/buffer.hpp src/render/buffer.cpp
-            src/render/renderer.hpp src/render/renderer.cpp)
+            src/render/renderer.hpp src/render/renderer.cpp src/render/context.hpp src/render/context.cpp
+            src/render/openGL/openGL_renderer_api.hpp src/render/openGL/openGL_renderer_api.cpp src/render/openGL/openGL_vertex_array.hpp
+            src/render/openGL/openGL_vertex_array.cpp src/render/openGL/openGL_context.hpp src/render/openGL/openGL_context.cpp
+            src/render/openGL/openGL_buffer.hpp src/render/openGL/openGL_buffer.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 add_subdirectory(lib)

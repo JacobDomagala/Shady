@@ -20,7 +20,7 @@
 #include "Texture.h"
 #include "../DISPLAY/Camera.h"
 #include "../Light.h"
-
+#include "app/window.hpp"
 
 using std::string;
 using std::vector;

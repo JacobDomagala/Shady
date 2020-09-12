@@ -3,9 +3,6 @@
 #include <glm/glm.hpp>
 #include <string>
 
-// TODO: move to renderer part
-#include <glad/glad.h>
-
 struct GLFWwindow;
 
 namespace shady::app {

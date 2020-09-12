@@ -8,7 +8,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "../SHADERS/Shader.h"
 #include "Texture.h"
-#include "app/window.hpp"
+#include "render/renderer.hpp"
 
 
 using std::vector;

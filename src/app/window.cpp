@@ -1,6 +1,7 @@
 #include "window.hpp"
 #include "render/render_command.hpp"
 #include "trace/logger.hpp"
+#include "utils/assert.hpp"
 
 #include <GLFW/glfw3.h>
 #include <functional>
@@ -15,10 +16,7 @@ Window::Window(int32_t width, int32_t height, const std::string& title)
       trace::Logger::Fatal("GLFW Error={}: {}", error, description);
    });
 
-   if (GLFW_TRUE != glfwInit())
-   {
-      trace::Logger::Fatal("GLFW Init failed!");
-   }
+   utils::Assert(glfwInit(), "GLFW Init failed!");
 
    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
@@ -27,12 +25,15 @@ Window::Window(int32_t width, int32_t height, const std::string& title)
    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
    m_pWindow = glfwCreateWindow(m_width, m_height, title.c_str(), nullptr, nullptr);
+
+   utils::Assert(m_pWindow, "Failed to create GLFW window!");
+
    trace::Logger::Info("GLFW Window created! Name:{} Width:{} Height:{}", m_title, m_width,
-                        m_height);
+                       m_height);
 
    glfwMakeContextCurrent(m_pWindow);
    m_context = render::Context::Create(m_pWindow);
-   
+
    glfwSwapInterval(1);
 }
 

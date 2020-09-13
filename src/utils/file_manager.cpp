@@ -1,7 +1,10 @@
 #include "file_manager.hpp"
 #include "trace/logger.hpp"
 
+#define STB_IMAGE_STATIC
+#define STB_IMAGE_IMPLEMENTATION
 #include <fstream>
+#include <stb_image.h>
 
 namespace shady::utils {
 
@@ -34,6 +37,24 @@ FileManager::WriteToFile(const std::string& fileName, const std::string& content
    std::ofstream fileHandle;
    fileHandle.open(fileName);
    fileHandle << content;
+}
+
+render::Texture::ImageData
+FileManager::ReadTexture(const std::string& fileName)
+{
+   const auto pathToImage = std::filesystem::path(TEXTURES_DIR / fileName).u8string();
+   int force_channels = 0;
+   int w, h, n;
+
+   render::Texture::ImageHandleType textureData(
+      stbi_load(pathToImage.c_str(), &w, &h, &n, force_channels), stbi_image_free);
+
+   if (!textureData)
+   {
+      trace::Logger::Fatal("FileManager::LoadImage -> {} can't be opened!", pathToImage);
+   }
+
+   return {std::move(textureData), {w, h}, n};
 }
 
 } // namespace shady::utils

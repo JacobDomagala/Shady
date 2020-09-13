@@ -1,5 +1,5 @@
 #include "vertex_array.hpp"
-#include "openGL/openGL_vertex_array.hpp"
+#include "opengl/opengl_vertex_array.hpp"
 #include "renderer.hpp"
 #include "trace/logger.hpp"
 
@@ -18,7 +18,7 @@ VertexArray::Create()
       break;
 
       case RendererAPI::API::OpenGL: {
-         return std::make_shared< openGL::OpenGLVertexArray >();
+         return std::make_shared< opengl::OpenGLVertexArray >();
       }
       break;
    }

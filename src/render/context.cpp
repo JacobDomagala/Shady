@@ -1,6 +1,6 @@
 #include "context.hpp"
 
-#include "openGL/openGL_context.hpp"
+#include "opengl/opengl_context.hpp"
 #include "renderer.hpp"
 #include "trace/logger.hpp"
 
@@ -18,7 +18,7 @@ Context::Create(GLFWwindow* window)
       break;
 
       case RendererAPI::API::OpenGL: {
-         return std::make_unique< openGL::OpenGLContext >(window);
+         return std::make_unique< opengl::OpenGLContext >(window);
       }
       break;
    }

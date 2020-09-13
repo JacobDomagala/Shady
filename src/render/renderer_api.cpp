@@ -1,6 +1,6 @@
 
 #include "renderer_api.hpp"
-#include "openGL/openGL_renderer_api.hpp"
+#include "opengl/opengl_renderer_api.hpp"
 #include "trace/logger.hpp"
 
 namespace shady::render {
@@ -18,7 +18,7 @@ RendererAPI::Create()
       break;
 
       case RendererAPI::API::OpenGL: {
-         return std::make_unique< openGL::OpenGLRendererAPI >();
+         return std::make_unique< opengl::OpenGLRendererAPI >();
       }
       break;
    }

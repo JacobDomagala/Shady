@@ -30,7 +30,7 @@ Light::Light(glm::vec3 position, glm::vec3 color, lightType type)
    lightSpaceMatrix = projectionMatrix * viewMatrix * modelMatrix;
    shadowMatrix = biasMatrix * lightSpaceMatrix;
 
-   shadowTexture.CreateDepthBuffer(shadowTextureWidth, shadowTextureHeight);
+   //shadowTexture.CreateDepthBuffer(shadowTextureWidth, shadowTextureHeight);
 }
 
 void

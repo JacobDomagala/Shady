@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "../SHADERS/Shader.h"
-#include "Texture.h"
 #include "render/renderer.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -28,13 +27,13 @@ struct Mesh
 {
    vector< Vertex > vertices;
    vector< uint32_t > indices;
-   vector< Texture > textures;
+//   vector< Texture > textures;
    uint32_t programID;
 
 
-   Mesh(vector< Vertex >* vertices, vector< uint32_t >* indices, vector< Texture >* textures);
-   void
-   AddTexture(char* filePath, textureType textureType);
+   //Mesh(vector< Vertex >* vertices, vector< uint32_t >* indices, vector< Texture >* textures);
+   //void
+   //AddTexture(char* filePath, textureType textureType);
 
    void
    Draw(uint32_t programID);

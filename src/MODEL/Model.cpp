@@ -1,5 +1,7 @@
 #include "Model.h"
 
+#include <assimp/postprocess.h>
+
 Model::Model()
    : translateValue(0.0, 0.0, 0.0),
      rotateValue(1.0, 1.0, 1.0),
@@ -107,7 +109,7 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
    // Data to fill
    vector< Vertex > vertices;
    vector< uint32_t > indices;
-   vector< Texture > textures;
+   //vector< Texture > textures;
 
    //// Walk through each of the mesh's vertices
    //for (GLuint i = 0; i < mesh->mNumVertices; i++)
@@ -181,46 +183,48 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
    //}
 
    // Return a mesh object created from the extracted mesh data
-   return Mesh(&vertices, &indices, &textures);
+   //return Mesh(&vertices, &indices, &textures);
+   return {};
 }
 
-vector< Texture >
-Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type, char* typeName)
-{
-   vector< Texture > textures;
-   //for (GLuint i = 0; i < mat->GetTextureCount(type); i++)
-   //{
-   //   aiString str;
-   //   mat->GetTexture(type, i, &str);
-   //   // Check if texture was loaded before and if so, continue to next iteration: skip loading a
-   //   // new texture
-   //   GLboolean alreadyLoaded = false;
-   //   for (GLuint j = 0; j < textures_loaded.size(); j++)
-   //   {
-   //      if (textures_loaded[j].path == str)
-   //      {
-   //         textures.push_back(textures_loaded[j]);
-   //         alreadyLoaded = true;
-   //         break;
-   //      }
-   //   }
-   //   if (!alreadyLoaded)
-   //   {
-   //      // If texture hasn't been loaded already, load it
-   //      Texture texture;
-   //      texture.LoadTexture(str.C_Str(), typeName, directory);
-   //      texture.path = str;
-   //      textures.push_back(texture);
-   //      textures_loaded.push_back(texture);
-   //   }
-   //}
-   return textures;
-}
+//vector< Texture >
+//Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type, char* typeName)
+//{
+//   vector< Texture > textures;
+//   //for (GLuint i = 0; i < mat->GetTextureCount(type); i++)
+//   //{
+//   //   aiString str;
+//   //   mat->GetTexture(type, i, &str);
+//   //   // Check if texture was loaded before and if so, continue to next iteration: skip loading a
+//   //   // new texture
+//   //   GLboolean alreadyLoaded = false;
+//   //   for (GLuint j = 0; j < textures_loaded.size(); j++)
+//   //   {
+//   //      if (textures_loaded[j].path == str)
+//   //      {
+//   //         textures.push_back(textures_loaded[j]);
+//   //         alreadyLoaded = true;
+//   //         break;
+//   //      }
+//   //   }
+//   //   if (!alreadyLoaded)
+//   //   {
+//   //      // If texture hasn't been loaded already, load it
+//   //      Texture texture;
+//   //      texture.LoadTexture(str.C_Str(), typeName, directory);
+//   //      texture.path = str;
+//   //      textures.push_back(texture);
+//   //      textures_loaded.push_back(texture);
+//   //   }
+//   //}
+//   return textures;
+//}
 
 void
 Model::CreateCube(int size)
 {
-   Mesh cube(NULL, NULL, 0);
+   //Mesh cube(NULL, NULL, 0);
+   Mesh cube;
 
    Vertex verticies[] = {vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -1.0f), vec2(1.0f, 1.0f), vec3(),
                          vec3(size, 0.0f, 0.0f), vec3(0.0f, 0.0f, -1.0f), vec2(0.0f, 1.0f), vec3(),
@@ -265,11 +269,11 @@ Model::CreateCube(int size)
    {
       cube.indices.push_back(indieces[i]);
    }
-   Texture tmp[2];
+  /* Texture tmp[2];
    tmp[0].LoadTexture("./Models/textures/177.png", "diffuse_map");
    tmp[1].LoadTexture("./Models/textures/177_norm.png", "depth_map");
    cube.textures.push_back(tmp[0]);
-   cube.textures.push_back(tmp[1]);
+   cube.textures.push_back(tmp[1]);*/
    cube.SetupMesh();
    meshes.push_back(cube);
 }

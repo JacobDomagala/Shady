@@ -2,7 +2,6 @@
 #define LIGHT_H
 
 #include "DISPLAY/Camera.h"
-#include "MODEL/Texture.h"
 #include <glm/gtc/type_ptr.hpp>
 
 enum lightType
@@ -14,7 +13,6 @@ enum lightType
 
 struct Light
 {
-   Texture shadowTexture;
    int shadowTextureWidth;
    int shadowTextureHeight;
 

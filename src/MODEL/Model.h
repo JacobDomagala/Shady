@@ -19,7 +19,6 @@
 #include "../DISPLAY/Camera.h"
 #include "../Light.h"
 #include "Mesh.h"
-#include "Texture.h"
 #include "app/window.hpp"
 
 using glm::mat4;
@@ -58,7 +57,7 @@ struct Model
    uint32_t programID;
    vector< Mesh > meshes;
    string directory;
-   vector< Texture > textures_loaded;
+   //vector< Texture > textures_loaded;
 
    void
    LoadModel(string path);
@@ -68,8 +67,8 @@ struct Model
    Mesh
    ProcessMesh(aiMesh* mesh, const aiScene* scene);
 
-   vector< Texture >
-   LoadMaterialTextures(aiMaterial* mat, aiTextureType type, char* typeName);
+   //vector< Texture >
+   //LoadMaterialTextures(aiMaterial* mat, aiTextureType type, char* typeName);
 
    void
    CreateCube(int size);

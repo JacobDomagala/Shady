@@ -1,39 +1,39 @@
 #include "Mesh.h"
 
-Mesh::Mesh(vector< Vertex >* vertices, vector< uint32_t >* indices, vector< Texture >* textures)
-{
-   if (vertices != NULL)
-   {
-      this->vertices = *vertices;
-      this->indices = *indices;
-      this->textures = *textures;
+//Mesh::Mesh(vector< Vertex >* vertices, vector< uint32_t >* indices, vector< Texture >* textures)
+//{
+//   if (vertices != NULL)
+//   {
+//      this->vertices = *vertices;
+//      this->indices = *indices;
+//      this->textures = *textures;
+//
+//      // Now that we have all the required data, set the vertex buffers and its attribute pointers.
+//      SetupMesh();
+//   }
+//}
 
-      // Now that we have all the required data, set the vertex buffers and its attribute pointers.
-      SetupMesh();
-   }
-}
-
-void
-Mesh::AddTexture(char* filePath, textureType textureType)
-{
-   Texture tmp;
-   switch (textureType)
-   {
-      case textureType::DIFFUSE_MAP: {
-         tmp.LoadTexture(filePath, "diffuse_map");
-         break;
-      }
-      case textureType::SPECULAR_MAP: {
-         tmp.LoadTexture(filePath, "specular_map");
-         break;
-      }
-      case textureType::NORMAL_MAP: {
-         tmp.LoadTexture(filePath, "normal_map");
-         break;
-      }
-   }
-   textures.push_back(tmp);
-}
+//void
+//Mesh::AddTexture(char* filePath, textureType textureType)
+//{
+//   Texture tmp;
+//   switch (textureType)
+//   {
+//      case textureType::DIFFUSE_MAP: {
+//         tmp.LoadTexture(filePath, "diffuse_map");
+//         break;
+//      }
+//      case textureType::SPECULAR_MAP: {
+//         tmp.LoadTexture(filePath, "specular_map");
+//         break;
+//      }
+//      case textureType::NORMAL_MAP: {
+//         tmp.LoadTexture(filePath, "normal_map");
+//         break;
+//      }
+//   }
+//   textures.push_back(tmp);
+//}
 
 void
 Mesh::Draw(uint32_t programID)
@@ -104,6 +104,6 @@ void
 Mesh::Delete()
 {
    vertices.clear();
-   textures.clear();
+   //textures.clear();
    indices.clear();
 }

@@ -21,11 +21,12 @@ set(SOURCES src/Main.cpp src/SkyBox.h src/SkyBox.cpp src/Light.h src/Light.cpp s
             src/render/renderer.hpp src/render/renderer.cpp src/render/context.hpp src/render/context.cpp
             src/render/openGL/openGL_renderer_api.hpp src/render/openGL/openGL_renderer_api.cpp src/render/openGL/openGL_vertex_array.hpp
             src/render/openGL/openGL_vertex_array.cpp src/render/openGL/openGL_context.hpp src/render/openGL/openGL_context.cpp
-            src/render/openGL/openGL_buffer.hpp src/render/openGL/openGL_buffer.cpp)
+            src/render/openGL/openGL_buffer.hpp src/render/openGL/openGL_buffer.cpp
+            src/utils/file_manager.hpp src/utils/file_manager.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 add_subdirectory(lib)
 
-target_include_directories(${PROJECT_NAME} PRIVATE src src/app src/trace src/render src/MODEL src/time src/DISPLAY src/SHADERS)
+target_include_directories(${PROJECT_NAME} PRIVATE src src/app src/trace src/render src/utils src/MODEL src/time src/DISPLAY src/SHADERS)
 target_link_libraries (${PROJECT_NAME} PRIVATE glm glfw glad stb_image assimp fmt)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)

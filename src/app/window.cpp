@@ -25,12 +25,15 @@ Window::Window(int32_t width, int32_t height, const std::string& title)
    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
    m_pWindow = glfwCreateWindow(m_width, m_height, title.c_str(), nullptr, nullptr);
+
+   utils::Assert(m_pWindow, "Failed to create GLFW window!");
+
    trace::Logger::Info("GLFW Window created! Name:{} Width:{} Height:{}", m_title, m_width,
-                        m_height);
+                       m_height);
 
    glfwMakeContextCurrent(m_pWindow);
    m_context = render::Context::Create(m_pWindow);
-   
+
    glfwSwapInterval(1);
 }
 

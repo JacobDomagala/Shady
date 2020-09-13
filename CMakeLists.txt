@@ -37,7 +37,7 @@ add_executable(${PROJECT_NAME}
     src/render/opengl/opengl_buffer.hpp src/render/opengl/opengl_buffer.cpp src/render/opengl/opengl_texture.hpp src/render/opengl/opengl_texture.cpp
 
     # utils
-    src/utils/file_manager.hpp src/utils/file_manager.cpp
+    src/utils/file_manager.hpp src/utils/file_manager.cpp src/utils/assert.hpp src/utils/assert.cpp
 )
 
 add_subdirectory(lib)

@@ -313,5 +313,5 @@ build
 lib/assimp/assimp*
 lib/glm/glm*
 lib/stb_image/stb_image*
-lib/glfw/GLFW*
+lib/glfw/glfw*
 lib/fmt/fmt*

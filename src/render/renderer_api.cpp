@@ -1,6 +1,6 @@
 
 #include "renderer_api.hpp"
-#include "openGL/openGL_renderer_api.hpp"
+#include "opengl/opengl_renderer_api.hpp"
 #include "trace/logger.hpp"
 
 namespace shady::render {

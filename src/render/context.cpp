@@ -1,6 +1,6 @@
 #include "context.hpp"
 
-#include "openGL/openGL_context.hpp"
+#include "opengl/opengl_context.hpp"
 #include "renderer.hpp"
 #include "trace/logger.hpp"
 

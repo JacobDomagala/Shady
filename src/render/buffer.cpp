@@ -1,7 +1,7 @@
 #include "buffer.hpp"
 #include "renderer.hpp"
 #include "trace/logger.hpp"
-#include "openGL/openGL_buffer.hpp"
+#include "opengl/opengl_buffer.hpp"
 
 namespace shady::render {
 

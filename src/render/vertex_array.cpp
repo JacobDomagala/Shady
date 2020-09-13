@@ -1,5 +1,5 @@
 #include "vertex_array.hpp"
-#include "openGL/openGL_vertex_array.hpp"
+#include "opengl/opengl_vertex_array.hpp"
 #include "renderer.hpp"
 #include "trace/logger.hpp"
 

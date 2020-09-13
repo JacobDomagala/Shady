@@ -1,4 +1,4 @@
-#include "openGL_vertex_array.hpp"
+#include "opengl_vertex_array.hpp"
 
 namespace shady::render::opengl {
 

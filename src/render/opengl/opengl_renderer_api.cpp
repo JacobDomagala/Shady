@@ -1,5 +1,5 @@
 
-#include "openGL_renderer_api.hpp"
+#include "opengl_renderer_api.hpp"
 
 #include "trace/logger.hpp"
 

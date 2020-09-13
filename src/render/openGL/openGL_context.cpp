@@ -1,4 +1,4 @@
-#include "openGL_context.hpp"
+#include "opengl_context.hpp"
 #include "trace/logger.hpp"
 
 #include <glad/glad.h>

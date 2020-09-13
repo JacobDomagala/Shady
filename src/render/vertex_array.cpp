@@ -18,7 +18,7 @@ VertexArray::Create()
       break;
 
       case RendererAPI::API::OpenGL: {
-         return std::make_shared< openGL::OpenGLVertexArray >();
+         return std::make_shared< opengl::OpenGLVertexArray >();
       }
       break;
    }

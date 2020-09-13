@@ -4,7 +4,7 @@
 
 #include <memory>
 
-namespace shady::render::openGL {
+namespace shady::render::opengl {
 
 class OpenGLVertexArray : public VertexArray
 {
@@ -30,4 +30,4 @@ class OpenGLVertexArray : public VertexArray
    GetIndexBuffer() const override;
 };
 
-} // namespace shady::render::openGL
+} // namespace shady::render::opengl

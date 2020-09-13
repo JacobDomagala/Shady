@@ -152,7 +152,7 @@ VertexBuffer::Create(uint32_t size)
       break;
 
       case RendererAPI::API::OpenGL: {
-         return std::make_shared< openGL::OpenGLVertexBuffer >(size);
+         return std::make_shared< opengl::OpenGLVertexBuffer >(size);
       }
       break;
    }
@@ -174,7 +174,7 @@ VertexBuffer::Create(float* vertices, uint32_t size)
       break;
 
       case RendererAPI::API::OpenGL: {
-         return std::make_shared< openGL::OpenGLVertexBuffer >(vertices, size);
+         return std::make_shared< opengl::OpenGLVertexBuffer >(vertices, size);
       }
       break;
    }
@@ -199,7 +199,7 @@ IndexBuffer::Create(uint32_t* indices, uint32_t size)
       break;
 
       case RendererAPI::API::OpenGL: {
-         return std::make_shared< openGL::OpenGLIndexBuffer >(indices, size);
+         return std::make_shared< opengl::OpenGLIndexBuffer >(indices, size);
       }
       break;
    }

@@ -5,7 +5,7 @@
 
 #include <glad/glad.h>
 
-namespace shady::render::openGL {
+namespace shady::render::opengl {
 
 void
 OpenGLRendererAPI::Init()
@@ -68,4 +68,4 @@ OpenGLRendererAPI::DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray
    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-} // namespace shady::render::openGL
+} // namespace shady::render::opengl

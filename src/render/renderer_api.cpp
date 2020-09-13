@@ -18,7 +18,7 @@ RendererAPI::Create()
       break;
 
       case RendererAPI::API::OpenGL: {
-         return std::make_unique< openGL::OpenGLRendererAPI >();
+         return std::make_unique< opengl::OpenGLRendererAPI >();
       }
       break;
    }

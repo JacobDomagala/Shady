@@ -18,7 +18,7 @@ Context::Create(GLFWwindow* window)
       break;
 
       case RendererAPI::API::OpenGL: {
-         return std::make_unique< openGL::OpenGLContext >(window);
+         return std::make_unique< opengl::OpenGLContext >(window);
       }
       break;
    }

@@ -2,7 +2,7 @@
 
 #include "context.hpp"
 
-namespace shady::render::openGL {
+namespace shady::render::opengl {
 
 class OpenGLContext : public Context
 {
@@ -20,4 +20,4 @@ class OpenGLContext : public Context
    GLFWwindow* m_windowHandle = nullptr;
 };
 
-} // namespace shady::render::openGL
+} // namespace shady::render::opengl

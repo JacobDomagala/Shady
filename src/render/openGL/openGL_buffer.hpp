@@ -2,7 +2,7 @@
 
 #include "buffer.hpp"
 
-namespace shady::render::openGL {
+namespace shady::render::opengl {
 
 class OpenGLVertexBuffer : public VertexBuffer
 {
@@ -48,4 +48,4 @@ class OpenGLIndexBuffer : public IndexBuffer
    uint32_t m_count;
 };
 
-} // namespace shady::render::openGL
+} // namespace shady::render::opengl

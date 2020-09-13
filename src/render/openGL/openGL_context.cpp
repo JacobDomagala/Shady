@@ -4,7 +4,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-namespace shady::render::openGL {
+namespace shady::render::opengl {
 
 OpenGLContext::OpenGLContext(GLFWwindow* window) : m_windowHandle(window)
 {
@@ -33,4 +33,4 @@ OpenGLContext::SwapBuffers()
    glfwSwapBuffers(m_windowHandle);
 }
 
-} // namespace shady::render::openGL
+} // namespace shady::render::opengl

@@ -2,7 +2,7 @@
 
 #include <glad/glad.h>
 
-namespace shady::render::openGL {
+namespace shady::render::opengl {
 
 /**************************************************************************************************
  *************************************** VERTEX BUFFER ********************************************
@@ -93,4 +93,4 @@ OpenGLIndexBuffer::GetCount() const
    return m_count;
 }
 
-} // namespace shady::render::openGL
+} // namespace shady::render::opengl

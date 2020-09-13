@@ -1,6 +1,6 @@
 #include "openGL_vertex_array.hpp"
 
-namespace shady::render::openGL {
+namespace shady::render::opengl {
 
 void
 OpenGLVertexArray::Bind() const
@@ -34,4 +34,4 @@ OpenGLVertexArray::GetIndexBuffer() const
    return {};
 }
 
-} // namespace shady::render::openGL
+} // namespace shady::render::opengl

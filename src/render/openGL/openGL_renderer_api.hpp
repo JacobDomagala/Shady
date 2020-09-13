@@ -4,7 +4,7 @@
 
 #include <glm/glm.hpp>
 
-namespace shady::render::openGL {
+namespace shady::render::opengl {
 
 class OpenGLRendererAPI : public RendererAPI
 {
@@ -27,4 +27,4 @@ class OpenGLRendererAPI : public RendererAPI
    DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray, uint32_t indexCount = 0) override;
 };
 
-} // namespace shady::render::openGL
+} // namespace shady::render::opengl

@@ -1,6 +1,7 @@
 #include "window.hpp"
 #include "render/render_command.hpp"
 #include "trace/logger.hpp"
+#include "utils/assert.hpp"
 
 #include <GLFW/glfw3.h>
 #include <functional>
@@ -15,10 +16,7 @@ Window::Window(int32_t width, int32_t height, const std::string& title)
       trace::Logger::Fatal("GLFW Error={}: {}", error, description);
    });
 
-   if (GLFW_TRUE != glfwInit())
-   {
-      trace::Logger::Fatal("GLFW Init failed!");
-   }
+   utils::Assert(glfwInit(), "GLFW Init failed!");
 
    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);

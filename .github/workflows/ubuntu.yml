@@ -23,7 +23,13 @@ jobs:
       run: cmake -E make_directory ${{runner.workspace}}/build
 
     - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get install xorg-dev
+      run: |
+        sudo apt-get update
+
+        sudo apt-get install -y xorg-dev
+        sudo apt-get install -y libc++-9-dev
+        echo "::set-env name=CXX::clang++-9"
+
 
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable

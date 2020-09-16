@@ -3,7 +3,6 @@
 
 //#include <Windows.h>
 #include "DISPLAY/Camera.h"
-#include "Shader.h"
 #include "app/window.hpp"
 
 struct EventListener
@@ -11,7 +10,6 @@ struct EventListener
    /*SDL_Event event;*/
    shady::app::Window* windowHandle;
    Camera* camera;
-   Shader* shaders;
 
    vec2 windowSize;
 
@@ -28,7 +26,7 @@ struct EventListener
    void
    IsOtherKeyPressed(int vKey);
 
-   EventListener(shady::app::Window* windowHandle, Camera* camera, Shader* shaders);
+   //EventListener(shady::app::Window* windowHandle, Camera* camera, Shader* shaders);
    void
    Listen();
 };

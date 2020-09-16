@@ -1,13 +1,13 @@
 #include "EventListener.h"
 
-EventListener::EventListener(shady::app::Window* windowHandle, Camera* camera, Shader* shaders)
-   : camera(camera),
-     // windowSize(windowHandle->width, windowHandle->height),
-     windowHandle(windowHandle),
-     // oldMousePosition(windowHandle->width / 2, windowHandle->height / 2),
-     shaders(shaders)
-{
-}
+//EventListener::EventListener(shady::app::Window* windowHandle, Camera* camera, Shader* shaders)
+//   : camera(camera),
+//     // windowSize(windowHandle->width, windowHandle->height),
+//     windowHandle(windowHandle),
+//     // oldMousePosition(windowHandle->width / 2, windowHandle->height / 2),
+//     shaders(shaders)
+//{
+//}
 
 void
 EventListener::KeyEvent()

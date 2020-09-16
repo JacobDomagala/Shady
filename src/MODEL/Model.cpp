@@ -35,9 +35,9 @@ Model::LoadModelFromFile(char* path)
 }
 
 void
-Model::Draw(shady::app::Window* window, Camera camera, Light* lights, Shader shader)
+Model::Draw(shady::app::Window* window, Camera camera, Light* lights/*, Shader shader*/)
 {
-   shader.UseProgram();
+   //shader.UseProgram();
 
    glm::vec3 lightPos = lights->position;
    glm::vec3 camPos = camera.position;

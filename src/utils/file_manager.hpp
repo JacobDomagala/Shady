@@ -24,6 +24,9 @@ class FileManager
 
  public:
    static std::string
+   ReadFile(const std::filesystem::path& path, FileType type = FileType::TEXT);
+
+   static std::string
    ReadFile(const std::string& fileName, FileType type = FileType::TEXT);
 
    static void

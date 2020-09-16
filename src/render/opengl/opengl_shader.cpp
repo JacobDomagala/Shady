@@ -29,8 +29,10 @@ ShaderTypeFromString(const std::string& type)
 
 OpenGLShader::OpenGLShader(const std::string& name) : m_name(name)
 {
-   Compile(utils::FileManager::ReadFile(fmt::format("{}.vs,glsl", name)),
-           utils::FileManager::ReadFile(fmt::format("{}.fs,glsl", name)));
+   Compile(utils::FileManager::ReadFile(utils::FileManager::SHADERS_DIR / name
+                                        / fmt::format("{}.vs,glsl", name)),
+           utils::FileManager::ReadFile(utils::FileManager::SHADERS_DIR / name
+                                        / fmt::format("{}.fs,glsl", name)));
 }
 
 OpenGLShader::~OpenGLShader()

@@ -50,7 +50,7 @@ struct Model
    RotateModel(vec3 rotate, float angle);
 
    void
-   Draw(shady::app::Window* window, Camera camera, Light* lights, Shader shader);
+   Draw(shady::app::Window* window, Camera camera, Light* lights/*, Shader shader*/);
 
    uint32_t modelMatrixUniformLocation;
 

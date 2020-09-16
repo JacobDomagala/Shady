@@ -9,6 +9,12 @@
 namespace shady::utils {
 
 std::string
+FileManager::ReadFile(const std::filesystem::path& path, FileType type)
+{
+   return ReadFile(path.u8string(), type);
+}
+
+std::string
 FileManager::ReadFile(const std::string& fileName, FileType type)
 {
    std::ifstream fileHandle;

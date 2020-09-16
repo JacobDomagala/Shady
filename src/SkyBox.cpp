@@ -62,7 +62,7 @@ SkyBox::LoadCubeMap(std::string folderPath)
 }
 
 void
-SkyBox::Draw(shady::app::Window* window, Camera camera, Shader shader)
+SkyBox::Draw(shady::app::Window* window, Camera camera/*, Shader shader*/)
 {
    //shader.UseProgram();
    //glDepthFunc(GL_LEQUAL);

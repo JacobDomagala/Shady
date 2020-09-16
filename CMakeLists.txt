@@ -12,7 +12,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_PATH})
 add_executable(${PROJECT_NAME}
     # global namespace (legacy files)
     src/Main.cpp src/SkyBox.h src/SkyBox.cpp src/Light.h src/Light.cpp src/EventListener.h src/EventListener.cpp
-    src/SHADERS/Shader.h src/SHADERS/Shader.cpp src/MODEL/Mesh.h src/MODEL/Mesh.cpp src/MODEL/Model.h src/MODEL/Model.cpp
+    src/MODEL/Mesh.h src/MODEL/Mesh.cpp src/MODEL/Model.h src/MODEL/Model.cpp
     src/DISPLAY/Camera.h src/DISPLAY/Camera.cpp src/DISPLAY/Movement.h src/DISPLAY/Movement.cpp
 
     # app
@@ -28,12 +28,13 @@ add_executable(${PROJECT_NAME}
     src/render/render_command.hpp src/render/render_command.cpp src/render/renderer_api.hpp src/render/renderer_api.cpp
     src/render/vertex_array.hpp src/render/vertex_array.cpp src/render/buffer.hpp src/render/buffer.cpp
     src/render/renderer.hpp src/render/renderer.cpp src/render/context.hpp src/render/context.cpp
-    src/render/texture.hpp src/render/texture.cpp
+    src/render/texture.hpp src/render/texture.cpp src/render/shader.hpp src/render/shader.cpp
 
     # render/opengl
     src/render/opengl/opengl_renderer_api.hpp src/render/opengl/opengl_renderer_api.cpp src/render/opengl/opengl_vertex_array.hpp
     src/render/opengl/opengl_vertex_array.cpp src/render/opengl/opengl_context.hpp src/render/opengl/opengl_context.cpp
     src/render/opengl/opengl_buffer.hpp src/render/opengl/opengl_buffer.cpp src/render/opengl/opengl_texture.hpp src/render/opengl/opengl_texture.cpp
+    src/render/opengl/opengl_shader.hpp src/render/opengl/opengl_shader.cpp
 
     # utils
     src/utils/file_manager.hpp src/utils/file_manager.cpp src/utils/assert.hpp src/utils/assert.cpp

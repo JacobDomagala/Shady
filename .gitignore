@@ -312,6 +312,7 @@ build
 # dependencies
 lib/assimp/assimp*
 lib/glm/glm*
+lib/glm/GLM*
 lib/stb_image/stb_image*
 lib/glfw/glfw*
 lib/fmt/fmt*

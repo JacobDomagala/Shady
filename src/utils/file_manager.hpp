@@ -14,6 +14,7 @@ class FileManager
       std::filesystem::current_path().parent_path().parent_path();
    static inline const std::filesystem::path ASSETS_DIR = ROOT_DIR / "assets";
    static inline const std::filesystem::path TEXTURES_DIR = ASSETS_DIR / "textures";
+   static inline const std::filesystem::path SHADERS_DIR = ASSETS_DIR / "shaders";
 
    enum class FileType
    {

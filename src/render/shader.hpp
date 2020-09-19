@@ -41,6 +41,9 @@ class ShaderLibrary
    static std::shared_ptr< Shader >
    GetShader(const std::string& name);
 
+   static void
+   Clear();
+
  private:
    static void
    LoadShader(const std::string& name);

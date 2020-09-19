@@ -68,4 +68,10 @@ OpenGLRendererAPI::DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray
    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+void
+OpenGLRendererAPI::DrawLines(uint32_t count)
+{
+   glDrawArrays(GL_LINES, 0, count * 2);
+}
+
 } // namespace shady::render::opengl

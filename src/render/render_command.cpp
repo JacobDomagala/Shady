@@ -32,4 +32,10 @@ RenderCommand::DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray, ui
    s_rendererAPI->DrawIndexed(vertexArray, count);
 }
 
+void
+RenderCommand::DrawLines(uint32_t count)
+{
+   s_rendererAPI->DrawLines(count);
+}
+
 } // namespace shady::render

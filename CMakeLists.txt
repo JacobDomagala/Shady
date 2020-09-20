@@ -13,7 +13,7 @@ add_executable(${PROJECT_NAME}
     # global namespace (legacy files)
     src/Main.cpp src/SkyBox.h src/SkyBox.cpp src/Light.h src/Light.cpp src/EventListener.h src/EventListener.cpp
     src/MODEL/Mesh.h src/MODEL/Mesh.cpp src/MODEL/Model.h src/MODEL/Model.cpp
-    src/DISPLAY/Camera.h src/DISPLAY/Camera.cpp src/DISPLAY/Movement.h src/DISPLAY/Movement.cpp
+    src/DISPLAY/Movement.h src/DISPLAY/Movement.cpp
 
     # app
     src/app/window.hpp src/app/window.cpp
@@ -29,6 +29,7 @@ add_executable(${PROJECT_NAME}
     src/render/vertex_array.hpp src/render/vertex_array.cpp src/render/buffer.hpp src/render/buffer.cpp
     src/render/renderer.hpp src/render/renderer.cpp src/render/context.hpp src/render/context.cpp
     src/render/texture.hpp src/render/texture.cpp src/render/shader.hpp src/render/shader.cpp
+    src/render/camera.hpp src/render/camera.cpp src/render/orthographic_camera.hpp src/render/orthographic_camera.cpp
 
     # render/opengl
     src/render/opengl/opengl_renderer_api.hpp src/render/opengl/opengl_renderer_api.cpp src/render/opengl/opengl_vertex_array.hpp

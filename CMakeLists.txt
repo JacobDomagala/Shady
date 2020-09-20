@@ -13,7 +13,7 @@ add_executable(${PROJECT_NAME}
     # global namespace (legacy files)
     src/Main.cpp src/SkyBox.h src/SkyBox.cpp src/Light.h src/Light.cpp src/EventListener.h src/EventListener.cpp
     src/MODEL/Mesh.h src/MODEL/Mesh.cpp src/MODEL/Model.h src/MODEL/Model.cpp
-    src/DISPLAY/Camera.h src/DISPLAY/Camera.cpp src/DISPLAY/Movement.h src/DISPLAY/Movement.cpp
+    src/DISPLAY/Movement.h src/DISPLAY/Movement.cpp
 
     # app
     src/app/window.hpp src/app/window.cpp

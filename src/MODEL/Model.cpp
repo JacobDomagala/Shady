@@ -35,17 +35,17 @@ Model::LoadModelFromFile(char* path)
 }
 
 void
-Model::Draw(shady::app::Window* window, Camera camera, Light* lights/*, Shader shader*/)
+Model::Draw(shady::app::Window* window, /*Camera camera,*/ Light* lights/*, Shader shader*/)
 {
    //shader.UseProgram();
 
    glm::vec3 lightPos = lights->position;
-   glm::vec3 camPos = camera.position;
+   //glm::vec3 camPos = camera.position;
 
    // projectionMatrix = window->projectionMatrix;
-   viewMatrix = camera.viewMatrix;
-   modelMatrix = glm::translate(translateValue) * glm::rotate(rotateAngle, rotateValue)
-                 * glm::scale(scaleValue);
+   //viewMatrix = camera.viewMatrix;
+   //modelMatrix = glm::translate(translateValue) * glm::rotate(rotateAngle, rotateValue)
+   //              * glm::scale(scaleValue);
 
    //glUniformMatrix4fv(glGetUniformLocation(shader.programID, "projectionMatrix"), 1, GL_FALSE,
    //                   glm::value_ptr(projectionMatrix));

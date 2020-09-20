@@ -25,10 +25,10 @@ Light::Light(glm::vec3 position, glm::vec3 color, lightType type)
 
    glm::mat4 viewMatrix = glm::lookAt(position, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-   biasMatrix = glm::translate(glm::vec3(0.5f)) * glm::scale(glm::vec3(0.5f)) * glm::mat4();
+   //biasMatrix = glm::translate(glm::vec3(0.5f)) * glm::scale(glm::vec3(0.5f)) * glm::mat4();
 
-   lightSpaceMatrix = projectionMatrix * viewMatrix * modelMatrix;
-   shadowMatrix = biasMatrix * lightSpaceMatrix;
+   //lightSpaceMatrix = projectionMatrix * viewMatrix * modelMatrix;
+   //shadowMatrix = biasMatrix * lightSpaceMatrix;
 
    //shadowTexture.CreateDepthBuffer(shadowTextureWidth, shadowTextureHeight);
 }

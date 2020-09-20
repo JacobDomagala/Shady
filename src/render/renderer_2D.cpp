@@ -158,12 +158,12 @@ Renderer2D::BeginScene(const Camera& camera)
    s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
 
    s_Data.TextureShader->Bind();
-   s_Data.TextureShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
+   s_Data.TextureShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
 
    s_Data.TextureSlotIndex = 1;
 
    s_LineData.LineShader->Bind();
-   s_LineData.LineShader->SetMat4("u_ViewProjection", camera.GetViewProjectionMatrix());
+   s_LineData.LineShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
 
    s_LineData.LineVertexBufferPtr = s_LineData.LineVertexBufferBase;
    s_LineData.NumLines = 0;

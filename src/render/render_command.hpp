@@ -22,6 +22,9 @@ class RenderCommand
    static void
    DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray, uint32_t count = 0);
 
+   static void
+   DrawLines(uint32_t count);
+
  private:
    static inline std::unique_ptr< RendererAPI > s_rendererAPI = RendererAPI::Create();
 };

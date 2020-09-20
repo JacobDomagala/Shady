@@ -33,6 +33,9 @@ class RendererAPI
    virtual void
    DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray, uint32_t indexCount = 0) = 0;
 
+   virtual void
+   DrawLines(uint32_t count) = 0;
+
    static API
    GetAPI();
 

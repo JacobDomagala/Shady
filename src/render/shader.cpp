@@ -43,6 +43,12 @@ ShaderLibrary::GetShader(const std::string& name)
 }
 
 void
+ShaderLibrary::Clear()
+{
+   s_shaderLibrary.clear();
+}
+
+void
 ShaderLibrary::LoadShader(const std::string& name)
 {
    s_shaderLibrary[name] = Shader::Create(name);

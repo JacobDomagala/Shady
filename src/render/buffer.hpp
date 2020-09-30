@@ -8,7 +8,6 @@ namespace shady::render {
 
 enum class ShaderDataType
 {
-   None = 0,
    Float,
    Float2,
    Float3,

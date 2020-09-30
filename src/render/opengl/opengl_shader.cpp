@@ -9,24 +9,6 @@
 
 namespace shady::render::opengl {
 
-static GLenum
-ShaderTypeFromString(const std::string& type)
-{
-   if (type == "vertex")
-   {
-      return GL_VERTEX_SHADER;
-   }
-
-   if (type == "fragment")
-   {
-      return GL_FRAGMENT_SHADER;
-   }
-
-   utils::Assert(false, "Unknown shader type!");
-
-   return 0;
-}
-
 OpenGLShader::OpenGLShader(const std::string& name) : m_name(name)
 {
    Compile(utils::FileManager::ReadFile(utils::FileManager::SHADERS_DIR / name

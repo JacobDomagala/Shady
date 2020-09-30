@@ -1,9 +1,8 @@
-#pragma once
-
 #include "renderer.hpp"
 #include "render_command.hpp"
 
 namespace shady::render {
+
 void
 Renderer::Init()
 {

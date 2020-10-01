@@ -11,12 +11,13 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_PATH})
 
 add_executable(${PROJECT_NAME}
     # global namespace (legacy files)
-    src/Main.cpp src/SkyBox.h src/SkyBox.cpp src/Light.h src/Light.cpp src/EventListener.h src/EventListener.cpp
+    src/Main.cpp src/SkyBox.h src/SkyBox.cpp src/Light.h src/Light.cpp
     src/MODEL/Mesh.h src/MODEL/Mesh.cpp src/MODEL/Model.h src/MODEL/Model.cpp
-    src/DISPLAY/Movement.h src/DISPLAY/Movement.cpp
 
     # app
     src/app/window.hpp src/app/window.cpp
+    # app/input
+    src/app/input/event.hpp src/app/input/input_manager.hpp src/app/input/input_manager.cpp src/app/input/input_listener.hpp
 
     # trace
     src/trace/logger.hpp
@@ -44,6 +45,7 @@ add_executable(${PROJECT_NAME}
 
 add_subdirectory(lib)
 
-target_include_directories(${PROJECT_NAME} PRIVATE src src/app src/trace src/render src/utils src/MODEL src/time src/DISPLAY src/SHADERS)
+target_include_directories(${PROJECT_NAME}
+                    PRIVATE src src/app src/app/input src/trace src/render src/utils src/MODEL src/time src/SHADERS)
 target_link_libraries (${PROJECT_NAME} PRIVATE glm glfw glad stb_image assimp fmt)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)

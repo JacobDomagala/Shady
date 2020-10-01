@@ -2,6 +2,7 @@
 #include "time/timer.hpp"
 #include "render/renderer.hpp"
 #include "render/render_command.hpp"
+#include "app/Input/input_manager.hpp"
 
 int
 main(int, char**)
@@ -11,9 +12,11 @@ main(int, char**)
   
    shady::render::Renderer::Init();
    shady::render::RenderCommand::SetClearColor({0.4f, 0.1f, 0.3f, 1.0f});
-
+   shady::app::input::InputManager::Init(mainWindow.GetWindowHandle());
+   
    while (1)
    {
+      shady::app::input::InputManager::PollEvents();
       mainWindow.Clear();
       mainWindow.SwapBuffers();
    }

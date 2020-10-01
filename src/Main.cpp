@@ -2,7 +2,7 @@
 #include "time/timer.hpp"
 #include "render/renderer.hpp"
 #include "render/render_command.hpp"
-#include "app/Input/input_manager.hpp"
+#include "app/input/input_manager.hpp"
 
 int
 main(int, char**)

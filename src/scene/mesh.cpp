@@ -1,4 +1,4 @@
-#include "Mesh.h"
+#include "mesh.hpp"
 
 //Mesh::Mesh(vector< Vertex >* vertices, vector< uint32_t >* indices, vector< Texture >* textures)
 //{

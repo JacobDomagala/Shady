@@ -1,5 +1,4 @@
-#ifndef MODEL_H
-#define MODEL_H
+#pragma once
 
 #include <fstream>
 #include <iostream>
@@ -49,7 +48,7 @@ struct Model
    RotateModel(vec3 rotate, float angle);
 
    void
-   Draw(shady::app::Window* window, /*Camera camera,*/ Light* lights/*, Shader shader*/);
+   Draw();
 
    uint32_t modelMatrixUniformLocation;
 
@@ -68,9 +67,6 @@ struct Model
 
    //vector< Texture >
    //LoadMaterialTextures(aiMaterial* mat, aiTextureType type, char* typeName);
-
-   void
-   CreateCube(int size);
 };
 
 

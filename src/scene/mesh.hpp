@@ -1,13 +1,10 @@
-#ifndef MESH_H
-#define MESH_H
-
+#pragma once
 
 #include <sstream>
 #include <vector>
 
 #include "render/renderer.hpp"
 #include <glm/gtc/matrix_transform.hpp>
-
 
 using glm::vec2;
 using glm::vec3;

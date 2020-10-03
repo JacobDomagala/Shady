@@ -12,7 +12,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_PATH})
 add_executable(${PROJECT_NAME}
     # global namespace (legacy files)
     src/Main.cpp src/SkyBox.h src/SkyBox.cpp src/Light.h src/Light.cpp
-    src/MODEL/Mesh.h src/MODEL/Mesh.cpp src/MODEL/Model.h src/MODEL/Model.cpp
 
     # app
     src/app/window.hpp src/app/window.cpp
@@ -39,6 +38,9 @@ add_executable(${PROJECT_NAME}
     src/render/opengl/opengl_buffer.hpp src/render/opengl/opengl_buffer.cpp src/render/opengl/opengl_texture.hpp src/render/opengl/opengl_texture.cpp
     src/render/opengl/opengl_shader.hpp src/render/opengl/opengl_shader.cpp
 
+    # scene
+    src/scene/mesh.hpp src/scene/mesh.cpp src/scene/model.hpp src/scene/model.cpp
+
     # utils
     src/utils/file_manager.hpp src/utils/file_manager.cpp src/utils/assert.hpp src/utils/assert.cpp
 )
@@ -46,6 +48,6 @@ add_executable(${PROJECT_NAME}
 add_subdirectory(lib)
 
 target_include_directories(${PROJECT_NAME}
-                    PRIVATE src src/app src/app/input src/trace src/render src/utils src/MODEL src/time src/SHADERS)
+                    PRIVATE src src/app src/app/input src/trace src/render src/utils src/scene src/time)
 target_link_libraries (${PROJECT_NAME} PRIVATE glm glfw glad stb_image assimp fmt)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)

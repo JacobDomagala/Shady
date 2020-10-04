@@ -4,27 +4,13 @@
 #include "shader.hpp"
 #include "texture.hpp"
 #include "vertex_array.hpp"
+#include "vertex.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <memory>
 #include <array>
 
 namespace shady::render {
-
-struct QuadVertex
-{
-   glm::vec3 Position;
-   glm::vec4 Color;
-   glm::vec2 TexCoord;
-   float TexIndex;
-   float TilingFactor;
-};
-
-struct LineVertex
-{
-   glm::vec3 Position;
-   glm::vec4 Color;
-};
 
 struct RendererData
 {
@@ -271,7 +257,7 @@ Renderer2D::DrawQuad(const glm::vec2& position, const glm::vec2& size, float rad
 
    if (textureIndex == 0.0f)
    {
-      if (s_Data.TextureSlotIndex >= RendererData::MaxTextureSlots)
+      if (s_Data.TextureSlotIndex >= RendererData::MaxTextureSlots - 1)
       {
          FlushAndReset(PrimitiveType::QUAD);
       }

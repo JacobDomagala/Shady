@@ -140,7 +140,7 @@ BufferLayout::CalculateOffsetsAndStride()
  *************************************** VERTEX BUFFER ********************************************
  *************************************************************************************************/
 std::shared_ptr< VertexBuffer >
-VertexBuffer::Create(uint32_t size)
+VertexBuffer::Create(size_t size)
 {
    switch (Renderer::GetAPI())
    {
@@ -162,7 +162,7 @@ VertexBuffer::Create(uint32_t size)
 }
 
 std::shared_ptr< VertexBuffer >
-VertexBuffer::Create(float* vertices, uint32_t size)
+VertexBuffer::Create(float* vertices, size_t size)
 {
    switch (Renderer::GetAPI())
    {
@@ -187,7 +187,29 @@ VertexBuffer::Create(float* vertices, uint32_t size)
  *************************************** INDEX BUFFER *********************************************
  *************************************************************************************************/
 std::shared_ptr< IndexBuffer >
-IndexBuffer::Create(uint32_t* indices, uint32_t size)
+IndexBuffer::Create(size_t size)
+{
+   switch (Renderer::GetAPI())
+   {
+      case RendererAPI::API::None: {
+         trace::Logger::Fatal(
+            "IndexBuffer::Create -> RendererAPI::None is currently not supported!");
+         return nullptr;
+      }
+      break;
+
+      case RendererAPI::API::OpenGL: {
+         return std::make_shared< opengl::OpenGLIndexBuffer >(size);
+      }
+      break;
+   }
+
+   trace::Logger::Fatal("IndexBuffer::Create -> Unknown RendererAPI!");
+   return nullptr;
+}
+
+std::shared_ptr< IndexBuffer >
+IndexBuffer::Create(uint32_t* indices, size_t size)
 {
    switch (Renderer::GetAPI())
    {

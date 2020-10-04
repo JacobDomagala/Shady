@@ -1,46 +1,25 @@
 #pragma once
 
-#include <sstream>
-#include <vector>
+#include "render/texture.hpp"
+#include "render/vertex.hpp"
 
-#include "render/renderer.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 
-using glm::vec2;
-using glm::vec3;
-using std::string;
-using std::vector;
+namespace shady::scene {
 
-struct Vertex
+class Mesh
 {
-   vec3 position;
-   vec3 normal;
-   vec2 texCoords;
-   vec3 tangent;
+ public:
+   Mesh(std::vector< render::Vertex >&& vertices, std::vector< uint32_t >&& indices,
+        render::TexturePtrVec&& textures);
+
+   void
+   Draw();
+
+ private:
+   std::vector< render::Vertex > m_vertices = {};
+   std::vector< uint32_t > m_indices = {};
+   render::TexturePtrVec m_textures = {};
 };
 
-struct Mesh
-{
-   vector< Vertex > vertices;
-   vector< uint32_t > indices;
-//   vector< Texture > textures;
-   uint32_t programID;
-
-
-   //Mesh(vector< Vertex >* vertices, vector< uint32_t >* indices, vector< Texture >* textures);
-   //void
-   //AddTexture(char* filePath, textureType textureType);
-
-   void
-   Draw(uint32_t programID);
-   void
-   Delete();
-
-   uint32_t VAO, VBO, EBO;
-
-   void
-   SetupMesh();
-};
-
-
-#endif
+} // namespace shady::scene

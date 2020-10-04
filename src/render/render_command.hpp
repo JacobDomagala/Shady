@@ -20,7 +20,7 @@ class RenderCommand
    Clear();
 
    static void
-   DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray, uint32_t count = 0);
+   DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray, size_t count = 0);
 
    static void
    DrawLines(uint32_t count);

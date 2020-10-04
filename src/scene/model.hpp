@@ -1,73 +1,62 @@
 #pragma once
 
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <sstream>
+#include "mesh.hpp"
+#include "render/texture.hpp"
+
 #include <string>
 #include <vector>
 
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <stb_image.h>
+#include <assimp/material.h>
 
+struct aiNode;
+struct aiMesh;
+struct aiScene;
 
-#include "../Light.h"
-#include "Mesh.h"
-#include "app/window.hpp"
+namespace shady::scene{
 
-using glm::mat4;
-using glm::vec3;
-using std::string;
-using std::vector;
-
-struct Model
+class Model
 {
-   // Model View Projection matrices
-   mat4 modelMatrix;
-   mat4 viewMatrix;
-   mat4 projectionMatrix;
+   public:
+   Model() = default;
 
-   // Model matrix data
-   vec3 translateValue;
-   vec3 scaleValue;
-   vec3 rotateValue;
-   float rotateAngle;
+   void
+   ScaleModel(const glm::vec3& scale);
 
-   Model();
    void
-   LoadModelFromFile(char* path);
+   TranslateModel(const glm::vec3& translate);
+
    void
-   ScaleModel(vec3 scale);
-   void
-   TranslateModel(vec3 translate);
-   void
-   RotateModel(vec3 rotate, float angle);
+   RotateModel(const glm::vec3& rotate, float angle);
 
    void
    Draw();
 
-   uint32_t modelMatrixUniformLocation;
-
-   uint32_t programID;
-   vector< Mesh > meshes;
-   string directory;
-   //vector< Texture > textures_loaded;
-
    void
-   LoadModel(string path);
+   LoadModel(const std::string& path);
 
+private:
    void
    ProcessNode(aiNode* node, const aiScene* scene);
    Mesh
    ProcessMesh(aiMesh* mesh, const aiScene* scene);
 
-   //vector< Texture >
-   //LoadMaterialTextures(aiMaterial* mat, aiTextureType type, char* typeName);
+   void
+   LoadMaterialTextures(aiMaterial* mat, aiTextureType type, render::TexturePtrVec& textures);
+
+private:
+   // Model View Projection matrices
+   glm::mat4 m_modelMatrix = {};
+   glm::mat4 m_viewMatrix = {};
+   glm::mat4 m_projectionMatrix = {};
+
+   // Model matrix data
+   glm::vec3 m_translateValue = {0.0f, 0.0f, 0.0f};;
+   glm::vec3 m_scaleValue = {1.0f, 1.0f, 1.0f};
+   glm::vec3 m_rotateValue = {1.0f, 1.0f, 1.0f};
+   float m_rotateAngle = 0.0f;
+
+   std::vector< Mesh > m_meshes = {};
 };
 
-
-#endif
+}

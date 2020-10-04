@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-namespace shady::render{
+namespace shady::render {
 
 struct Vertex
 {
@@ -10,6 +10,8 @@ struct Vertex
    glm::vec3 m_normal;
    glm::vec2 m_texCoords;
    glm::vec3 m_tangent;
+   glm::vec4 m_color;
+   float m_texIndex;
 };
 
 struct QuadVertex
@@ -27,4 +29,4 @@ struct LineVertex
    glm::vec4 Color;
 };
 
-}
+} // namespace shady::render

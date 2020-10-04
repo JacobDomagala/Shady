@@ -7,14 +7,14 @@ namespace shady::render::opengl {
 /**************************************************************************************************
  *************************************** VERTEX BUFFER ********************************************
  *************************************************************************************************/
-OpenGLVertexBuffer::OpenGLVertexBuffer(uint32_t size)
+OpenGLVertexBuffer::OpenGLVertexBuffer(size_t size)
 {
    glCreateBuffers(1, &m_rendererID);
    glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
    glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
 }
 
-OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertices, uint32_t size)
+OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertices, size_t size)
 {
    glCreateBuffers(1, &m_rendererID);
    glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
@@ -39,7 +39,7 @@ OpenGLVertexBuffer::Unbind() const
 }
 
 void
-OpenGLVertexBuffer::SetData(const void* data, uint32_t size)
+OpenGLVertexBuffer::SetData(const void* data, size_t size)
 {
    glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
    glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
@@ -60,14 +60,24 @@ OpenGLVertexBuffer::SetLayout(const BufferLayout& layout)
 /**************************************************************************************************
  *************************************** INDEX BUFFER *********************************************
  *************************************************************************************************/
-OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t* indices, uint32_t count) : m_count(count)
+OpenGLIndexBuffer::OpenGLIndexBuffer(size_t count) : m_count(count)
 {
    glCreateBuffers(1, &m_rendererID);
 
    // GL_ELEMENT_ARRAY_BUFFER is not valid without an actively bound VAO
    // Binding with GL_ARRAY_BUFFER allows the data to be loaded regardless of VAO state.
    glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
-   glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW);
+   glBufferData(GL_ARRAY_BUFFER, count * sizeof(size_t), nullptr, GL_DYNAMIC_DRAW);
+}
+
+OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t* indices, size_t count) : m_count(count)
+{
+   glCreateBuffers(1, &m_rendererID);
+
+   // GL_ELEMENT_ARRAY_BUFFER is not valid without an actively bound VAO
+   // Binding with GL_ARRAY_BUFFER allows the data to be loaded regardless of VAO state.
+   glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
+   glBufferData(GL_ARRAY_BUFFER, count * sizeof(size_t), indices, GL_STATIC_DRAW);
 }
 
 OpenGLIndexBuffer::~OpenGLIndexBuffer()
@@ -87,7 +97,14 @@ OpenGLIndexBuffer::Unbind() const
    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-uint32_t
+void
+OpenGLIndexBuffer::SetData(const void* data, size_t size)
+{
+   glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
+   glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
+}
+
+size_t
 OpenGLIndexBuffer::GetCount() const
 {
    return m_count;

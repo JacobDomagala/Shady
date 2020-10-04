@@ -80,7 +80,7 @@ class VertexBuffer
    Unbind() const = 0;
 
    virtual void
-   SetData(const void* data, uint32_t size) = 0;
+   SetData(const void* data, size_t size) = 0;
 
    virtual const BufferLayout&
    GetLayout() const = 0;
@@ -88,9 +88,9 @@ class VertexBuffer
    SetLayout(const BufferLayout& layout) = 0;
 
    static std::shared_ptr< VertexBuffer >
-   Create(uint32_t size);
+   Create(size_t size);
    static std::shared_ptr< VertexBuffer >
-   Create(float* vertices, uint32_t size);
+   Create(float* vertices, size_t size);
 };
 
 class IndexBuffer
@@ -103,11 +103,17 @@ class IndexBuffer
    virtual void
    Unbind() const = 0;
 
-   virtual uint32_t
+   virtual void
+   SetData(const void* data, size_t size) = 0;
+
+   virtual size_t
    GetCount() const = 0;
 
    static std::shared_ptr< IndexBuffer >
-   Create(uint32_t* indices, uint32_t count);
+   Create(size_t count);
+
+   static std::shared_ptr< IndexBuffer >
+   Create(uint32_t* indices, size_t count);
 };
 
 } // namespace shady::render

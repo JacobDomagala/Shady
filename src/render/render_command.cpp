@@ -27,7 +27,7 @@ RenderCommand::Clear()
 }
 
 void
-RenderCommand::DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray, uint32_t count)
+RenderCommand::DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray, size_t count)
 {
    s_rendererAPI->DrawIndexed(vertexArray, count);
 }

@@ -44,10 +44,10 @@ class Texture
    virtual bool
    operator==(const Texture& other) const = 0;
 
-   static TexturePtr
+   static std::shared_ptr< Texture >
    Create(const std::string& textureName);
 
-   static TexturePtr
+   static std::shared_ptr< Texture >
    Create(const glm::ivec2& size);
 };
 

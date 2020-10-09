@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include <unordered_map>
+#include <string>
 
 namespace shady::render {
 

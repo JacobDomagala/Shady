@@ -44,11 +44,17 @@ class Texture
    virtual bool
    operator==(const Texture& other) const = 0;
 
+   TextureType
+   GetType() const;
+
    static std::shared_ptr< Texture >
    Create(const std::string& textureName);
 
    static std::shared_ptr< Texture >
    Create(const glm::ivec2& size);
+
+ private:
+   TextureType m_type;
 };
 
 using TexturePtr = std::shared_ptr< Texture >;

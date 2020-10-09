@@ -12,9 +12,11 @@ Mesh::Mesh(std::vector< render::Vertex >&& vertices, std::vector< uint32_t >&& i
 }
 
 void
-Mesh::Draw()
+Mesh::Draw(const glm::vec3& translateVal, const glm::vec3& scaleVal, const glm::vec3 rotateAxis,
+           float rotateVal, const glm::vec4& tintColor)
 {
-   render::Renderer3D::DrawMesh(m_vertices, m_indices);
+   render::Renderer3D::DrawMesh(m_vertices, m_indices, translateVal, scaleVal, rotateAxis,
+                                rotateVal, m_textures, tintColor);
 }
 
 } // namespace shady::scene

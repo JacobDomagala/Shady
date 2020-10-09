@@ -31,7 +31,8 @@ Model::Draw()
 {
    for (auto& mesh : m_meshes)
    {
-      mesh.Draw();
+      mesh.Draw(m_translateValue, m_scaleValue, m_rotateValue, m_rotateAngle,
+                {1.0f, 1.0f, 1.0f, 1.0f});
    }
 }
 
@@ -114,7 +115,7 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
       {
          vertex.m_texCoords = glm::vec2(0.0f, 0.0f);
       }
-         
+
       // Tangents
       vector.x = mesh->mTangents[i].x;
       vector.y = mesh->mTangents[i].y;

@@ -45,10 +45,14 @@ Renderer3D::Init()
    // setup vertex buffer
    s_Data.m_vertexBuffer = VertexBuffer::Create(s_Data.m_maxVertices * sizeof(render::Vertex));
    s_Data.m_vertexBuffer->SetLayout({{ShaderDataType::Float3, "a_Position"},
-                                     {ShaderDataType::Float4, "a_Color"},
+                                     {ShaderDataType::Float3, "a_Normal"},
                                      {ShaderDataType::Float2, "a_TexCoord"},
-                                     {ShaderDataType::Float, "a_TexIndex"},
-                                     {ShaderDataType::Float, "a_TilingFactor"}});
+                                     {ShaderDataType::Float3, "a_Tangent"},
+                                     {ShaderDataType::Float, "a_DiffTexIndex"},
+                                     {ShaderDataType::Float, "a_NormTexIndex"},
+                                     {ShaderDataType::Float, "a_SpecTexIndex"},
+                                     {ShaderDataType::Float4, "a_Color"}});
+
    s_Data.m_vertexArray->AddVertexBuffer(s_Data.m_vertexBuffer);
    s_Data.m_vertexArray->SetIndexBuffer(IndexBuffer::Create(s_Data.m_maxIndices));
 
@@ -139,60 +143,79 @@ Renderer3D::FlushAndReset()
 }
 
 void
-Renderer3D::DrawMesh(const std::vector< Vertex >& vertices, const std::vector< uint32_t >& indices,
+Renderer3D::DrawMesh(std::vector< Vertex >& vertices, const std::vector< uint32_t >& indices,
                      const glm::vec3& translateVal, const glm::vec3& scaleVal,
-                     float radiansRotation, const std::shared_ptr< Texture >& texture,
-                     const glm::vec4& tintColor)
+                     const glm::vec3& rotateAxis, float radiansRotation,
+                     const TexturePtrVec& textures, const glm::vec4& tintColor)
 {
-   if (s_Data.m_currentVertex >= RendererData::m_maxVertices)
+   if (s_Data.m_currentVertex >= RendererData::m_maxVertices
+       || (s_Data.m_textureSlotIndex + textures.size()) >= (RendererData::m_maxTextureSlots - 1))
    {
       FlushAndReset();
    }
 
-   float textureIndex = 0.0f;
+   auto meshTextures = SetupTextures(textures);
 
-   // Check whether texture for this mesh is already loaded
-   const auto textureIdxPtr =
-      std::find_if(s_Data.m_textureSlots.begin(), s_Data.m_textureSlots.end(),
-                   [&texture](const auto& textureSlot) { return *textureSlot == *texture; });
+   glm::mat4 modelMat = glm::translate(glm::mat4(1.0f), translateVal)
+                        * glm::rotate(glm::mat4(1.0f), radiansRotation, rotateAxis)
+                        * glm::scale(glm::mat4(1.0f), scaleVal);
 
-   if (s_Data.m_textureSlots.end() != textureIdxPtr)
+
+   for (auto& vertex : vertices)
    {
-      textureIndex =
-         static_cast< float >(std::distance(s_Data.m_textureSlots.begin(), textureIdxPtr));
+      vertex.m_color = tintColor;
+      vertex.m_position = modelMat * glm::vec4(vertex.m_position, 1.0f);
+      vertex.m_diffTexIndex = meshTextures[TextureType::DIFFUSE_MAP];
+      vertex.m_specTexIndex = meshTextures[TextureType::SPECULAR_MAP];
+      vertex.m_normTexIndex = meshTextures[TextureType::NORMAL_MAP];
    }
-   else
-   {
-      if (s_Data.m_textureSlotIndex >= RendererData::m_maxTextureSlots - 1)
-      {
-         FlushAndReset();
-      }
-
-      textureIndex = static_cast< float >(s_Data.m_textureSlotIndex);
-      s_Data.m_textureSlots[s_Data.m_textureSlotIndex] = texture;
-      s_Data.m_textureSlotIndex++;
-   }
-
-   glm::mat4 transformMat = glm::translate(glm::mat4(1.0f), translateVal)
-                            * glm::rotate(glm::mat4(1.0f), radiansRotation, {0.0f, 0.0f, 1.0f})
-                            * glm::scale(glm::mat4(1.0f), scaleVal);
-
-   // for (auto& vertex : vertices)
-   //{
-   //   s_Data.m_vertexBufferPtr->m_position = transformMat * glm::vec4(vertex.m_position, 1.0f);
-   //   s_Data.m_vertexBufferPtr->m_color = tintColor;
-   //   s_Data.m_vertexBufferPtr->m_texCoords = vertex.m_texCoords;
-   //   s_Data.m_vertexBufferPtr->m_texIndex = textureIndex;
-   //   s_Data.m_vertexBufferPtr++;
-   //}
 
    s_Data.m_verticesBatch.insert(s_Data.m_verticesBatch.begin() + s_Data.m_currentVertex,
                                  vertices.begin(), vertices.end());
    s_Data.m_indicesBatch.insert(s_Data.m_indicesBatch.begin() + s_Data.m_currentIndex,
                                 indices.begin(), indices.end());
 
-   s_Data.m_currentVertex += vertices.size();
-   s_Data.m_currentIndex += indices.size();
+   s_Data.m_currentVertex += static_cast< uint32_t >(vertices.size());
+   s_Data.m_currentIndex += static_cast< uint32_t >(indices.size());
+}
+
+std::unordered_map< TextureType, float >
+Renderer3D::SetupTextures(const TexturePtrVec& textures)
+{
+   if (textures.empty())
+   {
+      return {{TextureType::DIFFUSE_MAP, 0.0f},
+              {TextureType::NORMAL_MAP, 0.0f},
+              {TextureType::SPECULAR_MAP, 0.0f}};
+   }
+
+   std::unordered_map< TextureType, float > meshTextures;
+
+   // Check whether textures for this mesh are already loaded
+   for (auto& texture : textures)
+   {
+      float textureIndex = 0.0f;
+
+      const auto textureIdxPtr =
+         std::find_if(s_Data.m_textureSlots.begin(), s_Data.m_textureSlots.end(),
+                      [&texture](const auto& textureSlot) { return *textureSlot == *texture; });
+
+      if (s_Data.m_textureSlots.end() != textureIdxPtr)
+      {
+         textureIndex =
+            static_cast< float >(std::distance(s_Data.m_textureSlots.begin(), textureIdxPtr));
+      }
+      else
+      {
+         textureIndex = static_cast< float >(s_Data.m_textureSlotIndex);
+         s_Data.m_textureSlots[s_Data.m_textureSlotIndex] = texture;
+         s_Data.m_textureSlotIndex++;
+      }
+
+      meshTextures[texture->GetType()] = textureIndex;
+   }
+
+   return meshTextures;
 }
 
 } // namespace shady::render

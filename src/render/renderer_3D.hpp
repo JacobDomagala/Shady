@@ -1,7 +1,8 @@
 #pragma once
 
-#include "vertex.hpp"
 #include "render/texture.hpp"
+#include "vertex.hpp"
+
 
 #include <glm/glm.hpp>
 #include <memory>
@@ -27,11 +28,11 @@ class Renderer3D
    EndScene();
 
    static void
-   DrawMesh(const std::vector< Vertex >& vertices, const std::vector< uint32_t >& indices,
-             const glm::vec3& translateVal = glm::vec3{0.0f},
-             const glm::vec3& scaleVal = glm::vec3{1.0f}, float radiansRotation = 0.0f,
-             const std::shared_ptr< Texture >& texture = Texture::Create(glm::ivec2{1,1}),
-             const glm::vec4& tintColor = glm::vec4(1.0f));
+   DrawMesh(std::vector< Vertex >& vertices, const std::vector< uint32_t >& indices,
+            const glm::vec3& translateVal = glm::vec3{0.0f},
+            const glm::vec3& scaleVal = glm::vec3{1.0f},
+            const glm::vec3& rotateAxis = glm::vec3{1.0f}, float radiansRotation = 0.0f,
+            const TexturePtrVec& textures = {}, const glm::vec4& tintColor = glm::vec4(1.0f));
 
  private:
    static void
@@ -42,6 +43,9 @@ class Renderer3D
 
    static void
    FlushAndReset();
+
+   static std::unordered_map< TextureType, float >
+   SetupTextures(const TexturePtrVec& textures);
 };
 
 } // namespace shady::render

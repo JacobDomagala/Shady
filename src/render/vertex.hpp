@@ -10,8 +10,10 @@ struct Vertex
    glm::vec3 m_normal;
    glm::vec2 m_texCoords;
    glm::vec3 m_tangent;
+   float m_diffTexIndex;
+   float m_normTexIndex;
+   float m_specTexIndex;
    glm::vec4 m_color;
-   float m_texIndex;
 };
 
 struct QuadVertex

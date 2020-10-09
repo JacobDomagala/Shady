@@ -7,8 +7,8 @@ namespace shady::render::opengl {
 class OpenGLVertexBuffer : public VertexBuffer
 {
  public:
-   explicit OpenGLVertexBuffer(uint32_t size);
-   explicit OpenGLVertexBuffer(float* vertices, uint32_t size);
+   explicit OpenGLVertexBuffer(size_t size);
+   explicit OpenGLVertexBuffer(float* vertices, size_t size);
    virtual ~OpenGLVertexBuffer();
 
    void
@@ -17,7 +17,7 @@ class OpenGLVertexBuffer : public VertexBuffer
    Unbind() const override;
 
    void
-   SetData(const void* data, uint32_t size) override;
+   SetData(const void* data, size_t size) override;
 
    const BufferLayout&
    GetLayout() const override;
@@ -32,7 +32,8 @@ class OpenGLVertexBuffer : public VertexBuffer
 class OpenGLIndexBuffer : public IndexBuffer
 {
  public:
-   OpenGLIndexBuffer(uint32_t* indices, uint32_t count);
+   OpenGLIndexBuffer(size_t count);
+   OpenGLIndexBuffer(uint32_t* indices, size_t count);
    virtual ~OpenGLIndexBuffer();
 
    void
@@ -40,12 +41,15 @@ class OpenGLIndexBuffer : public IndexBuffer
    void
    Unbind() const override;
 
-   uint32_t
+   void
+   SetData(const void* data, size_t size) override;
+
+   size_t
    GetCount() const override;
 
  private:
    uint32_t m_rendererID;
-   uint32_t m_count;
+   size_t m_count;
 };
 
 } // namespace shady::render::opengl

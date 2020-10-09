@@ -1,11 +1,19 @@
 #pragma once
 
+#include <functional>
 #include <glm/glm.hpp>
 #include <memory>
 #include <unordered_map>
-#include <functional>
+#include <string>
 
 namespace shady::render {
+
+enum class TextureType
+{
+   DIFFUSE_MAP,
+   SPECULAR_MAP,
+   NORMAL_MAP
+};
 
 class Texture
 {
@@ -37,17 +45,26 @@ class Texture
    virtual bool
    operator==(const Texture& other) const = 0;
 
+   TextureType
+   GetType() const;
+
    static std::shared_ptr< Texture >
    Create(const std::string& textureName);
 
    static std::shared_ptr< Texture >
    Create(const glm::ivec2& size);
+
+ private:
+   TextureType m_type;
 };
+
+using TexturePtr = std::shared_ptr< Texture >;
+using TexturePtrVec = std::vector< TexturePtr >;
 
 class TextureLibrary
 {
  public:
-   static std::shared_ptr< Texture >
+   static TexturePtr
    GetTexture(const std::string& textureName);
 
    static void
@@ -58,7 +75,6 @@ class TextureLibrary
    LoadTexture(const std::string& textureName);
 
  private:
-   static inline std::unordered_map< std::string, std::shared_ptr< Texture > > s_loadedTextures =
-      {};
+   static inline std::unordered_map< std::string, TexturePtr > s_loadedTextures = {};
 };
 } // namespace shady::render

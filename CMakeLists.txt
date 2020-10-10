@@ -31,13 +31,13 @@ add_executable(${PROJECT_NAME}
     src/render/texture.hpp src/render/texture.cpp src/render/shader.hpp src/render/shader.cpp
     src/render/camera.hpp src/render/camera.cpp src/render/orthographic_camera.hpp src/render/orthographic_camera.cpp
     src/render/renderer_2D.hpp src/render/renderer_2D.cpp src/render/renderer_3D.hpp src/render/renderer_3D.cpp
-    src/render/vertex.hpp
+    src/render/vertex.hpp src/render/framebuffer.hpp src/render/framebuffer.cpp
 
     # render/opengl
     src/render/opengl/opengl_renderer_api.hpp src/render/opengl/opengl_renderer_api.cpp src/render/opengl/opengl_vertex_array.hpp
     src/render/opengl/opengl_vertex_array.cpp src/render/opengl/opengl_context.hpp src/render/opengl/opengl_context.cpp
     src/render/opengl/opengl_buffer.hpp src/render/opengl/opengl_buffer.cpp src/render/opengl/opengl_texture.hpp src/render/opengl/opengl_texture.cpp
-    src/render/opengl/opengl_shader.hpp src/render/opengl/opengl_shader.cpp
+    src/render/opengl/opengl_shader.hpp src/render/opengl/opengl_shader.cpp src/render/opengl/opengl_framebuffer.hpp src/render/opengl/opengl_framebuffer.cpp
 
     # scene
     src/scene/mesh.hpp src/scene/mesh.cpp src/scene/model.hpp src/scene/model.cpp src/scene/light.hpp src/scene/light.cpp

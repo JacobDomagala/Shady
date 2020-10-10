@@ -1,34 +1,40 @@
-#ifndef LIGHT_H
-#define LIGHT_H
+#pragma once
+
+#include "framebuffer.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 
-enum lightType
+namespace shady::scene {
+
+enum class LightType
 {
    DIRECTIONAL_LIGHT,
    POINT_LIGHT,
    SPOTLIGHT
 };
 
-struct Light
+class Light
 {
-   int shadowTextureWidth;
-   int shadowTextureHeight;
-
-   glm::vec3 color;
-   glm::vec3 position;
-   float intensity;
-
-   glm::mat4 modelMatrix;
-   glm::mat4 lightSpaceMatrix;
-   glm::mat4 biasMatrix;
-   glm::mat4 shadowMatrix;
-
-   Light(glm::vec3 position, glm::vec3 color, lightType type);
+ public:
+   Light(const glm::vec3& position, const glm::vec3& color, LightType type);
    void
    StartDrawingShadows(uint32_t programID);
    void
    StopDrawingShadows();
+
+ private:
+   int32_t m_shadowTextureWidth = 4096;
+   int32_t m_shadowTextureHeight = 4096;
+   std::shared_ptr< render::FrameBuffer > m_shadowBuffer;
+
+   glm::vec3 m_color = glm::vec3(1.0f);
+   glm::vec3 m_position = glm::vec3(0.0f);
+   float m_intensity = 1.0f;
+
+   glm::mat4 m_modelMatrix = glm::mat4();
+   glm::mat4 m_lightSpaceMatrix = glm::mat4();
+   glm::mat4 m_biasMatrix = glm::mat4();
+   glm::mat4 m_shadowMatrix = glm::mat4();
 };
 
-#endif
+} // namespace shady::scene

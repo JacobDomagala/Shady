@@ -11,7 +11,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_PATH})
 
 add_executable(${PROJECT_NAME}
     # global namespace (legacy files)
-    src/Main.cpp src/SkyBox.h src/SkyBox.cpp src/Light.h src/Light.cpp
+    src/Main.cpp src/SkyBox.h src/SkyBox.cpp
 
     # app
     src/app/window.hpp src/app/window.cpp
@@ -19,7 +19,7 @@ add_executable(${PROJECT_NAME}
     src/app/input/event.hpp src/app/input/input_manager.hpp src/app/input/input_manager.cpp src/app/input/input_listener.hpp
 
     # trace
-    src/trace/logger.hpp
+    src/trace/logger.hpp src/trace/logger.impl.hpp src/trace/logger.cpp
 
     # time
     src/time/timer.hpp src/time/timer.cpp src/time/scoped_timer.hpp src/time/scoped_timer.cpp src/time/utils.hpp src/time/utils.cpp
@@ -30,7 +30,7 @@ add_executable(${PROJECT_NAME}
     src/render/renderer.hpp src/render/renderer.cpp src/render/context.hpp src/render/context.cpp
     src/render/texture.hpp src/render/texture.cpp src/render/shader.hpp src/render/shader.cpp
     src/render/camera.hpp src/render/camera.cpp src/render/orthographic_camera.hpp src/render/orthographic_camera.cpp
-    src/render/renderer_2D.hpp src/render/renderer_2D.cpp src/render/renderer_3D.hpp src/render/renderer_3D.cpp 
+    src/render/renderer_2D.hpp src/render/renderer_2D.cpp src/render/renderer_3D.hpp src/render/renderer_3D.cpp
     src/render/vertex.hpp
 
     # render/opengl
@@ -40,7 +40,7 @@ add_executable(${PROJECT_NAME}
     src/render/opengl/opengl_shader.hpp src/render/opengl/opengl_shader.cpp
 
     # scene
-    src/scene/mesh.hpp src/scene/mesh.cpp src/scene/model.hpp src/scene/model.cpp
+    src/scene/mesh.hpp src/scene/mesh.cpp src/scene/model.hpp src/scene/model.cpp src/scene/light.hpp src/scene/light.cpp
 
     # utils
     src/utils/file_manager.hpp src/utils/file_manager.cpp src/utils/assert.hpp src/utils/assert.cpp

@@ -8,14 +8,37 @@ namespace shady::render {
  ****************************************** TEXTURE ***********************************************
  *************************************************************************************************/
 
+Texture::Texture(TextureType type)
+{
+}
+
+uint32_t
+Texture::GetWidth() const
+{
+   return m_imageData.m_size.x;
+}
+
+uint32_t
+Texture::GetHeight() const
+{
+   return m_imageData.m_size.y;
+}
+
+TextureHandleType
+Texture::GetTextureID() const
+{
+   return m_textureHandle;
+}
+
 TextureType
 Texture::GetType() const
 {
    return m_type;
 }
 
-std::shared_ptr< Texture >
-Texture::Create(const std::string& textureName)
+template < typename ... Args >
+static TexturePtr
+Texture::Create(const Args&... args)
 {
    switch (Renderer::GetAPI())
    {
@@ -26,7 +49,7 @@ Texture::Create(const std::string& textureName)
       break;
 
       case RendererAPI::API::OpenGL: {
-         return std::make_shared< opengl::OpenGLTexture >(textureName);
+         return std::make_shared< opengl::OpenGLTexture >(args...);
       }
       break;
    }
@@ -35,31 +58,16 @@ Texture::Create(const std::string& textureName)
    return nullptr;
 }
 
-std::shared_ptr< Texture >
-Texture::Create(const glm::ivec2& size)
-{
-   switch (Renderer::GetAPI())
-   {
-      case RendererAPI::API::None: {
-         trace::Logger::Fatal("Texture::Create() -> RendererAPI::None is currently not supported!");
-         return nullptr;
-      }
-      break;
+template TexturePtr
+Texture::Create< std::string >(const std::string& textureName);
 
-      case RendererAPI::API::OpenGL: {
-         return std::make_shared< opengl::OpenGLTexture >(size);
-      }
-      break;
-   }
-
-   trace::Logger::Fatal("Texture::Create() -> Unknown RendererAPI!");
-   return nullptr;
-}
+template TexturePtr
+Texture::Create< glm::ivec2 >(const glm::ivec2& size);
 
 /**************************************************************************************************
  *************************************** TEXTURE LIBRARY ******************************************
  *************************************************************************************************/
-std::shared_ptr< Texture >
+TexturePtr
 TextureLibrary::GetTexture(const std::string& textureName)
 {
    if (s_loadedTextures.find(textureName) == s_loadedTextures.end())

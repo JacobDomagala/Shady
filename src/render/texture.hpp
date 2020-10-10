@@ -3,8 +3,9 @@
 #include <functional>
 #include <glm/glm.hpp>
 #include <memory>
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
+
 
 namespace shady::render {
 
@@ -14,6 +15,12 @@ enum class TextureType
    SPECULAR_MAP,
    NORMAL_MAP
 };
+
+class Texture;
+
+using TextureHandleType = uint32_t;
+using TexturePtr = std::shared_ptr< Texture >;
+using TexturePtrVec = std::vector< TexturePtr >;
 
 class Texture
 {
@@ -28,16 +35,8 @@ class Texture
    };
 
  public:
+   Texture(TextureType type = TextureType::DIFFUSE_MAP);
    virtual ~Texture() = default;
-
-   virtual uint32_t
-   GetWidth() const = 0;
-
-   virtual uint32_t
-   GetHeight() const = 0;
-
-   virtual uint32_t
-   GetTextureID() const = 0;
 
    virtual void
    Bind(uint32_t slot = 0) const = 0;
@@ -45,21 +44,27 @@ class Texture
    virtual bool
    operator==(const Texture& other) const = 0;
 
+   uint32_t
+   GetWidth() const;
+
+   uint32_t
+   GetHeight() const;
+
+   TextureHandleType
+   GetTextureID() const;
+
    TextureType
    GetType() const;
 
-   static std::shared_ptr< Texture >
-   Create(const std::string& textureName);
+   template < typename ... Args >
+   static TexturePtr
+   Create(const Args&... args);
 
-   static std::shared_ptr< Texture >
-   Create(const glm::ivec2& size);
-
- private:
+ protected:
    TextureType m_type;
+   ImageData m_imageData;
+   TextureHandleType m_textureHandle;
 };
-
-using TexturePtr = std::shared_ptr< Texture >;
-using TexturePtrVec = std::vector< TexturePtr >;
 
 class TextureLibrary
 {
@@ -77,4 +82,5 @@ class TextureLibrary
  private:
    static inline std::unordered_map< std::string, TexturePtr > s_loadedTextures = {};
 };
+
 } // namespace shady::render

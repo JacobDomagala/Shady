@@ -12,15 +12,6 @@ class OpenGLTexture : public Texture
 
    ~OpenGLTexture() override;
 
-   uint32_t
-   GetWidth() const override;
-
-   uint32_t
-   GetHeight() const override;
-
-   uint32_t
-   GetTextureID() const override;
-
    void
    Bind(uint32_t slot = 0) const override;
 
@@ -30,9 +21,5 @@ class OpenGLTexture : public Texture
  private:
    void
    CreateTexture();
-
- private:
-   uint32_t m_textureHandle;
-   ImageData m_imageData;
 };
 } // namespace shady::render::opengl

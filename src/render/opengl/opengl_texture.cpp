@@ -47,24 +47,6 @@ OpenGLTexture::CreateTexture()
                        m_imageData.m_bytes.get());
 }
 
-uint32_t
-OpenGLTexture::GetWidth() const
-{
-   return m_imageData.m_size.x;
-}
-
-uint32_t
-OpenGLTexture::GetHeight() const
-{
-   return m_imageData.m_size.y;
-}
-
-uint32_t
-OpenGLTexture::GetTextureID() const
-{
-   return m_textureHandle;
-}
-
 void
 OpenGLTexture::Bind(uint32_t slot) const
 {

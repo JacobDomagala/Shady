@@ -11,7 +11,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_PATH})
 
 add_executable(${PROJECT_NAME}
     # global namespace (legacy files)
-    src/Main.cpp src/SkyBox.h src/SkyBox.cpp
+    src/Main.cpp
 
     # app
     src/app/window.hpp src/app/window.cpp
@@ -41,6 +41,7 @@ add_executable(${PROJECT_NAME}
 
     # scene
     src/scene/mesh.hpp src/scene/mesh.cpp src/scene/model.hpp src/scene/model.cpp src/scene/light.hpp src/scene/light.cpp
+    src/scene/skybox.hpp src/scene/skybox.cpp
 
     # utils
     src/utils/file_manager.hpp src/utils/file_manager.cpp src/utils/assert.hpp src/utils/assert.cpp

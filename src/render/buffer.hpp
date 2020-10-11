@@ -1,8 +1,8 @@
 #pragma once
 
-#include "trace/logger.hpp"
-
 #include <vector>
+#include <string>
+#include <memory>
 
 namespace shady::render {
 

@@ -1,6 +1,7 @@
 #include "texture.hpp"
 #include "opengl/opengl_texture.hpp"
 #include "renderer.hpp"
+#include "trace/logger.hpp"
 
 namespace shady::render {
 
@@ -37,7 +38,7 @@ Texture::GetType() const
 }
 
 template < typename ... Args >
-static TexturePtr
+TexturePtr
 Texture::Create(const Args&... args)
 {
    switch (Renderer::GetAPI())

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "framebuffer.hpp"
+#include "render/framebuffer.hpp"
 
 #include <glm/glm.hpp>
 

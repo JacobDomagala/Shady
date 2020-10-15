@@ -1,8 +1,12 @@
 #pragma once
 
-#include "app/window.hpp"
 #include <glm/gtc/type_ptr.hpp>
 #include <vector>
+
+#include "render/texture.hpp"
+#include "render/shader.hpp"
+#include "render/vertex_array.hpp"
+#include "render/camera.hpp"
 
 namespace shady::scene {
 
@@ -11,14 +15,14 @@ class Skybox
  public:
    void
    LoadCubeMap(std::string folderPath);
+
    void
-   Draw(shady::app::Window* window /*,Camera camera, Shader shader*/);
+   Draw(const render::Camera& camera);
 
  private:
-   std::vector< std::string > faces;
-   uint32_t textureID;
-   // Shader skyBoxShaders;
-   uint32_t skyboxVAO, skyboxVBO;
+   render::TexturePtr m_cubeTexture;
+   std::shared_ptr<render::Shader> m_shader;
+   std::shared_ptr<render::VertexArray> m_vertexArray;
 };
 
 } // namespace shady::scene

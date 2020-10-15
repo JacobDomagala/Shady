@@ -1,87 +1,62 @@
 #include "skybox.hpp"
+#include "render/render_command.hpp"
+#include "render/texture.hpp"
 
 namespace shady::scene {
 
 void
-Skybox::LoadCubeMap(std::string folderPath)
+Skybox::LoadCubeMap(const std::string& directoryPath)
 {
-   // GLfloat skyboxVertices[] = {// Positions
-   //                            -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f,
-   //                            1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f,
+   // Positions
+   auto skyboxVertices[] = {
+      -1.0f, 1.0f,  -1.0f, // vertex 0
+      -1.0f, -1.0f, -1.0f, // vertex 1
+      1.0f,  -1.0f, -1.0f, // vertex 2
+      1.0f,  1.0f,  -1.0f, // vertex 3
+      -1.0f, -1.0f, 1.0f,  // vertex 4
+      -1.0f, 1.0f,  1.0f,  // vertex 5
+      1.0f,  -1.0f, 1.0f,  // vertex 6
+      1.0f,  1.0f,  1.0f   // vertex 7
+   };
 
-   //                            -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  -1.0f,
-   //                            -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f, 1.0f,
+   auto vertexBuffer = render::VertexBuffer::Create(8);
+   vertexBuffer->SetData(skyboxVertices, sizeof(skyboxVertices));
+   vertexBuffer->SetLayout({render::ShaderDataType::Float3, "a_Position"});
 
-   //                            1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,
-   //                            1.0f,  1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f,
+   auto indexBuffer = render::IndexBuffer::Create(24);
+   indexBuffer->SetData({
+      0, 2, 1, 0, 3, 2, // face 1
+      2, 3, 6, 3, 9, 6, // face 2
+      7, 5, 4, 7, 4, 6, // face 3
+      5, 1, 4, 5, 0, 1, // face 4
+   });
 
-   //                            -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,  1.0f,  1.0f,
-   //                            1.0f,  1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,
+   m_vertexArray = render::VertexArray::Create();
+   m_vertexArray->AddVertexBuffer(vertexBuffer);
+   m_vertexArray->SetIndexBuffer(indexBuffer);
 
-   //                            -1.0f, 1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  1.0f,
-   //                            1.0f,  1.0f,  1.0f,  -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f,  -1.0f,
-
-   //                            -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, -1.0f,
-   //                            1.0f,  -1.0f, -1.0f, -1.0f, -1.0f, 1.0f,  1.0f,  -1.0f, 1.0f};
-
-
-   // glGenVertexArrays(1, &skyboxVAO);
-   // glGenBuffers(1, &skyboxVBO);
-   // glBindVertexArray(skyboxVAO);
-   // glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-   // glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
-   // glEnableVertexAttribArray(0);
-   // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-   // glBindVertexArray(0);
-
-   //// Cubemap (Skybox)
-
-   // faces.push_back(folderPath + "/right.jpg");
-   // faces.push_back(folderPath + "/left.jpg");
-   // faces.push_back(folderPath + "/top.jpg");
-   // faces.push_back(folderPath + "/bottom.jpg");
-   // faces.push_back(folderPath + "/back.jpg");
-   // faces.push_back(folderPath + "/front.jpg");
-
-   // glGenTextures(1, &textureID);
-
-
-   // glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
-   // for (GLuint i = 0; i < faces.size(); i++)
-   //{
-   //   // int width, height;
-   //   // unsigned char* data = SOIL_load_image(faces[i].c_str(), &width, &height, 0,
-   //   SOIL_LOAD_RGB);
-   //   // glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB,
-   //   // GL_UNSIGNED_BYTE, data); SOIL_free_image_data(data);
-   //}
-   // glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-   // glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-   // glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-   // glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-   // glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-   // glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+   m_cubeTexture = render::TextureLibrary::GetTexture(directoryPath, render::TextureType::CUBE_MAP);
+   m_shader = render::ShaderLibrary::GetShader("Skybox");
 }
 
 void
-Skybox::Draw(shady::app::Window* window /*,Camera camera, Shader shader*/)
+Skybox::Draw(const render::Camera& camera)
 {
-   // shader.UseProgram();
-   // glDepthFunc(GL_LEQUAL);
-   // glm::mat4 view = glm::mat4(glm::mat3(camera.viewMatrix));
-   // glm::mat4 projection; // = window->projectionMatrix;
-   // glUniformMatrix4fv(glGetUniformLocation(shader.programID, "view"), 1, GL_FALSE,
-   //                   glm::value_ptr(view));
-   // glUniformMatrix4fv(glGetUniformLocation(shader.programID, "projection"), 1, GL_FALSE,
-   //                   glm::value_ptr(projection));
-   // glBindVertexArray(skyboxVAO);
-   // glActiveTexture(GL_TEXTURE0);
-   // glUniform1i(glGetUniformLocation(shader.programID, "skybox"), 0);
-   // glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
-   // glDrawArrays(GL_TRIANGLES, 0, 36);
-   // glBindVertexArray(0);
+   // We draw here directly without calling Renderer because we use unique shader
+   // so we wouldn't be able to use batching anyways
+   m_shader->Bind();
 
-   // glDepthFunc(GL_LESS);
+   render::RenderCommand::SetDepthFunc(render::DepthFunc::LEQUAL);
+
+   m_shader->SetMat4("u_ViewProjectionMat", camera.GetViewProjection());
+   m_vertexArray->Bind();
+   m_cubeTexture->Bind(0);
+
+   m_shader->SetInt("skybox", 0);
+
+   render::RenderCommand::DrawIndexed(m_vertexArray);
+
+   render::RenderCommand::SetDepthFunc(render::DepthFunc::LESS);
 }
 
 } // namespace shady::scene

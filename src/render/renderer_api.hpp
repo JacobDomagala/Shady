@@ -6,6 +6,12 @@
 
 namespace shady::render {
 
+enum class DepthFunc
+{
+   LEQUAL,
+   LESS
+};
+
 class RendererAPI
 {
  public:
@@ -20,6 +26,9 @@ class RendererAPI
 
    virtual void
    Init() = 0;
+
+   virtual void
+   SetDepthFunc(DepthFunc depthFunc) = 0;
 
    virtual void
    SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;

@@ -84,7 +84,7 @@ Renderer2D::Init()
    s_Data.QuadVertexArray->SetIndexBuffer(quadIB);
    delete[] quadIndices;
 
-   s_Data.WhiteTexture = Texture::Create(glm::ivec2{1,1});
+   s_Data.WhiteTexture = Texture::Create(glm::ivec2{1,1}, TextureType::DIFFUSE_MAP);
    //s_Data.WhiteTexture->CreateColorTexture({1, 1}, {1.0f, 1.0f, 1.0f});
 
    int32_t samplers[s_Data.MaxTextureSlots];

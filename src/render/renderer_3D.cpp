@@ -59,7 +59,7 @@ Renderer3D::Init()
    s_Data.m_verticesBatch.reserve(s_Data.m_maxVertices * sizeof(Vertex));
    s_Data.m_indicesBatch.reserve(s_Data.m_maxIndices * sizeof(uint32_t));
 
-   s_Data.m_whiteTexture = Texture::Create(glm::ivec2{1, 1});
+   s_Data.m_whiteTexture = Texture::Create(glm::ivec2{1, 1}, TextureType::DIFFUSE_MAP);
    // s_Data.m_whiteTexture->CreateColorTexture({1, 1}, {1.0f, 1.0f, 1.0f});
 
    int32_t samplers[s_Data.m_maxTextureSlots];

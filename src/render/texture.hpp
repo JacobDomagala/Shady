@@ -6,14 +6,14 @@
 #include <string>
 #include <unordered_map>
 
-
 namespace shady::render {
 
 enum class TextureType
 {
    DIFFUSE_MAP,
    SPECULAR_MAP,
-   NORMAL_MAP
+   NORMAL_MAP,
+   CUBE_MAP
 };
 
 class Texture;
@@ -56,9 +56,11 @@ class Texture
    TextureType
    GetType() const;
 
-   template < typename ... Args >
    static TexturePtr
-   Create(const Args&... args);
+   Create(const std::string& textureName, TextureType type);
+
+   static TexturePtr
+   Create(const glm::ivec2& size, TextureType type);
 
  protected:
    TextureType m_type;
@@ -70,14 +72,14 @@ class TextureLibrary
 {
  public:
    static TexturePtr
-   GetTexture(const std::string& textureName);
+   GetTexture(const std::string& textureName, TextureType type = TextureType::DIFFUSE_MAP);
 
    static void
    Clear();
 
  private:
    static void
-   LoadTexture(const std::string& textureName);
+   LoadTexture(const std::string& textureName, TextureType type = TextureType::DIFFUSE_MAP);
 
  private:
    static inline std::unordered_map< std::string, TexturePtr > s_loadedTextures = {};

@@ -9,11 +9,11 @@ main(int, char**)
 {
    int width = 1280, height = 760;
    shady::app::Window mainWindow(width, height, "DEngine");
-  
+
    shady::render::Renderer::Init();
    shady::render::RenderCommand::SetClearColor({0.4f, 0.1f, 0.3f, 1.0f});
    shady::app::input::InputManager::Init(mainWindow.GetWindowHandle());
-   
+
    while (1)
    {
       shady::app::input::InputManager::PollEvents();
@@ -42,7 +42,7 @@ main(int, char**)
 
    // EventListener eventListener(&mainWindow, &camera, &simpleProgram);
 
-   // SkyBox sky;
+   // Skybox sky;
    // sky.LoadCubeMap("./Models/skybox");
 
    // Model box;

@@ -11,7 +11,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_PATH})
 
 add_executable(${PROJECT_NAME}
     # global namespace (legacy files)
-    src/Main.cpp src/SkyBox.h src/SkyBox.cpp
+    src/Main.cpp
 
     # app
     src/app/window.hpp src/app/window.cpp
@@ -31,7 +31,7 @@ add_executable(${PROJECT_NAME}
     src/render/texture.hpp src/render/texture.cpp src/render/shader.hpp src/render/shader.cpp
     src/render/camera.hpp src/render/camera.cpp src/render/orthographic_camera.hpp src/render/orthographic_camera.cpp
     src/render/renderer_2D.hpp src/render/renderer_2D.cpp src/render/renderer_3D.hpp src/render/renderer_3D.cpp
-    src/render/vertex.hpp src/render/framebuffer.hpp src/render/framebuffer.cpp
+    src/render/vertex.hpp src/render/framebuffer.hpp src/render/framebuffer.cpp src/render/helpers.hpp
 
     # render/opengl
     src/render/opengl/opengl_renderer_api.hpp src/render/opengl/opengl_renderer_api.cpp src/render/opengl/opengl_vertex_array.hpp
@@ -41,6 +41,7 @@ add_executable(${PROJECT_NAME}
 
     # scene
     src/scene/mesh.hpp src/scene/mesh.cpp src/scene/model.hpp src/scene/model.cpp src/scene/light.hpp src/scene/light.cpp
+    src/scene/skybox.hpp src/scene/skybox.cpp
 
     # utils
     src/utils/file_manager.hpp src/utils/file_manager.cpp src/utils/assert.hpp src/utils/assert.cpp

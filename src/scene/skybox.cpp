@@ -2,13 +2,15 @@
 #include "render/render_command.hpp"
 #include "render/texture.hpp"
 
+#include <array>
+
 namespace shady::scene {
 
 void
 Skybox::LoadCubeMap(const std::string& directoryPath)
 {
    // Positions
-   auto skyboxVertices[] = {
+   std::array< float, 32 > skyboxVertices = {
       -1.0f, 1.0f,  -1.0f, // vertex 0
       -1.0f, -1.0f, -1.0f, // vertex 1
       1.0f,  -1.0f, -1.0f, // vertex 2
@@ -20,16 +22,17 @@ Skybox::LoadCubeMap(const std::string& directoryPath)
    };
 
    auto vertexBuffer = render::VertexBuffer::Create(8);
-   vertexBuffer->SetData(skyboxVertices, sizeof(skyboxVertices));
-   vertexBuffer->SetLayout({render::ShaderDataType::Float3, "a_Position"});
+   vertexBuffer->SetData(skyboxVertices.data(), sizeof(skyboxVertices));
+   vertexBuffer->SetLayout(render::BufferLayout{{render::ShaderDataType::Float3, "a_Position"}});
 
-   auto indexBuffer = render::IndexBuffer::Create(24);
-   indexBuffer->SetData({
+   std::array< uint8_t, 24 > indicies = {
       0, 2, 1, 0, 3, 2, // face 1
       2, 3, 6, 3, 9, 6, // face 2
       7, 5, 4, 7, 4, 6, // face 3
       5, 1, 4, 5, 0, 1, // face 4
-   });
+   };
+   auto indexBuffer = render::IndexBuffer::Create(24);
+   indexBuffer->SetData(indicies.data(), 24);
 
    m_vertexArray = render::VertexArray::Create();
    m_vertexArray->AddVertexBuffer(vertexBuffer);

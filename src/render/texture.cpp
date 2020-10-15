@@ -1,9 +1,8 @@
 #include "texture.hpp"
-#include "helpers.hpp"
-#include "opengl/opengl_texture.hpp"
 #include "renderer.hpp"
 #include "trace/logger.hpp"
-
+#include "helpers.hpp"
+#include "opengl/opengl_texture.hpp"
 
 namespace shady::render {
 
@@ -39,18 +38,17 @@ Texture::GetType() const
    return m_type;
 }
 
-template < typename... Args >
 TexturePtr
-Texture::Create(const Args&... args)
+Texture::Create(const std::string& textureName, TextureType type)
 {
-   return CreateSharedWrapper< opengl::OpenGLTexture, Texture >(args...);
+   return CreateSharedWrapper< opengl::OpenGLTexture, Texture >(textureName, type);
 }
 
-template TexturePtr
-Texture::Create< std::string >(const std::string& textureName);
-
-template TexturePtr
-Texture::Create< glm::ivec2 >(const glm::ivec2& size);
+TexturePtr
+Texture::Create(const glm::ivec2& size, TextureType type)
+{
+   return CreateSharedWrapper< opengl::OpenGLTexture, Texture >(size, type);
+}
 
 /**************************************************************************************************
  *************************************** TEXTURE LIBRARY ******************************************

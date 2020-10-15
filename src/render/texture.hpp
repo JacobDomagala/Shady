@@ -6,7 +6,6 @@
 #include <string>
 #include <unordered_map>
 
-
 namespace shady::render {
 
 enum class TextureType
@@ -57,9 +56,11 @@ class Texture
    TextureType
    GetType() const;
 
-   template < typename ... Args >
    static TexturePtr
-   Create(const Args&... args);
+   Create(const std::string& textureName, TextureType type);
+
+   static TexturePtr
+   Create(const glm::ivec2& size, TextureType type);
 
  protected:
    TextureType m_type;

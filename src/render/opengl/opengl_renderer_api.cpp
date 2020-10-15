@@ -42,6 +42,12 @@ OpenGLRendererAPI::Init()
 }
 
 void
+OpenGLRendererAPI::SetDepthFunc(DepthFunc depthFunc)
+{
+   glDepthFunc(depthFunc == DepthFunc::LEQUAL ? GL_LEQUAL : GL_LESS);
+}
+
+void
 OpenGLRendererAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 {
    glViewport(x, y, width, height);
@@ -60,10 +66,10 @@ OpenGLRendererAPI::Clear()
 }
 
 void
-OpenGLRendererAPI::DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray,
-                               size_t indexCount)
+OpenGLRendererAPI::DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray, size_t indexCount)
 {
-   auto count = static_cast<GLsizei>(indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount());
+   auto count =
+      static_cast< GLsizei >(indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount());
    glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
    glBindTexture(GL_TEXTURE_2D, 0);
 }

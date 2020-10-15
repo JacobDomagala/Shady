@@ -1,4 +1,5 @@
 #include "vertex_array.hpp"
+#include "helpers.hpp"
 #include "opengl/opengl_vertex_array.hpp"
 #include "renderer.hpp"
 #include "trace/logger.hpp"
@@ -8,23 +9,7 @@ namespace shady::render {
 std::shared_ptr< VertexArray >
 VertexArray::Create()
 {
-   switch (Renderer::GetAPI())
-   {
-      case RendererAPI::API::None: {
-         trace::Logger::Fatal(
-            "VertexArray::Create() -> RendererAPI::None is currently not supported!");
-         return nullptr;
-      }
-      break;
-
-      case RendererAPI::API::OpenGL: {
-         return std::make_shared< opengl::OpenGLVertexArray >();
-      }
-      break;
-   }
-
-   trace::Logger::Fatal("VertexArray::Create() -> Unknown RendererAPI!");
-   return nullptr;
+   return CreateSharedWrapper< opengl::OpenGLVertexArray, VertexArray >();
 }
 
 } // namespace shady::render

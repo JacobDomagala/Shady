@@ -1,7 +1,9 @@
 #include "buffer.hpp"
+#include "helpers.hpp"
+#include "opengl/opengl_buffer.hpp"
 #include "renderer.hpp"
 #include "trace/logger.hpp"
-#include "opengl/opengl_buffer.hpp"
+
 
 namespace shady::render {
 
@@ -142,45 +144,13 @@ BufferLayout::CalculateOffsetsAndStride()
 std::shared_ptr< VertexBuffer >
 VertexBuffer::Create(size_t size)
 {
-   switch (Renderer::GetAPI())
-   {
-      case RendererAPI::API::None: {
-         trace::Logger::Fatal(
-            "VertexBuffer::Create -> RendererAPI::None is currently not supported!");
-         return nullptr;
-      }
-      break;
-
-      case RendererAPI::API::OpenGL: {
-         return std::make_shared< opengl::OpenGLVertexBuffer >(size);
-      }
-      break;
-   }
-
-   trace::Logger::Fatal("VertexBuffer::Create -> Unknown RendererAPI!");
-   return nullptr;
+   return CreateSharedWrapper< opengl::OpenGLVertexBuffer, VertexBuffer >(size);
 }
 
 std::shared_ptr< VertexBuffer >
 VertexBuffer::Create(float* vertices, size_t size)
 {
-   switch (Renderer::GetAPI())
-   {
-      case RendererAPI::API::None: {
-         trace::Logger::Fatal(
-            "VertexBuffer::Create -> RendererAPI::None is currently not supported!");
-         return nullptr;
-      }
-      break;
-
-      case RendererAPI::API::OpenGL: {
-         return std::make_shared< opengl::OpenGLVertexBuffer >(vertices, size);
-      }
-      break;
-   }
-
-   trace::Logger::Fatal("VertexBuffer::Create -> Unknown RendererAPI!");
-   return nullptr;
+   return CreateSharedWrapper< opengl::OpenGLVertexBuffer, VertexBuffer >(vertices, size);
 }
 
 /**************************************************************************************************
@@ -189,45 +159,13 @@ VertexBuffer::Create(float* vertices, size_t size)
 std::shared_ptr< IndexBuffer >
 IndexBuffer::Create(size_t size)
 {
-   switch (Renderer::GetAPI())
-   {
-      case RendererAPI::API::None: {
-         trace::Logger::Fatal(
-            "IndexBuffer::Create -> RendererAPI::None is currently not supported!");
-         return nullptr;
-      }
-      break;
-
-      case RendererAPI::API::OpenGL: {
-         return std::make_shared< opengl::OpenGLIndexBuffer >(size);
-      }
-      break;
-   }
-
-   trace::Logger::Fatal("IndexBuffer::Create -> Unknown RendererAPI!");
-   return nullptr;
+   return CreateSharedWrapper< opengl::OpenGLIndexBuffer, IndexBuffer >(size);
 }
 
 std::shared_ptr< IndexBuffer >
 IndexBuffer::Create(uint32_t* indices, size_t size)
 {
-   switch (Renderer::GetAPI())
-   {
-      case RendererAPI::API::None: {
-         trace::Logger::Fatal(
-            "IndexBuffer::Create -> RendererAPI::None is currently not supported!");
-         return nullptr;
-      }
-      break;
-
-      case RendererAPI::API::OpenGL: {
-         return std::make_shared< opengl::OpenGLIndexBuffer >(indices, size);
-      }
-      break;
-   }
-
-   trace::Logger::Fatal("IndexBuffer::Create -> Unknown RendererAPI!");
-   return nullptr;
+   return CreateSharedWrapper< opengl::OpenGLIndexBuffer, IndexBuffer >(indices, size);
 }
 
 } // namespace shady::render

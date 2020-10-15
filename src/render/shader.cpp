@@ -2,6 +2,7 @@
 #include "opengl/opengl_shader.hpp"
 #include "renderer.hpp"
 #include "trace/logger.hpp"
+#include "helpers.hpp"
 
 namespace shady::render {
 
@@ -11,22 +12,7 @@ namespace shady::render {
 std::shared_ptr< Shader >
 Shader::Create(const std::string& name)
 {
-   switch (Renderer::GetAPI())
-   {
-      case RendererAPI::API::None: {
-         trace::Logger::Fatal("Shader::Create() -> RendererAPI::None is currently not supported!");
-         return nullptr;
-      }
-      break;
-
-      case RendererAPI::API::OpenGL: {
-         return std::make_shared< opengl::OpenGLShader >(name);
-      }
-      break;
-   }
-
-   trace::Logger::Fatal("Shader::Create() -> Unknown RendererAPI!");
-   return nullptr;
+   return CreateSharedWrapper<opengl::OpenGLShader, Shader>(name);
 }
 
 /**************************************************************************************************

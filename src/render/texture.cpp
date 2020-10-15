@@ -1,7 +1,9 @@
 #include "texture.hpp"
+#include "helpers.hpp"
 #include "opengl/opengl_texture.hpp"
 #include "renderer.hpp"
 #include "trace/logger.hpp"
+
 
 namespace shady::render {
 
@@ -37,25 +39,16 @@ Texture::GetType() const
    return m_type;
 }
 
-template < typename ... Args >
+template < typename... Args >
 TexturePtr
 Texture::Create(const Args&... args)
 {
-   switch (Renderer::GetAPI())
-   {
-      case RendererAPI::API::None: {
-         trace::Logger::Fatal("Texture::Create() -> RendererAPI::None is currently not supported!");
-         return nullptr;
-      }
-      break;
+   return CreateSharedWrapper< opengl::OpenGLTexture, Texture >(args...);
+}
 
-      case RendererAPI::API::OpenGL: {
-         return std::make_shared< opengl::OpenGLTexture >(args...);
-      }
-      break;
-   }
-
-   trace::Logger::Fatal("Texture::Create() -> Unknown RendererAPI!");
+TexturePtr
+Texture::CreateCubeMap(const std::string& directory)
+{
    return nullptr;
 }
 

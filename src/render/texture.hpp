@@ -13,7 +13,8 @@ enum class TextureType
 {
    DIFFUSE_MAP,
    SPECULAR_MAP,
-   NORMAL_MAP
+   NORMAL_MAP,
+   CUBE_MAP
 };
 
 class Texture;
@@ -59,6 +60,9 @@ class Texture
    template < typename ... Args >
    static TexturePtr
    Create(const Args&... args);
+
+   static TexturePtr
+   CreateCubeMap(const std::string& directory);
 
  protected:
    TextureType m_type;

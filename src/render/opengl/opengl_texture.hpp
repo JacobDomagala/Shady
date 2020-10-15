@@ -7,8 +7,8 @@ namespace shady::render::opengl {
 class OpenGLTexture : public Texture
 {
  public:
-   explicit OpenGLTexture(const std::string& name);
-   explicit OpenGLTexture(const glm::ivec2& size);
+   explicit OpenGLTexture(const std::string& name, TextureType type);
+   explicit OpenGLTexture(const glm::ivec2& size, TextureType type);
 
    ~OpenGLTexture() override;
 
@@ -21,5 +21,9 @@ class OpenGLTexture : public Texture
  private:
    void
    CreateTexture();
+
+   void
+   CreateCubeMap(const std::string& name);
 };
+
 } // namespace shady::render::opengl

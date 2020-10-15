@@ -61,9 +61,6 @@ class Texture
    static TexturePtr
    Create(const Args&... args);
 
-   static TexturePtr
-   CreateCubeMap(const std::string& directory);
-
  protected:
    TextureType m_type;
    ImageData m_imageData;
@@ -74,14 +71,14 @@ class TextureLibrary
 {
  public:
    static TexturePtr
-   GetTexture(const std::string& textureName);
+   GetTexture(const std::string& textureName, TextureType type = TextureType::DIFFUSE_MAP);
 
    static void
    Clear();
 
  private:
    static void
-   LoadTexture(const std::string& textureName);
+   LoadTexture(const std::string& textureName, TextureType type = TextureType::DIFFUSE_MAP);
 
  private:
    static inline std::unordered_map< std::string, TexturePtr > s_loadedTextures = {};

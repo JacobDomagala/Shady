@@ -5,13 +5,26 @@
 
 namespace shady::render::opengl {
 
-OpenGLTexture::OpenGLTexture(const std::string& name)
+OpenGLTexture::OpenGLTexture(const std::string& name, TextureType type) : Texture(type)
 {
-   m_imageData = utils::FileManager::ReadTexture(name);
-   CreateTexture();
+   switch (type)
+   {
+      case TextureType::DIFFUSE_MAP:
+      case TextureType::SPECULAR_MAP:
+      case TextureType::NORMAL_MAP: {
+         m_imageData = utils::FileManager::ReadTexture(name);
+         CreateTexture();
+      }
+      break;
+
+      case TextureType::CUBE_MAP: {
+         CreateCubeMap(name);
+      }
+      break;
+   }
 }
 
-OpenGLTexture::OpenGLTexture(const glm::ivec2& size)
+OpenGLTexture::OpenGLTexture(const glm::ivec2& size, TextureType type) : Texture(type)
 {
    // cast here to avoid overflow warning
    m_imageData.m_bytes = ImageHandleType(
@@ -45,6 +58,35 @@ OpenGLTexture::CreateTexture()
 
    glTextureSubImage2D(m_textureHandle, 0, 0, 0, width, height, dataFormat, GL_UNSIGNED_BYTE,
                        m_imageData.m_bytes.get());
+}
+
+void
+OpenGLTexture::CreateCubeMap(const std::string& name)
+{
+   std::unordered_map< std::string, GLenum > faces = {
+      {name + "_right.jpg", GL_TEXTURE_CUBE_MAP_POSITIVE_X},
+      {name + "_left.jpg", GL_TEXTURE_CUBE_MAP_NEGATIVE_X},
+      {name + "_top.jpg", GL_TEXTURE_CUBE_MAP_POSITIVE_Y},
+      {name + "_bottom.jpg", GL_TEXTURE_CUBE_MAP_NEGATIVE_Y},
+      {name + "_back.jpg", GL_TEXTURE_CUBE_MAP_POSITIVE_Z},
+      {name + "_front.jpg", GL_TEXTURE_CUBE_MAP_NEGATIVE_Z}};
+
+   glGenTextures(1, &m_textureHandle);
+   glBindTexture(GL_TEXTURE_CUBE_MAP, m_textureHandle);
+
+   for (auto& [textureName, glFaceOrientation] : faces)
+   {
+      auto textureData = utils::FileManager::ReadTexture(textureName);
+      glTexImage2D(glFaceOrientation, 0, GL_RGB, textureData.m_size.x, textureData.m_size.y, 0,
+                   GL_RGB, GL_UNSIGNED_BYTE, textureData.m_bytes.get());
+   }
+
+   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+   glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
 
 void

@@ -1,9 +1,11 @@
 #pragma once
 
 #include "renderer_api.hpp"
+#include "trace/logger.hpp"
 #include "utils/assert.hpp"
 
 #include <memory>
+#include <fmt/format.h>
 
 namespace shady::render {
 

@@ -1,17 +1,28 @@
 name: Code quality check
 
-on: [push]
+on: [pull_request]
 
 jobs:
-  clang-tidy:
-    # The CMake configure and build commands are platform agnostic and should work equally
-    # well on Windows or Mac.  You can convert this to a matrix build if you need
-    # cross-platform coverage.
-    # See: https://docs.github.com/en/actions/configuring-and-managing-workflows/configuring-a-workflow#configuring-a-build-matrix
+  code-quality:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
+    - name: Setup env
+      run: |
+        sudo apt-get update
 
-    - name: clang-tidy check
-      uses: muxee/clang-tidy-action@0.0.1-rc1
+        sudo apt-get install -y xorg-dev
+        sudo apt-get install -y libc++-9-dev
+        echo "::set-env name=CXX::clang++-9"
+
+        sudo apt-get install -y cppcheck
+        sudo apt-get install -y clang-tidy
+
+        cmake -E make_directory ${{runner.workspace}}/build
+
+    - name: cppcheck
+      working-directory: ${{runner.workspace}}/build
+      run: |
+        cmake $GITHUB_WORKSPACE -DCMAKE_EXPORT_COMPILE_COMMANDS=ON .
+        cppcheck src --enable=all --project=compile_commands.json -i$GITHUB_WORKSPACE/lib

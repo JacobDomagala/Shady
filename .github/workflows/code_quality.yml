@@ -1,0 +1,17 @@
+name: Code quality check
+
+on: [push]
+
+jobs:
+  clang-tidy:
+    # The CMake configure and build commands are platform agnostic and should work equally
+    # well on Windows or Mac.  You can convert this to a matrix build if you need
+    # cross-platform coverage.
+    # See: https://docs.github.com/en/actions/configuring-and-managing-workflows/configuring-a-workflow#configuring-a-build-matrix
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: clang-tidy check
+      uses: muxee/clang-tidy-action@0.0.1-rc1

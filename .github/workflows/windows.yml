@@ -22,9 +22,6 @@ jobs:
       # We'll use this as our working directory for all subsequent commands
       run: cmake -E make_directory ${{runner.workspace}}/build
 
-    # - name: Install dependencies
-    #   run: sudo apt-get update && sudo apt-get install xorg-dev
-
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
       # access regardless of the host operating system
@@ -40,6 +37,3 @@ jobs:
       shell: bash
       # Execute the build.  You can specify a specific target with "--target <NAME>"
       run: cmake --build . --config $BUILD_TYPE
-
-    - name: clang-tidy check
-      uses: muxee/clang-tidy-action@0.0.1-rc1

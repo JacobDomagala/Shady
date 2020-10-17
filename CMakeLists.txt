@@ -11,7 +11,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_PATH})
 
 add_executable(${PROJECT_NAME}
     # global namespace (legacy files)
-    src/Main.cpp
+    src/main.cpp
 
     # app
     src/app/window.hpp src/app/window.cpp

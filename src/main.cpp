@@ -1,8 +1,10 @@
-#include "app/window.hpp"
-#include "time/timer.hpp"
-#include "render/renderer.hpp"
-#include "render/render_command.hpp"
 #include "app/input/input_manager.hpp"
+#include "app/window.hpp"
+#include "render/render_command.hpp"
+#include "render/renderer.hpp"
+#include "scene/skybox.hpp"
+#include "time/timer.hpp"
+#include "utils/file_manager.hpp"
 
 int
 main(int, char**)
@@ -13,7 +15,9 @@ main(int, char**)
    shady::render::Renderer::Init();
    shady::render::RenderCommand::SetClearColor({0.4f, 0.1f, 0.3f, 1.0f});
    shady::app::input::InputManager::Init(mainWindow.GetWindowHandle());
+   shady::scene::Skybox skyBox;
 
+   skyBox.LoadCubeMap((shady::utils::FileManager::TEXTURES_DIR / "cloudy" / "bluecloud").u8string());
    while (1)
    {
       shady::app::input::InputManager::PollEvents();

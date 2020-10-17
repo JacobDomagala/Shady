@@ -12,9 +12,9 @@ namespace shady::render::opengl {
 OpenGLShader::OpenGLShader(const std::string& name) : m_name(name)
 {
    Compile(utils::FileManager::ReadFile(utils::FileManager::SHADERS_DIR / name
-                                        / fmt::format("{}.vs,glsl", name)),
+                                        / fmt::format("{}.vs.glsl", name)),
            utils::FileManager::ReadFile(utils::FileManager::SHADERS_DIR / name
-                                        / fmt::format("{}.fs,glsl", name)));
+                                        / fmt::format("{}.fs.glsl", name)));
 }
 
 OpenGLShader::~OpenGLShader()
@@ -35,9 +35,9 @@ OpenGLShader::Compile(const std::string& vertexShader, const std::string& fragme
    glShaderSource(fragmentShaderID, 1, &shaderSource, NULL);
 
    glCompileShader(vertexShaderID);
-   CheckCompileStatus(vertexShaderID);
+   CheckCompileStatus(GL_VERTEX_SHADER, vertexShaderID);
    glCompileShader(fragmentShaderID);
-   CheckCompileStatus(fragmentShaderID);
+   CheckCompileStatus(GL_FRAGMENT_SHADER, fragmentShaderID);
 
    m_shaderID = glCreateProgram();
    glAttachShader(m_shaderID, vertexShaderID);
@@ -52,7 +52,7 @@ OpenGLShader::Compile(const std::string& vertexShader, const std::string& fragme
 }
 
 void
-OpenGLShader::CheckCompileStatus(GLuint shaderID)
+OpenGLShader::CheckCompileStatus(GLuint type, GLuint shaderID)
 {
    GLint isCompleted = 0;
    glGetShaderiv(shaderID, GL_COMPILE_STATUS, &isCompleted);
@@ -65,6 +65,11 @@ OpenGLShader::CheckCompileStatus(GLuint shaderID)
       glGetShaderInfoLog(shaderID, maxLength, &maxLength, &log[0]);
 
       trace::Logger::Fatal(std::move(log));
+   }
+   else
+   {
+      trace::Logger::Debug("OpenGL {} Shader: {} compiled! ",
+                           type == GL_VERTEX_SHADER ? "Vertex" : "Fragment", m_name);
    }
 }
 
@@ -82,6 +87,10 @@ OpenGLShader::CheckLinkStatus(GLuint programID)
       glGetProgramInfoLog(programID, maxLength, &maxLength, &log[0]);
 
       trace::Logger::Fatal(std::move(log));
+   }
+   else
+   {
+      trace::Logger::Debug("OpenGL Shader program: {} linked! ", m_name);
    }
 }
 

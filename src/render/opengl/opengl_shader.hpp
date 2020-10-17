@@ -58,7 +58,7 @@ class OpenGLShader : public Shader
    Compile(const std::string& vertexShader, const std::string& fragmentShader);
 
    void
-   CheckCompileStatus(GLuint shaderID);
+   CheckCompileStatus(GLuint type, GLuint shaderID);
 
    void
    CheckLinkStatus(GLuint shaderID);

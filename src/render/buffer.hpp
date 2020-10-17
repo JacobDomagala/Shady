@@ -88,9 +88,9 @@ class VertexBuffer
    SetLayout(const BufferLayout& layout) = 0;
 
    static std::shared_ptr< VertexBuffer >
-   Create(size_t size);
+   Create(size_t sizeInBytes);
    static std::shared_ptr< VertexBuffer >
-   Create(float* vertices, size_t size);
+   Create(float* vertices, size_t sizeInBytes);
 };
 
 class IndexBuffer

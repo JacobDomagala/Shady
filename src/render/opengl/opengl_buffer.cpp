@@ -7,18 +7,18 @@ namespace shady::render::opengl {
 /**************************************************************************************************
  *************************************** VERTEX BUFFER ********************************************
  *************************************************************************************************/
-OpenGLVertexBuffer::OpenGLVertexBuffer(size_t size)
+OpenGLVertexBuffer::OpenGLVertexBuffer(size_t sizeInBytes)
 {
    glCreateBuffers(1, &m_rendererID);
    glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
-   glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
+   glBufferData(GL_ARRAY_BUFFER, sizeInBytes, nullptr, GL_DYNAMIC_DRAW);
 }
 
-OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertices, size_t size)
+OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertices, size_t sizeInBytes)
 {
    glCreateBuffers(1, &m_rendererID);
    glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
-   glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
+   glBufferData(GL_ARRAY_BUFFER, sizeInBytes, vertices, GL_STATIC_DRAW);
 }
 
 OpenGLVertexBuffer::~OpenGLVertexBuffer()

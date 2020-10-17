@@ -11,7 +11,7 @@ void
 Skybox::LoadCubeMap(const std::string& directoryPath)
 {
    // Positions
-   std::array< float, 32 > skyboxVertices = {
+   std::array< float, 24 > skyboxVertices = {
       -1.0f, 1.0f,  -1.0f, // vertex 0
       -1.0f, -1.0f, -1.0f, // vertex 1
       1.0f,  -1.0f, -1.0f, // vertex 2
@@ -22,25 +22,25 @@ Skybox::LoadCubeMap(const std::string& directoryPath)
       1.0f,  1.0f,  1.0f   // vertex 7
    };
 
-   auto vertexBuffer = render::VertexBuffer::Create(8);
-   vertexBuffer->SetData(skyboxVertices.data(), sizeof(skyboxVertices));
-   vertexBuffer->SetLayout(render::BufferLayout{{render::ShaderDataType::Float3, "a_Position"}});
+   auto vertexBuffer =
+      render::VertexBuffer::Create(skyboxVertices.data(), skyboxVertices.size() * sizeof(float));
+   vertexBuffer->SetLayout({{render::ShaderDataType::Float3, "a_Position"}});
 
-   std::array< uint8_t, 24 > indicies = {
+   std::array< uint32_t, 24 > indicies = {
       0, 2, 1, 0, 3, 2, // face 1
       2, 3, 6, 3, 9, 6, // face 2
       7, 5, 4, 7, 4, 6, // face 3
       5, 1, 4, 5, 0, 1, // face 4
    };
-   auto indexBuffer = render::IndexBuffer::Create(24);
-   indexBuffer->SetData(indicies.data(), 24);
+   auto indexBuffer = render::IndexBuffer::Create(indicies.data(), indicies.size());
 
    m_vertexArray = render::VertexArray::Create();
    m_vertexArray->AddVertexBuffer(vertexBuffer);
    m_vertexArray->SetIndexBuffer(indexBuffer);
 
    m_cubeTexture = render::TextureLibrary::GetTexture(render::TextureType::CUBE_MAP, directoryPath);
-   m_shader = render::ShaderLibrary::GetShader((utils::FileManager::SHADERS_DIR / "cubemapenv" / "skybox").u8string());
+   m_shader = render::ShaderLibrary::GetShader(
+      (utils::FileManager::SHADERS_DIR / "cubemapenv" / "skybox").u8string());
 }
 
 void
@@ -52,11 +52,11 @@ Skybox::Draw(const render::Camera& camera)
 
    render::RenderCommand::SetDepthFunc(render::DepthFunc::LEQUAL);
 
-   m_shader->SetMat4("view_matrix", camera.GetView());
+   m_shader->SetMat4("u_viewProjection", camera.GetViewProjection());
    m_vertexArray->Bind();
    m_cubeTexture->Bind(0);
 
-   m_shader->SetInt("tex_cubemap", 0);
+   m_shader->SetInt("skybox", 0);
 
    render::RenderCommand::DrawIndexed(m_vertexArray);
 

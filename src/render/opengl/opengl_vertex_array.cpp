@@ -1,4 +1,5 @@
 #include "opengl_vertex_array.hpp"
+#include "trace/logger.hpp"
 
 #include <glad/glad.h>
 
@@ -34,6 +35,11 @@ ShaderDataTypeToOpenGLBaseType(ShaderDataType type)
    }
 
    return 0;
+}
+
+OpenGLVertexArray::OpenGLVertexArray()
+{
+   glGenVertexArrays(1, &m_vertexArrayID);
 }
 
 void

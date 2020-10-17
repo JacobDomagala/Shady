@@ -9,7 +9,8 @@ namespace shady::render::opengl {
 class OpenGLVertexArray : public VertexArray
 {
  public:
-   virtual ~OpenGLVertexArray() = default;
+   OpenGLVertexArray();
+   ~OpenGLVertexArray() override = default;
 
    void
    Bind() const override;

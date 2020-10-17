@@ -10,28 +10,31 @@ namespace shady::render {
 static uint32_t
 ShaderDataTypeSize(ShaderDataType type)
 {
+   const auto floatSize = sizeof(float);
+   const auto intSize = sizeof(int32_t);
+
    switch (type)
    {
       case ShaderDataType::Float:
-         return 4;
+         return floatSize;
       case ShaderDataType::Float2:
-         return 4 * 2;
+         return floatSize * 2;
       case ShaderDataType::Float3:
-         return 4 * 3;
+         return floatSize * 3;
       case ShaderDataType::Float4:
-         return 4 * 4;
+         return floatSize * 4;
       case ShaderDataType::Mat3:
-         return 4 * 3 * 3;
+         return floatSize * 3 * 3;
       case ShaderDataType::Mat4:
-         return 4 * 4 * 4;
+         return floatSize * 4 * 4;
       case ShaderDataType::Int:
-         return 4;
+         return intSize;
       case ShaderDataType::Int2:
-         return 4 * 2;
+         return intSize * 2;
       case ShaderDataType::Int3:
-         return 4 * 3;
+         return intSize * 3;
       case ShaderDataType::Int4:
-         return 4 * 4;
+         return intSize * 4;
       case ShaderDataType::Bool:
          return 1;
    }
@@ -80,6 +83,7 @@ BufferElement::GetComponentCount() const
       case ShaderDataType::Bool:
          return 1;
    }
+
    trace::Logger::Fatal("BufferElement::GetComponentCount -> Unknown ShaderDataType!");
    return 0;
 }
@@ -130,6 +134,7 @@ BufferLayout::CalculateOffsetsAndStride()
 {
    size_t offset = 0;
    m_stride = 0;
+
    for (auto& element : m_elements)
    {
       element.m_offset = offset;
@@ -142,15 +147,15 @@ BufferLayout::CalculateOffsetsAndStride()
  *************************************** VERTEX BUFFER ********************************************
  *************************************************************************************************/
 std::shared_ptr< VertexBuffer >
-VertexBuffer::Create(size_t size)
+VertexBuffer::Create(size_t sizeInBytes)
 {
-   return CreateSharedWrapper< opengl::OpenGLVertexBuffer, VertexBuffer >(size);
+   return CreateSharedWrapper< opengl::OpenGLVertexBuffer, VertexBuffer >(sizeInBytes);
 }
 
 std::shared_ptr< VertexBuffer >
-VertexBuffer::Create(float* vertices, size_t size)
+VertexBuffer::Create(float* vertices, size_t sizeInBytes)
 {
-   return CreateSharedWrapper< opengl::OpenGLVertexBuffer, VertexBuffer >(vertices, size);
+   return CreateSharedWrapper< opengl::OpenGLVertexBuffer, VertexBuffer >(vertices, sizeInBytes);
 }
 
 /**************************************************************************************************

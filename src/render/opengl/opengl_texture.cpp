@@ -1,11 +1,13 @@
 #include "opengl_texture.hpp"
+#include "trace/logger.hpp"
 #include "utils/file_manager.hpp"
+
 
 #include <glad/glad.h>
 
 namespace shady::render::opengl {
 
-OpenGLTexture::OpenGLTexture(const std::string& name, TextureType type) : Texture(type)
+OpenGLTexture::OpenGLTexture(TextureType type, const std::string& name) : Texture(type, name)
 {
    switch (type)
    {
@@ -24,7 +26,7 @@ OpenGLTexture::OpenGLTexture(const std::string& name, TextureType type) : Textur
    }
 }
 
-OpenGLTexture::OpenGLTexture(const glm::ivec2& size, TextureType type) : Texture(type)
+OpenGLTexture::OpenGLTexture(TextureType type, const glm::ivec2& size) : Texture(type)
 {
    // cast here to avoid overflow warning
    m_imageData.m_bytes = ImageHandleType(
@@ -58,6 +60,8 @@ OpenGLTexture::CreateTexture()
 
    glTextureSubImage2D(m_textureHandle, 0, 0, 0, width, height, dataFormat, GL_UNSIGNED_BYTE,
                        m_imageData.m_bytes.get());
+
+   trace::Logger::Debug("OpenGL texture loaded = {}", m_name);
 }
 
 void
@@ -79,6 +83,8 @@ OpenGLTexture::CreateCubeMap(const std::string& name)
       auto textureData = utils::FileManager::ReadTexture(textureName);
       glTexImage2D(glFaceOrientation, 0, GL_RGB, textureData.m_size.x, textureData.m_size.y, 0,
                    GL_RGB, GL_UNSIGNED_BYTE, textureData.m_bytes.get());
+
+      trace::Logger::Debug("OpenGL cubemap texture loaded = {}", textureName);
    }
 
    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

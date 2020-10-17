@@ -7,8 +7,8 @@ namespace shady::render::opengl {
 class OpenGLTexture : public Texture
 {
  public:
-   explicit OpenGLTexture(const std::string& name, TextureType type);
-   explicit OpenGLTexture(const glm::ivec2& size, TextureType type);
+   explicit OpenGLTexture(TextureType type, const std::string& name);
+   explicit OpenGLTexture(TextureType type, const glm::ivec2& size);
 
    ~OpenGLTexture() override;
 

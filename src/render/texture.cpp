@@ -1,8 +1,9 @@
 #include "texture.hpp"
-#include "renderer.hpp"
-#include "trace/logger.hpp"
 #include "helpers.hpp"
 #include "opengl/opengl_texture.hpp"
+#include "renderer.hpp"
+#include "trace/logger.hpp"
+
 
 namespace shady::render {
 
@@ -10,7 +11,7 @@ namespace shady::render {
  ****************************************** TEXTURE ***********************************************
  *************************************************************************************************/
 
-Texture::Texture(TextureType type) : m_type(type)
+Texture::Texture(TextureType type, const std::string& name) : m_name(name), m_type(type)
 {
 }
 
@@ -38,28 +39,34 @@ Texture::GetType() const
    return m_type;
 }
 
-TexturePtr
-Texture::Create(const std::string& textureName, TextureType type)
+std::string
+Texture::GetName() const
 {
-   return CreateSharedWrapper< opengl::OpenGLTexture, Texture >(textureName, type);
+   return m_name;
 }
 
 TexturePtr
-Texture::Create(const glm::ivec2& size, TextureType type)
+Texture::Create(TextureType type, const std::string& textureName)
 {
-   return CreateSharedWrapper< opengl::OpenGLTexture, Texture >(size, type);
+   return CreateSharedWrapper< opengl::OpenGLTexture, Texture >(type, textureName);
+}
+
+TexturePtr
+Texture::Create( TextureType type, const glm::ivec2& size)
+{
+   return CreateSharedWrapper< opengl::OpenGLTexture, Texture >(type, size);
 }
 
 /**************************************************************************************************
  *************************************** TEXTURE LIBRARY ******************************************
  *************************************************************************************************/
 TexturePtr
-TextureLibrary::GetTexture(const std::string& textureName, TextureType type)
+TextureLibrary::GetTexture(TextureType type, const std::string& textureName)
 {
    if (s_loadedTextures.find(textureName) == s_loadedTextures.end())
    {
       trace::Logger::Info("Texture: {} not found in library. Loading it", textureName);
-      LoadTexture(textureName, type);
+      LoadTexture(type, textureName);
    }
 
    return s_loadedTextures[textureName];
@@ -72,9 +79,9 @@ TextureLibrary::Clear()
 }
 
 void
-TextureLibrary::LoadTexture(const std::string& textureName, TextureType type)
+TextureLibrary::LoadTexture(TextureType type, const std::string& textureName)
 {
-   s_loadedTextures[textureName] = Texture::Create(textureName, type);
+   s_loadedTextures[textureName] = Texture::Create(type, textureName);
 }
 
 } // namespace shady::render

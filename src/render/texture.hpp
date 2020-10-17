@@ -35,7 +35,7 @@ class Texture
    };
 
  public:
-   Texture(TextureType type = TextureType::DIFFUSE_MAP);
+   Texture(TextureType type = TextureType::DIFFUSE_MAP, const std::string& name = "defaultName");
    virtual ~Texture() = default;
 
    virtual void
@@ -56,30 +56,34 @@ class Texture
    TextureType
    GetType() const;
 
-   static TexturePtr
-   Create(const std::string& textureName, TextureType type);
+   std::string
+   GetName() const;
 
    static TexturePtr
-   Create(const glm::ivec2& size, TextureType type);
+   Create(TextureType type, const std::string& textureName);
+
+   static TexturePtr
+   Create(TextureType type, const glm::ivec2& size);
 
  protected:
    TextureType m_type;
    ImageData m_imageData;
    TextureHandleType m_textureHandle;
+   std::string m_name;
 };
 
 class TextureLibrary
 {
  public:
    static TexturePtr
-   GetTexture(const std::string& textureName, TextureType type = TextureType::DIFFUSE_MAP);
+   GetTexture(TextureType type, const std::string& textureName);
 
    static void
    Clear();
 
  private:
    static void
-   LoadTexture(const std::string& textureName, TextureType type = TextureType::DIFFUSE_MAP);
+   LoadTexture(TextureType type, const std::string& textureName);
 
  private:
    static inline std::unordered_map< std::string, TexturePtr > s_loadedTextures = {};

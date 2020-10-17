@@ -7,6 +7,22 @@
 
 namespace shady::scene {
 
+static render::TextureType
+GetShadyTexFromAssimpTex(aiTextureType assimpTex)
+{
+   switch (assimpTex)
+   {
+      case aiTextureType_SPECULAR:
+         return render::TextureType::SPECULAR_MAP;
+      case aiTextureType_NORMALS:
+         return render::TextureType::NORMAL_MAP;
+      case aiTextureType_DIFFUSE:
+      default: {
+         return render::TextureType::DIFFUSE_MAP;
+      }
+   }
+}
+
 void
 Model::ScaleModel(const glm::vec3& scale)
 {
@@ -162,7 +178,8 @@ Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type, render::Texture
       aiString str;
       mat->GetTexture(type, i, &str);
 
-      textures.push_back(render::TextureLibrary::GetTexture(str.C_Str()));
+      textures.push_back(
+         render::TextureLibrary::GetTexture(GetShadyTexFromAssimpTex(type), str.C_Str()));
    }
 }
 

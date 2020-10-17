@@ -1,6 +1,7 @@
 #include "skybox.hpp"
 #include "render/render_command.hpp"
 #include "render/texture.hpp"
+#include "utils/file_manager.hpp"
 
 #include <array>
 
@@ -38,8 +39,8 @@ Skybox::LoadCubeMap(const std::string& directoryPath)
    m_vertexArray->AddVertexBuffer(vertexBuffer);
    m_vertexArray->SetIndexBuffer(indexBuffer);
 
-   m_cubeTexture = render::TextureLibrary::GetTexture(directoryPath, render::TextureType::CUBE_MAP);
-   m_shader = render::ShaderLibrary::GetShader("Skybox");
+   m_cubeTexture = render::TextureLibrary::GetTexture(render::TextureType::CUBE_MAP, directoryPath);
+   m_shader = render::ShaderLibrary::GetShader((utils::FileManager::SHADERS_DIR / "cubemapenv" / "skybox").u8string());
 }
 
 void
@@ -51,11 +52,11 @@ Skybox::Draw(const render::Camera& camera)
 
    render::RenderCommand::SetDepthFunc(render::DepthFunc::LEQUAL);
 
-   m_shader->SetMat4("u_ViewProjectionMat", camera.GetViewProjection());
+   m_shader->SetMat4("view_matrix", camera.GetView());
    m_vertexArray->Bind();
    m_cubeTexture->Bind(0);
 
-   m_shader->SetInt("skybox", 0);
+   m_shader->SetInt("tex_cubemap", 0);
 
    render::RenderCommand::DrawIndexed(m_vertexArray);
 

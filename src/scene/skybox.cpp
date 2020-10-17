@@ -44,7 +44,7 @@ Skybox::LoadCubeMap(const std::string& directoryPath)
 }
 
 void
-Skybox::Draw(const render::Camera& camera)
+Skybox::Draw(const Camera& camera)
 {
    // We draw here directly without calling Renderer because we use unique shader
    // so we wouldn't be able to use batching anyways

@@ -3,10 +3,13 @@
 #include <glm/glm.hpp>
 #include <memory>
 
+namespace shady::scene {
+class Camera;
+}
+
 namespace shady::render {
 
 class Texture;
-class Camera;
 
 enum class PrimitiveType
 {
@@ -24,7 +27,7 @@ class Renderer2D
    Shutdown();
 
    static void
-   BeginScene(const Camera& camera);
+   BeginScene(const scene::Camera& camera);
 
    static void
    EndScene();

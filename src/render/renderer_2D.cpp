@@ -1,14 +1,16 @@
-#include "renderer_2D.hpp"
-#include "camera.hpp"
-#include "render_command.hpp"
-#include "shader.hpp"
-#include "texture.hpp"
-#include "vertex_array.hpp"
-#include "vertex.hpp"
+#include "render/renderer_2D.hpp"
+#include "render/render_command.hpp"
+#include "render/shader.hpp"
+#include "render/texture.hpp"
+#include "render/vertex.hpp"
+#include "render/vertex_array.hpp"
+#include "scene/camera.hpp"
 
+
+#include <array>
 #include <glm/gtc/matrix_transform.hpp>
 #include <memory>
-#include <array>
+
 
 namespace shady::render {
 
@@ -84,8 +86,8 @@ Renderer2D::Init()
    s_Data.QuadVertexArray->SetIndexBuffer(quadIB);
    delete[] quadIndices;
 
-   s_Data.WhiteTexture = Texture::Create(TextureType::DIFFUSE_MAP, glm::ivec2{1,1});
-   //s_Data.WhiteTexture->CreateColorTexture({1, 1}, {1.0f, 1.0f, 1.0f});
+   s_Data.WhiteTexture = Texture::Create(TextureType::DIFFUSE_MAP, glm::ivec2{1, 1});
+   // s_Data.WhiteTexture->CreateColorTexture({1, 1}, {1.0f, 1.0f, 1.0f});
 
    int32_t samplers[s_Data.MaxTextureSlots];
    for (uint32_t i = 0; i < s_Data.MaxTextureSlots; i++)
@@ -138,7 +140,7 @@ Renderer2D::Shutdown()
 }
 
 void
-Renderer2D::BeginScene(const Camera& camera)
+Renderer2D::BeginScene(const scene::Camera& camera)
 {
    s_Data.QuadIndexCount = 0;
    s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;

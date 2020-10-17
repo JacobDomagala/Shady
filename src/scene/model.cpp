@@ -23,6 +23,23 @@ GetShadyTexFromAssimpTex(aiTextureType assimpTex)
    }
 }
 
+Model::Model(const std::string& path)
+{
+   // Read file via ASSIMP
+   Assimp::Importer importer;
+   auto scene = importer.ReadFile(path, aiProcess_GenSmoothNormals | aiProcess_Triangulate
+                                           | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+   // Check for errors
+   if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+   {
+      trace::Logger::Fatal("{}", importer.GetErrorString());
+      return;
+   }
+
+   // Process ASSIMP's root node recursively
+   ProcessNode(scene->mRootNode, scene);
+}
+
 void
 Model::ScaleModel(const glm::vec3& scale)
 {
@@ -50,24 +67,6 @@ Model::Draw()
       mesh.Draw(m_translateValue, m_scaleValue, m_rotateValue, m_rotateAngle,
                 {1.0f, 1.0f, 1.0f, 1.0f});
    }
-}
-
-void
-Model::LoadModel(const std::string& path)
-{
-   // Read file via ASSIMP
-   Assimp::Importer importer;
-   auto scene = importer.ReadFile(path, aiProcess_GenSmoothNormals | aiProcess_Triangulate
-                                           | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
-   // Check for errors
-   if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
-   {
-      trace::Logger::Fatal("{}", importer.GetErrorString());
-      return;
-   }
-
-   // Process ASSIMP's root node recursively
-   ProcessNode(scene->mRootNode, scene);
 }
 
 void

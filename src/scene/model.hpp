@@ -18,7 +18,7 @@ namespace shady::scene {
 class Model
 {
  public:
-   Model() = default;
+  Model(const std::string& path);
 
    void
    ScaleModel(const glm::vec3& scale);
@@ -31,9 +31,6 @@ class Model
 
    void
    Draw();
-
-   void
-   LoadModel(const std::string& path);
 
  private:
    void

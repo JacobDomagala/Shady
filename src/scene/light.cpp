@@ -1,4 +1,4 @@
-#include "light.hpp"
+#include "scene/light.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -34,7 +34,7 @@ Light::Light(const glm::vec3& position, const glm::vec3& color, LightType type)
 }
 
 void
-Light::StartDrawingShadows(uint32_t programID)
+Light::BeginRenderToLightmap()
 {
    /*glUseProgram(programID);
    glUniformMatrix4fv(glGetUniformLocation(programID, "lightSpaceMatrix"), 1, GL_FALSE,
@@ -49,9 +49,21 @@ Light::StartDrawingShadows(uint32_t programID)
 }
 
 void
-Light::StopDrawingShadows()
+Light::EndRenderToLightmap()
 {
    m_shadowBuffer->Unbind();
+}
+
+void
+Light::BindLightMap()
+{
+   m_shadowBuffer->Bind();
+}
+
+const glm::mat4&
+Light::GetLightSpaceMat() const
+{
+   return m_lightSpaceMatrix;
 }
 
 } // namespace shady::scene

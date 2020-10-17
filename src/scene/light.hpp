@@ -1,6 +1,6 @@
 #pragma once
 
-#include "framebuffer.hpp"
+#include "render/framebuffer.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -17,10 +17,18 @@ class Light
 {
  public:
    Light(const glm::vec3& position, const glm::vec3& color, LightType type);
+
    void
-   StartDrawingShadows(uint32_t programID);
+   BeginRenderToLightmap();
+
    void
-   StopDrawingShadows();
+   EndRenderToLightmap();
+
+   void
+   BindLightMap();
+
+   const glm::mat4&
+   GetLightSpaceMat() const;
 
  private:
    int32_t m_shadowTextureWidth = 4096;

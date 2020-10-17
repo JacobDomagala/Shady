@@ -1,10 +1,10 @@
-#include "renderer_3D.hpp"
-#include "camera.hpp"
-#include "render_command.hpp"
-#include "shader.hpp"
-#include "texture.hpp"
-#include "vertex.hpp"
-#include "vertex_array.hpp"
+#include "render/renderer_3D.hpp"
+#include "scene/camera.hpp"
+#include "render/render_command.hpp"
+#include "render/shader.hpp"
+#include "render/texture.hpp"
+#include "render/vertex.hpp"
+#include "render/vertex_array.hpp"
 
 #include <array>
 #include <glm/gtc/matrix_transform.hpp>
@@ -90,7 +90,7 @@ Renderer3D::Shutdown()
 }
 
 void
-Renderer3D::BeginScene(const Camera& camera)
+Renderer3D::BeginScene(const scene::Camera& camera)
 {
    s_Data.m_textureShader->Bind();
    s_Data.m_textureShader->SetMat4("u_ViewProjection", camera.GetViewProjection());

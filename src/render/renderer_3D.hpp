@@ -1,16 +1,17 @@
 #pragma once
 
 #include "render/texture.hpp"
-#include "vertex.hpp"
-
+#include "render/vertex.hpp"
 
 #include <glm/glm.hpp>
 #include <memory>
 #include <vector>
 
-namespace shady::render {
-
+namespace shady::scene {
 class Camera;
+}
+
+namespace shady::render {
 
 class Renderer3D
 {
@@ -22,7 +23,7 @@ class Renderer3D
    Shutdown();
 
    static void
-   BeginScene(const Camera& camera);
+   BeginScene(const scene::Camera& camera);
 
    static void
    EndScene();

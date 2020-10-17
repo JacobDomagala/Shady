@@ -10,11 +10,9 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${OUTPUT_PATH})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_PATH})
 
 add_executable(${PROJECT_NAME}
-    # global namespace (legacy files)
-    src/main.cpp
-
     # app
-    src/app/window.hpp src/app/window.cpp
+    src/app/window.hpp src/app/window.cpp src/app/main.cpp src/app/shady.hpp src/app/shady.cpp
+
     # app/input
     src/app/input/event.hpp src/app/input/input_manager.hpp src/app/input/input_manager.cpp src/app/input/input_listener.hpp
 
@@ -29,8 +27,6 @@ add_executable(${PROJECT_NAME}
     src/render/vertex_array.hpp src/render/vertex_array.cpp src/render/buffer.hpp src/render/buffer.cpp
     src/render/renderer.hpp src/render/renderer.cpp src/render/context.hpp src/render/context.cpp
     src/render/texture.hpp src/render/texture.cpp src/render/shader.hpp src/render/shader.cpp
-    src/render/camera.hpp src/render/camera.cpp src/render/orthographic_camera.hpp src/render/orthographic_camera.cpp
-    src/render/perspective_camera.hpp src/render/perspective_camera.cpp
     src/render/renderer_2D.hpp src/render/renderer_2D.cpp src/render/renderer_3D.hpp src/render/renderer_3D.cpp
     src/render/vertex.hpp src/render/framebuffer.hpp src/render/framebuffer.cpp src/render/helpers.hpp
 
@@ -42,7 +38,9 @@ add_executable(${PROJECT_NAME}
 
     # scene
     src/scene/mesh.hpp src/scene/mesh.cpp src/scene/model.hpp src/scene/model.cpp src/scene/light.hpp src/scene/light.cpp
-    src/scene/skybox.hpp src/scene/skybox.cpp
+    src/scene/skybox.hpp src/scene/skybox.cpp src/scene/scene.hpp src/scene/scene.cpp
+    src/scene/camera.hpp src/scene/camera.cpp src/scene/orthographic_camera.hpp src/scene/orthographic_camera.cpp
+    src/scene/perspective_camera.hpp src/scene/perspective_camera.cpp
 
     # utils
     src/utils/file_manager.hpp src/utils/file_manager.cpp src/utils/assert.hpp src/utils/assert.cpp

@@ -1,8 +1,8 @@
-#include "perspective_camera.hpp"
+#include "scene/perspective_camera.hpp"
 
 #include <glm/gtx/transform.hpp>
 
-namespace shady::render {
+namespace shady::scene {
 
 PerspectiveCamera::PerspectiveCamera(const glm::mat4& projection) : Camera(projection)
 {

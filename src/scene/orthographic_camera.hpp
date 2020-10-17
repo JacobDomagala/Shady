@@ -1,8 +1,8 @@
 #pragma once
 
-#include "camera.hpp"
+#include "scene/camera.hpp"
 
-namespace shady::render {
+namespace shady::scene {
 
 class OrthographicCamera : public Camera
 {

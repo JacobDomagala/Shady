@@ -1,8 +1,8 @@
-#include "orthographic_camera.hpp"
+#include "scene/orthographic_camera.hpp"
 
 #include <glm/gtx/transform.hpp>
 
-namespace shady::render {
+namespace shady::scene {
 
 OrthographicCamera::OrthographicCamera(const glm::mat4& projection) : Camera(projection)
 {

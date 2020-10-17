@@ -1,8 +1,8 @@
-#include "camera.hpp"
+#include "scene/camera.hpp"
 
 #include <glm/gtx/transform.hpp>
 
-namespace shady::render {
+namespace shady::scene {
 
 Camera::Camera(const glm::mat4& projection) : m_projectionMat(projection)
 {

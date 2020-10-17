@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-namespace shady::render {
+namespace shady::scene {
 
 
 class Camera

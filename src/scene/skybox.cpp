@@ -54,6 +54,8 @@ Skybox::Draw(const render::Camera& camera)
 
    m_shader->SetMat4("u_viewProjection", camera.GetViewProjection());
    m_vertexArray->Bind();
+   m_vertexArray->GetVertexBuffers().front()->Bind();
+   m_vertexArray->GetIndexBuffer()->Bind();
    m_cubeTexture->Bind(0);
 
    m_shader->SetInt("skybox", 0);

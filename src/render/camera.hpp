@@ -32,6 +32,9 @@ class Camera
    const glm::vec3&
    GetPosition() const;
 
+   void
+   MoveBy(const glm::vec3& moveBy);
+
  protected:
    void
    UpdateViewMatrix();

@@ -65,7 +65,7 @@ TextureLibrary::GetTexture(TextureType type, const std::string& textureName)
 {
    if (s_loadedTextures.find(textureName) == s_loadedTextures.end())
    {
-      trace::Logger::Info("Texture: {} not found in library. Loading it", textureName);
+      trace::Logger::Debug("Texture: {} not found in library. Loading it", textureName);
       LoadTexture(type, textureName);
    }
 

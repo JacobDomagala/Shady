@@ -30,6 +30,7 @@ add_executable(${PROJECT_NAME}
     src/render/renderer.hpp src/render/renderer.cpp src/render/context.hpp src/render/context.cpp
     src/render/texture.hpp src/render/texture.cpp src/render/shader.hpp src/render/shader.cpp
     src/render/camera.hpp src/render/camera.cpp src/render/orthographic_camera.hpp src/render/orthographic_camera.cpp
+    src/render/perspective_camera.hpp src/render/perspective_camera.cpp
     src/render/renderer_2D.hpp src/render/renderer_2D.cpp src/render/renderer_3D.hpp src/render/renderer_3D.cpp
     src/render/vertex.hpp src/render/framebuffer.hpp src/render/framebuffer.cpp src/render/helpers.hpp
 

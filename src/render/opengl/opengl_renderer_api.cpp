@@ -71,7 +71,6 @@ OpenGLRendererAPI::DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray
    auto count =
       static_cast< GLsizei >(indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount());
    glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
-   glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void

@@ -5,23 +5,35 @@
 #include "scene/skybox.hpp"
 #include "time/timer.hpp"
 #include "utils/file_manager.hpp"
+#include "render/perspective_camera.hpp"
 
 int
 main(int, char**)
 {
+   using namespace shady::render;
+   using namespace shady::utils;
+   using namespace shady::app;
+   using namespace shady::app::input;
+   using namespace shady::scene;
+
    int width = 1280, height = 760;
-   shady::app::Window mainWindow(width, height, "DEngine");
+   Window mainWindow(width, height, "DEngine");
 
-   shady::render::Renderer::Init();
-   shady::render::RenderCommand::SetClearColor({0.4f, 0.1f, 0.3f, 1.0f});
-   shady::app::input::InputManager::Init(mainWindow.GetWindowHandle());
-   shady::scene::Skybox skyBox;
+   Renderer::Init();
+   RenderCommand::SetClearColor({0.4f, 0.1f, 0.3f, 1.0f});
+   InputManager::Init(mainWindow.GetWindowHandle());
 
-   skyBox.LoadCubeMap((shady::utils::FileManager::TEXTURES_DIR / "cloudy" / "bluecloud").u8string());
+   PerspectiveCamera camera(90.0f, 16.0f/9.0f, 0.1f, 10.0f);
+
+   Skybox skyBox;
+   skyBox.LoadCubeMap((FileManager::TEXTURES_DIR / "cloudy" / "bluecloud").u8string());
+
    while (1)
    {
       shady::app::input::InputManager::PollEvents();
       mainWindow.Clear();
+
+      skyBox.Draw(camera);
       mainWindow.SwapBuffers();
    }
    // mainWindow.ShowCursor(false);

@@ -34,7 +34,7 @@ class FileManager
                FileType type = FileType::TEXT);
 
    static render::Texture::ImageData
-   ReadTexture(const std::string& fileName);
+   ReadTexture(const std::string& fileName, bool flipVertical = false);
 };
 
 } // namespace shady::utils

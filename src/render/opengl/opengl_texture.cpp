@@ -72,8 +72,8 @@ OpenGLTexture::CreateCubeMap(const std::string& name)
       {name + "_left.jpg", GL_TEXTURE_CUBE_MAP_NEGATIVE_X},
       {name + "_top.jpg", GL_TEXTURE_CUBE_MAP_POSITIVE_Y},
       {name + "_bottom.jpg", GL_TEXTURE_CUBE_MAP_NEGATIVE_Y},
-      {name + "_back.jpg", GL_TEXTURE_CUBE_MAP_POSITIVE_Z},
-      {name + "_front.jpg", GL_TEXTURE_CUBE_MAP_NEGATIVE_Z}};
+      {name + "_back.jpg", GL_TEXTURE_CUBE_MAP_NEGATIVE_Z},
+      {name + "_front.jpg", GL_TEXTURE_CUBE_MAP_POSITIVE_Z}};
 
    glGenTextures(1, &m_textureHandle);
    glBindTexture(GL_TEXTURE_CUBE_MAP, m_textureHandle);

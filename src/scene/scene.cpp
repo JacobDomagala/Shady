@@ -61,8 +61,8 @@ Scene::Render()
 void
 Scene::LoadDefault()
 {
-   m_camera = std::make_unique< PerspectiveCamera >(90.0f, 16.0f / 9.0f, 0.1f, 10.0f);
-   m_skybox.LoadCubeMap((utils::FileManager::TEXTURES_DIR / "cloudy" / "bluecloud").u8string());
+   m_camera = std::make_unique< PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 10.0f);
+   m_skybox.LoadCubeMap((utils::FileManager::TEXTURES_DIR / "skybox" / "default").u8string());
 }
 
 } // namespace shady::scene

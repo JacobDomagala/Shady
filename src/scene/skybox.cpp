@@ -12,25 +12,27 @@ Skybox::LoadCubeMap(const std::string& directoryPath)
 {
    // Positions
    std::array< float, 24 > skyboxVertices = {
-      -1.0f, 1.0f,  -1.0f, // vertex 0
-      -1.0f, -1.0f, -1.0f, // vertex 1
-      1.0f,  -1.0f, -1.0f, // vertex 2
-      1.0f,  1.0f,  -1.0f, // vertex 3
-      -1.0f, -1.0f, 1.0f,  // vertex 4
-      -1.0f, 1.0f,  1.0f,  // vertex 5
-      1.0f,  -1.0f, 1.0f,  // vertex 6
-      1.0f,  1.0f,  1.0f   // vertex 7
+      -1.0f, 1.0f,  1.0f, // vertex 0
+      -1.0f, -1.0f, -1.0f,  // vertex 1
+      1.0f,  -1.0f, 1.0f, // vertex 2
+      1.0f,  1.0f,  1.0f, // vertex 3
+      -1.0f, -1.0f, -1.0f,  // vertex 4
+      -1.0f, 1.0f,  -1.0f,  // vertex 5
+      1.0f,  -1.0f, -1.0f,  // vertex 6
+      1.0f,  1.0f,  -1.0f   // vertex 7
    };
 
    auto vertexBuffer =
       render::VertexBuffer::Create(skyboxVertices.data(), skyboxVertices.size() * sizeof(float));
    vertexBuffer->SetLayout({{render::ShaderDataType::Float3, "a_Position"}});
 
-   std::array< uint32_t, 24 > indicies = {
-      0, 2, 1, 0, 3, 2, // face 1
-      2, 3, 6, 3, 9, 6, // face 2
-      7, 5, 4, 7, 4, 6, // face 3
-      5, 1, 4, 5, 0, 1, // face 4
+   std::array< uint32_t, 36 > indicies = {
+      0, 2, 3, 1, 2, 0, // face 1
+      3, 2, 6, 3, 6, 7, // face 2
+      4, 7, 6, 4, 5, 7, // face 3
+      1, 0, 4, 4, 0, 5, // face 4
+      0, 3, 7, 0, 7, 5, // face 5
+      4, 6, 2, 4, 2, 1  // face 6
    };
    auto indexBuffer = render::IndexBuffer::Create(indicies.data(), indicies.size());
 

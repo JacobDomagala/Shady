@@ -56,6 +56,18 @@ Camera::GetPosition() const
    return m_position;
 }
 
+const glm::vec3&
+Camera::GetLookAtVec() const
+{
+   return m_lookAtDirection;
+}
+
+const glm::vec3&
+Camera::GetUpVec() const
+{
+   return m_upVector;
+}
+
 void
 Camera::UpdateViewMatrix()
 {
@@ -63,4 +75,4 @@ Camera::UpdateViewMatrix()
    m_viewProjectionMat = m_projectionMat * m_viewMat;
 }
 
-} // namespace shady::render
+} // namespace shady::scene

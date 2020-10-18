@@ -49,12 +49,15 @@ struct MouseButtonEvent : public Event
 
 struct CursorPositionEvent : public Event
 {
-   CursorPositionEvent(double x, double y) : Event(EventType::MOUSE_CURSOR), m_xPos(x), m_yPos(y)
+   CursorPositionEvent(double x, double y, double xDelta, double yDelta)
+      : Event(EventType::MOUSE_CURSOR), m_xPos(x), m_yPos(y), m_xDelta(xDelta), m_yDelta(yDelta)
    {
    }
 
    double m_xPos;
    double m_yPos;
+   double m_xDelta;
+   double m_yDelta;
 };
 
 struct MouseScrollEvent : public Event

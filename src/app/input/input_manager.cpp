@@ -32,9 +32,10 @@ InputManager::InternalCursorPositionCallback(GLFWwindow* window, double x, doubl
 {
    trace::Logger::Trace("GLFW cursor pos {} {}", x, y);
 
-   s_mousePosition = glm::vec2(x, y);
+   auto deltaPosition = glm::dvec2(x, y) - s_mousePosition;
+   s_mousePosition = glm::dvec2(x, y);
 
-   BroadcastEvent(CursorPositionEvent{x, y});
+   BroadcastEvent(CursorPositionEvent{x, y, deltaPosition.x, deltaPosition.y});
 }
 
 void
@@ -91,6 +92,7 @@ void
 InputManager::Init(GLFWwindow* mainWindow)
 {
    s_windowHandle = mainWindow;
+   glfwGetCursorPos(s_windowHandle, &s_mousePosition.x, &s_mousePosition.y);
 
    glfwSetKeyCallback(s_windowHandle, InternalKeyCallback);
    glfwSetMouseButtonCallback(s_windowHandle, InternalMouseButtonCallback);

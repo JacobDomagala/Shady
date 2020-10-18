@@ -75,7 +75,7 @@ class InputManager
    // in future handle input from multiple windows?
    static inline GLFWwindow* s_windowHandle = nullptr;
 
-   static inline glm::vec2 s_mousePosition = {};
+   static inline glm::dvec2 s_mousePosition = {};
    static inline std::unordered_map< int32_t, bool > s_keyMap = {};
 };
 

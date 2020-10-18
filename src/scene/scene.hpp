@@ -1,8 +1,9 @@
 #pragma once
 
 #include "scene/light.hpp"
-#include "scene/skybox.hpp"
 #include "scene/model.hpp"
+#include "scene/skybox.hpp"
+
 
 #include <memory>
 #include <vector>
@@ -17,7 +18,11 @@ class Scene
 {
  public:
    void
-   AddCamera();
+   AddCamera(CameraType type, const glm::vec3& position,
+             std::initializer_list< float > constructParams);
+
+   scene::Camera&
+   GetCamera();
 
    void
    AddModel(const std::string& fileName);

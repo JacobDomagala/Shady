@@ -8,8 +8,15 @@
 namespace shady::scene {
 
 void
-Scene::AddCamera()
+Scene::AddCamera(CameraType type, const glm::vec3& position,
+                 std::initializer_list< float > constructParams)
 {
+}
+
+scene::Camera&
+Scene::GetCamera()
+{
+   return *m_camera;
 }
 
 void
@@ -30,25 +37,25 @@ Scene::Render()
 {
    // For now we only use single light
    // First pass -> render depth from camera POV to texture
-  //  m_light->BeginRenderToLightmap();
-  //  render::Renderer3D::BeginScene(*m_camera);
+   //  m_light->BeginRenderToLightmap();
+   //  render::Renderer3D::BeginScene(*m_camera);
 
-  //  for (auto& model : m_models)
-  //  {
-  //     model->Draw();
-  //  }
+   //  for (auto& model : m_models)
+   //  {
+   //     model->Draw();
+   //  }
 
-  //  render::Renderer3D::EndScene();
-  //  m_light->EndRenderToLightmap();
+   //  render::Renderer3D::EndScene();
+   //  m_light->EndRenderToLightmap();
 
    // Second pass -> use lightmap generated to render shadows
    m_skybox.Draw(*m_camera);
-  //  render::Renderer3D::BeginScene(*m_camera);
-  //  for (auto& model : m_models)
-  //  {
-  //     model->Draw();
-  //  }
-  //  render::Renderer3D::EndScene();
+   //  render::Renderer3D::BeginScene(*m_camera);
+   //  for (auto& model : m_models)
+   //  {
+   //     model->Draw();
+   //  }
+   //  render::Renderer3D::EndScene();
 }
 
 void

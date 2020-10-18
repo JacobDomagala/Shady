@@ -57,12 +57,6 @@ Camera::GetPosition() const
 }
 
 void
-Camera::MoveBy(const glm::vec3& moveBy)
-{
-   m_position += moveBy;
-}
-
-void
 Camera::UpdateViewMatrix()
 {
    m_viewMat = glm::lookAt(m_position, m_position + m_lookAtDirection, m_upVector);

@@ -4,6 +4,10 @@
 
 namespace shady::scene {
 
+enum class CameraType{
+  orthographic,
+  perspective
+};
 
 class Camera
 {
@@ -32,8 +36,8 @@ class Camera
    const glm::vec3&
    GetPosition() const;
 
-   void
-   MoveBy(const glm::vec3& moveBy);
+   virtual void
+   MouseMovement(const glm::vec2& mouseMovement) = 0;
 
  protected:
    void

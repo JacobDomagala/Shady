@@ -46,6 +46,12 @@ void
 OpenGLVertexArray::Bind() const
 {
    glBindVertexArray(m_vertexArrayID);
+
+   if (m_vertexBuffers.size())
+   {
+      m_vertexBuffers.at(0)->Bind();
+      m_indexBuffer->Bind();
+   }
 }
 
 void

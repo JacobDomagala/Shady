@@ -5,6 +5,7 @@
 #include "render/texture.hpp"
 #include "render/vertex.hpp"
 #include "render/vertex_array.hpp"
+#include "trace/logger.hpp"
 
 #include <array>
 #include <glm/gtc/matrix_transform.hpp>
@@ -68,7 +69,7 @@ Renderer3D::Init()
       samplers[i] = i;
    }
 
-   s_Data.m_textureShader = ShaderLibrary::GetShader("DefaultShader");
+   s_Data.m_textureShader = ShaderLibrary::GetShader("default");
    s_Data.m_textureShader->Bind();
    s_Data.m_textureShader->SetIntArray("u_Textures", samplers, s_Data.m_maxTextureSlots);
 
@@ -92,6 +93,8 @@ Renderer3D::Shutdown()
 void
 Renderer3D::BeginScene(const scene::Camera& camera)
 {
+   trace::Logger::Info("Renderer3D::BeginScene: shader:{}", s_Data.m_textureShader->GetName());
+
    s_Data.m_textureShader->Bind();
    s_Data.m_textureShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
 
@@ -101,6 +104,7 @@ Renderer3D::BeginScene(const scene::Camera& camera)
 void
 Renderer3D::EndScene()
 {
+   trace::Logger::Info("Renderer3D::EndScene");
    SendData();
 }
 
@@ -114,6 +118,8 @@ Renderer3D::SendData()
 void
 Renderer3D::Flush()
 {
+   trace::Logger::Info("Renderer3D::Flush: numVertices:{} ", s_Data.m_currentVertex);
+
    if (s_Data.m_currentVertex == 0)
    {
       return; // Nothing to draw

@@ -17,4 +17,6 @@ class ScopedTimer
    Timer m_timer;
 };
 
+#define SCOPED_TIMER(str) shady::time::ScopedTimer t(std::move(str));
+
 } // namespace shady::time

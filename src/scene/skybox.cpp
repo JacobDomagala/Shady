@@ -27,12 +27,12 @@ Skybox::LoadCubeMap(const std::string& directoryPath)
    vertexBuffer->SetLayout({{render::ShaderDataType::Float3, "a_Position"}});
 
    std::array< uint32_t, 36 > indicies = {
-      0, 2, 3, 1, 2, 0, // face 1
-      3, 2, 6, 3, 6, 7, // face 2
-      4, 7, 6, 4, 5, 7, // face 3
-      1, 0, 4, 4, 0, 5, // face 4
-      0, 3, 7, 0, 7, 5, // face 5
-      4, 6, 2, 4, 2, 1  // face 6
+      3, 2, 0, 0, 2, 1, // face 1
+      6, 2, 3, 7, 6, 3, // face 2
+      6, 7, 4, 7, 5, 4, // face 3
+      4, 0, 1, 5, 0, 4, // face 4
+      7, 3, 0, 5, 7, 0, // face 5
+      2, 6, 4, 1, 2, 4  // face 6
    };
    auto indexBuffer = render::IndexBuffer::Create(indicies.data(), indicies.size());
 

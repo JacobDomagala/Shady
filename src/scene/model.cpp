@@ -32,12 +32,17 @@ Model::Model(const std::string& path)
    // Check for errors
    if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
    {
-      trace::Logger::Fatal("{}", importer.GetErrorString());
+      trace::Logger::Fatal("Error loading model: {} \n Error message: {}", path,
+                           importer.GetErrorString());
       return;
    }
 
+   trace::Logger::Debug("Loading model: {}", path);
+
    // Process ASSIMP's root node recursively
    ProcessNode(scene->mRootNode, scene);
+
+   trace::Logger::Info("Loaded model: {} numVertices: {}", path, m_numVertices);
 }
 
 void
@@ -80,6 +85,8 @@ Model::ProcessNode(aiNode* node, const aiScene* scene)
       auto mesh = scene->mMeshes[node->mMeshes[i]];
       m_meshes.push_back(ProcessMesh(mesh, scene));
    }
+
+   trace::Logger::Debug("Processed node: {}", node->mName.C_Str());
 
    // After we've processed all of the meshes (if any) we then recursively process each of the
    // children nodes
@@ -131,11 +138,14 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
          vertex.m_texCoords = glm::vec2(0.0f, 0.0f);
       }
 
-      // Tangents
-      vector.x = mesh->mTangents[i].x;
-      vector.y = mesh->mTangents[i].y;
-      vector.z = mesh->mTangents[i].z;
-      vertex.m_tangent = vector;
+      if (mesh->HasTangentsAndBitangents())
+      {
+         // Tangents
+         vector.x = mesh->mTangents[i].x;
+         vector.y = mesh->mTangents[i].y;
+         vector.z = mesh->mTangents[i].z;
+         vertex.m_tangent = vector;
+      }
 
       vertices.push_back(vertex);
    }
@@ -165,7 +175,9 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
       LoadMaterialTextures(material, aiTextureType_NORMALS, textures);
    }
 
-   // Return a mesh object created from the extracted mesh data
+   trace::Logger::Debug("Processed mesh: {}", mesh->mName.C_Str());
+   m_numVertices += mesh->mNumVertices;
+
    return Mesh(std::move(vertices), std::move(indices), std::move(textures));
 }
 

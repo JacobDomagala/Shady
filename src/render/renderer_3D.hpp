@@ -58,10 +58,10 @@ class Renderer3D
 
  private:
    // TODO: Figure out the proper way of setting triangle cap per batch
-   static inline const uint32_t s_maxTriangles = 1000;
-   static inline const uint32_t s_maxVertices = s_maxTriangles * 3;
-   static inline const uint32_t s_maxIndices = s_maxVertices * 2;
-   static inline const uint32_t s_maxTextureSlots = 32; // TODO: RenderCaps
+   static inline constexpr uint32_t s_maxTriangles = 1000;
+   static inline constexpr uint32_t s_maxVertices = s_maxTriangles * 3;
+   static inline constexpr uint32_t s_maxIndices = s_maxVertices * 2;
+   static inline constexpr uint32_t s_maxTextureSlots = 32; // TODO: RenderCaps
 
    static inline std::shared_ptr< VertexArray > s_vertexArray;
    static inline std::shared_ptr< VertexBuffer > s_vertexBuffer;

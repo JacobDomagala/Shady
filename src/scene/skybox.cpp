@@ -12,14 +12,14 @@ Skybox::LoadCubeMap(const std::string& directoryPath)
 {
    // Positions
    std::array< float, 24 > skyboxVertices = {
-      -1.0f, 1.0f,  1.0f, // vertex 0
-      -1.0f, -1.0f, -1.0f,  // vertex 1
-      1.0f,  -1.0f, 1.0f, // vertex 2
-      1.0f,  1.0f,  1.0f, // vertex 3
-      -1.0f, -1.0f, -1.0f,  // vertex 4
-      -1.0f, 1.0f,  -1.0f,  // vertex 5
-      1.0f,  -1.0f, -1.0f,  // vertex 6
-      1.0f,  1.0f,  -1.0f   // vertex 7
+      -1.0f, 1.0f,  1.0f,  // vertex 0
+      -1.0f, -1.0f, 1.0f,  // vertex 1
+      1.0f,  -1.0f, 1.0f,  // vertex 2
+      1.0f,  1.0f,  1.0f,  // vertex 3
+      -1.0f, -1.0f, -1.0f, // vertex 4
+      -1.0f, 1.0f,  -1.0f, // vertex 5
+      1.0f,  -1.0f, -1.0f, // vertex 6
+      1.0f,  1.0f,  -1.0f  // vertex 7
    };
 
    auto vertexBuffer =
@@ -54,7 +54,9 @@ Skybox::Draw(const Camera& camera)
 
    render::RenderCommand::SetDepthFunc(render::DepthFunc::LEQUAL);
 
-   m_shader->SetMat4("u_viewProjection", camera.GetViewProjection());
+   // cutoff camera position part
+   m_shader->SetMat4("u_viewProjection",
+                     camera.GetProjection() * glm::mat4(glm::mat3(camera.GetView())));
    m_vertexArray->Bind();
    m_vertexArray->GetVertexBuffers().front()->Bind();
    m_vertexArray->GetIndexBuffer()->Bind();

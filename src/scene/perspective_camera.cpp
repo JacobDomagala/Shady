@@ -1,4 +1,5 @@
 #include "scene/perspective_camera.hpp"
+#include "trace/logger.hpp"
 
 #include <glm/gtx/transform.hpp>
 
@@ -8,9 +9,9 @@ PerspectiveCamera::PerspectiveCamera(const glm::mat4& projection) : Camera(proje
 {
 }
 
-PerspectiveCamera::PerspectiveCamera(float fieldOfView, float aspectRation, float near, float far)
+PerspectiveCamera::PerspectiveCamera(float fieldOfView, float aspectRation, float nearClip, float farClip)
 {
-   m_projectionMat = glm::perspective(fieldOfView, aspectRation, near, far);
+   m_projectionMat = glm::perspective(fieldOfView, aspectRation, nearClip, farClip);
 }
 
 void
@@ -29,8 +30,21 @@ PerspectiveCamera::MouseMovement(const glm::vec2& mouseMovement)
    m_lookAtDirection.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
    m_lookAtDirection = glm::normalize(m_lookAtDirection);
 
-   auto rightVector = glm::normalize(glm::cross(m_lookAtDirection, m_worldUp));
-   m_upVector = glm::normalize(glm::cross(rightVector, m_lookAtDirection));
+   m_rightVector = glm::normalize(glm::cross(m_lookAtDirection, m_worldUp));
+   m_upVector = glm::normalize(glm::cross(m_rightVector, m_lookAtDirection));
+
+   UpdateViewMatrix();
+}
+
+void
+PerspectiveCamera::MoveCamera(const glm::vec2& leftRightVec)
+{
+   constexpr auto cameraSpeed = 0.01f;
+
+   trace::Logger::Debug("Camera Pos:{} LookAtDir:{} RightVec:{}", m_position, m_lookAtDirection,
+                        m_rightVector);
+   m_position += cameraSpeed *(leftRightVec.y * m_lookAtDirection);
+   m_position += cameraSpeed *(leftRightVec.x * m_rightVector);
 
    UpdateViewMatrix();
 }

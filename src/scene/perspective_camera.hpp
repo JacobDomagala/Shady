@@ -15,6 +15,9 @@ class PerspectiveCamera : public Camera
    void
    MouseMovement(const glm::vec2& mouseMovement) override;
 
+   void
+   MoveCamera(const glm::vec2& leftRightVec) override;
+
  private:
    float m_yaw = -90.0f;
    float m_pitch = 0.0f;

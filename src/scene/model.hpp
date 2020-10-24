@@ -18,7 +18,7 @@ namespace shady::scene {
 class Model
 {
  public:
-  Model(const std::string& path);
+   Model(const std::string& path);
 
    void
    ScaleModel(const glm::vec3& scale);
@@ -43,12 +43,13 @@ class Model
 
  private:
    // Model matrix data
-   glm::vec3 m_translateValue = {0.0f, 0.0f, 0.0f};
-   glm::vec3 m_scaleValue = {1.0f, 1.0f, 1.0f};
+   glm::vec3 m_translateValue = {0.0f, 0.0f, 10.0f};
+   glm::vec3 m_scaleValue = {10.0f, 10.0f, 10.0f};
    glm::vec3 m_rotateValue = {1.0f, 1.0f, 1.0f};
    float m_rotateAngle = 0.0f;
 
    std::vector< Mesh > m_meshes = {};
+   uint32_t m_numVertices = 0;
 };
 
 } // namespace shady::scene

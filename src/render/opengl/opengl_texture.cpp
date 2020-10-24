@@ -34,6 +34,8 @@ OpenGLTexture::OpenGLTexture(TextureType type, const glm::ivec2& size) : Texture
 
    m_imageData.m_size = size;
    m_imageData.m_channels = 4;
+
+   CreateTexture();
 }
 
 OpenGLTexture::~OpenGLTexture()

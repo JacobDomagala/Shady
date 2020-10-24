@@ -19,7 +19,7 @@ add_executable(${PROJECT_NAME}
     src/app/input/event.hpp src/app/input/input_manager.hpp src/app/input/input_manager.cpp src/app/input/input_listener.hpp
 
     # trace
-    src/trace/logger.hpp src/trace/logger.impl.hpp src/trace/logger.cpp
+    src/trace/logger.hpp src/trace/logger.impl.hpp src/trace/logger.cpp src/trace/formatter_types.hpp
 
     # time
     src/time/timer.hpp src/time/timer.cpp src/time/scoped_timer.hpp src/time/scoped_timer.cpp src/time/utils.hpp src/time/utils.cpp

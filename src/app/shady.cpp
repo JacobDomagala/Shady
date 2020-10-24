@@ -46,35 +46,32 @@ void
 Shady::OnUpdate()
 {
    input::InputManager::PollEvents();
+
+   if (input::InputManager::CheckKeyPressed(GLFW_KEY_W))
+   {
+      m_currentScene.GetCamera().MoveCamera({0.0f, 1.0f});
+   }
+   if (input::InputManager::CheckKeyPressed(GLFW_KEY_S))
+   {
+      m_currentScene.GetCamera().MoveCamera({0.0f, -1.0f});
+   }
+   if (input::InputManager::CheckKeyPressed(GLFW_KEY_A))
+   {
+      m_currentScene.GetCamera().MoveCamera({-1.0f, 0.0f});
+   }
+   if (input::InputManager::CheckKeyPressed(GLFW_KEY_D))
+   {
+      m_currentScene.GetCamera().MoveCamera({1.0f, 0.0f});
+   }
 }
 
 void
 Shady::KeyCallback(const input::KeyEvent& event)
 {
-   auto& mainCamera = m_currentScene.GetCamera();
    switch (event.m_key)
    {
       case GLFW_KEY_ESCAPE: {
          m_active = false;
-      }
-      break;
-      case GLFW_KEY_W: {
-         //  mainCamera.MoveBy({0.0f, 0.0f, 0.01f});
-      }
-      break;
-
-      case GLFW_KEY_S: {
-         // mainCamera.MoveBy({0.0f, 0.0f, -0.01f});
-      }
-      break;
-
-      case GLFW_KEY_A: {
-         // mainCamera.MoveBy({0.01f, 0.0f, 0.0f});
-      }
-      break;
-
-      case GLFW_KEY_D: {
-         // mainCamera.MoveBy({-0.01f, 0.0f, 0.0f});
       }
       break;
    }

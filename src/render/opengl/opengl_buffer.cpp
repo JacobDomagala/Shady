@@ -67,7 +67,7 @@ OpenGLIndexBuffer::OpenGLIndexBuffer(size_t count) : m_count(count)
    // GL_ELEMENT_ARRAY_BUFFER is not valid without an actively bound VAO
    // Binding with GL_ARRAY_BUFFER allows the data to be loaded regardless of VAO state.
    glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
-   glBufferData(GL_ARRAY_BUFFER, count * sizeof(size_t), nullptr, GL_DYNAMIC_DRAW);
+   glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), nullptr, GL_DYNAMIC_DRAW);
 }
 
 OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t* indices, size_t count) : m_count(count)
@@ -77,7 +77,7 @@ OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t* indices, size_t count) : m_count(
    // GL_ELEMENT_ARRAY_BUFFER is not valid without an actively bound VAO
    // Binding with GL_ARRAY_BUFFER allows the data to be loaded regardless of VAO state.
    glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
-   glBufferData(GL_ARRAY_BUFFER, count * sizeof(size_t), indices, GL_STATIC_DRAW);
+   glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW);
 }
 
 OpenGLIndexBuffer::~OpenGLIndexBuffer()

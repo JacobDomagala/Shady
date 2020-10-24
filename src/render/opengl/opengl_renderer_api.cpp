@@ -1,6 +1,5 @@
 
 #include "opengl_renderer_api.hpp"
-
 #include "trace/logger.hpp"
 
 #include <glad/glad.h>
@@ -37,6 +36,10 @@ OpenGLRendererAPI::Init()
    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, NULL,
                          GL_FALSE);
 
+   glEnable(GL_MULTISAMPLE);
+
+   glEnable(GL_CULL_FACE);
+   glCullFace(GL_BACK);
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
@@ -45,6 +48,18 @@ void
 OpenGLRendererAPI::SetDepthFunc(DepthFunc depthFunc)
 {
    glDepthFunc(depthFunc == DepthFunc::LEQUAL ? GL_LEQUAL : GL_LESS);
+}
+
+void
+OpenGLRendererAPI::EnableDepthTesting()
+{
+   glEnable(GL_DEPTH_TEST);
+}
+
+void
+OpenGLRendererAPI::DisableDepthTesting()
+{
+   glDisable(GL_DEPTH_TEST);
 }
 
 void

@@ -15,6 +15,18 @@ RenderCommand::SetDepthFunc(DepthFunc depthFunc)
 }
 
 void
+RenderCommand::EnableDepthTesting()
+{
+   s_rendererAPI->EnableDepthTesting();
+}
+
+void
+RenderCommand::DisableDepthTesting()
+{
+   s_rendererAPI->DisableDepthTesting();
+}
+
+void
 RenderCommand::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 {
    s_rendererAPI->SetViewport(x, y, width, height);

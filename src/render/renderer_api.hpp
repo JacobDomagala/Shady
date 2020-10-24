@@ -31,6 +31,12 @@ class RendererAPI
    SetDepthFunc(DepthFunc depthFunc) = 0;
 
    virtual void
+   EnableDepthTesting() = 0;
+
+   virtual void
+   DisableDepthTesting() = 0;
+
+   virtual void
    SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
 
    virtual void

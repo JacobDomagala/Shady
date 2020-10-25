@@ -22,7 +22,7 @@ PerspectiveCamera::MouseMovement(const glm::vec2& mouseMovement)
 
    if (m_constrainPitch)
    {
-      glm::clamp(m_pitch, -89.0f, 89.0f);
+      m_pitch = glm::clamp(m_pitch, -89.0f, 89.0f);
    }
 
    m_lookAtDirection.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
@@ -41,7 +41,7 @@ PerspectiveCamera::MoveCamera(const glm::vec2& leftRightVec)
 {
    constexpr auto cameraSpeed = 0.01f;
 
-   trace::Logger::Debug("Camera Pos:{} LookAtDir:{} RightVec:{}", m_position, m_lookAtDirection,
+   trace::Logger::Trace("Camera Pos:{} LookAtDir:{} RightVec:{}", m_position, m_lookAtDirection,
                         m_rightVector);
    m_position += cameraSpeed *(leftRightVec.y * m_lookAtDirection);
    m_position += cameraSpeed *(leftRightVec.x * m_rightVector);

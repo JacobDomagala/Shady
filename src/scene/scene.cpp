@@ -28,7 +28,6 @@ void
 Scene::AddModel(const std::string& fileName)
 {
    auto model = std::make_unique< Model >(fileName);
-   model->ScaleModel(glm::vec3{10.0f, 10.0f, 10.0f});
    m_models.push_back(std::move(model));
 }
 
@@ -41,6 +40,7 @@ Scene::AddLight(LightType type, const glm::vec3& position, const glm::vec3& colo
 void
 Scene::Render()
 {
+   SCOPED_TIMER("Scene::Render");
    // For now we only use single light
    // First pass -> render depth from camera POV to texture
    // m_light->BeginRenderToLightmap();
@@ -55,15 +55,22 @@ Scene::Render()
    // m_light->EndRenderToLightmap();
 
    // Second pass -> use lightmap generated to render shadows
-   m_skybox.Draw(*m_camera);
-   render::Renderer3D::BeginScene(*m_camera);
-
-   for (auto& model : m_models)
    {
-      model->Draw();
+      SCOPED_TIMER("SKYBOX");
+      m_skybox.Draw(*m_camera);
    }
 
-   render::Renderer3D::EndScene();
+   {
+      SCOPED_TIMER("MODELS");
+      render::Renderer3D::BeginScene(*m_camera);
+
+      for (auto& model : m_models)
+      {
+         model->Draw();
+      }
+
+      render::Renderer3D::EndScene();
+   }
 }
 
 void
@@ -73,6 +80,21 @@ Scene::LoadDefault()
    m_camera = std::make_unique< PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 500.0f);
    m_skybox.LoadCubeMap((utils::FileManager::TEXTURES_DIR / "skybox" / "default").u8string());
    AddModel((utils::FileManager::MODELS_DIR / "Crate" / "Crate1.obj").u8string());
+
+   // @TODO: Should be removed later
+   auto& crate = m_models.front();
+   crate->ScaleModel(glm::vec3{2.0f, 2.0f, 2.0f});
+   crate->TranslateModel(glm::vec3{-2.0f, 0.0f, -10.0f});
+   crate->RotateModel(glm::vec3{0.0f, 1.0f, 0.0f}, 20.0f);
+   crate->GetMeshes().front().AddTexture(
+      render::TextureLibrary::GetTexture(render::TextureType::NORMAL_MAP, "196_norm.png"));
+   crate->GetMeshes().front().AddTexture(
+      render::TextureLibrary::GetTexture(render::TextureType::SPECULAR_MAP, "196_s.png"));
+
+   AddModel(
+      (utils::FileManager::MODELS_DIR / "penguin-skipper" / "source" / "Skipper.obj").u8string());
+   auto& skipper = m_models.at(1);
+   skipper->ScaleModel(glm::vec3{2.0f, 2.0f, 2.0f});
 }
 
 } // namespace shady::scene

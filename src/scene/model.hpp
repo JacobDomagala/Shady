@@ -32,9 +32,13 @@ class Model
    void
    Draw();
 
+   std::vector< Mesh >&
+   GetMeshes();
+
  private:
    void
    ProcessNode(aiNode* node, const aiScene* scene);
+
    Mesh
    ProcessMesh(aiMesh* mesh, const aiScene* scene);
 
@@ -43,13 +47,15 @@ class Model
 
  private:
    // Model matrix data
-   glm::vec3 m_translateValue = {0.0f, 0.0f, 10.0f};
-   glm::vec3 m_scaleValue = {10.0f, 10.0f, 10.0f};
+   glm::vec3 m_translateValue = {0.0f, 0.0f, 0.0f};
+   glm::vec3 m_scaleValue = {1.0f, 1.0f, 1.0f};
    glm::vec3 m_rotateValue = {1.0f, 1.0f, 1.0f};
    float m_rotateAngle = 0.0f;
 
    std::vector< Mesh > m_meshes = {};
    uint32_t m_numVertices = 0;
+
+   std::string m_name = "DefaultName";
 };
 
 } // namespace shady::scene

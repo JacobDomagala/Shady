@@ -21,15 +21,15 @@ Renderer3D::Init()
 
    // setup vertex buffer
    s_vertexBuffer = VertexBuffer::Create(s_maxVertices * sizeof(render::Vertex));
-   s_vertexBuffer->SetLayout({{ShaderDataType::Float3, "a_Position"},
-                                     {ShaderDataType::Float3, "a_Normal"},
-                                     {ShaderDataType::Float2, "a_TexCoord"},
-                                     {ShaderDataType::Float3, "a_Tangent"},
-                                     {ShaderDataType::Float, "a_DiffTexIndex"},
-                                     {ShaderDataType::Float, "a_NormTexIndex"},
-                                     {ShaderDataType::Float, "a_SpecTexIndex"},
-                                     {ShaderDataType::Mat4, "a_ModelMat"},
-                                     {ShaderDataType::Float4, "a_Color"}});
+   s_vertexBuffer->SetLayout({{ShaderDataType::Float3, "a_position"},
+                              {ShaderDataType::Float3, "a_normal"},
+                              {ShaderDataType::Float2, "a_texCoord"},
+                              {ShaderDataType::Float3, "a_tangent"},
+                              {ShaderDataType::Float, "a_diffTexIndex"},
+                              {ShaderDataType::Float, "a_normTexIndex"},
+                              {ShaderDataType::Float, "a_specTexIndex"},
+                              {ShaderDataType::Float, "a_modelMatIndex"},
+                              {ShaderDataType::Float4, "a_color"}});
 
    s_vertexArray->AddVertexBuffer(s_vertexBuffer);
 
@@ -43,12 +43,10 @@ Renderer3D::Init()
 
    s_textureShader = ShaderLibrary::GetShader("default");
 
-   // Set all texture slots to 0
    s_textureSlots[0] = s_whiteTexture;
 
    trace::Logger::Info("Renderer3D::Init: shader:{} maxVertices:{} maxIndices:{} maxTextures:{}",
-                       s_textureShader->GetName(), s_maxVertices, s_maxIndices,
-                       s_maxTextureSlots);
+                       s_textureShader->GetName(), s_maxVertices, s_maxIndices, s_maxTextureSlots);
 }
 
 void
@@ -70,7 +68,10 @@ Renderer3D::BeginScene(const scene::Camera& camera)
    trace::Logger::Debug("Renderer3D::BeginScene: shader:{}", s_textureShader->GetName());
 
    s_textureShader->Bind();
-   s_textureShader->SetMat4("u_viewProjection", camera.GetViewProjection());
+   s_textureShader->SetMat4("u_projectionMat", camera.GetProjection());
+   s_textureShader->SetMat4("u_viewMat", camera.GetView());
+   s_textureShader->SetFloat3("u_cameraPos", camera.GetPosition());
+   s_textureShader->SetFloat3("u_lightPos", glm::vec3{-10.0f, 200.0f, 0.0f});
 
    int32_t samplers[s_maxTextureSlots];
    for (uint32_t i = 0; i < s_maxTextureSlots; i++)
@@ -78,7 +79,7 @@ Renderer3D::BeginScene(const scene::Camera& camera)
       samplers[i] = i;
    }
 
-   s_textureShader->SetIntArray("u_Textures", samplers, s_maxTextureSlots);
+   s_textureShader->SetIntArray("u_textures", samplers, s_maxTextureSlots);
 
    s_textureSlotIndex = 1;
 }
@@ -93,11 +94,11 @@ Renderer3D::EndScene()
 void
 Renderer3D::SendData()
 {
-   s_vertexBuffer->SetData(s_verticesBatch.data(),
-                                  s_currentVertex * sizeof(Vertex));
+   s_vertexBuffer->SetData(s_verticesBatch.data(), s_currentVertex * sizeof(Vertex));
+   s_indexBuffer->SetData(s_indicesBatch.data(), s_currentIndex * sizeof(uint32_t));
 
-   s_indexBuffer->SetData(s_indicesBatch.data(),
-                                 s_currentIndex * sizeof(uint32_t));
+   s_textureShader->SetMat4Array("u_modelMats", s_modelMats.data(), s_currentModelMatIdx);
+
    Flush();
 }
 
@@ -131,16 +132,17 @@ Renderer3D::FlushAndReset()
    s_currentIndex = 0;
    s_currentVertex = 0;
    s_textureSlotIndex = 1;
+   s_currentModelMatIdx = 0;
 }
 
 void
-Renderer3D::DrawMesh(std::vector< Vertex >& vertices, const std::vector< uint32_t >& indices,
-                     const glm::vec3& translateVal, const glm::vec3& scaleVal,
-                     const glm::vec3& rotateAxis, float radiansRotation,
+Renderer3D::DrawMesh(const std::string& modelName, std::vector< Vertex >& vertices,
+                     const std::vector< uint32_t >& indices, const glm::vec3& translateVal,
+                     const glm::vec3& scaleVal, const glm::vec3& rotateAxis, float radiansRotation,
                      const TexturePtrVec& textures, const glm::vec4& tintColor)
 {
-   time::ScopedTimer meshScope(fmt::format("Renderer3D::DrawMesh: numVertices:{} indices:{}",
-                                           vertices.size(), indices.size()));
+   // SCOPED_TIMER(fmt::format("Renderer3D::DrawMesh {}: numVertices:{} indices:{}", modelName,
+   //                          vertices.size(), indices.size()));
 
    if (s_currentVertex >= s_maxVertices
        || (s_textureSlotIndex + textures.size()) >= (s_maxTextureSlots - 1))
@@ -149,29 +151,23 @@ Renderer3D::DrawMesh(std::vector< Vertex >& vertices, const std::vector< uint32_
    }
 
    auto meshTextures = SetupTextures(textures);
+   auto modelMatIdx = SetupModelMat(modelName, translateVal, scaleVal, rotateAxis, radiansRotation);
 
-   trace::Logger::Debug(
-      "DIFFUSE_MAP:{} SPECULAR_MAP:{} NORMAL_MAP:{}", meshTextures[TextureType::DIFFUSE_MAP],
-      meshTextures[TextureType::SPECULAR_MAP], meshTextures[TextureType::NORMAL_MAP]);
 
-   glm::mat4 modelMat = glm::translate(glm::mat4(1.0f), translateVal)
-                        * glm::rotate(glm::mat4(1.0f), radiansRotation, rotateAxis)
-                        * glm::scale(glm::mat4(1.0f), scaleVal);
-
-   std::transform(vertices.begin(), vertices.end(),
-                  s_verticesBatch.begin() + s_currentVertex,
-                  [&modelMat, &tintColor, &meshTextures](auto& vertex) {
+   std::transform(vertices.begin(), vertices.end(), s_verticesBatch.begin() + s_currentVertex,
+                  [modelMatIdx, &tintColor, &meshTextures](auto& vertex) {
                      vertex.m_color = tintColor;
-                     vertex.m_modelMat = modelMat;
+                     vertex.m_modelMatIndex = modelMatIdx;
                      vertex.m_diffTexIndex = meshTextures[TextureType::DIFFUSE_MAP];
                      vertex.m_specTexIndex = meshTextures[TextureType::SPECULAR_MAP];
                      vertex.m_normTexIndex = meshTextures[TextureType::NORMAL_MAP];
+
                      return vertex;
                   });
 
 
-   s_indicesBatch.insert(s_indicesBatch.begin() + s_currentIndex,
-                                indices.begin(), indices.end());
+   s_indicesBatch.insert(s_indicesBatch.begin() + s_currentIndex, indices.begin(), indices.end());
+
 
    s_currentVertex += static_cast< uint32_t >(vertices.size());
    s_currentIndex += static_cast< uint32_t >(indices.size());
@@ -194,16 +190,14 @@ Renderer3D::SetupTextures(const TexturePtrVec& textures)
    {
       float textureIndex = 0.0f;
 
-      const auto textureIdxPtr =
-         std::find_if(s_textureSlots.begin(), s_textureSlots.end(),
-                      [&texture](const auto& textureSlot) {
-                         return textureSlot ? *textureSlot == *texture : false;
-                      });
+      const auto textureIdxPtr = std::find_if(
+         s_textureSlots.begin(), s_textureSlots.end(), [&texture](const auto& textureSlot) {
+            return textureSlot ? *textureSlot == *texture : false;
+         });
 
       if (s_textureSlots.end() != textureIdxPtr)
       {
-         textureIndex =
-            static_cast< float >(std::distance(s_textureSlots.begin(), textureIdxPtr));
+         textureIndex = static_cast< float >(std::distance(s_textureSlots.begin(), textureIdxPtr));
       }
       else
       {
@@ -216,6 +210,31 @@ Renderer3D::SetupTextures(const TexturePtrVec& textures)
    }
 
    return meshTextures;
+}
+
+float
+Renderer3D::SetupModelMat(const std::string& modelName, const glm::vec3& translateVal,
+                          const glm::vec3& scaleVal, const glm::vec3& rotateAxis,
+                          float radiansRotation)
+{
+   auto modelIt = s_modelMatsIdx.find(modelName);
+
+   if (modelIt == s_modelMatsIdx.end())
+   {
+      if (s_currentModelMatIdx >= s_maxModelMatSlots)
+      {
+         FlushAndReset();
+      }
+
+      s_modelMats[s_currentModelMatIdx] = {
+         glm::translate(glm::mat4(1.0f), translateVal)
+         * glm::rotate(glm::mat4(1.0f), radiansRotation, rotateAxis)
+         * glm::scale(glm::mat4(1.0f), scaleVal)};
+      s_modelMatsIdx[modelName] = static_cast< float >(s_currentModelMatIdx);
+      ++s_currentModelMatIdx;
+   }
+
+   return s_modelMatsIdx[modelName];
 }
 
 } // namespace shady::render

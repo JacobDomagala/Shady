@@ -37,8 +37,8 @@ class Renderer3D
    EndScene();
 
    static void
-   DrawMesh(std::vector< Vertex >& vertices, const std::vector< uint32_t >& indices,
-            const glm::vec3& translateVal = glm::vec3{0.0f},
+   DrawMesh(const std::string& modelName, std::vector< Vertex >& vertices,
+            const std::vector< uint32_t >& indices, const glm::vec3& translateVal = glm::vec3{0.0f},
             const glm::vec3& scaleVal = glm::vec3{1.0f},
             const glm::vec3& rotateAxis = glm::vec3{1.0f}, float radiansRotation = 0.0f,
             const TexturePtrVec& textures = {}, const glm::vec4& tintColor = glm::vec4(1.0f));
@@ -56,12 +56,17 @@ class Renderer3D
    static std::unordered_map< TextureType, float >
    SetupTextures(const TexturePtrVec& textures);
 
+   static float
+   SetupModelMat(const std::string& modelName, const glm::vec3& translateVal,
+                 const glm::vec3& scaleVal, const glm::vec3& rotateAxis, float radiansRotation);
+
  private:
    // TODO: Figure out the proper way of setting triangle cap per batch
-   static inline constexpr uint32_t s_maxTriangles = 1000;
+   static inline constexpr uint32_t s_maxTriangles = 100000;
    static inline constexpr uint32_t s_maxVertices = s_maxTriangles * 3;
    static inline constexpr uint32_t s_maxIndices = s_maxVertices * 2;
    static inline constexpr uint32_t s_maxTextureSlots = 32; // TODO: RenderCaps
+   static inline constexpr uint32_t s_maxModelMatSlots = 32;
 
    static inline std::shared_ptr< VertexArray > s_vertexArray;
    static inline std::shared_ptr< VertexBuffer > s_vertexBuffer;
@@ -74,6 +79,10 @@ class Renderer3D
    static inline uint32_t s_currentVertex = 0;
    static inline std::vector< uint32_t > s_indicesBatch;
    static inline uint32_t s_currentIndex = 0;
+
+   static inline std::array<glm::mat4, s_maxModelMatSlots> s_modelMats;
+   static inline uint32_t s_currentModelMatIdx = 0;
+   static inline std::unordered_map<std::string, float> s_modelMatsIdx;
 
    static inline std::array< std::shared_ptr< Texture >, s_maxTextureSlots > s_textureSlots;
    static inline uint32_t s_textureSlotIndex = 1; // 0 = white texture

@@ -14,8 +14,11 @@ class Mesh
         render::TexturePtrVec&& textures);
 
    void
-   Draw(const glm::vec3& translateVal, const glm::vec3& scaleVal, const glm::vec3 rotateAxis,
-        float rotateVal, const glm::vec4& tintColor);
+   AddTexture(const render::TexturePtr& texture);
+
+   void
+   Draw(const std::string& modelName, const glm::vec3& translateVal, const glm::vec3& scaleVal,
+        const glm::vec3 rotateAxis, float rotateVal, const glm::vec4& tintColor);
 
  private:
    std::vector< render::Vertex > m_vertices = {};

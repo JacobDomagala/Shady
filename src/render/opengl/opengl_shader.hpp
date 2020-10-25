@@ -33,6 +33,8 @@ class OpenGLShader : public Shader
    SetFloat4(const std::string& name, const glm::vec4& value) override;
    void
    SetMat4(const std::string& name, const glm::mat4& value) override;
+   void
+   SetMat4Array(const std::string& name, const glm::mat4* matrices, uint32_t count) override;
 
    void
    UploadUniformInt(const std::string& name, int value);
@@ -51,7 +53,7 @@ class OpenGLShader : public Shader
    void
    UploadUniformMat3(const std::string& name, const glm::mat3& matrix);
    void
-   UploadUniformMat4(const std::string& name, const glm::mat4& matrix);
+   UploadUniformMat4(const std::string& name, const glm::mat4* matrix, uint32_t count = 1);
 
  private:
    void

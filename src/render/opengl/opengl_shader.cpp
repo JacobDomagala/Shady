@@ -145,7 +145,13 @@ OpenGLShader::SetFloat4(const std::string& name, const glm::vec4& value)
 void
 OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value)
 {
-   UploadUniformMat4(name, value);
+   UploadUniformMat4(name, &value);
+}
+
+void
+OpenGLShader::SetMat4Array(const std::string& name, const glm::mat4* matrices, uint32_t count)
+{
+   UploadUniformMat4(name, matrices, count);
 }
 
 void
@@ -198,10 +204,10 @@ OpenGLShader::UploadUniformMat3(const std::string& name, const glm::mat3& matrix
 }
 
 void
-OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4& matrix)
+OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4* matrices, uint32_t count)
 {
    GLint location = glGetUniformLocation(m_shaderID, name.c_str());
-   glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+   glUniformMatrix4fv(location, count, GL_FALSE, reinterpret_cast< const GLfloat* >(matrices));
 }
 
 } // namespace shady::render::opengl

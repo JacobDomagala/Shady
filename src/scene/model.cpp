@@ -42,7 +42,8 @@ Model::Model(const std::string& path)
    // Process ASSIMP's root node recursively
    ProcessNode(scene->mRootNode, scene);
 
-   trace::Logger::Info("Loaded model: {} numVertices: {}", path, m_numVertices);
+   m_name = scene->mRootNode->mName.C_Str();
+   trace::Logger::Info("Loaded model: {} numVertices: {}", m_name, m_numVertices);
 }
 
 void
@@ -69,9 +70,15 @@ Model::Draw()
 {
    for (auto& mesh : m_meshes)
    {
-      mesh.Draw(m_translateValue, m_scaleValue, m_rotateValue, m_rotateAngle,
+      mesh.Draw(m_name, m_translateValue, m_scaleValue, m_rotateValue, m_rotateAngle,
                 {1.0f, 1.0f, 1.0f, 1.0f});
    }
+}
+
+std::vector< Mesh >&
+Model::GetMeshes()
+{
+   return m_meshes;
 }
 
 void

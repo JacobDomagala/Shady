@@ -52,7 +52,7 @@ Skybox::Draw(const Camera& camera)
    // so we wouldn't be able to use batching anyways
    m_shader->Bind();
 
-   render::RenderCommand::SetDepthFunc(render::DepthFunc::LEQUAL);
+   render::RenderCommand::DisableDepthTesting();
 
    // cutoff camera position part
    m_shader->SetMat4("u_viewProjection",
@@ -66,7 +66,7 @@ Skybox::Draw(const Camera& camera)
 
    render::RenderCommand::DrawIndexed(m_vertexArray);
 
-   render::RenderCommand::SetDepthFunc(render::DepthFunc::LESS);
+   render::RenderCommand::EnableDepthTesting();
 }
 
 } // namespace shady::scene

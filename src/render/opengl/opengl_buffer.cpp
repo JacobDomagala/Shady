@@ -60,7 +60,7 @@ OpenGLVertexBuffer::SetLayout(const BufferLayout& layout)
 /**************************************************************************************************
  *************************************** INDEX BUFFER *********************************************
  *************************************************************************************************/
-OpenGLIndexBuffer::OpenGLIndexBuffer(size_t count) : m_count(count)
+OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t count) : m_count(count)
 {
    glCreateBuffers(1, &m_rendererID);
 
@@ -70,7 +70,7 @@ OpenGLIndexBuffer::OpenGLIndexBuffer(size_t count) : m_count(count)
    glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), nullptr, GL_DYNAMIC_DRAW);
 }
 
-OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t* indices, size_t count) : m_count(count)
+OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t* indices, uint32_t count) : m_count(count)
 {
    glCreateBuffers(1, &m_rendererID);
 
@@ -104,10 +104,77 @@ OpenGLIndexBuffer::SetData(const void* data, size_t size)
    glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
 }
 
-size_t
+uint32_t
 OpenGLIndexBuffer::GetCount() const
 {
    return m_count;
+}
+
+/**************************************************************************************************
+ ************************************* DRAW INDIRECT BUFFER ***************************************
+ *************************************************************************************************/
+OpenGLDrawIndirectBuffer::OpenGLDrawIndirectBuffer()
+{
+   glGenBuffers(1, &m_rendererID);
+   glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_rendererID);
+}
+
+OpenGLDrawIndirectBuffer::~OpenGLDrawIndirectBuffer()
+{
+   glDeleteBuffers(1, &m_rendererID);
+}
+
+void
+OpenGLDrawIndirectBuffer::Bind() const
+{
+   glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_rendererID);
+}
+
+void
+OpenGLDrawIndirectBuffer::Unbind() const
+{
+   glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+}
+
+void
+OpenGLDrawIndirectBuffer::SetData(const void* data, size_t size)
+{
+   glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_rendererID);
+   glBufferData(GL_DRAW_INDIRECT_BUFFER, size, data, GL_DYNAMIC_DRAW);
+}
+
+
+/**************************************************************************************************
+ ************************************* SHADER STORAGE BUFFER **************************************
+ *************************************************************************************************/
+OpenGLShaderStorageBuffer::OpenGLShaderStorageBuffer()
+{
+   glGenBuffers(1, &m_rendererID);
+   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_rendererID);
+}
+
+OpenGLShaderStorageBuffer::~OpenGLShaderStorageBuffer()
+{
+   glDeleteBuffers(1, &m_rendererID);
+}
+
+void
+OpenGLShaderStorageBuffer::Bind() const
+{
+   glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_rendererID);
+}
+
+void
+OpenGLShaderStorageBuffer::Unbind() const
+{
+   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
+
+void
+OpenGLShaderStorageBuffer::SetData(const void* data, size_t size)
+{
+   glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_rendererID);
+   glBufferData(GL_SHADER_STORAGE_BUFFER, size, data, GL_DYNAMIC_DRAW);
 }
 
 } // namespace shady::render::opengl

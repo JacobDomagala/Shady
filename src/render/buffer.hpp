@@ -1,8 +1,9 @@
 #pragma once
 
-#include <vector>
-#include <string>
 #include <memory>
+#include <string>
+#include <vector>
+
 
 namespace shady::render {
 
@@ -106,14 +107,48 @@ class IndexBuffer
    virtual void
    SetData(const void* data, size_t size) = 0;
 
-   virtual size_t
+   virtual uint32_t
    GetCount() const = 0;
 
    static std::shared_ptr< IndexBuffer >
-   Create(size_t count);
+   Create(uint32_t count);
 
    static std::shared_ptr< IndexBuffer >
-   Create(uint32_t* indices, size_t count);
+   Create(uint32_t* indices, uint32_t count);
+};
+
+class DrawIndirectBuffer
+{
+ public:
+   virtual ~DrawIndirectBuffer() = default;
+
+   virtual void
+   Bind() const = 0;
+   virtual void
+   Unbind() const = 0;
+
+   virtual void
+   SetData(const void* data, size_t size) = 0;
+
+   static std::shared_ptr< DrawIndirectBuffer >
+   Create();
+};
+
+class ShaderStorageBuffer
+{
+ public:
+   virtual ~ShaderStorageBuffer() = default;
+
+   virtual void
+   Bind() const = 0;
+   virtual void
+   Unbind() const = 0;
+
+   virtual void
+   SetData(const void* data, size_t size) = 0;
+
+   static std::shared_ptr< ShaderStorageBuffer >
+   Create();
 };
 
 } // namespace shady::render

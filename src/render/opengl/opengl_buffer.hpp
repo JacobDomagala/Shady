@@ -9,7 +9,7 @@ class OpenGLVertexBuffer : public VertexBuffer
  public:
    explicit OpenGLVertexBuffer(size_t size);
    explicit OpenGLVertexBuffer(float* vertices, size_t size);
-   virtual ~OpenGLVertexBuffer();
+   ~OpenGLVertexBuffer() override;
 
    void
    Bind() const override;
@@ -32,9 +32,9 @@ class OpenGLVertexBuffer : public VertexBuffer
 class OpenGLIndexBuffer : public IndexBuffer
 {
  public:
-   OpenGLIndexBuffer(size_t count);
-   OpenGLIndexBuffer(uint32_t* indices, size_t count);
-   virtual ~OpenGLIndexBuffer();
+   OpenGLIndexBuffer(uint32_t count);
+   OpenGLIndexBuffer(uint32_t* indices, uint32_t count);
+   ~OpenGLIndexBuffer() override;
 
    void
    Bind() const override;
@@ -44,12 +44,48 @@ class OpenGLIndexBuffer : public IndexBuffer
    void
    SetData(const void* data, size_t size) override;
 
-   size_t
+   uint32_t
    GetCount() const override;
 
  private:
    uint32_t m_rendererID;
-   size_t m_count;
+   uint32_t m_count;
+};
+
+class OpenGLDrawIndirectBuffer : public DrawIndirectBuffer
+{
+ public:
+   OpenGLDrawIndirectBuffer();
+   ~OpenGLDrawIndirectBuffer() override;
+
+   void
+   Bind() const override;
+   void
+   Unbind() const override;
+
+   void
+   SetData(const void* data, size_t size) override;
+
+ private:
+   uint32_t m_rendererID;
+};
+
+class OpenGLShaderStorageBuffer : public ShaderStorageBuffer
+{
+ public:
+   OpenGLShaderStorageBuffer();
+   ~OpenGLShaderStorageBuffer() override;
+
+   void
+   Bind() const override;
+   void
+   Unbind() const override;
+
+   void
+   SetData(const void* data, size_t size) override;
+
+ private:
+   uint32_t m_rendererID;
 };
 
 } // namespace shady::render::opengl

@@ -33,7 +33,10 @@ class OpenGLRendererAPI : public RendererAPI
    Clear() override;
 
    void
-   DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray, size_t indexCount = 0) override;
+   DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray, uint32_t indexCount = 0) override;
+
+   void
+   MultiDrawElemsIndirect(uint32_t drawCount) override;
 
    void
    DrawLines(uint32_t count) override;

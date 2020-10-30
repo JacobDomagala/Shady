@@ -45,8 +45,12 @@ class Model
    void
    LoadMaterialTextures(aiMaterial* mat, aiTextureType type, render::TexturePtrVec& textures);
 
+   void
+   RecalculateModelMat();
+
  private:
    // Model matrix data
+   glm::mat4 m_modelMat = glm::mat4(1.0f);
    glm::vec3 m_translateValue = {0.0f, 0.0f, 0.0f};
    glm::vec3 m_scaleValue = {1.0f, 1.0f, 1.0f};
    glm::vec3 m_rotateValue = {1.0f, 1.0f, 1.0f};
@@ -54,6 +58,7 @@ class Model
 
    std::vector< Mesh > m_meshes = {};
    uint32_t m_numVertices = 0;
+   uint32_t m_numIndices = 0;
 
    std::string m_name = "DefaultName";
 };

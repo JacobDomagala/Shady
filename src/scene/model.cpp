@@ -27,8 +27,9 @@ Model::Model(const std::string& path)
 {
    // Read file via ASSIMP
    Assimp::Importer importer;
-   auto scene = importer.ReadFile(path, aiProcess_GenSmoothNormals | aiProcess_Triangulate
-                                           | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+   auto scene = importer.ReadFile(
+      path, aiProcess_GenSmoothNormals | aiProcess_Triangulate | aiProcess_CalcTangentSpace
+               | aiProcess_JoinIdenticalVertices | aiProcess_ValidateDataStructure);
    // Check for errors
    if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
    {
@@ -43,19 +44,21 @@ Model::Model(const std::string& path)
    ProcessNode(scene->mRootNode, scene);
 
    m_name = scene->mRootNode->mName.C_Str();
-   trace::Logger::Info("Loaded model: {} numVertices: {}", m_name, m_numVertices);
+   trace::Logger::Info("Loaded model: {} numVertices: {} numIndices: {}", m_name, m_numVertices, m_numIndices);
 }
 
 void
 Model::ScaleModel(const glm::vec3& scale)
 {
    m_scaleValue = scale;
+   RecalculateModelMat();
 }
 
 void
 Model::TranslateModel(const glm::vec3& translate)
 {
    m_translateValue = translate;
+   RecalculateModelMat();
 }
 
 void
@@ -63,6 +66,7 @@ Model::RotateModel(const glm::vec3& rotate, float angle)
 {
    m_rotateAngle = angle;
    m_rotateValue = rotate;
+   RecalculateModelMat();
 }
 
 void
@@ -70,8 +74,7 @@ Model::Draw()
 {
    for (auto& mesh : m_meshes)
    {
-      mesh.Draw(m_name, m_translateValue, m_scaleValue, m_rotateValue, m_rotateAngle,
-                {1.0f, 1.0f, 1.0f, 1.0f});
+      mesh.Draw(m_name, m_modelMat, {1.0f, 1.0f, 1.0f, 1.0f});
    }
 }
 
@@ -184,8 +187,9 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 
    trace::Logger::Debug("Processed mesh: {}", mesh->mName.C_Str());
    m_numVertices += mesh->mNumVertices;
+   m_numIndices += indices.size();
 
-   return Mesh(std::move(vertices), std::move(indices), std::move(textures));
+   return Mesh(mesh->mName.C_Str(), std::move(vertices), std::move(indices), std::move(textures));
 }
 
 void
@@ -201,4 +205,11 @@ Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type, render::Texture
    }
 }
 
+void
+Model::RecalculateModelMat()
+{
+   m_modelMat = glm::translate(glm::mat4(1.0f), m_translateValue)
+                * glm::rotate(glm::mat4(1.0f), m_rotateAngle, m_rotateValue)
+                * glm::scale(glm::mat4(1.0f), m_scaleValue);
+}
 } // namespace shady::scene

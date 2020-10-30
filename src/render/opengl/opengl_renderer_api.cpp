@@ -38,7 +38,12 @@ OpenGLRendererAPI::Init()
 
    glEnable(GL_MULTISAMPLE);
    glEnable(GL_DEPTH_TEST);
-   //glCullFace(GL_BACK);
+   //glDepthMask(GL_TRUE);
+
+   //glEnable(GL_CULL_FACE);
+  // glCullFace(GL_FRONT);
+  // glFrontFace(GL_CCW);
+
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
@@ -80,11 +85,17 @@ OpenGLRendererAPI::Clear()
 }
 
 void
-OpenGLRendererAPI::DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray, size_t indexCount)
+OpenGLRendererAPI::DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray, uint32_t indexCount)
 {
    auto count =
       static_cast< GLsizei >(indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount());
    glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
+}
+
+void
+OpenGLRendererAPI::MultiDrawElemsIndirect(uint32_t drawCount)
+{
+   glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, nullptr, drawCount, 0);
 }
 
 void

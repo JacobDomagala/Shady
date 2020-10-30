@@ -1,9 +1,12 @@
-#version 450 core
+#version 460 core
 
 uniform mat4 u_projectionMat;
 uniform mat4 u_viewMat;
 
-uniform mat4 u_modelMats[32];
+layout (std140, binding = 0) buffer CB0
+{
+    mat4 Transforms[];
+};
 
 uniform vec3 u_cameraPos;
 uniform vec3 u_lightPos;
@@ -15,13 +18,13 @@ layout(location = 3) in vec3 a_tangent;
 layout(location = 4) in float a_diffTexIndex;
 layout(location = 5) in float a_normTexIndex;
 layout(location = 6) in float a_specTexIndex;
-layout(location = 7) in float a_modelMatIndex;
-layout(location = 8) in vec4 a_color;
+layout(location = 7) in vec4 a_color;
 
 out VS_OUT
 {
    vec3 fPosition;
    vec2 fTexCoord;
+   vec3 fColor;
    vec3 fCameraPosition;
    vec3 fLightPosition;
 
@@ -35,7 +38,7 @@ vs_out;
 void
 main(void)
 {
-   mat4 modelMat = u_modelMats[int(a_modelMatIndex)];
+   mat4 modelMat = Transforms[gl_DrawID];
 
    mat3 normalMatrix = transpose(inverse(mat3(modelMat)));
    vec3 T = normalize(a_tangent);

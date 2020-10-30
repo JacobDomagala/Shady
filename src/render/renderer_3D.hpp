@@ -2,6 +2,7 @@
 
 #include "render/texture.hpp"
 #include "render/vertex.hpp"
+#include "scene/model.hpp"
 
 #include <array>
 #include <glm/glm.hpp>
@@ -20,7 +21,8 @@ class Texture;
 class VertexArray;
 class VertexBuffer;
 class IndexBuffer;
-
+class DrawIndirectBuffer;
+class ShaderStorageBuffer;
 class Renderer3D
 {
  public:
@@ -37,11 +39,12 @@ class Renderer3D
    EndScene();
 
    static void
-   DrawMesh(const std::string& modelName, std::vector< Vertex >& vertices,
-            const std::vector< uint32_t >& indices, const glm::vec3& translateVal = glm::vec3{0.0f},
-            const glm::vec3& scaleVal = glm::vec3{1.0f},
-            const glm::vec3& rotateAxis = glm::vec3{1.0f}, float radiansRotation = 0.0f,
-            const TexturePtrVec& textures = {}, const glm::vec4& tintColor = glm::vec4(1.0f));
+   AddMesh(const std::string& modelName, std::vector< Vertex >& vertices,
+           const std::vector< uint32_t >& indices, const TexturePtrVec& textures = {});
+
+   static void
+   DrawMesh(const std::string& modelName, const glm::mat4& modelMat,
+            const glm::vec4& tintColor = glm::vec4(1.0f));
 
  private:
    static void
@@ -57,8 +60,26 @@ class Renderer3D
    SetupTextures(const TexturePtrVec& textures);
 
    static float
-   SetupModelMat(const std::string& modelName, const glm::vec3& translateVal,
-                 const glm::vec3& scaleVal, const glm::vec3& rotateAxis, float radiansRotation);
+   SetupModelMat(const std::string& modelName, const glm::mat4& modelMat);
+
+ private:
+   struct DrawElementsIndirectCommand
+   {
+      // number of indices for model
+      uint32_t count;
+
+      // number of instances to draw
+      uint32_t instanceCount;
+
+      // offset to first index in the currently bound index buffer
+      uint32_t firstIndex;
+
+      // offset to first vertex in the currently bound vertex buffer
+      uint32_t baseVertex;
+
+      // base draw instance
+      uint32_t baseInstance;
+   };
 
  private:
    // TODO: Figure out the proper way of setting triangle cap per batch
@@ -71,6 +92,8 @@ class Renderer3D
    static inline std::shared_ptr< VertexArray > s_vertexArray;
    static inline std::shared_ptr< VertexBuffer > s_vertexBuffer;
    static inline std::shared_ptr< IndexBuffer > s_indexBuffer;
+   static inline std::shared_ptr< DrawIndirectBuffer > s_drawIndirectBuffer;
+   static inline std::shared_ptr< ShaderStorageBuffer > s_ssbo;
    static inline std::shared_ptr< Shader > s_textureShader;
    static inline std::shared_ptr< Texture > s_whiteTexture;
 
@@ -80,12 +103,15 @@ class Renderer3D
    static inline std::vector< uint32_t > s_indicesBatch;
    static inline uint32_t s_currentIndex = 0;
 
-   static inline std::array<glm::mat4, s_maxModelMatSlots> s_modelMats;
+   static inline std::array< glm::mat4, s_maxModelMatSlots > s_modelMats;
    static inline uint32_t s_currentModelMatIdx = 0;
-   static inline std::unordered_map<std::string, float> s_modelMatsIdx;
+   static inline std::unordered_map< std::string, float > s_modelMatsIdx;
 
    static inline std::array< std::shared_ptr< Texture >, s_maxTextureSlots > s_textureSlots;
    static inline uint32_t s_textureSlotIndex = 1; // 0 = white texture
+
+   static inline std::array< DrawElementsIndirectCommand, s_maxModelMatSlots > s_commands;
+   static inline uint32_t s_numModels = 0;
 };
 
 } // namespace shady::render

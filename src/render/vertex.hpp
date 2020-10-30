@@ -13,7 +13,6 @@ struct Vertex
    float m_diffTexIndex;
    float m_normTexIndex;
    float m_specTexIndex;
-   float m_modelMatIndex;
    glm::vec4 m_color;
 };
 

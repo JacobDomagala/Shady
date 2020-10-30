@@ -28,7 +28,6 @@ Renderer3D::Init()
                               {ShaderDataType::Float, "a_diffTexIndex"},
                               {ShaderDataType::Float, "a_normTexIndex"},
                               {ShaderDataType::Float, "a_specTexIndex"},
-                              {ShaderDataType::Float, "a_modelMatIndex"},
                               {ShaderDataType::Float4, "a_color"}});
 
    s_vertexArray->AddVertexBuffer(s_vertexBuffer);
@@ -40,10 +39,12 @@ Renderer3D::Init()
    s_indicesBatch.resize(s_maxIndices * sizeof(uint32_t));
 
    s_whiteTexture = TextureLibrary::GetTexture(TextureType::DIFFUSE_MAP, "white.png");
-
    s_textureShader = ShaderLibrary::GetShader("default");
 
    s_textureSlots[0] = s_whiteTexture;
+
+   s_ssbo = ShaderStorageBuffer::Create();
+   s_drawIndirectBuffer = DrawIndirectBuffer::Create();
 
    trace::Logger::Info("Renderer3D::Init: shader:{} maxVertices:{} maxIndices:{} maxTextures:{}",
                        s_textureShader->GetName(), s_maxVertices, s_maxIndices, s_maxTextureSlots);
@@ -97,7 +98,7 @@ Renderer3D::SendData()
    s_vertexBuffer->SetData(s_verticesBatch.data(), s_currentVertex * sizeof(Vertex));
    s_indexBuffer->SetData(s_indicesBatch.data(), s_currentIndex * sizeof(uint32_t));
 
-   s_textureShader->SetMat4Array("u_modelMats", s_modelMats.data(), s_currentModelMatIdx);
+   //s_textureShader->SetMat4Array("u_modelMats", s_modelMats.data(), s_currentModelMatIdx);
 
    Flush();
 }
@@ -121,7 +122,10 @@ Renderer3D::Flush()
       s_textureSlots[i]->Bind(i);
    }
 
-   RenderCommand::DrawIndexed(s_vertexArray, s_currentIndex);
+   s_ssbo->SetData(s_modelMats.data(), s_modelMats.size() * sizeof(glm::mat4));
+   s_drawIndirectBuffer->SetData(s_commands.data(), s_numModels * sizeof(DrawElementsIndirectCommand));
+
+   RenderCommand::MultiDrawElemsIndirect(s_numModels);
 }
 
 void
@@ -129,35 +133,41 @@ Renderer3D::FlushAndReset()
 {
    SendData();
 
-   s_currentIndex = 0;
-   s_currentVertex = 0;
-   s_textureSlotIndex = 1;
-   s_currentModelMatIdx = 0;
+   // s_currentIndex = 0;
+   // s_currentVertex = 0;
+   // s_textureSlotIndex = 1;
+   // s_currentModelMatIdx = 0;
 }
 
 void
-Renderer3D::DrawMesh(const std::string& modelName, std::vector< Vertex >& vertices,
-                     const std::vector< uint32_t >& indices, const glm::vec3& translateVal,
-                     const glm::vec3& scaleVal, const glm::vec3& rotateAxis, float radiansRotation,
-                     const TexturePtrVec& textures, const glm::vec4& tintColor)
+Renderer3D::DrawMesh(const std::string& modelName, const glm::mat4& modelMat,
+                     const glm::vec4& tintColor)
+{
+   auto modelMatIdx = SetupModelMat(modelName, modelMat);
+}
+
+void
+Renderer3D::AddMesh(const std::string& modelName, std::vector< Vertex >& vertices,
+                    const std::vector< uint32_t >& indices, const TexturePtrVec& textures)
 {
    // SCOPED_TIMER(fmt::format("Renderer3D::DrawMesh {}: numVertices:{} indices:{}", modelName,
    //                          vertices.size(), indices.size()));
 
-   if (s_currentVertex >= s_maxVertices
-       || (s_textureSlotIndex + textures.size()) >= (s_maxTextureSlots - 1))
-   {
-      FlushAndReset();
-   }
+   // if (s_currentVertex >= s_maxVertices
+   //     || (s_textureSlotIndex + textures.size()) >= (s_maxTextureSlots - 1))
+   // {
+   //    FlushAndReset();
+   // }
 
    auto meshTextures = SetupTextures(textures);
-   auto modelMatIdx = SetupModelMat(modelName, translateVal, scaleVal, rotateAxis, radiansRotation);
+   // auto modelMatIdx = SetupModelMat(modelName, translateVal, scaleVal, rotateAxis,
+   // radiansRotation);
 
 
    std::transform(vertices.begin(), vertices.end(), s_verticesBatch.begin() + s_currentVertex,
-                  [modelMatIdx, &tintColor, &meshTextures](auto& vertex) {
-                     vertex.m_color = tintColor;
-                     vertex.m_modelMatIndex = modelMatIdx;
+                  [&meshTextures](auto& vertex) {
+                     // vertex.m_color = tintColor;
+                     // vertex.m_modelMatIndex = modelMatIdx;
                      vertex.m_diffTexIndex = meshTextures[TextureType::DIFFUSE_MAP];
                      vertex.m_specTexIndex = meshTextures[TextureType::SPECULAR_MAP];
                      vertex.m_normTexIndex = meshTextures[TextureType::NORMAL_MAP];
@@ -168,6 +178,14 @@ Renderer3D::DrawMesh(const std::string& modelName, std::vector< Vertex >& vertic
 
    s_indicesBatch.insert(s_indicesBatch.begin() + s_currentIndex, indices.begin(), indices.end());
 
+   DrawElementsIndirectCommand newModel;
+   newModel.count = static_cast< uint32_t >(indices.size());
+   newModel.instanceCount = 1;
+   newModel.firstIndex = s_currentIndex;
+   newModel.baseVertex = s_currentVertex;
+   newModel.baseInstance = 0;
+
+   s_commands[s_numModels++] = newModel;
 
    s_currentVertex += static_cast< uint32_t >(vertices.size());
    s_currentIndex += static_cast< uint32_t >(indices.size());
@@ -213,9 +231,7 @@ Renderer3D::SetupTextures(const TexturePtrVec& textures)
 }
 
 float
-Renderer3D::SetupModelMat(const std::string& modelName, const glm::vec3& translateVal,
-                          const glm::vec3& scaleVal, const glm::vec3& rotateAxis,
-                          float radiansRotation)
+Renderer3D::SetupModelMat(const std::string& modelName, const glm::mat4& modelMat)
 {
    auto modelIt = s_modelMatsIdx.find(modelName);
 
@@ -226,10 +242,7 @@ Renderer3D::SetupModelMat(const std::string& modelName, const glm::vec3& transla
          FlushAndReset();
       }
 
-      s_modelMats[s_currentModelMatIdx] = {
-         glm::translate(glm::mat4(1.0f), translateVal)
-         * glm::rotate(glm::mat4(1.0f), radiansRotation, rotateAxis)
-         * glm::scale(glm::mat4(1.0f), scaleVal)};
+      s_modelMats[s_currentModelMatIdx] = modelMat;
       s_modelMatsIdx[modelName] = static_cast< float >(s_currentModelMatIdx);
       ++s_currentModelMatIdx;
    }

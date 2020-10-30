@@ -6,6 +6,7 @@ in VS_OUT
 {
    vec3 fPosition;
    vec2 fTexCoord;
+   vec3 fColor;
    vec3 fCameraPosition;
    vec3 fLightPosition;
 
@@ -62,5 +63,6 @@ main(void)
 
    //OUTPUT
    vec3 lighting = (ambientLight + (diffuseLight + specularLight));
+
    color = vec4(lighting, 1.0f);
 }

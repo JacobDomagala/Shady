@@ -64,10 +64,11 @@ Scene::Render()
       SCOPED_TIMER("MODELS");
       render::Renderer3D::BeginScene(*m_camera);
 
-      for (auto& model : m_models)
-      {
-         model->Draw();
-      }
+
+   for (auto& model : m_models)
+   {
+      model->Draw();
+   }
 
       render::Renderer3D::EndScene();
    }
@@ -91,10 +92,7 @@ Scene::LoadDefault()
    crate->GetMeshes().front().AddTexture(
       render::TextureLibrary::GetTexture(render::TextureType::SPECULAR_MAP, "196_s.png"));
 
-   AddModel(
-      (utils::FileManager::MODELS_DIR / "penguin-skipper" / "source" / "Skipper.obj").u8string());
-   auto& skipper = m_models.at(1);
-   skipper->ScaleModel(glm::vec3{2.0f, 2.0f, 2.0f});
+   AddModel((utils::FileManager::MODELS_DIR / "suzanne.obj").u8string());
 }
 
 } // namespace shady::scene

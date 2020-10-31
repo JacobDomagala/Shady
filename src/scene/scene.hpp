@@ -30,6 +30,9 @@ class Scene
    void
    AddLight(LightType type, const glm::vec3& position, const glm::vec3& color);
 
+   Light&
+   GetLight();
+
    void
    Render();
 
@@ -42,6 +45,8 @@ class Scene
    std::vector< std::unique_ptr< Model > > m_models;
    std::unique_ptr< Light > m_light;
    std::shared_ptr< render::Shader > m_mainShader;
+
+   Model* m_lightSphere = nullptr;
 };
 
 } // namespace shady::scene

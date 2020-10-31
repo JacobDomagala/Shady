@@ -63,6 +63,24 @@ Shady::OnUpdate()
    {
       m_currentScene.GetCamera().MoveCamera({1.0f, 0.0f});
    }
+
+   if (input::InputManager::CheckKeyPressed(GLFW_KEY_LEFT))
+   {
+      m_currentScene.GetLight().MoveBy({0.05f, 0.0f, 0.0f});
+   }
+   if (input::InputManager::CheckKeyPressed(GLFW_KEY_UP))
+   {
+      m_currentScene.GetLight().MoveBy({0.0f, 0.05f, 0.0f});
+   }
+   if (input::InputManager::CheckKeyPressed(GLFW_KEY_DOWN))
+   {
+      m_currentScene.GetLight().MoveBy({0.0f, -0.05f, 0.0f});
+   }
+   if (input::InputManager::CheckKeyPressed(GLFW_KEY_RIGHT))
+   {
+      m_currentScene.GetLight().MoveBy({-0.05f, 0.0f, 0.0f});
+   }
+
 }
 
 void

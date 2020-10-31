@@ -7,7 +7,6 @@
 #include "time/scoped_timer.hpp"
 #include "utils/file_manager.hpp"
 
-
 #include <fmt/format.h>
 
 namespace shady::scene {
@@ -37,10 +36,21 @@ Scene::AddLight(LightType type, const glm::vec3& position, const glm::vec3& colo
    m_light = std::make_unique< Light >(position, color, type);
 }
 
+Light&
+Scene::GetLight()
+{
+   return *m_light;
+}
+
 void
 Scene::Render()
 {
    SCOPED_TIMER("Scene::Render");
+
+
+   m_lightSphere->TranslateModel(m_light->GetPosition());
+
+
    // For now we only use single light
    // First pass -> render depth from camera POV to texture
    // m_light->BeginRenderToLightmap();
@@ -62,13 +72,13 @@ Scene::Render()
 
    {
       SCOPED_TIMER("MODELS");
-      render::Renderer3D::BeginScene(*m_camera);
+      render::Renderer3D::BeginScene(*m_camera, *m_light);
 
 
-   for (auto& model : m_models)
-   {
-      model->Draw();
-   }
+      for (auto& model : m_models)
+      {
+         model->Draw();
+      }
 
       render::Renderer3D::EndScene();
    }
@@ -77,15 +87,16 @@ Scene::Render()
 void
 Scene::LoadDefault()
 {
+   m_light = std::make_unique< Light >(glm::vec3{2.0f, 5.0f, -10.0f}, glm::vec3{1.0f, 0.7f, 0.8f},
+                                       LightType::DIRECTIONAL_LIGHT);
    time::ScopedTimer loadScope("Scene::LoadDefault");
    m_camera = std::make_unique< PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 500.0f);
    m_skybox.LoadCubeMap((utils::FileManager::TEXTURES_DIR / "skybox" / "default").u8string());
    AddModel((utils::FileManager::MODELS_DIR / "Crate" / "Crate1.obj").u8string());
 
    // @TODO: Should be removed later
-   auto& crate = m_models.front();
-   crate->ScaleModel(glm::vec3{2.0f, 2.0f, 2.0f});
-   crate->TranslateModel(glm::vec3{-2.0f, 0.0f, -10.0f});
+   auto& crate = m_models.back();
+   crate->TranslateModel(glm::vec3{-2.0f, 0.0f, -3.0f});
    crate->RotateModel(glm::vec3{0.0f, 1.0f, 0.0f}, 20.0f);
    crate->GetMeshes().front().AddTexture(
       render::TextureLibrary::GetTexture(render::TextureType::NORMAL_MAP, "196_norm.png"));
@@ -93,6 +104,18 @@ Scene::LoadDefault()
       render::TextureLibrary::GetTexture(render::TextureType::SPECULAR_MAP, "196_s.png"));
 
    AddModel((utils::FileManager::MODELS_DIR / "suzanne.obj").u8string());
+   auto& suzanne = m_models.back();
+   suzanne->ScaleModel({0.5f, 0.5f, 0.5f});
+   suzanne->TranslateModel(glm::vec3{2.0f, 0.0f, -2.0f});
+
+   AddModel((utils::FileManager::MODELS_DIR / "floor" / "floor.obj").u8string());
+   auto& floor = m_models.back();
+   floor->TranslateModel({0.0f, -1.5f, 0.0f});
+   floor->GetMeshes().front().AddTexture(render::TextureLibrary::GetTexture(
+      render::TextureType::DIFFUSE_MAP, "metal_hammered_diffuse.jpg"));
+
+   AddModel((utils::FileManager::MODELS_DIR / "sphere" / "sphere.obj").u8string());
+   m_lightSphere = m_models.back().get();
 }
 
 } // namespace shady::scene

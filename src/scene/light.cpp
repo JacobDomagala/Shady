@@ -30,7 +30,7 @@ Light::Light(const glm::vec3& position, const glm::vec3& color, LightType type)
    // m_lightSpaceMatrix = projectionMatrix * viewMatrix * m_modelMatrix;
    // m_shadowMatrix = m_biasMatrix * m_lightSpaceMatrix;
 
-   m_shadowBuffer = render::FrameBuffer::Create({m_shadowTextureWidth, m_shadowTextureHeight});
+   //m_shadowBuffer = render::FrameBuffer::Create({m_shadowTextureWidth, m_shadowTextureHeight});
 }
 
 void
@@ -64,6 +64,18 @@ const glm::mat4&
 Light::GetLightSpaceMat() const
 {
    return m_lightSpaceMatrix;
+}
+
+const glm::vec3&
+Light::GetPosition() const
+{
+   return m_position;
+}
+
+void
+Light::MoveBy(const glm::vec3& moveBy)
+{
+   m_position += moveBy;
 }
 
 } // namespace shady::scene

@@ -187,7 +187,7 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 
    trace::Logger::Debug("Processed mesh: {}", mesh->mName.C_Str());
    m_numVertices += mesh->mNumVertices;
-   m_numIndices += indices.size();
+   m_numIndices += static_cast<uint32_t>(indices.size());
 
    return Mesh(mesh->mName.C_Str(), std::move(vertices), std::move(indices), std::move(textures));
 }

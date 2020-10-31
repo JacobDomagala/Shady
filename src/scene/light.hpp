@@ -30,6 +30,12 @@ class Light
    const glm::mat4&
    GetLightSpaceMat() const;
 
+  const glm::vec3&
+  GetPosition() const;
+
+   void
+   MoveBy(const glm::vec3& moveBy);
+
  private:
    int32_t m_shadowTextureWidth = 4096;
    int32_t m_shadowTextureHeight = 4096;

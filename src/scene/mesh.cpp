@@ -10,7 +10,7 @@ Mesh::Mesh(const std::string& name, std::vector< render::Vertex >&& vertices,
      m_textures(std::move(textures)),
      m_name(name)
 {
-   render::Renderer3D::AddMesh(m_name, m_vertices, m_indices, m_textures);
+   render::Renderer3D::AddMesh(m_name, m_vertices, m_indices);
 }
 
 void
@@ -22,7 +22,7 @@ Mesh::AddTexture(const render::TexturePtr& texture)
 void
 Mesh::Draw(const std::string& modelName, const glm::mat4& modelMat, const glm::vec4& tintColor)
 {
-   render::Renderer3D::DrawMesh(modelName, modelMat, tintColor);
+   render::Renderer3D::DrawMesh(modelName, modelMat, m_textures, tintColor);
 }
 
 } // namespace shady::scene

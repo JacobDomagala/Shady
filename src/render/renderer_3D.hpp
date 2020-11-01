@@ -12,7 +12,8 @@
 
 namespace shady::scene {
 class Camera;
-}
+class Light;
+} // namespace shady::scene
 
 namespace shady::render {
 
@@ -21,8 +22,9 @@ class Texture;
 class VertexArray;
 class VertexBuffer;
 class IndexBuffer;
-class DrawIndirectBuffer;
-class ShaderStorageBuffer;
+class StorageBuffer;
+class BufferLockManager;
+
 class Renderer3D
 {
  public:
@@ -33,17 +35,17 @@ class Renderer3D
    Shutdown();
 
    static void
-   BeginScene(const scene::Camera& camera);
+   BeginScene(const scene::Camera& camera, const scene::Light& light);
 
    static void
    EndScene();
 
    static void
    AddMesh(const std::string& modelName, std::vector< Vertex >& vertices,
-           const std::vector< uint32_t >& indices, const TexturePtrVec& textures = {});
+           const std::vector< uint32_t >& indices);
 
    static void
-   DrawMesh(const std::string& modelName, const glm::mat4& modelMat,
+   DrawMesh(const std::string& modelName, const glm::mat4& modelMat, const TexturePtrVec& textures,
             const glm::vec4& tintColor = glm::vec4(1.0f));
 
  private:
@@ -92,8 +94,8 @@ class Renderer3D
    static inline std::shared_ptr< VertexArray > s_vertexArray;
    static inline std::shared_ptr< VertexBuffer > s_vertexBuffer;
    static inline std::shared_ptr< IndexBuffer > s_indexBuffer;
-   static inline std::shared_ptr< DrawIndirectBuffer > s_drawIndirectBuffer;
-   static inline std::shared_ptr< ShaderStorageBuffer > s_ssbo;
+   static inline std::shared_ptr< StorageBuffer > s_drawIndirectBuffer;
+   static inline std::shared_ptr< StorageBuffer > s_ssbo;
    static inline std::shared_ptr< Shader > s_textureShader;
    static inline std::shared_ptr< Texture > s_whiteTexture;
 
@@ -111,7 +113,10 @@ class Renderer3D
    static inline uint32_t s_textureSlotIndex = 1; // 0 = white texture
 
    static inline std::array< DrawElementsIndirectCommand, s_maxModelMatSlots > s_commands;
+   static inline std::unordered_map< std::string, uint32_t > s_modelCommandMap;
    static inline uint32_t s_numModels = 0;
+
+   static inline std::shared_ptr< BufferLockManager > s_bufferLockManager;
 };
 
 } // namespace shady::render

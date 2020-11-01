@@ -1,7 +1,7 @@
 #pragma once
 
-#include "buffer.hpp"
-
+#include "render/buffer.hpp"
+#include "render/opengl/opengl_buffer_lock.hpp"
 namespace shady::render::opengl {
 
 class OpenGLVertexBuffer : public VertexBuffer
@@ -17,16 +17,32 @@ class OpenGLVertexBuffer : public VertexBuffer
    Unbind() const override;
 
    void
-   SetData(const void* data, size_t size) override;
+   SetData(const void* data, size_t size, size_t offsetInBytes = 0) override;
 
    const BufferLayout&
    GetLayout() const override;
    void
    SetLayout(const BufferLayout& layout) override;
 
- private:
+ protected:
+   // used by OpenGLMappedVertexBuffer
+   OpenGLVertexBuffer();
+
+ protected:
    uint32_t m_rendererID;
    BufferLayout m_layout;
+};
+
+class OpenGLMappedVertexBuffer : public OpenGLVertexBuffer
+{
+ public:
+   explicit OpenGLMappedVertexBuffer(size_t size);
+
+   void
+   SetData(const void* data, size_t sizeInBytes, size_t offsetInBytes = 0) override;
+
+ private:
+   uint8_t* m_baseMemPtr = nullptr;
 };
 
 class OpenGLIndexBuffer : public IndexBuffer
@@ -52,11 +68,11 @@ class OpenGLIndexBuffer : public IndexBuffer
    uint32_t m_count;
 };
 
-class OpenGLDrawIndirectBuffer : public DrawIndirectBuffer
+class OpenGLStorageBuffer : public StorageBuffer
 {
  public:
-   OpenGLDrawIndirectBuffer();
-   ~OpenGLDrawIndirectBuffer() override;
+   OpenGLStorageBuffer(BufferType type, size_t size);
+   ~OpenGLStorageBuffer() override;
 
    void
    Bind() const override;
@@ -66,26 +82,22 @@ class OpenGLDrawIndirectBuffer : public DrawIndirectBuffer
    void
    SetData(const void* data, size_t size) override;
 
- private:
-   uint32_t m_rendererID;
-};
+   void
+   BindBufferRange(uint32_t index, size_t usedBufferSize) override;
 
-class OpenGLShaderStorageBuffer : public ShaderStorageBuffer
-{
- public:
-   OpenGLShaderStorageBuffer();
-   ~OpenGLShaderStorageBuffer() override;
+   size_t
+   GetOffset() const override;
 
    void
-   Bind() const override;
-   void
-   Unbind() const override;
-
-   void
-   SetData(const void* data, size_t size) override;
+   OnUsageComplete(size_t usedBufferSize) override;
 
  private:
    uint32_t m_rendererID;
+   uint8_t* m_baseMemPtr = nullptr;
+   size_t m_currentHead = 0;
+   size_t m_capacity = 0;
+   GLenum m_type;
+   OpenGLBufferLockManager m_bufferLock;
 };
 
 } // namespace shady::render::opengl

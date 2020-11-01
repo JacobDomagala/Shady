@@ -31,7 +31,7 @@ class RenderCommand
    DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray, uint32_t count = 0);
 
    static void
-   MultiDrawElemsIndirect(uint32_t drawCount);
+   MultiDrawElemsIndirect(uint32_t drawCount, size_t offset = 0);
 
    static void
    DrawLines(uint32_t count);

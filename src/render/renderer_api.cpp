@@ -1,9 +1,10 @@
 
 #include "renderer_api.hpp"
-#include "opengl/opengl_renderer_api.hpp"
 #include "helpers.hpp"
+#include "opengl/opengl_renderer_api.hpp"
 #include "trace/logger.hpp"
 #include "utils/assert.hpp"
+
 
 namespace shady::render {
 

@@ -49,7 +49,7 @@ class RendererAPI
    DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray, uint32_t indexCount = 0) = 0;
 
    virtual void
-   MultiDrawElemsIndirect(uint32_t drawCount) = 0;
+   MultiDrawElemsIndirect(uint32_t drawCount, size_t offset = 0) = 0;
 
    virtual void
    DrawLines(uint32_t count) = 0;

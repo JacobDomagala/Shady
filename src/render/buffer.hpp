@@ -22,6 +22,9 @@ enum class ShaderDataType
    Bool
 };
 
+/**************************************************************************************************
+ *************************************** BUFFER ELEMENT *******************************************
+ *************************************************************************************************/
 struct BufferElement
 {
    std::string m_name;
@@ -37,6 +40,9 @@ struct BufferElement
    GetComponentCount() const;
 };
 
+/**************************************************************************************************
+ *************************************** BUFFER LAYOUT ********************************************
+ *************************************************************************************************/
 class BufferLayout
 {
  public:
@@ -70,6 +76,9 @@ class BufferLayout
    uint32_t m_stride = 0;
 };
 
+/**************************************************************************************************
+ *************************************** VERTEX BUFFER ********************************************
+ *************************************************************************************************/
 class VertexBuffer
 {
  public:
@@ -81,7 +90,7 @@ class VertexBuffer
    Unbind() const = 0;
 
    virtual void
-   SetData(const void* data, size_t size) = 0;
+   SetData(const void* data, size_t size, size_t offsetInBytes = 0) = 0;
 
    virtual const BufferLayout&
    GetLayout() const = 0;
@@ -89,11 +98,16 @@ class VertexBuffer
    SetLayout(const BufferLayout& layout) = 0;
 
    static std::shared_ptr< VertexBuffer >
+   CreatePersistanceMap(size_t sizeInBytes);
+   static std::shared_ptr< VertexBuffer >
    Create(size_t sizeInBytes);
    static std::shared_ptr< VertexBuffer >
    Create(float* vertices, size_t sizeInBytes);
 };
 
+/**************************************************************************************************
+ *************************************** INDEX BUFFER *********************************************
+ *************************************************************************************************/
 class IndexBuffer
 {
  public:
@@ -117,27 +131,19 @@ class IndexBuffer
    Create(uint32_t* indices, uint32_t count);
 };
 
-class DrawIndirectBuffer
+/**************************************************************************************************
+ *************************************** STORAGE BUFFER *******************************************
+ *************************************************************************************************/
+enum class BufferType
 {
- public:
-   virtual ~DrawIndirectBuffer() = default;
-
-   virtual void
-   Bind() const = 0;
-   virtual void
-   Unbind() const = 0;
-
-   virtual void
-   SetData(const void* data, size_t size) = 0;
-
-   static std::shared_ptr< DrawIndirectBuffer >
-   Create();
+   ShaderStorage,
+   DrawIndirect
 };
 
-class ShaderStorageBuffer
+class StorageBuffer
 {
  public:
-   virtual ~ShaderStorageBuffer() = default;
+   virtual ~StorageBuffer() = default;
 
    virtual void
    Bind() const = 0;
@@ -147,8 +153,18 @@ class ShaderStorageBuffer
    virtual void
    SetData(const void* data, size_t size) = 0;
 
-   static std::shared_ptr< ShaderStorageBuffer >
-   Create();
+   virtual void
+   BindBufferRange(uint32_t index, size_t atomCount) = 0;
+
+   virtual void
+   OnUsageComplete(size_t usedBufferSize) = 0;
+
+   // Return current Head offset of storage buffer
+   virtual size_t
+   GetOffset() const = 0;
+
+   static std::shared_ptr< StorageBuffer >
+   Create(BufferType type, size_t size);
 };
 
 } // namespace shady::render

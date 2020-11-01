@@ -147,6 +147,12 @@ BufferLayout::CalculateOffsetsAndStride()
  *************************************** VERTEX BUFFER ********************************************
  *************************************************************************************************/
 std::shared_ptr< VertexBuffer >
+VertexBuffer::CreatePersistanceMap(size_t sizeInBytes)
+{
+   return CreateSharedWrapper< opengl::OpenGLMappedVertexBuffer, VertexBuffer >(sizeInBytes);
+}
+
+std::shared_ptr< VertexBuffer >
 VertexBuffer::Create(size_t sizeInBytes)
 {
    return CreateSharedWrapper< opengl::OpenGLVertexBuffer, VertexBuffer >(sizeInBytes);
@@ -174,21 +180,12 @@ IndexBuffer::Create(uint32_t* indices, uint32_t count)
 }
 
 /**************************************************************************************************
- ************************************* DRAW INDIRECT BUFFER ***************************************
+ *************************************** STORAGE BUFFER *******************************************
  *************************************************************************************************/
-std::shared_ptr< DrawIndirectBuffer >
-DrawIndirectBuffer::Create()
+std::shared_ptr< StorageBuffer >
+StorageBuffer::Create(BufferType type, size_t size)
 {
-   return CreateSharedWrapper< opengl::OpenGLDrawIndirectBuffer, DrawIndirectBuffer >();
-}
-
-/**************************************************************************************************
- ************************************* SHADER STORAGE BUFFER **************************************
- *************************************************************************************************/
-std::shared_ptr< ShaderStorageBuffer >
-ShaderStorageBuffer::Create()
-{
-   return CreateSharedWrapper< opengl::OpenGLShaderStorageBuffer, ShaderStorageBuffer >();
+   return CreateSharedWrapper< opengl::OpenGLStorageBuffer, StorageBuffer >(type, size);
 }
 
 } // namespace shady::render

@@ -1,6 +1,9 @@
 #include "opengl_buffer.hpp"
+#include "utils/assert.hpp"
 
+#include <fmt/format.h>
 #include <glad/glad.h>
+
 
 namespace shady::render::opengl {
 
@@ -21,6 +24,12 @@ OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertices, size_t sizeInBytes)
    glBufferData(GL_ARRAY_BUFFER, sizeInBytes, vertices, GL_STATIC_DRAW);
 }
 
+OpenGLVertexBuffer::OpenGLVertexBuffer()
+{
+   glCreateBuffers(1, &m_rendererID);
+   glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
+}
+
 OpenGLVertexBuffer::~OpenGLVertexBuffer()
 {
    glDeleteBuffers(1, &m_rendererID);
@@ -39,7 +48,7 @@ OpenGLVertexBuffer::Unbind() const
 }
 
 void
-OpenGLVertexBuffer::SetData(const void* data, size_t size)
+OpenGLVertexBuffer::SetData(const void* data, size_t size, size_t offsetInBytes)
 {
    glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
    glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
@@ -55,6 +64,23 @@ void
 OpenGLVertexBuffer::SetLayout(const BufferLayout& layout)
 {
    m_layout = layout;
+}
+
+/**************************************************************************************************
+ ************************************* MAPPED VERTEX BUFFER ***************************************
+ *************************************************************************************************/
+OpenGLMappedVertexBuffer::OpenGLMappedVertexBuffer(size_t size)
+{
+   const GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
+   glBufferStorage(GL_ARRAY_BUFFER, size, nullptr, flags);
+   m_baseMemPtr = reinterpret_cast< uint8_t* >(glMapBufferRange(GL_ARRAY_BUFFER, 0, size, flags));
+}
+
+void
+OpenGLMappedVertexBuffer::SetData(const void* data, size_t size, size_t offset)
+{
+   void* dst = (unsigned char*)m_baseMemPtr + offset;
+   memcpy(dst, data, size);
 }
 
 /**************************************************************************************************
@@ -113,68 +139,87 @@ OpenGLIndexBuffer::GetCount() const
 /**************************************************************************************************
  ************************************* DRAW INDIRECT BUFFER ***************************************
  *************************************************************************************************/
-OpenGLDrawIndirectBuffer::OpenGLDrawIndirectBuffer()
+OpenGLStorageBuffer::OpenGLStorageBuffer(BufferType type, size_t size) : m_bufferLock(true)
 {
+   switch (type)
+   {
+      case BufferType::ShaderStorage: {
+         m_type = GL_SHADER_STORAGE_BUFFER;
+      }
+      break;
+
+      case BufferType::DrawIndirect: {
+         m_type = GL_DRAW_INDIRECT_BUFFER;
+      }
+      break;
+   }
+
    glGenBuffers(1, &m_rendererID);
-   glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_rendererID);
+
+   const GLbitfield mapFlags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT;
+   const GLbitfield createFlags = mapFlags | GL_DYNAMIC_STORAGE_BIT;
+
+   glBindBuffer(m_type, m_rendererID);
+   glBufferStorage(m_type, 3 * size, nullptr, createFlags);
+
+   m_baseMemPtr = reinterpret_cast< uint8_t* >(glMapBufferRange(m_type, 0, size, mapFlags));
+
+   m_capacity = 3 * size;
 }
 
-OpenGLDrawIndirectBuffer::~OpenGLDrawIndirectBuffer()
+OpenGLStorageBuffer::~OpenGLStorageBuffer()
 {
    glDeleteBuffers(1, &m_rendererID);
 }
 
 void
-OpenGLDrawIndirectBuffer::Bind() const
+OpenGLStorageBuffer::Bind() const
 {
-   glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_rendererID);
+   glBindBuffer(m_type, m_rendererID);
 }
 
 void
-OpenGLDrawIndirectBuffer::Unbind() const
+OpenGLStorageBuffer::Unbind() const
 {
-   glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+   glBindBuffer(m_type, 0);
 }
 
 void
-OpenGLDrawIndirectBuffer::SetData(const void* data, size_t size)
+OpenGLStorageBuffer::SetData(const void* data, size_t size)
 {
-   glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_rendererID);
-   glBufferData(GL_DRAW_INDIRECT_BUFFER, size, data, GL_DYNAMIC_DRAW);
-}
+   utils::Assert(size <= m_capacity,
+                 fmt::format("Attempting to copy more data than allocated! Size:{} Capacity:{}",
+                             size, m_capacity));
 
+   if (m_currentHead + size > m_capacity)
+   {
+      m_currentHead = 0;
+   }
 
-/**************************************************************************************************
- ************************************* SHADER STORAGE BUFFER **************************************
- *************************************************************************************************/
-OpenGLShaderStorageBuffer::OpenGLShaderStorageBuffer()
-{
-   glGenBuffers(1, &m_rendererID);
-   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_rendererID);
-}
+   m_bufferLock.WaitForLockedRange(m_currentHead, size);
 
-OpenGLShaderStorageBuffer::~OpenGLShaderStorageBuffer()
-{
-   glDeleteBuffers(1, &m_rendererID);
+   void* dst = (unsigned char*)m_baseMemPtr + m_currentHead;
+   memcpy(dst, data, size);
 }
 
 void
-OpenGLShaderStorageBuffer::Bind() const
+OpenGLStorageBuffer::BindBufferRange(uint32_t index, size_t size)
 {
-   glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_rendererID);
+   // Should only be used by GL_SHADER_STORAGE_BUFFER
+   glBindBufferRange(m_type, index, m_rendererID, m_currentHead, size);
+}
+
+size_t
+OpenGLStorageBuffer::GetOffset() const
+{
+   return m_currentHead;
 }
 
 void
-OpenGLShaderStorageBuffer::Unbind() const
+OpenGLStorageBuffer::OnUsageComplete(size_t usedBufferSize)
 {
-   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-}
-
-void
-OpenGLShaderStorageBuffer::SetData(const void* data, size_t size)
-{
-   glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_rendererID);
-   glBufferData(GL_SHADER_STORAGE_BUFFER, size, data, GL_DYNAMIC_DRAW);
+   m_bufferLock.LockRange(m_currentHead, usedBufferSize);
+   m_currentHead = (m_currentHead + usedBufferSize) % m_capacity;
 }
 
 } // namespace shady::render::opengl

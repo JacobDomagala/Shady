@@ -19,7 +19,7 @@ Window::Window(int32_t width, int32_t height, const std::string& title)
    utils::Assert(glfwInit(), "GLFW Init failed!");
 
    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
    glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);

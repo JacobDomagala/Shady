@@ -51,9 +51,9 @@ RenderCommand::DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray, ui
 }
 
 void
-RenderCommand::MultiDrawElemsIndirect(uint32_t drawCount)
+RenderCommand::MultiDrawElemsIndirect(uint32_t drawCount, size_t offset)
 {
-   s_rendererAPI->MultiDrawElemsIndirect(drawCount);
+   s_rendererAPI->MultiDrawElemsIndirect(drawCount, offset);
 }
 
 void

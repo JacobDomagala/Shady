@@ -58,10 +58,10 @@ class Renderer3D
    static void
    FlushAndReset();
 
-   static std::unordered_map< TextureType, float >
+   static std::unordered_map< TextureType, int32_t >
    SetupTextures(const TexturePtrVec& textures);
 
-   static float
+   static int32_t
    SetupModelMat(const std::string& modelName, const glm::mat4& modelMat);
 
  private:
@@ -81,6 +81,15 @@ class Renderer3D
 
       // base draw instance
       uint32_t baseInstance;
+   };
+
+   struct VertexBufferData
+   {
+      glm::mat4 modelMat;
+      int32_t diffuseTextureID;
+      int32_t normalTextureID;
+      int32_t specularTextureID;
+      int32_t reserved;
    };
 
  private:
@@ -105,9 +114,10 @@ class Renderer3D
    static inline std::vector< uint32_t > s_indicesBatch;
    static inline uint32_t s_currentIndex = 0;
 
-   static inline std::array< glm::mat4, s_maxModelMatSlots > s_modelMats;
+   //static inline std::array< glm::mat4, s_maxModelMatSlots > s_modelMats;
+   static inline std::array< VertexBufferData, s_maxModelMatSlots > s_renderDataPerObj;
    static inline uint32_t s_currentModelMatIdx = 0;
-   static inline std::unordered_map< std::string, float > s_modelMatsIdx;
+   static inline std::unordered_map< std::string, uint32_t > s_modelMatsIdx;
 
    static inline std::array< std::shared_ptr< Texture >, s_maxTextureSlots > s_textureSlots;
    static inline uint32_t s_textureSlotIndex = 1; // 0 = white texture

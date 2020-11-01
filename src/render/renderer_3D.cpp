@@ -28,9 +28,6 @@ Renderer3D::Init()
                               {ShaderDataType::Float3, "a_normal"},
                               {ShaderDataType::Float2, "a_texCoord"},
                               {ShaderDataType::Float3, "a_tangent"},
-                              {ShaderDataType::Float, "a_diffTexIndex"},
-                              {ShaderDataType::Float, "a_normTexIndex"},
-                              {ShaderDataType::Float, "a_specTexIndex"},
                               {ShaderDataType::Float4, "a_color"}});
 
    s_vertexArray->AddVertexBuffer(s_vertexBuffer);
@@ -48,7 +45,7 @@ Renderer3D::Init()
 
    // @TODO: For now we hardcode size for 100 model matrices
    // which essentially means that we can store up to 100 unique model/meshes for now
-   s_ssbo = StorageBuffer::Create(BufferType::ShaderStorage, sizeof(glm::mat4) * 100);
+   s_ssbo = StorageBuffer::Create(BufferType::ShaderStorage, sizeof(VertexBufferData) * 100);
    s_drawIndirectBuffer =
       StorageBuffer::Create(BufferType::DrawIndirect, sizeof(DrawElementsIndirectCommand) * 100);
 
@@ -132,10 +129,10 @@ Renderer3D::Flush()
       s_textureSlots[i]->Bind(i);
    }
 
-   const auto modelMatsSize = s_modelMats.size() * sizeof(glm::mat4);
+   const auto modelMatsSize = s_renderDataPerObj.size() * sizeof(VertexBufferData);
    const auto elemsIndirectSize = s_numModels * sizeof(DrawElementsIndirectCommand);
 
-   s_ssbo->SetData(s_modelMats.data(), modelMatsSize);
+   s_ssbo->SetData(s_renderDataPerObj.data(), modelMatsSize);
    s_drawIndirectBuffer->SetData(s_commands.data(), elemsIndirectSize);
 
    s_ssbo->BindBufferRange(0, modelMatsSize);
@@ -163,6 +160,12 @@ Renderer3D::DrawMesh(const std::string& modelName, const glm::mat4& modelMat,
 {
    auto modelMatIdx = SetupModelMat(modelName, modelMat);
    auto meshTextures = SetupTextures(textures);
+   s_renderDataPerObj[s_modelMatsIdx[modelName]].diffuseTextureID =
+      meshTextures[TextureType::DIFFUSE_MAP];
+   s_renderDataPerObj[s_modelMatsIdx[modelName]].normalTextureID =
+      meshTextures[TextureType::NORMAL_MAP];
+   s_renderDataPerObj[s_modelMatsIdx[modelName]].specularTextureID =
+      meshTextures[TextureType::SPECULAR_MAP];
 }
 
 void
@@ -189,7 +192,7 @@ Renderer3D::AddMesh(const std::string& modelName, std::vector< Vertex >& vertice
    s_currentIndex += static_cast< uint32_t >(indices.size());
 }
 
-std::unordered_map< TextureType, float >
+std::unordered_map< TextureType, int32_t >
 Renderer3D::SetupTextures(const TexturePtrVec& textures)
 {
    if (textures.empty())
@@ -199,12 +202,12 @@ Renderer3D::SetupTextures(const TexturePtrVec& textures)
               {TextureType::SPECULAR_MAP, 0.0f}};
    }
 
-   std::unordered_map< TextureType, float > meshTextures;
+   std::unordered_map< TextureType, int32_t > meshTextures;
 
    // Check whether textures for this mesh are already loaded
    for (auto& texture : textures)
    {
-      float textureIndex = 0.0f;
+      int32_t textureIndex = 0;
 
       const auto textureIdxPtr = std::find_if(
          s_textureSlots.begin(), s_textureSlots.end(), [&texture](const auto& textureSlot) {
@@ -213,11 +216,11 @@ Renderer3D::SetupTextures(const TexturePtrVec& textures)
 
       if (s_textureSlots.end() != textureIdxPtr)
       {
-         textureIndex = static_cast< float >(std::distance(s_textureSlots.begin(), textureIdxPtr));
+         textureIndex = std::distance(s_textureSlots.begin(), textureIdxPtr);
       }
       else
       {
-         textureIndex = static_cast< float >(s_textureSlotIndex);
+         textureIndex = s_textureSlotIndex;
          s_textureSlots[s_textureSlotIndex] = texture;
          s_textureSlotIndex++;
       }
@@ -225,10 +228,11 @@ Renderer3D::SetupTextures(const TexturePtrVec& textures)
       meshTextures[texture->GetType()] = textureIndex;
    }
 
+
    return meshTextures;
 }
 
-float
+int32_t
 Renderer3D::SetupModelMat(const std::string& modelName, const glm::mat4& modelMat)
 {
    auto modelIt = s_modelMatsIdx.find(modelName);
@@ -240,13 +244,13 @@ Renderer3D::SetupModelMat(const std::string& modelName, const glm::mat4& modelMa
          FlushAndReset();
       }
 
-      s_modelMats[s_currentModelMatIdx] = modelMat;
-      s_modelMatsIdx[modelName] = static_cast< float >(s_currentModelMatIdx);
+      s_renderDataPerObj[s_currentModelMatIdx].modelMat = modelMat;
+      s_modelMatsIdx[modelName] = s_currentModelMatIdx;
       ++s_currentModelMatIdx;
    }
    else
    {
-      s_modelMats[s_modelMatsIdx[modelName]] = modelMat;
+      s_renderDataPerObj[s_modelMatsIdx[modelName]].modelMat = modelMat;
    }
 
    return s_modelMatsIdx[modelName];

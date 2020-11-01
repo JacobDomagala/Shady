@@ -105,6 +105,12 @@ Scene::LoadDefault()
 
    AddModel((utils::FileManager::MODELS_DIR / "suzanne.obj").u8string());
    auto& suzanne = m_models.back();
+   suzanne->GetMeshes().front().AddTexture(render::TextureLibrary::GetTexture(
+      render::TextureType::DIFFUSE_MAP, "metal_hammered_diffuse.jpg"));
+   suzanne->GetMeshes().front().AddTexture(render::TextureLibrary::GetTexture(
+      render::TextureType::NORMAL_MAP, "metal_hammered_norm.jpg"));
+   suzanne->GetMeshes().front().AddTexture(render::TextureLibrary::GetTexture(
+      render::TextureType::SPECULAR_MAP, "metal_hammered_rough.jpg"));
    suzanne->ScaleModel({0.5f, 0.5f, 0.5f});
    suzanne->TranslateModel(glm::vec3{2.0f, 0.0f, -2.0f});
 

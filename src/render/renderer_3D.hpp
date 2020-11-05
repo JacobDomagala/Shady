@@ -61,9 +61,6 @@ class Renderer3D
    static std::unordered_map< TextureType, int32_t >
    SetupTextures(const TexturePtrVec& textures);
 
-   static int32_t
-   SetupModelMat(const std::string& modelName, const glm::mat4& modelMat);
-
  private:
    struct DrawElementsIndirectCommand
    {
@@ -89,16 +86,18 @@ class Renderer3D
       int32_t diffuseTextureID;
       int32_t normalTextureID;
       int32_t specularTextureID;
+
+      // padding
       int32_t reserved;
    };
 
  private:
    // TODO: Figure out the proper way of setting triangle cap per batch
-   static inline constexpr uint32_t s_maxTriangles = 100000;
+   static inline constexpr uint32_t s_maxTriangles = 500000;
    static inline constexpr uint32_t s_maxVertices = s_maxTriangles * 3;
    static inline constexpr uint32_t s_maxIndices = s_maxVertices * 2;
    static inline constexpr uint32_t s_maxTextureSlots = 32; // TODO: RenderCaps
-   static inline constexpr uint32_t s_maxModelMatSlots = 32;
+   static inline constexpr uint32_t s_maxModelMatSlots = 500;
 
    static inline std::shared_ptr< VertexArray > s_vertexArray;
    static inline std::shared_ptr< VertexBuffer > s_vertexBuffer;
@@ -108,25 +107,24 @@ class Renderer3D
    static inline std::shared_ptr< Shader > s_textureShader;
    static inline std::shared_ptr< Texture > s_whiteTexture;
 
-   // data batches which are filled with each call to DrawMesh
    static inline std::vector< render::Vertex > s_verticesBatch;
    static inline uint32_t s_currentVertex = 0;
    static inline std::vector< uint32_t > s_indicesBatch;
    static inline uint32_t s_currentIndex = 0;
 
-   //static inline std::array< glm::mat4, s_maxModelMatSlots > s_modelMats;
-   static inline std::array< VertexBufferData, s_maxModelMatSlots > s_renderDataPerObj;
-   static inline uint32_t s_currentModelMatIdx = 0;
-   static inline std::unordered_map< std::string, uint32_t > s_modelMatsIdx;
+   static inline std::vector< VertexBufferData > s_renderDataPerObj;
+   static inline uint32_t s_currentModelIdx = 0;
 
    static inline std::array< std::shared_ptr< Texture >, s_maxTextureSlots > s_textureSlots;
    static inline uint32_t s_textureSlotIndex = 1; // 0 = white texture
 
-   static inline std::array< DrawElementsIndirectCommand, s_maxModelMatSlots > s_commands;
+   static inline std::vector< DrawElementsIndirectCommand > s_commands;
    static inline std::unordered_map< std::string, uint32_t > s_modelCommandMap;
    static inline uint32_t s_numModels = 0;
 
    static inline std::shared_ptr< BufferLockManager > s_bufferLockManager;
+
+   static inline bool s_sceneChanged = false;
 };
 
 } // namespace shady::render

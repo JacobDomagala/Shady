@@ -48,6 +48,16 @@ OpenGLTexture::CreateTexture()
 {
    const auto width = m_imageData.m_size.x;
    const auto height = m_imageData.m_size.y;
+
+   if (!width || !height || !m_imageData.m_bytes)
+   {
+      trace::Logger::Debug(
+         "OpenGL texture not loaded due to incorrect size! Name:{} Width:{}, Height:{}", m_name,
+         width, height);
+
+      return;
+   }
+
    const auto dataFormat = m_imageData.m_channels == 4 ? GL_RGBA : GL_RGB;
    const auto internalFormat = m_imageData.m_channels == 4 ? GL_RGBA8 : GL_RGB8;
 

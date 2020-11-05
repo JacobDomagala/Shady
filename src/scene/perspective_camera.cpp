@@ -39,7 +39,7 @@ PerspectiveCamera::MouseMovement(const glm::vec2& mouseMovement)
 void
 PerspectiveCamera::MoveCamera(const glm::vec2& leftRightVec)
 {
-   constexpr auto cameraSpeed = 0.01f;
+   constexpr auto cameraSpeed = 0.5f;
 
    trace::Logger::Trace("Camera Pos:{} LookAtDir:{} RightVec:{}", m_position, m_lookAtDirection,
                         m_rightVector);

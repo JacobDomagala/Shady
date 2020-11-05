@@ -161,7 +161,7 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
    }
 
    std::vector< uint32_t > indices;
-   // Now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the
+   // Now walk through each of the mesh's faces (a face is a mesh its triangle) and retrieve the
    // corresponding vertex indices.
    for (uint32_t i = 0; i < mesh->mNumFaces; i++)
    {

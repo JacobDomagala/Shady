@@ -25,7 +25,7 @@ class Scene
    GetCamera();
 
    void
-   AddModel(const std::string& fileName);
+   AddModel(const std::string& fileName, LoadFlags additionalFlags = LoadFlags::None);
 
    void
    AddLight(LightType type, const glm::vec3& position, const glm::vec3& color);

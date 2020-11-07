@@ -2,7 +2,6 @@
 #include "trace/logger.hpp"
 
 #include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
 namespace shady::scene {
@@ -23,13 +22,15 @@ GetShadyTexFromAssimpTex(aiTextureType assimpTex)
    }
 }
 
-Model::Model(const std::string& path)
+Model::Model(const std::string& path, LoadFlags additionalAssimpFlags)
 {
-   // Read file via ASSIMP
    Assimp::Importer importer;
+
    auto scene = importer.ReadFile(
       path, aiProcess_GenSmoothNormals | aiProcess_Triangulate | aiProcess_CalcTangentSpace
-               | aiProcess_JoinIdenticalVertices | aiProcess_ValidateDataStructure);
+               | aiProcess_JoinIdenticalVertices | aiProcess_ValidateDataStructure
+               | static_cast< uint32_t >(additionalAssimpFlags));
+
    // Check for errors
    if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
    {

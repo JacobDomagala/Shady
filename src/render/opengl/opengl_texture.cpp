@@ -1,10 +1,12 @@
 #include "opengl_texture.hpp"
 #include "trace/logger.hpp"
+#include "utils/assert.hpp"
 #include "utils/file_manager.hpp"
 
+#include <array>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
-#include <array>
+
 
 // Undefine leaking 'max' from Windows
 #undef max
@@ -53,23 +55,25 @@ OpenGLTexture::CreateTexture()
    const auto width = m_imageData.m_size.x;
    const auto height = m_imageData.m_size.y;
 
-   if (!width || !height || !m_imageData.m_bytes)
-   {
-      trace::Logger::Debug(
-         "OpenGL texture not loaded due to incorrect size! Name:{} Width:{}, Height:{}", m_name,
-         width, height);
-
-      return;
-   }
+   utils::Assert(width > 0 && height > 0 && m_imageData.m_bytes && m_imageData.m_channels == 3
+                    || m_imageData.m_channels == 4,
+                 fmt::format("Wrong Texture data: Name:{} Width:{} Height:{} Data:{} Format:{}",
+                             m_name, width, height, m_imageData.m_bytes ? "Valid" : "Invalid",
+                             m_imageData.m_channels));
 
    const auto dataFormat = m_imageData.m_channels == 4 ? GL_RGBA : GL_RGB;
    const auto internalFormat = m_imageData.m_channels == 4 ? GL_RGBA8 : GL_RGB8;
 
-   const auto numMips = 1 + glm::floor(glm::log2(static_cast< float >(::glm::max(width, height))));
+   const auto numMips = 1
+                        + static_cast< int32_t >(
+                           glm::floor(glm::log2(static_cast< float >(::glm::max(width, height)))));
+
 
    glCreateTextures(GL_TEXTURE_2D, 1, &m_textureID);
+
    glTextureStorage2D(m_textureID, numMips, internalFormat, width, height);
 
+   glTextureParameterf(m_textureID, GL_TEXTURE_MAX_ANISOTROPY, 16.0f);
    glTextureParameteri(m_textureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
    glTextureParameteri(m_textureID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -90,7 +94,7 @@ void
 OpenGLTexture::CreateCubeMap(const std::string& name)
 {
    std::unordered_map< GLuint, std::string > textureFaces = {
-      {0, name + "_right.jpg"},  {1, name + "_left.jpg"}, {2, name + "_top.jpg"},
+      {0, name + "_right.jpg"},  {1, name + "_left.jpg"},  {2, name + "_top.jpg"},
       {3, name + "_bottom.jpg"}, {4, name + "_front.jpg"}, {5, name + "_back.jpg"}};
 
 
@@ -130,6 +134,18 @@ void
 OpenGLTexture::Bind(uint32_t slot) const
 {
    glBindTextureUnit(slot, m_textureID);
+}
+
+void
+OpenGLTexture::MakeResident()
+{
+   glMakeTextureHandleResidentARB(m_textureHandle);
+}
+
+void
+OpenGLTexture::MakeNonResident()
+{
+   glMakeTextureHandleNonResidentARB(m_textureHandle);
 }
 
 bool

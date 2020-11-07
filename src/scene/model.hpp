@@ -7,6 +7,8 @@
 #include <vector>
 
 #include <assimp/material.h>
+#include <assimp/postprocess.h>
+
 #include <glm/glm.hpp>
 
 struct aiNode;
@@ -15,10 +17,15 @@ struct aiScene;
 
 namespace shady::scene {
 
+enum class LoadFlags {
+  None = 0,
+  FlipUV = aiProcess_FlipUVs
+};
+
 class Model
 {
  public:
-   Model(const std::string& path);
+   Model(const std::string& path, LoadFlags additionalAssimpFlags = LoadFlags::None);
 
    void
    ScaleModel(const glm::vec3& scale);
@@ -34,6 +41,9 @@ class Model
 
    std::vector< Mesh >&
    GetMeshes();
+
+  //  void
+  //  ReloadModel();
 
  private:
    void
@@ -61,6 +71,7 @@ class Model
    uint32_t m_numIndices = 0;
 
    std::string m_name = "DefaultName";
+   bool m_flipUV = false;
 };
 
 } // namespace shady::scene

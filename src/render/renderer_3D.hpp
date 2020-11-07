@@ -18,7 +18,6 @@ class Light;
 namespace shady::render {
 
 class Shader;
-class Texture;
 class VertexArray;
 class VertexBuffer;
 class IndexBuffer;
@@ -58,7 +57,7 @@ class Renderer3D
    static void
    FlushAndReset();
 
-   static std::unordered_map< TextureType, int32_t >
+   static std::unordered_map< TextureType, TextureHandleType >
    SetupTextures(const TexturePtrVec& textures);
 
  private:
@@ -83,44 +82,63 @@ class Renderer3D
    struct VertexBufferData
    {
       glm::mat4 modelMat;
-      int32_t diffuseTextureID;
-      int32_t normalTextureID;
-      int32_t specularTextureID;
+      TextureHandleType diffuseTextureID;
+      TextureHandleType normalTextureID;
+      TextureHandleType specularTextureID;
 
       // padding
-      int32_t reserved;
+      uint64_t reserved;
+   };
+
+   struct TexAddress
+   {
+      uint64_t diffuseHandle;
+      uint64_t normalHandle;
+      uint64_t specularHandle;
+
+      // padding
+//      int32_t reserved;
    };
 
  private:
-   // TODO: Figure out the proper way of setting triangle cap per batch
+   // UPPER LIMITS
    static inline constexpr uint32_t s_maxTriangles = 500000;
    static inline constexpr uint32_t s_maxVertices = s_maxTriangles * 3;
    static inline constexpr uint32_t s_maxIndices = s_maxVertices * 2;
-   static inline constexpr uint32_t s_maxTextureSlots = 32; // TODO: RenderCaps
-   static inline constexpr uint32_t s_maxModelMatSlots = 500;
+   static inline constexpr uint32_t s_maxTextureSlots = 32;
+   static inline constexpr uint32_t s_maxMeshesSlots = 500;
 
+   //-----------------------------------------
+   // VAO/VBO
    static inline std::shared_ptr< VertexArray > s_vertexArray;
    static inline std::shared_ptr< VertexBuffer > s_vertexBuffer;
    static inline std::shared_ptr< IndexBuffer > s_indexBuffer;
-   static inline std::shared_ptr< StorageBuffer > s_drawIndirectBuffer;
-   static inline std::shared_ptr< StorageBuffer > s_ssbo;
-   static inline std::shared_ptr< Shader > s_textureShader;
-   static inline std::shared_ptr< Texture > s_whiteTexture;
 
    static inline std::vector< render::Vertex > s_verticesBatch;
    static inline uint32_t s_currentVertex = 0;
    static inline std::vector< uint32_t > s_indicesBatch;
    static inline uint32_t s_currentIndex = 0;
 
+   //-----------------------------------------
+   // SSBOs
+   static inline std::shared_ptr< StorageBuffer > s_transforms;
+   static inline std::shared_ptr< StorageBuffer > s_textureData;
+   static inline std::shared_ptr< Shader > s_textureShader;
+   static inline std::shared_ptr< Texture > s_whiteTexture;
+
    static inline std::vector< VertexBufferData > s_renderDataPerObj;
-   static inline uint32_t s_currentModelIdx = 0;
+   static inline std::vector< TexAddress > s_textureDataPerObj;
 
-   static inline std::array< std::shared_ptr< Texture >, s_maxTextureSlots > s_textureSlots;
-   static inline uint32_t s_textureSlotIndex = 1; // 0 = white texture
+   static inline uint32_t s_numMeshes = 0;
+   static inline uint32_t s_currentMeshIdx = 0;
 
+   static inline TexturePtrVec s_textures;
+
+   //-----------------------------------------
+   // INDIRECT DATA
+   static inline std::shared_ptr< StorageBuffer > s_drawIndirectBuffer;
    static inline std::vector< DrawElementsIndirectCommand > s_commands;
    static inline std::unordered_map< std::string, uint32_t > s_modelCommandMap;
-   static inline uint32_t s_numModels = 0;
 
    static inline std::shared_ptr< BufferLockManager > s_bufferLockManager;
 

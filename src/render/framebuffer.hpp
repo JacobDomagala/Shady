@@ -19,7 +19,7 @@ class FrameBuffer
    uint32_t m_width;
    uint32_t m_height;
    uint32_t m_framebufferHandle;
-   TextureHandleType m_textureHandle;
+   TextureIDType m_textureID;
 };
 
 } // namespace shady::render

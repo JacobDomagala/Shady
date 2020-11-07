@@ -18,7 +18,8 @@ enum class TextureType
 
 class Texture;
 
-using TextureHandleType = uint32_t;
+using TextureIDType = uint32_t;
+using TextureHandleType = uint64_t;
 using TexturePtr = std::shared_ptr< Texture >;
 using TexturePtrVec = std::vector< TexturePtr >;
 
@@ -41,6 +42,12 @@ class Texture
    virtual void
    Bind(uint32_t slot = 0) const = 0;
 
+   virtual void
+   MakeResident() = 0;
+
+   virtual void
+   MakeNonResident() = 0;
+
    virtual bool
    operator==(const Texture& other) const = 0;
 
@@ -50,8 +57,11 @@ class Texture
    uint32_t
    GetHeight() const;
 
-   TextureHandleType
+   TextureIDType
    GetTextureID() const;
+
+   TextureHandleType
+   GetTextureHandle() const;
 
    TextureType
    GetType() const;
@@ -68,6 +78,7 @@ class Texture
  protected:
    TextureType m_type;
    ImageData m_imageData;
+   TextureIDType m_textureID;
    TextureHandleType m_textureHandle;
    std::string m_name;
 };

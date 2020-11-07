@@ -10,7 +10,7 @@ ScopedTimer::ScopedTimer(std::string&& logMsg) : m_logMsg(std::move(logMsg))
 
 ScopedTimer::~ScopedTimer()
 {
-   trace::Logger::Info("{} took {}", m_logMsg, m_timer.ToggleTimer().ToString());
+   trace::Logger::Debug("{} took {}", m_logMsg, m_timer.ToggleTimer().ToString());
 }
 
 } // namespace shady::time

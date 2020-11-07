@@ -37,21 +37,20 @@ Renderer3D::Init()
 
    s_verticesBatch.resize(s_maxVertices);
    s_indicesBatch.resize(s_maxIndices);
-   s_commands.resize(s_maxModelMatSlots);
-   s_renderDataPerObj.resize(s_maxModelMatSlots);
+   s_commands.resize(s_maxMeshesSlots);
+   s_renderDataPerObj.resize(s_maxMeshesSlots);
 
    s_whiteTexture = TextureLibrary::GetTexture(TextureType::DIFFUSE_MAP, "white.png");
    s_textureShader = ShaderLibrary::GetShader("default");
 
-   s_textureSlots[0] = s_whiteTexture;
-
-   // @TODO: For now we hardcode size for 's_maxModelMatSlots' model matrices
-   // which essentially means that we can store up to 's_maxModelMatSlots' unique model/meshes for
+   // @TODO: For now we hardcode size for 's_maxMeshesSlots' model matrices
+   // which essentially means that we can store up to 's_maxMeshesSlots' unique model/meshes for
    // now
-   s_ssbo = StorageBuffer::Create(BufferType::ShaderStorage,
-                                  sizeof(VertexBufferData) * s_maxModelMatSlots);
+   s_transforms =
+      StorageBuffer::Create(BufferType::ShaderStorage, sizeof(VertexBufferData) * s_maxMeshesSlots);
+
    s_drawIndirectBuffer = StorageBuffer::Create(
-      BufferType::DrawIndirect, sizeof(DrawElementsIndirectCommand) * s_maxModelMatSlots);
+      BufferType::DrawIndirect, sizeof(DrawElementsIndirectCommand) * s_maxMeshesSlots);
 
    trace::Logger::Info("Renderer3D::Init: shader:{} maxVertices:{} maxIndices:{} maxTextures:{}",
                        s_textureShader->GetName(), s_maxVertices, s_maxIndices, s_maxTextureSlots);
@@ -65,10 +64,6 @@ Renderer3D::Shutdown()
    s_vertexArray.reset();
    s_vertexBuffer.reset();
    s_whiteTexture.reset();
-
-   // TextureLibrary::Clear();
-   // ShaderLibrary::Clear();
-
    s_textureShader.reset();
 }
 
@@ -83,14 +78,6 @@ Renderer3D::BeginScene(const scene::Camera& camera, const scene::Light& light)
    s_textureShader->SetFloat3("u_cameraPos", camera.GetPosition());
    s_textureShader->SetFloat3("u_lightPos", light.GetPosition());
 
-   int32_t samplers[s_maxTextureSlots];
-   for (uint32_t i = 0; i < s_maxTextureSlots; i++)
-   {
-      samplers[i] = i;
-   }
-
-   s_textureShader->SetIntArray("u_textures", samplers, s_maxTextureSlots);
-
    const auto size = s_currentVertex * sizeof(Vertex);
 
    if (s_sceneChanged)
@@ -103,8 +90,6 @@ Renderer3D::BeginScene(const scene::Camera& camera, const scene::Light& light)
 
       s_sceneChanged = false;
    }
-
-   // s_textureSlotIndex = 1;
 }
 
 void
@@ -123,9 +108,8 @@ Renderer3D::SendData()
 void
 Renderer3D::Flush()
 {
-   SCOPED_TIMER(fmt::format(
-      "Renderer3D::Flush: numMeshes:{} numVertices:{} numTextures:{}",
-      s_numModels, s_currentVertex, s_textureSlotIndex));
+   SCOPED_TIMER(fmt::format("Renderer3D::Flush: numMeshes:{} numVertices:{} numTextures:{}",
+                            s_numMeshes, s_currentVertex, s_textures.size()));
 
    if (s_currentVertex == 0)
    {
@@ -135,53 +119,48 @@ Renderer3D::Flush()
    s_vertexArray->Bind();
    s_textureShader->Bind();
 
-   // Bind textures
-   for (uint32_t i = 0; i < s_textureSlotIndex; i++)
-   {
-      s_textureSlots[i]->Bind(i);
-   }
+   const auto bufferDataSSBOSize = s_renderDataPerObj.size() * sizeof(VertexBufferData);
+   // const auto textureDataSSBOSize = s_textureDataPerObj.size() * sizeof(TexAddress);
+   const auto elemsIndirectSize = s_numMeshes * sizeof(DrawElementsIndirectCommand);
 
-   const auto modelMatsSize = s_renderDataPerObj.size() * sizeof(VertexBufferData);
-   const auto elemsIndirectSize = s_numModels * sizeof(DrawElementsIndirectCommand);
+   s_transforms->SetData(s_renderDataPerObj.data(), bufferDataSSBOSize);
+   s_transforms->BindBufferRange(0, bufferDataSSBOSize);
 
-   s_ssbo->SetData(s_renderDataPerObj.data(), modelMatsSize);
    s_drawIndirectBuffer->SetData(s_commands.data(), elemsIndirectSize);
 
-   s_ssbo->BindBufferRange(0, modelMatsSize);
+   RenderCommand::MultiDrawElemsIndirect(s_numMeshes, s_drawIndirectBuffer->GetOffset());
 
-   RenderCommand::MultiDrawElemsIndirect(s_numModels, s_drawIndirectBuffer->GetOffset());
-
-   s_ssbo->OnUsageComplete(modelMatsSize);
+   s_transforms->OnUsageComplete(bufferDataSSBOSize);
    s_drawIndirectBuffer->OnUsageComplete(elemsIndirectSize);
 
-   s_currentModelIdx = 0;
+   s_currentMeshIdx = 0;
+
+   for (auto& texture : s_textures)
+   {
+      texture->MakeNonResident();
+   }
+   s_textures.clear();
 }
 
 void
 Renderer3D::FlushAndReset()
 {
    SendData();
-
-   // s_currentIndex = 0;
-   // s_currentVertex = 0;
-   // s_textureSlotIndex = 1;
-   // s_currentModelMatIdx = 0;
 }
 
 void
 Renderer3D::DrawMesh(const std::string& modelName, const glm::mat4& modelMat,
                      const TexturePtrVec& textures, const glm::vec4& tintColor)
 {
-   // auto modelMatIdx = SetupModelMat(modelName, modelMat);
-   s_renderDataPerObj[s_currentModelIdx].modelMat = modelMat;
+   s_renderDataPerObj[s_currentMeshIdx].modelMat = modelMat;
 
    auto meshTextures = SetupTextures(textures);
-   s_renderDataPerObj[s_currentModelIdx].diffuseTextureID = meshTextures[TextureType::DIFFUSE_MAP];
-   s_renderDataPerObj[s_currentModelIdx].normalTextureID = meshTextures[TextureType::NORMAL_MAP];
-   s_renderDataPerObj[s_currentModelIdx].specularTextureID =
-      meshTextures[TextureType::SPECULAR_MAP];
 
-   ++s_currentModelIdx;
+   s_renderDataPerObj[s_currentMeshIdx].diffuseTextureID = meshTextures[TextureType::DIFFUSE_MAP];
+   s_renderDataPerObj[s_currentMeshIdx].normalTextureID = meshTextures[TextureType::NORMAL_MAP];
+   s_renderDataPerObj[s_currentMeshIdx].specularTextureID = meshTextures[TextureType::SPECULAR_MAP];
+
+   ++s_currentMeshIdx;
 }
 
 void
@@ -200,9 +179,9 @@ Renderer3D::AddMesh(const std::string& modelName, std::vector< Vertex >& vertice
    newModel.baseVertex = s_currentVertex;
    newModel.baseInstance = 0;
 
-   s_commands[s_numModels] = newModel;
-   s_modelCommandMap[modelName] = s_numModels;
-   ++s_numModels;
+   s_commands[s_numMeshes] = newModel;
+   s_modelCommandMap[modelName] = s_numMeshes;
+   ++s_numMeshes;
 
    s_currentVertex += static_cast< uint32_t >(vertices.size());
    s_currentIndex += static_cast< uint32_t >(indices.size());
@@ -210,42 +189,33 @@ Renderer3D::AddMesh(const std::string& modelName, std::vector< Vertex >& vertice
    s_sceneChanged = true;
 }
 
-std::unordered_map< TextureType, int32_t >
+std::unordered_map< TextureType, TextureHandleType >
 Renderer3D::SetupTextures(const TexturePtrVec& textures)
 {
    if (textures.empty())
    {
-      return {{TextureType::DIFFUSE_MAP, 0.0f},
-              {TextureType::NORMAL_MAP, 0.0f},
-              {TextureType::SPECULAR_MAP, 0.0f}};
+      return {{TextureType::DIFFUSE_MAP, 0},
+              {TextureType::NORMAL_MAP, 0},
+              {TextureType::SPECULAR_MAP, 0}};
    }
 
-   std::unordered_map< TextureType, int32_t > meshTextures;
+   std::unordered_map< TextureType, TextureHandleType > meshTextures;
 
-   // Check whether textures for this mesh are already loaded
    for (auto& texture : textures)
    {
-      int32_t textureIndex = 0;
+      const auto texHandle = texture->GetTextureHandle();
 
-      const auto textureIdxPtr = std::find_if(
-         s_textureSlots.begin(), s_textureSlots.end(), [&texture](const auto& textureSlot) {
-            return textureSlot ? *textureSlot == *texture : false;
-         });
+      auto iter = std::find_if(s_textures.begin(), s_textures.end(),
+                               [&texture](const auto& tex) { return *texture == *tex; });
 
-      if (s_textureSlots.end() != textureIdxPtr)
+      if (iter == s_textures.end())
       {
-         textureIndex = std::distance(s_textureSlots.begin(), textureIdxPtr);
-      }
-      else
-      {
-         textureIndex = s_textureSlotIndex;
-         s_textureSlots[s_textureSlotIndex] = texture;
-         s_textureSlotIndex++;
+         s_textures.push_back(texture);
+         texture->MakeResident();
       }
 
-      meshTextures[texture->GetType()] = textureIndex;
+      meshTextures[texture->GetType()] = texHandle;
    }
-
 
    return meshTextures;
 }

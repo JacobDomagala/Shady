@@ -27,8 +27,14 @@ Texture::GetHeight() const
    return m_imageData.m_size.y;
 }
 
-TextureHandleType
+TextureIDType
 Texture::GetTextureID() const
+{
+   return m_textureID;
+}
+
+TextureHandleType
+Texture::GetTextureHandle() const
 {
    return m_textureHandle;
 }

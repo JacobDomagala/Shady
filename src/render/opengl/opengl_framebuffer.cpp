@@ -6,8 +6,7 @@ namespace shady::render::opengl {
 OpenGLFramebuffer::OpenGLFramebuffer(const glm::ivec2& size)
 {
    glGenFramebuffers(1, &m_framebufferHandle);
-   glGenTextures(1, &m_textureHandle);
-   glBindTexture(GL_TEXTURE_2D, m_textureHandle);
+   glCreateTextures(GL_TEXTURE_2D,1, &m_textureID);
 
    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, m_width, m_height, 0, GL_DEPTH_COMPONENT,
                 GL_FLOAT, NULL);
@@ -25,7 +24,7 @@ OpenGLFramebuffer::OpenGLFramebuffer(const glm::ivec2& size)
 
    glBindFramebuffer(GL_FRAMEBUFFER, m_framebufferHandle);
 
-   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_textureHandle, 0);
+   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_textureID, 0);
 
    glDrawBuffer(GL_NONE);
    glReadBuffer(GL_NONE);

@@ -2,6 +2,8 @@
 
 #include "texture.hpp"
 
+#include <queue>
+
 namespace shady::render::opengl {
 
 class OpenGLTexture : public Texture
@@ -14,6 +16,12 @@ class OpenGLTexture : public Texture
 
    void
    Bind(uint32_t slot = 0) const override;
+
+   void
+   MakeResident() override;
+
+   void
+   MakeNonResident() override;
 
    virtual bool
    operator==(const Texture& other) const override;

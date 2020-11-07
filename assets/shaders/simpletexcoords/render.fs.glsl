@@ -1,15 +1,3 @@
-#version 420 core
-
-layout (binding = 0) uniform sampler2D tex_object;
-
-in VS_OUT
-{
-    vec2 tc;
-} fs_in;
-
-out vec4 color;
-
-void main(void)
-{
-    color = texture(tex_object, fs_in.tc * vec2(3.0, 1.0));
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:9a1b327a7ec04181617512d1af23a2d886ef48f833ecafc118eb2577e5fe97cd
+size 203

@@ -1,33 +1,3 @@
-#version 410 core
-
-uniform sampler2D tex_envmap;
-
-in VS_OUT
-{
-    vec3 normal;
-    vec3 view;
-} fs_in;
-
-out vec4 color;
-
-void main(void)
-{
-    // u will be our normalized view vector
-    vec3 u = normalize(fs_in.view);
-
-    // Reflect u about the plane defined by the normal at the fragment
-    vec3 r = reflect(u, normalize(fs_in.normal));
-
-    vec2 tc;
-
-    tc.y = r.y; r.y = 0.0;
-    tc.x = normalize(r).x * 0.5;
-
-    float s = sign(r.z) * 0.5;
-
-    tc.s = 0.75 - s * (0.5 - tc.s);
-    tc.t = 0.5 + 0.5 * tc.t;
-
-    // Sample from scaled and biased texture coordinate
-    color = texture(tex_envmap, tc);
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:c7831fe7982f4ba9e77969f0e77c9e8d42b9d86f95400ef26ce4ef6f031ae5ff
+size 610

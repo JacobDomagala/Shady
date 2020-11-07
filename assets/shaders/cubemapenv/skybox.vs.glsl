@@ -1,13 +1,3 @@
-#version 430 core
-
-layout (location = 0) in vec3 a_Position;
-
-out vec3 TexCoords;
-
-uniform mat4 u_viewProjection;
-
-void main()
-{
-    TexCoords = a_Position;
-    gl_Position = u_viewProjection * vec4(a_Position, 1.0);
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:52393b9cb84b6e0a90cdf4f24f829146db833fa96c4054c7d248aac49797513f
+size 218

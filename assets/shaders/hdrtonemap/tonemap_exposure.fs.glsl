@@ -1,14 +1,3 @@
-#version 430 core
-
-layout (binding = 0) uniform sampler2D hdr_image;
-
-uniform float exposure = 1.0;
-
-out vec4 color;
-
-void main(void)
-{
-    vec4 c = texelFetch(hdr_image, 2 * ivec2(gl_FragCoord.xy), 0);
-    c.rgb = vec3(1.0) - exp(-c.rgb * exposure);
-    color = c;
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:cf92eb860b89aab64fb99ded333cbb6de1f7c8eb5ad57ab3d744009caf1a5acc
+size 268

@@ -1,16 +1,3 @@
-#version 410 core
-
-out vec4 color;
-
-in VS_OUT
-{
-    vec3 normal;
-    vec4 color;
-} fs_in;
-
-void main(void)
-{
-    vec3 N = normalize(fs_in.normal);
-
-    color = fs_in.color * abs(N.z);
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:3308c59771eb2507f8585b3c668f337e4053aa4348975d0de15ef0da39b62232
+size 186

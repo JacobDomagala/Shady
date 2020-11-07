@@ -1,16 +1,3 @@
-#version 420 core
-
-layout (binding = 0) uniform sampler2DArray tex_array;
-
-layout (location = 0) out vec4 color;
-
-in VS_OUT
-{
-    vec3 tc;
-} fs_in;
-
-void main(void)
-{
-    color = texture(tex_array, fs_in.tc);
-}
-
+version https://git-lfs.github.com/spec/v1
+oid sha256:dbd33982e018965de62f7f1355867fbbcc0d9c30a59b5b22a3f7ba996f6c7752
+size 212

@@ -1,14 +1,3 @@
-#version 420 core
-
-out vec2 tc;
-
-void main(void)
-{
-    const vec4 vertices[] = vec4[](vec4(-1.0, -1.0, 0.5, 1.0),
-                                   vec4( 1.0, -1.0, 0.5, 1.0),
-                                   vec4(-1.0,  1.0, 0.5, 1.0),
-                                   vec4( 1.0,  1.0, 0.5, 1.0));
-
-    tc = vertices[gl_VertexID].xy;
-    gl_Position = vertices[gl_VertexID];
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:0e8f17fa1affeb8b9da2dee44f497a8452d1bf3c02b4891508e64e4704cc63b0
+size 383

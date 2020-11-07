@@ -1,20 +1,3 @@
-#version 410 core
-
-layout (vertices = 16) out;
-
-void main(void)
-{
-    uint id = gl_InvocationID;
-
-    if (id == 0)
-    {
-        gl_TessLevelInner[0] = 16.0;
-        gl_TessLevelInner[1] = 16.0;
-        gl_TessLevelOuter[0] = 16.0;
-        gl_TessLevelOuter[1] = 16.0;
-        gl_TessLevelOuter[2] = 16.0;
-        gl_TessLevelOuter[3] = 16.0;
-    }
-
-    gl_out[gl_InvocationID].gl_Position = gl_in[id].gl_Position;
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:b5f5f18e6ee9b61c2f212515503323038ed2c5b7e78d60308615c06984cdc6d7
+size 417

@@ -1,12 +1,3 @@
-#version 430 core
-
-uniform sampler2D s;
-
-uniform float exposure;
-
-out vec4 color;
-
-void main(void)
-{
-    color = texture(s, 2.0 * gl_FragCoord.xy / textureSize(s, 0));
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:4c274be728f3647941a5d67694046cf53dde847d12307e43dd19d89a55b6d18c
+size 170

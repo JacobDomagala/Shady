@@ -1,20 +1,3 @@
-#version 430 core
-
-layout (location = 0) in vec4 position;
-
-uniform mat4 mvp;
-
-out VS_OUT
-{
-    vec4 pos;
-    vec4 color;
-} vs_out;
-
-void main(void)
-{
-    vec4 p = mvp * position;
-
-    gl_Position = p;
-    vs_out.color = vec4(1.0);
-    vs_out.pos = p / p.w;
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:c9120db50a883eddec758673d0e3fceb17611f3f699f8a06581a0e6a13f0c627
+size 260

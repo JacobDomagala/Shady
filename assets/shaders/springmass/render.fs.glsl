@@ -1,8 +1,3 @@
-#version 410 core
-
-layout (location = 0) out vec4 color;
-
-void main(void)
-{
-    color = vec4(1.0);
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:bdb3467ec05dfb136662711c59888dee74982695e30466761699fd279acf9dd1
+size 101

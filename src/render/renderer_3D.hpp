@@ -90,27 +90,17 @@ class Renderer3D
       uint64_t reserved;
    };
 
-   struct TexAddress
-   {
-      uint64_t diffuseHandle;
-      uint64_t normalHandle;
-      uint64_t specularHandle;
-
-      // padding
-//      int32_t reserved;
-   };
-
  private:
    // UPPER LIMITS
    static inline constexpr uint32_t s_maxTriangles = 500000;
    static inline constexpr uint32_t s_maxVertices = s_maxTriangles * 3;
    static inline constexpr uint32_t s_maxIndices = s_maxVertices * 2;
-   static inline constexpr uint32_t s_maxTextureSlots = 32;
    static inline constexpr uint32_t s_maxMeshesSlots = 500;
 
    //-----------------------------------------
    // VAO/VBO
    static inline std::shared_ptr< VertexArray > s_vertexArray;
+   static inline std::shared_ptr< VertexBuffer > s_drawIDs;
    static inline std::shared_ptr< VertexBuffer > s_vertexBuffer;
    static inline std::shared_ptr< IndexBuffer > s_indexBuffer;
 
@@ -121,13 +111,10 @@ class Renderer3D
 
    //-----------------------------------------
    // SSBOs
-   static inline std::shared_ptr< StorageBuffer > s_transforms;
-   static inline std::shared_ptr< StorageBuffer > s_textureData;
+   static inline std::shared_ptr< StorageBuffer > s_perMeshDataSSBO;
    static inline std::shared_ptr< Shader > s_textureShader;
-   static inline std::shared_ptr< Texture > s_whiteTexture;
 
    static inline std::vector< VertexBufferData > s_renderDataPerObj;
-   static inline std::vector< TexAddress > s_textureDataPerObj;
 
    static inline uint32_t s_numMeshes = 0;
    static inline uint32_t s_currentMeshIdx = 0;

@@ -96,7 +96,7 @@ OpenGLRendererAPI::DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray
 void
 OpenGLRendererAPI::MultiDrawElemsIndirect(uint32_t drawCount, size_t offset)
 {
-   glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
+  // glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
    glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, (void*)offset, drawCount, 0);
 }
 

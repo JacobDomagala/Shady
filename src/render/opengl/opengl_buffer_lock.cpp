@@ -1,22 +1,23 @@
 #include "opengl_buffer_lock.hpp"
 #include "utils/assert.hpp"
+#include "trace/logger.hpp"
 
 namespace shady::render::opengl {
 
 GLuint64 kOneSecondInNanoSeconds = 1000000000;
 
-OpenGLBufferLockManager::OpenGLBufferLockManager(bool _cpuUpdates) : mCPUUpdates(_cpuUpdates)
+OpenGLBufferLockManager::OpenGLBufferLockManager(bool cpuUpdates) : m_cpuUpdates(cpuUpdates)
 {
 }
 
 OpenGLBufferLockManager::~OpenGLBufferLockManager()
 {
-   for (auto& lock : mBufferLocks)
+   for (auto& lock : m_bufferLocks)
    {
-      cleanup(&lock);
+      Cleanup(&lock);
    }
 
-   mBufferLocks.clear();
+   m_bufferLocks.clear();
 }
 
 void
@@ -25,12 +26,12 @@ OpenGLBufferLockManager::WaitForLockedRange(size_t _lockBeginBytes, size_t _lock
    BufferRange testRange = {_lockBeginBytes, _lockLength};
    std::vector< BufferLock > swapLocks;
 
-   for (auto& lock : mBufferLocks)
+   for (auto& lock : m_bufferLocks)
    {
-      if (testRange.Overlaps(lock.mRange))
+      if (testRange.Overlaps(lock.m_range))
       {
-         wait(&lock.mSyncObj);
-         cleanup(&lock);
+         Wait(&lock.m_syncObj);
+         Cleanup(&lock);
       }
       else
       {
@@ -38,29 +39,29 @@ OpenGLBufferLockManager::WaitForLockedRange(size_t _lockBeginBytes, size_t _lock
       }
    }
 
-   mBufferLocks.swap(swapLocks);
+   m_bufferLocks.swap(swapLocks);
 }
 
 void
-OpenGLBufferLockManager::LockRange(size_t _lockBeginBytes, size_t _lockLength)
+OpenGLBufferLockManager::LockRange(size_t lockBeginBytes, size_t lockLength)
 {
-   BufferRange newRange = {_lockBeginBytes, _lockLength};
+   BufferRange newRange = {lockBeginBytes, lockLength};
    GLsync syncName = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
    BufferLock newLock = {newRange, syncName};
 
-   mBufferLocks.push_back(newLock);
+   m_bufferLocks.push_back(newLock);
 }
 
 void
-OpenGLBufferLockManager::wait(GLsync* _syncObj)
+OpenGLBufferLockManager::Wait(GLsync* syncObj)
 {
-   if (mCPUUpdates)
+   if (m_cpuUpdates)
    {
       GLbitfield waitFlags = 0;
       GLuint64 waitDuration = 0;
       while (1)
       {
-         GLenum waitRet = glClientWaitSync(*_syncObj, waitFlags, waitDuration);
+         GLenum waitRet = glClientWaitSync(*syncObj, waitFlags, waitDuration);
          if (waitRet == GL_ALREADY_SIGNALED || waitRet == GL_CONDITION_SATISFIED)
          {
             return;
@@ -75,14 +76,14 @@ OpenGLBufferLockManager::wait(GLsync* _syncObj)
    }
    else
    {
-      glWaitSync(*_syncObj, 0, GL_TIMEOUT_IGNORED);
+      glWaitSync(*syncObj, 0, GL_TIMEOUT_IGNORED);
    }
 }
 
 void
-OpenGLBufferLockManager::cleanup(BufferLock* _bufferLock)
+OpenGLBufferLockManager::Cleanup(BufferLock* _bufferLock)
 {
-   glDeleteSync(_bufferLock->mSyncObj);
+   glDeleteSync(_bufferLock->m_syncObj);
 }
 
 } // namespace shady::render::opengl

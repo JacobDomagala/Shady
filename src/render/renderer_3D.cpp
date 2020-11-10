@@ -14,6 +14,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <memory>
+#include <numeric>
 
 namespace shady::render {
 
@@ -32,6 +33,14 @@ Renderer3D::Init()
 
    s_vertexArray->AddVertexBuffer(s_vertexBuffer);
 
+
+   std::array< float, s_maxMeshesSlots > drawIDs;
+   std::iota(std::begin(drawIDs), std::end(drawIDs), 0);
+   s_drawIDs = VertexBuffer::Create(drawIDs.data(), s_maxMeshesSlots * sizeof(float));
+   s_drawIDs->SetLayout({{ShaderDataType::Float, "a_drawID", 1}});
+
+   s_vertexArray->AddVertexBuffer(s_drawIDs);
+
    s_indexBuffer = IndexBuffer::Create(s_maxIndices);
    s_vertexArray->SetIndexBuffer(s_indexBuffer);
 
@@ -40,20 +49,19 @@ Renderer3D::Init()
    s_commands.resize(s_maxMeshesSlots);
    s_renderDataPerObj.resize(s_maxMeshesSlots);
 
-   s_whiteTexture = TextureLibrary::GetTexture(TextureType::DIFFUSE_MAP, "white.png");
    s_textureShader = ShaderLibrary::GetShader("default");
 
    // @TODO: For now we hardcode size for 's_maxMeshesSlots' model matrices
    // which essentially means that we can store up to 's_maxMeshesSlots' unique model/meshes for
    // now
-   s_transforms =
+   s_perMeshDataSSBO =
       StorageBuffer::Create(BufferType::ShaderStorage, sizeof(VertexBufferData) * s_maxMeshesSlots);
 
    s_drawIndirectBuffer = StorageBuffer::Create(
       BufferType::DrawIndirect, sizeof(DrawElementsIndirectCommand) * s_maxMeshesSlots);
 
-   trace::Logger::Info("Renderer3D::Init: shader:{} maxVertices:{} maxIndices:{} maxTextures:{}",
-                       s_textureShader->GetName(), s_maxVertices, s_maxIndices, s_maxTextureSlots);
+   trace::Logger::Info("Renderer3D::Init: shader:{} maxVertices:{} maxIndices:{}",
+                       s_textureShader->GetName(), s_maxVertices, s_maxIndices);
 
    s_bufferLockManager = BufferLockManager::Create(true);
 }
@@ -63,16 +71,17 @@ Renderer3D::Shutdown()
 {
    s_vertexArray.reset();
    s_vertexBuffer.reset();
-   s_whiteTexture.reset();
    s_textureShader.reset();
 }
 
 void
 Renderer3D::BeginScene(const scene::Camera& camera, const scene::Light& light)
 {
-   trace::Logger::Debug("Renderer3D::BeginScene: shader:{}", s_textureShader->GetName());
+  // trace::Logger::Debug("Renderer3D::BeginScene: shader:{}", s_textureShader->GetName());
 
    s_textureShader->Bind();
+
+   // @TODO: Mby use uniform buffer for all these?
    s_textureShader->SetMat4("u_projectionMat", camera.GetProjection());
    s_textureShader->SetMat4("u_viewMat", camera.GetView());
    s_textureShader->SetFloat3("u_cameraPos", camera.GetPosition());
@@ -95,7 +104,7 @@ Renderer3D::BeginScene(const scene::Camera& camera, const scene::Light& light)
 void
 Renderer3D::EndScene()
 {
-   trace::Logger::Debug("Renderer3D::EndScene");
+  // trace::Logger::Debug("Renderer3D::EndScene");
    FlushAndReset();
 }
 
@@ -108,8 +117,8 @@ Renderer3D::SendData()
 void
 Renderer3D::Flush()
 {
-   SCOPED_TIMER(fmt::format("Renderer3D::Flush: numMeshes:{} numVertices:{} numTextures:{}",
-                            s_numMeshes, s_currentVertex, s_textures.size()));
+   // SCOPED_TIMER(fmt::format("Renderer3D::Flush: numMeshes:{} numVertices:{} numTextures:{}",
+   //                          s_numMeshes, s_currentVertex, s_textures.size()));
 
    if (s_currentVertex == 0)
    {
@@ -119,18 +128,17 @@ Renderer3D::Flush()
    s_vertexArray->Bind();
    s_textureShader->Bind();
 
-   const auto bufferDataSSBOSize = s_renderDataPerObj.size() * sizeof(VertexBufferData);
-   // const auto textureDataSSBOSize = s_textureDataPerObj.size() * sizeof(TexAddress);
-   const auto elemsIndirectSize = s_numMeshes * sizeof(DrawElementsIndirectCommand);
+   const auto bufferDataSSBOSize = s_maxMeshesSlots * sizeof(VertexBufferData);
+   const auto elemsIndirectSize = s_maxMeshesSlots * sizeof(DrawElementsIndirectCommand);
 
-   s_transforms->SetData(s_renderDataPerObj.data(), bufferDataSSBOSize);
-   s_transforms->BindBufferRange(0, bufferDataSSBOSize);
+   s_perMeshDataSSBO->SetData(s_renderDataPerObj.data(), bufferDataSSBOSize);
+   s_perMeshDataSSBO->BindBufferRange(0, bufferDataSSBOSize);
 
    s_drawIndirectBuffer->SetData(s_commands.data(), elemsIndirectSize);
 
    RenderCommand::MultiDrawElemsIndirect(s_numMeshes, s_drawIndirectBuffer->GetOffset());
 
-   s_transforms->OnUsageComplete(bufferDataSSBOSize);
+   s_perMeshDataSSBO->OnUsageComplete(bufferDataSSBOSize);
    s_drawIndirectBuffer->OnUsageComplete(elemsIndirectSize);
 
    s_currentMeshIdx = 0;
@@ -160,6 +168,7 @@ Renderer3D::DrawMesh(const std::string& modelName, const glm::mat4& modelMat,
    s_renderDataPerObj[s_currentMeshIdx].normalTextureID = meshTextures[TextureType::NORMAL_MAP];
    s_renderDataPerObj[s_currentMeshIdx].specularTextureID = meshTextures[TextureType::SPECULAR_MAP];
 
+   s_commands[s_modelCommandMap[modelName]].baseInstance = s_currentMeshIdx;
    ++s_currentMeshIdx;
 }
 

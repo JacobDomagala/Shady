@@ -46,11 +46,12 @@ ShaderDataTypeSize(ShaderDataType type)
 /**************************************************************************************************
  *************************************** BUFFER ELEMENT *******************************************
  *************************************************************************************************/
-BufferElement::BufferElement(ShaderDataType type, const std::string& name, bool normalized)
+BufferElement::BufferElement(ShaderDataType type, const std::string& name, uint32_t divisor, bool normalized)
    : m_name(name),
      m_type(type),
      m_size(ShaderDataTypeSize(type)),
      m_offset(0),
+     m_divisor(divisor),
      m_normalized(normalized)
 {
 }

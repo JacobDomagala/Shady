@@ -23,13 +23,13 @@ Shady::Init()
    input::InputManager::RegisterForMouseScrollInput(this);
 
    m_currentScene.LoadDefault();
+
+   render::RenderCommand::SetClearColor({0.4f, 0.1f, 0.3f, 1.0f});
 }
 
 void
 Shady::MainLoop()
 {
-   render::RenderCommand::SetClearColor({0.4f, 0.1f, 0.3f, 1.0f});
-
    while (m_active)
    {
       m_window->Clear();

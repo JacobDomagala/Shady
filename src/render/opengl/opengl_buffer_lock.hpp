@@ -9,8 +9,8 @@ namespace shady::render::opengl {
 
 struct BufferLock
 {
-   BufferRange mRange;
-   GLsync mSyncObj;
+   BufferRange m_range;
+   GLsync m_syncObj;
 };
 
 class OpenGLBufferLockManager : public BufferLockManager
@@ -26,14 +26,15 @@ class OpenGLBufferLockManager : public BufferLockManager
 
  private:
    void
-   wait(GLsync* _syncObj);
+   Wait(GLsync* syncObj);
    void
-   cleanup(BufferLock* _bufferLock);
+   Cleanup(BufferLock* bufferLock);
 
-   std::vector< BufferLock > mBufferLocks;
+ private:
+   std::vector< BufferLock > m_bufferLocks;
 
    // Whether it's the CPU (true) that updates, or the GPU (false)
-   bool mCPUUpdates;
+   bool m_cpuUpdates;
 };
 
 } // namespace shady::render::opengl

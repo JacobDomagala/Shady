@@ -32,9 +32,10 @@ struct BufferElement
    uint32_t m_size;
    size_t m_offset;
    bool m_normalized;
+   uint32_t m_divisor;
 
    BufferElement() = default;
-   BufferElement(ShaderDataType type, const std::string& name, bool normalized = false);
+   BufferElement(ShaderDataType type, const std::string& name, uint32_t divisor = 0, bool normalized = false);
 
    uint32_t
    GetComponentCount() const;

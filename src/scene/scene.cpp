@@ -45,7 +45,7 @@ Scene::GetLight()
 void
 Scene::Render()
 {
-   SCOPED_TIMER("Scene::Render");
+   //SCOPED_TIMER("Scene::Render");
 
 
    m_lightSphere->TranslateModel(m_light->GetPosition());
@@ -66,12 +66,12 @@ Scene::Render()
 
    // Second pass -> use lightmap generated to render shadows
    {
-      SCOPED_TIMER("SKYBOX");
+     // SCOPED_TIMER("SKYBOX");
       m_skybox.Draw(*m_camera);
    }
 
    {
-      SCOPED_TIMER("MODELS");
+      //SCOPED_TIMER("MODELS");
       render::Renderer3D::BeginScene(*m_camera, *m_light);
 
       for (auto& model : m_models)
@@ -121,10 +121,6 @@ Scene::LoadDefault()
 
    AddModel((utils::FileManager::MODELS_DIR / "sphere" / "sphere.obj").u8string());
    m_lightSphere = m_models.back().get();
-
-   // for(auto i : {0,1,2,3,4,5, 6,7,8,9,10,11,12,13,14,15})
-   //    AddModel((utils::FileManager::MODELS_DIR / "sphere" / "sphere.obj").u8string());
-
 }
 
 } // namespace shady::scene

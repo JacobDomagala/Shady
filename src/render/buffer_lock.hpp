@@ -10,10 +10,10 @@ struct BufferRange
    size_t mLength;
 
    bool
-   Overlaps(const BufferRange& _rhs) const
+   Overlaps(const BufferRange& rhs) const
    {
-      return mStartOffset < (_rhs.mStartOffset + _rhs.mLength)
-             && _rhs.mStartOffset < (mStartOffset + mLength);
+      return mStartOffset < (rhs.mStartOffset + rhs.mLength)
+             && rhs.mStartOffset < (mStartOffset + mLength);
    }
 };
 

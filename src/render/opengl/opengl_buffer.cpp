@@ -156,15 +156,17 @@ OpenGLStorageBuffer::OpenGLStorageBuffer(BufferType type, size_t size) : m_buffe
 
    glGenBuffers(1, &m_rendererID);
 
-   const GLbitfield mapFlags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT;
+   const GLbitfield mapFlags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
    const GLbitfield createFlags = mapFlags | GL_DYNAMIC_STORAGE_BIT;
 
+   const auto tripleBuffer = 3 * size;
+
    glBindBuffer(m_type, m_rendererID);
-   glBufferStorage(m_type, 3 * size, nullptr, createFlags);
+   glBufferStorage(m_type, tripleBuffer, nullptr, createFlags);
 
-   m_baseMemPtr = reinterpret_cast< uint8_t* >(glMapBufferRange(m_type, 0, size, mapFlags));
+   m_baseMemPtr = reinterpret_cast< uint8_t* >(glMapBufferRange(m_type, 0, tripleBuffer, mapFlags));
 
-   m_capacity = 3 * size;
+   m_capacity = tripleBuffer;
 }
 
 OpenGLStorageBuffer::~OpenGLStorageBuffer()

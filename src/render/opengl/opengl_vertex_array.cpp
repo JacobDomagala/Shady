@@ -49,7 +49,11 @@ OpenGLVertexArray::Bind() const
 
    if (m_vertexBuffers.size())
    {
-      m_vertexBuffers.at(0)->Bind();
+      for (auto& vbo : m_vertexBuffers)
+      {
+         vbo->Bind();
+      }
+
       m_indexBuffer->Bind();
    }
 }
@@ -85,6 +89,7 @@ OpenGLVertexArray::AddVertexBuffer(const std::shared_ptr< VertexBuffer >& vertex
                                   ShaderDataTypeToOpenGLBaseType(element.m_type),
                                   element.m_normalized ? GL_TRUE : GL_FALSE, layout.GetStride(),
                                   (const void*)element.m_offset);
+            glVertexAttribDivisor(m_vertexBufferIndex, element.m_divisor);
             m_vertexBufferIndex++;
             break;
          }

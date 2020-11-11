@@ -21,31 +21,9 @@ namespace shady::render {
 void
 Renderer3D::Init()
 {
-   s_vertexArray = VertexArray::Create();
-
-   // setup vertex buffer
-   s_vertexBuffer = VertexBuffer::CreatePersistanceMap(s_maxVertices * sizeof(render::Vertex));
-   s_vertexBuffer->SetLayout({{ShaderDataType::Float3, "a_position"},
-                              {ShaderDataType::Float3, "a_normal"},
-                              {ShaderDataType::Float2, "a_texCoord"},
-                              {ShaderDataType::Float3, "a_tangent"},
-                              {ShaderDataType::Float4, "a_color"}});
-
-   s_vertexArray->AddVertexBuffer(s_vertexBuffer);
-
-
-   std::array< float, s_maxMeshesSlots > drawIDs;
-   std::iota(std::begin(drawIDs), std::end(drawIDs), 0);
-   s_drawIDs = VertexBuffer::Create(drawIDs.data(), s_maxMeshesSlots * sizeof(float));
-   s_drawIDs->SetLayout({{ShaderDataType::Float, "a_drawID", 1}});
-
-   s_vertexArray->AddVertexBuffer(s_drawIDs);
-
-   s_indexBuffer = IndexBuffer::Create(s_maxIndices);
-   s_vertexArray->SetIndexBuffer(s_indexBuffer);
-
    s_verticesBatch.resize(s_maxVertices);
    s_indicesBatch.resize(s_maxIndices);
+
    s_commands.resize(s_maxMeshesSlots);
    s_renderDataPerObj.resize(s_maxMeshesSlots);
 
@@ -77,7 +55,7 @@ Renderer3D::Shutdown()
 void
 Renderer3D::BeginScene(const scene::Camera& camera, const scene::Light& light)
 {
-  // trace::Logger::Debug("Renderer3D::BeginScene: shader:{}", s_textureShader->GetName());
+   // trace::Logger::Debug("Renderer3D::BeginScene: shader:{}", s_textureShader->GetName());
 
    s_textureShader->Bind();
 
@@ -91,11 +69,35 @@ Renderer3D::BeginScene(const scene::Camera& camera, const scene::Light& light)
 
    if (s_sceneChanged)
    {
-      s_bufferLockManager->WaitForLockedRange(0, size);
-      s_vertexBuffer->SetData(s_verticesBatch.data(), size);
-      s_bufferLockManager->LockRange(0, size);
+      s_vertexArray = VertexArray::Create();
 
-      s_indexBuffer->SetData(s_indicesBatch.data(), s_currentIndex * sizeof(uint32_t));
+      // setup vertex buffer
+      s_vertexBuffer = VertexBuffer::Create(reinterpret_cast< float* >(s_verticesBatch.data()),
+                                            s_maxVertices * sizeof(render::Vertex));
+      s_vertexBuffer->SetLayout({{ShaderDataType::Float3, "a_position"},
+                                 {ShaderDataType::Float3, "a_normal"},
+                                 {ShaderDataType::Float2, "a_texCoord"},
+                                 {ShaderDataType::Float3, "a_tangent"},
+                                 {ShaderDataType::Float4, "a_color"}});
+
+      s_vertexArray->AddVertexBuffer(s_vertexBuffer);
+
+
+      std::array< float, s_maxMeshesSlots > drawIDs;
+      std::iota(std::begin(drawIDs), std::end(drawIDs), 0);
+      s_drawIDs = VertexBuffer::Create(drawIDs.data(), s_maxMeshesSlots * sizeof(float));
+      s_drawIDs->SetLayout({{ShaderDataType::Float, "a_drawID", 1}});
+
+      s_vertexArray->AddVertexBuffer(s_drawIDs);
+
+      s_indexBuffer = IndexBuffer::Create(s_indicesBatch.data(), s_maxIndices);
+      s_vertexArray->SetIndexBuffer(s_indexBuffer);
+
+      // s_bufferLockManager->WaitForLockedRange(0, size);
+      // s_vertexBuffer->SetData(s_verticesBatch.data(), size);
+      // s_bufferLockManager->LockRange(0, size);
+
+      // s_indexBuffer->SetData(s_indicesBatch.data(), s_currentIndex * sizeof(uint32_t));
 
       s_sceneChanged = false;
    }
@@ -104,7 +106,7 @@ Renderer3D::BeginScene(const scene::Camera& camera, const scene::Light& light)
 void
 Renderer3D::EndScene()
 {
-  // trace::Logger::Debug("Renderer3D::EndScene");
+   // trace::Logger::Debug("Renderer3D::EndScene");
    FlushAndReset();
 }
 

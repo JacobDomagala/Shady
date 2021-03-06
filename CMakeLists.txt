@@ -11,6 +11,13 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_PATH})
 
 add_definitions( -DCMAKE_ROOT_DIR="${CMAKE_CURRENT_SOURCE_DIR}" )
 
+# Link this 'library' to use the warnings specified in CompilerWarnings.cmake
+add_library(project_warnings INTERFACE)
+
+include(cmake/compile_warnings.cmake)
+include(cmake/util_functions.cmake)
+set_target_warnings(project_warnings)
+
 add_executable(${PROJECT_NAME}
     # app
     src/app/window.hpp src/app/window.cpp src/app/main.cpp src/app/shady.hpp src/app/shady.cpp
@@ -54,5 +61,6 @@ add_subdirectory(lib)
 
 target_include_directories(${PROJECT_NAME}
                     PRIVATE src src/app src/app/input src/trace src/render src/utils src/scene src/time)
-target_link_libraries (${PROJECT_NAME} PRIVATE glm glfw glad stb_image assimp fmt)
+target_link_libraries_system (${PROJECT_NAME} PRIVATE glm glfw glad stb_image assimp fmt)
+target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)

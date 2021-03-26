@@ -57,7 +57,8 @@ class OpenGLShader : public Shader
 
  private:
    void
-   Compile(const std::string& vertexShader, const std::string& fragmentShader);
+   Compile(const std::string& vertexShader, const std::string& fragmentShader,
+           const std::string& geometryShader);
 
    void
    CheckCompileStatus(GLuint type, GLuint shaderID);

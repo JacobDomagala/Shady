@@ -36,7 +36,10 @@ class RenderCommand
    static void
    DrawLines(uint32_t count);
 
- private:
+   static void
+   CheckForErrors();
+
+private:
    static inline std::unique_ptr< RendererAPI > s_rendererAPI = RendererAPI::Create();
 };
 

@@ -1,6 +1,7 @@
 
 #include "opengl_renderer_api.hpp"
 #include "trace/logger.hpp"
+#include "utils/assert.hpp"
 
 #include <glad/glad.h>
 
@@ -104,6 +105,28 @@ void
 OpenGLRendererAPI::DrawLines(uint32_t count)
 {
    glDrawArrays(GL_LINES, 0, count * 2);
+}
+
+void
+OpenGLRendererAPI::CheckForErrors()
+{
+   const auto value = glGetError();
+
+   switch (value)
+   {
+      case GL_INVALID_FRAMEBUFFER_OPERATION: {
+         utils::Assert(false, "Framebuffer error!");
+      }
+      break;
+
+      case GL_NONE: {
+         // No error
+      }break;
+
+      default: {
+         trace::Logger::Fatal("Unspecified error {:#04x} !", value);
+      }
+   }
 }
 
 } // namespace shady::render::opengl

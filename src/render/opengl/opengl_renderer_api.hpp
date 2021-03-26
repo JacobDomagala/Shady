@@ -40,6 +40,9 @@ class OpenGLRendererAPI : public RendererAPI
 
    void
    DrawLines(uint32_t count) override;
+
+   void
+   CheckForErrors() override;
 };
 
 } // namespace shady::render::opengl

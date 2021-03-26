@@ -14,7 +14,9 @@ OpenGLShader::OpenGLShader(const std::string& name) : m_name(name)
    Compile(utils::FileManager::ReadFile(utils::FileManager::SHADERS_DIR / name
                                         / fmt::format("{}.vs.glsl", name)),
            utils::FileManager::ReadFile(utils::FileManager::SHADERS_DIR / name
-                                        / fmt::format("{}.fs.glsl", name)));
+                                        / fmt::format("{}.fs.glsl", name)),
+           utils::FileManager::ReadFile(utils::FileManager::SHADERS_DIR / name
+                                        / fmt::format("{}.gs.glsl", name)));
 }
 
 OpenGLShader::~OpenGLShader()
@@ -23,10 +25,12 @@ OpenGLShader::~OpenGLShader()
 }
 
 void
-OpenGLShader::Compile(const std::string& vertexShader, const std::string& fragmentShader)
+OpenGLShader::Compile(const std::string& vertexShader, const std::string& fragmentShader,
+                      const std::string& geometryShader)
 {
-   auto vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-   auto fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+   const auto vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+   const auto fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+   const auto geometryShaderID = glCreateShader(GL_GEOMETRY_SHADER);
 
    const GLchar* shaderSource = vertexShader.c_str();
    glShaderSource(vertexShaderID, 1, &shaderSource, NULL);
@@ -42,6 +46,19 @@ OpenGLShader::Compile(const std::string& vertexShader, const std::string& fragme
    m_shaderID = glCreateProgram();
    glAttachShader(m_shaderID, vertexShaderID);
    glAttachShader(m_shaderID, fragmentShaderID);
+
+   if (!geometryShader.empty())
+   {
+      trace::Logger::Debug("Sources for geometry shader found!");
+
+      shaderSource = geometryShader.c_str();
+      glShaderSource(geometryShaderID, 1, &shaderSource, NULL);
+      glCompileShader(geometryShaderID);
+      CheckCompileStatus(GL_GEOMETRY_SHADER, geometryShaderID);
+
+      glAttachShader(m_shaderID, geometryShaderID);
+   }
+
    glLinkProgram(m_shaderID);
    CheckLinkStatus(m_shaderID);
 
@@ -49,6 +66,7 @@ OpenGLShader::Compile(const std::string& vertexShader, const std::string& fragme
 
    glDeleteShader(vertexShaderID);
    glDeleteShader(fragmentShaderID);
+   glDeleteShader(geometryShaderID);
 }
 
 void
@@ -68,8 +86,10 @@ OpenGLShader::CheckCompileStatus(GLuint type, GLuint shaderID)
    }
    else
    {
-      trace::Logger::Debug("OpenGL {} Shader: {} compiled! ",
-                           type == GL_VERTEX_SHADER ? "Vertex" : "Fragment", m_name);
+      trace::Logger::Debug(
+         "OpenGL {} Shader: {} compiled! ",
+         type == GL_VERTEX_SHADER ? "Vertex" : (type == GL_FRAGMENT_SHADER ? "Fragment" : "Geometry"),
+         m_name);
    }
 }
 

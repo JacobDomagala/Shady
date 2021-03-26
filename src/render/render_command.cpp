@@ -62,4 +62,10 @@ RenderCommand::DrawLines(uint32_t count)
    s_rendererAPI->DrawLines(count);
 }
 
+void
+RenderCommand::CheckForErrors()
+{
+   s_rendererAPI->CheckForErrors();
+}
+
 } // namespace shady::render

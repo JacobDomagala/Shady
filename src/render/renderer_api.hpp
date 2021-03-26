@@ -54,6 +54,9 @@ class RendererAPI
    virtual void
    DrawLines(uint32_t count) = 0;
 
+   virtual void
+   CheckForErrors() = 0;
+
    static API
    GetAPI();
 

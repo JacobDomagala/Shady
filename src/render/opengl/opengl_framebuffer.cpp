@@ -1,4 +1,5 @@
 #include "opengl_framebuffer.hpp"
+#include "render/render_command.hpp"
 #include "trace/logger.hpp"
 
 #include <glad/glad.h>
@@ -12,40 +13,35 @@ OpenGLFramebuffer::OpenGLFramebuffer(const glm::ivec2& size, FrameBufferType typ
 
    if (type == FrameBufferType::SINGLE)
    {
-      glCreateTextures(GL_TEXTURE_2D, 1, &m_textureID);
-      // glTextureStorage2D(m_textureID, 0, internalFormat, m_width, m_height);
+      glGenFramebuffers(1, &m_framebufferID);
 
-      //    glTextureSubImage2D(m_textureID, 0, 0, 0, m_width, m_height, dataFormat,
-      //    GL_DEPTH_COMPONENT,
-      //                     nullptr);
+      // For some reason we cannot call glCreateTextures here
+      // It causes framebuffer to be incomplete!
+      glGenTextures(1, &m_textureID);
+      glBindTexture(GL_TEXTURE_2D, m_textureID);
 
       glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, m_width, m_height, 0, GL_DEPTH_COMPONENT,
                    GL_FLOAT, NULL);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-      glTextureParameteri(m_textureID, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      glTextureParameteri(m_textureID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      glTextureParameteri(m_textureID, GL_TEXTURE_WRAP_S, GL_REPEAT);
-      glTextureParameteri(m_textureID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+      GLfloat borderColor[] = {1.0, 1.0, 1.0, 1.0};
+      glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
-      GLfloat borderColor[] = {1.0f, 0.0f, 0.0f, 0.0f};
-
-      glTextureParameterfv(m_textureID, GL_TEXTURE_BORDER_COLOR, borderColor);
-      glTextureParameteri(m_textureID, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-      glTextureParameteri(m_textureID, GL_TEXTURE_COMPARE_FUNC, GL_LESS);
-
-      glCreateFramebuffers(1, &m_framebufferID);
+      glBindFramebuffer(GL_FRAMEBUFFER, m_framebufferID);
       glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_textureID, 0);
-     // glDrawBuffer(GL_NONE);
-     // glReadBuffer(GL_NONE);
-//      glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-      assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
-
+      glDrawBuffer(GL_NONE);
+      glReadBuffer(GL_NONE);
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
    }
    else
    {
-      glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_textureID);
+      glGenTextures(1, &m_textureID);
+      glBindTexture(GL_TEXTURE_CUBE_MAP, m_textureID);
 
       for (unsigned int i = 0; i < 6; ++i)
       {
@@ -62,8 +58,8 @@ OpenGLFramebuffer::OpenGLFramebuffer(const glm::ivec2& size, FrameBufferType typ
       glGenFramebuffers(1, &m_framebufferID);
       glBindFramebuffer(GL_FRAMEBUFFER, m_framebufferID);
       glNamedFramebufferTexture(m_framebufferID, GL_DEPTH_ATTACHMENT, m_textureID, 0);
-      // glDrawBuffer(GL_NONE);
-      // glReadBuffer(GL_NONE);
+      glDrawBuffer(GL_NONE);
+      glReadBuffer(GL_NONE);
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
    }
 

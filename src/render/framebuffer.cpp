@@ -7,10 +7,9 @@
 namespace shady::render {
 
 std::shared_ptr< FrameBuffer >
-FrameBuffer::Create(const glm::ivec2& size)
+FrameBuffer::Create(const glm::ivec2& size, FrameBufferType type)
 {
-   return CreateSharedWrapper< opengl::OpenGLFramebuffer, FrameBuffer >(size);
+   return CreateSharedWrapper< opengl::OpenGLFramebuffer, FrameBuffer >(size, type);
 }
-
 
 } // namespace shady::render

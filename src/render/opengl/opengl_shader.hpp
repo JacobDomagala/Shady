@@ -21,6 +21,9 @@ class OpenGLShader : public Shader
    const std::string&
    GetName() const override;
 
+   uint32_t
+   GetID() const;
+
    void
    SetInt(const std::string& name, int value) override;
    void

@@ -9,6 +9,24 @@
 
 namespace shady::render::opengl {
 
+template < typename FunctionPtr, typename... Args >
+void
+SetUniformLocation(const OpenGLShader& program, const std::string& name, FunctionPtr&& ptr,
+                   Args&&... args)
+{
+   GLint location = glGetUniformLocation(program.GetID(), name.c_str());
+
+   if (location < 0)
+   {
+      trace::Logger::Warn("OpenGL shader location not found! Location name = {} for shader = {}!",
+                          name, program.GetName());
+   }
+   else
+   {
+      ptr(location, std::forward<Args>(args)...);
+   }
+}
+
 OpenGLShader::OpenGLShader(const std::string& name) : m_name(name)
 {
    Compile(utils::FileManager::ReadFile(utils::FileManager::SHADERS_DIR / name
@@ -22,6 +40,12 @@ OpenGLShader::OpenGLShader(const std::string& name) : m_name(name)
 OpenGLShader::~OpenGLShader()
 {
    glDeleteProgram(m_shaderID);
+}
+
+uint32_t
+OpenGLShader::GetID() const
+{
+   return m_shaderID;
 }
 
 void
@@ -86,10 +110,11 @@ OpenGLShader::CheckCompileStatus(GLuint type, GLuint shaderID)
    }
    else
    {
-      trace::Logger::Debug(
-         "OpenGL {} Shader: {} compiled! ",
-         type == GL_VERTEX_SHADER ? "Vertex" : (type == GL_FRAGMENT_SHADER ? "Fragment" : "Geometry"),
-         m_name);
+      trace::Logger::Debug("OpenGL {} Shader: {} compiled! ",
+                           type == GL_VERTEX_SHADER
+                              ? "Vertex"
+                              : (type == GL_FRAGMENT_SHADER ? "Fragment" : "Geometry"),
+                           m_name);
    }
 }
 
@@ -183,64 +208,56 @@ OpenGLShader::SetMat4Array(const std::string& name, const glm::mat4* matrices, u
 void
 OpenGLShader::UploadUniformInt(const std::string& name, int value)
 {
-   GLint location = glGetUniformLocation(m_shaderID, name.c_str());
-   glUniform1i(location, value);
+   SetUniformLocation(*this, name.c_str(), glUniform1i, value);
 }
 
 void
 OpenGLShader::UploadUniformUnsignedInt(const std::string& name, uint32_t value)
 {
-   GLint location = glGetUniformLocation(m_shaderID, name.c_str());
-   glUniform1ui(location, value);
+   SetUniformLocation(*this, name.c_str(), glUniform1ui, value);
 }
 
 void
 OpenGLShader::UploadUniformIntArray(const std::string& name, int* values, uint32_t count)
 {
-   GLint location = glGetUniformLocation(m_shaderID, name.c_str());
-   glUniform1iv(location, count, values);
+   SetUniformLocation(*this, name.c_str(), glUniform1iv, count, values);
 }
 
 void
 OpenGLShader::UploadUniformFloat(const std::string& name, float value)
 {
-   GLint location = glGetUniformLocation(m_shaderID, name.c_str());
-   glUniform1f(location, value);
+   SetUniformLocation(*this, name.c_str(), glUniform1f, value);
 }
 
 void
 OpenGLShader::UploadUniformFloat2(const std::string& name, const glm::vec2& value)
 {
-   GLint location = glGetUniformLocation(m_shaderID, name.c_str());
-   glUniform2f(location, value.x, value.y);
+   SetUniformLocation(*this, name.c_str(), glUniform2f, value.x, value.y);
 }
 
 void
 OpenGLShader::UploadUniformFloat3(const std::string& name, const glm::vec3& value)
 {
-   GLint location = glGetUniformLocation(m_shaderID, name.c_str());
-   glUniform3f(location, value.x, value.y, value.z);
+   SetUniformLocation(*this, name.c_str(), glUniform3f, value.x, value.y, value.z);
 }
 
 void
 OpenGLShader::UploadUniformFloat4(const std::string& name, const glm::vec4& value)
 {
-   GLint location = glGetUniformLocation(m_shaderID, name.c_str());
-   glUniform4f(location, value.x, value.y, value.z, value.w);
+   SetUniformLocation(*this, name.c_str(), glUniform4f, value.x, value.y, value.z, value.w);
 }
 
 void
 OpenGLShader::UploadUniformMat3(const std::string& name, const glm::mat3& matrix)
 {
-   GLint location = glGetUniformLocation(m_shaderID, name.c_str());
-   glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+   SetUniformLocation(*this, name.c_str(), glUniformMatrix3fv, 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
 void
 OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4* matrices, uint32_t count)
 {
-   GLint location = glGetUniformLocation(m_shaderID, name.c_str());
-   glUniformMatrix4fv(location, count, GL_FALSE, reinterpret_cast< const GLfloat* >(matrices));
+   SetUniformLocation(*this, name.c_str(), glUniformMatrix4fv, count, GL_FALSE,
+                      reinterpret_cast< const GLfloat* >(matrices));
 }
 
 } // namespace shady::render::opengl

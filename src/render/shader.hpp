@@ -20,6 +20,8 @@ class Shader
    virtual void
    SetInt(const std::string& name, int value) = 0;
    virtual void
+   SetUint(const std::string& name, uint32_t value) = 0;
+   virtual void
    SetIntArray(const std::string& name, int* values, uint32_t count) = 0;
    virtual void
    SetFloat(const std::string& name, float value) = 0;
@@ -35,8 +37,11 @@ class Shader
    virtual const std::string&
    GetName() const = 0;
 
+private:
    static std::shared_ptr< Shader >
    Create(const std::string& name);
+
+   friend class ShaderLibrary;
 };
 
 class ShaderLibrary

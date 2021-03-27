@@ -139,6 +139,12 @@ OpenGLShader::SetInt(const std::string& name, int value)
 }
 
 void
+OpenGLShader::SetUint(const std::string& name, uint32_t value)
+{
+   UploadUniformUnsignedInt(name, value);
+}
+
+void
 OpenGLShader::SetIntArray(const std::string& name, int* values, uint32_t count)
 {
    UploadUniformIntArray(name, values, count);
@@ -179,6 +185,13 @@ OpenGLShader::UploadUniformInt(const std::string& name, int value)
 {
    GLint location = glGetUniformLocation(m_shaderID, name.c_str());
    glUniform1i(location, value);
+}
+
+void
+OpenGLShader::UploadUniformUnsignedInt(const std::string& name, uint32_t value)
+{
+   GLint location = glGetUniformLocation(m_shaderID, name.c_str());
+   glUniform1ui(location, value);
 }
 
 void

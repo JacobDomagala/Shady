@@ -13,7 +13,7 @@ namespace shady::app {
 void
 Shady::Init()
 {
-   m_window = std::make_unique< Window >(1920, 1080, "Shady");
+   m_window = std::make_unique< Window >(m_windowWidth, m_windowHeight, "Shady");
    render::Renderer::Init();
 
    input::InputManager::Init(m_window->GetWindowHandle());
@@ -25,6 +25,8 @@ Shady::Init()
    m_currentScene.LoadDefault();
 
    render::RenderCommand::SetClearColor({0.4f, 0.1f, 0.3f, 1.0f});
+
+   m_gui.Init(m_window->GetWindowHandle());
 }
 
 void
@@ -36,7 +38,9 @@ Shady::MainLoop()
 
       OnUpdate();
 
-      m_currentScene.Render();
+      m_currentScene.Render(m_windowWidth, m_windowHeight,
+                            input::InputManager::CheckKeyPressed(GLFW_KEY_SPACE));
+      m_gui.Render({m_windowWidth, m_windowHeight}, m_currentScene.GetLight().GetDepthMapID());
 
       m_window->SwapBuffers();
    }

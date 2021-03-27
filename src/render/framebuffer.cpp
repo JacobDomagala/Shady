@@ -6,10 +6,22 @@
 
 namespace shady::render {
 
-std::shared_ptr< FrameBuffer >
-FrameBuffer::Create(const glm::ivec2& size, FrameBufferType type)
+TextureHandleType
+FrameBuffer::GetDepthMapHandle()
 {
-   return CreateSharedWrapper< opengl::OpenGLFramebuffer, FrameBuffer >(size, type);
+   return m_textureHandle;
+}
+
+TextureIDType
+FrameBuffer::GetDepthMapID()
+{
+   return m_textureID;
+}
+
+std::shared_ptr< FrameBuffer >
+FrameBuffer::Create(const glm::ivec2& size, FrameBufferType type, FramebufferAttachment attachment)
+{
+   return CreateSharedWrapper< opengl::OpenGLFramebuffer, FrameBuffer >(size, type, attachment);
 }
 
 } // namespace shady::render

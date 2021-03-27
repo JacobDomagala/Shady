@@ -10,13 +10,19 @@
 #include "time/scoped_timer.hpp"
 #include "trace/logger.hpp"
 #include "utils/assert.hpp"
+#include "utils/file_manager.hpp"
 
-
+#include <glad/glad.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <memory>
 #include <numeric>
 
+
 namespace shady::render {
+
+GLuint depthMapFBO;
+GLuint depthMap;
+GLuint texColorBuffer;
 
 void
 Renderer3D::Init()
@@ -28,6 +34,8 @@ Renderer3D::Init()
    s_renderDataPerObj.resize(s_maxMeshesSlots);
 
    s_textureShader = ShaderLibrary::GetShader("default");
+   s_shadowShader = ShaderLibrary::GetShader(
+      (utils::FileManager::SHADERS_DIR / "default" / "shadowmap_point").u8string());
 
    // @TODO: For now we hardcode size for 's_maxMeshesSlots' model matrices
    // which essentially means that we can store up to 's_maxMeshesSlots' unique model/meshes for
@@ -53,19 +61,44 @@ Renderer3D::Shutdown()
 }
 
 void
-Renderer3D::BeginScene(const scene::Camera& camera, const scene::Light& light)
+Renderer3D::BeginScene(const glm::ivec2& screenSize, const scene::Camera& camera,
+                       scene::Light& light, bool shadowMap)
 {
-   // trace::Logger::Debug("Renderer3D::BeginScene: shader:{}", s_textureShader->GetName());
+   trace::Logger::Debug("Renderer3D::BeginScene: {} shader:{}",
+                        shadowMap ? "FIRST_PASS" : "SECOND_PASS",
+                        shadowMap ? s_shadowShader->GetName() : s_textureShader->GetName());
 
-   s_textureShader->Bind();
+   s_screenWidth = screenSize.x;
+   s_screenHeight = screenSize.y;
+   s_drawingToShadowMap = shadowMap;
+   s_lightPtr = &light;
 
-   // @TODO: Mby use uniform buffer for all these?
-   s_textureShader->SetMat4("u_projectionMat", camera.GetProjection());
-   s_textureShader->SetMat4("u_viewMat", camera.GetView());
-   s_textureShader->SetFloat3("u_cameraPos", camera.GetPosition());
-   s_textureShader->SetFloat3("u_lightPos", light.GetPosition());
+   if (!s_drawingToShadowMap)
+   {
+      RenderCommand::SetViewport(0, 0, s_screenWidth, s_screenHeight);
 
-   const auto size = s_currentVertex * sizeof(Vertex);
+      s_textureShader->Bind();
+      // @TODO: Mby use uniform buffer for all these?
+      light.BindLightMap(0);
+      s_textureShader->SetInt("u_depthMap", 0);
+      s_textureShader->SetMat4("u_lightSpaceMat", light.GetLightSpaceMat());
+      s_textureShader->SetMat4("u_projectionMat", camera.GetProjection());
+      s_textureShader->SetMat4("u_viewMat", camera.GetView());
+      s_textureShader->SetFloat3("u_cameraPos", camera.GetPosition());
+      s_textureShader->SetFloat3("u_lightPos", light.GetPosition());
+
+      // const auto size = s_currentVertex * sizeof(Vertex);
+   }
+   else
+   {
+      const auto shadowMapSize = light.GetLightmapSize();
+      RenderCommand::SetViewport(0, 0, shadowMapSize.x, shadowMapSize.y);
+
+      s_shadowShader->Bind();
+      s_textureShader->SetMat4("u_lightSpaceMat", light.GetLightSpaceMat());
+
+      light.BeginRenderToLightmap();
+   }
 
    if (s_sceneChanged)
    {
@@ -106,7 +139,8 @@ Renderer3D::BeginScene(const scene::Camera& camera, const scene::Light& light)
 void
 Renderer3D::EndScene()
 {
-   // trace::Logger::Debug("Renderer3D::EndScene");
+   trace::Logger::Debug("Renderer3D::EndScene: {}",
+                        s_drawingToShadowMap ? "FIRST_PASS" : "SECOND_PASS");
    FlushAndReset();
 }
 
@@ -128,7 +162,6 @@ Renderer3D::Flush()
    }
 
    s_vertexArray->Bind();
-   s_textureShader->Bind();
 
    const auto bufferDataSSBOSize = s_maxMeshesSlots * sizeof(VertexBufferData);
    const auto elemsIndirectSize = s_maxMeshesSlots * sizeof(DrawElementsIndirectCommand);
@@ -150,6 +183,11 @@ Renderer3D::Flush()
       texture->MakeNonResident();
    }
    s_textures.clear();
+
+   if (s_drawingToShadowMap)
+   {
+      s_lightPtr->EndRenderToLightmap();
+   }
 }
 
 void

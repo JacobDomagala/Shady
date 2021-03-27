@@ -31,7 +31,7 @@ FileManager::ReadFile(const std::string& fileName, FileType type)
 
    if (returnVal.empty())
    {
-      trace::Logger::Fatal("FileManager::ReadFile -> {} is empty!", returnVal);
+      trace::Logger::Fatal("FileManager::ReadFile -> {} is empty!", fileName);
    }
 
    return returnVal;

@@ -6,7 +6,8 @@
 
 namespace shady::render::opengl {
 
-OpenGLFramebuffer::OpenGLFramebuffer(const glm::ivec2& size, FrameBufferType type)
+OpenGLFramebuffer::OpenGLFramebuffer(const glm::ivec2& size, FrameBufferType type,
+                                     FramebufferAttachment attachment)
 {
    m_width = size.x;
    m_height = size.y;
@@ -14,14 +15,27 @@ OpenGLFramebuffer::OpenGLFramebuffer(const glm::ivec2& size, FrameBufferType typ
    if (type == FrameBufferType::SINGLE)
    {
       glGenFramebuffers(1, &m_framebufferID);
+      glBindFramebuffer(GL_FRAMEBUFFER, m_framebufferID);
 
       // For some reason we cannot call glCreateTextures here
       // It causes framebuffer to be incomplete!
       glGenTextures(1, &m_textureID);
       glBindTexture(GL_TEXTURE_2D, m_textureID);
 
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, m_width, m_height, 0, GL_DEPTH_COMPONENT,
-                   GL_FLOAT, NULL);
+      if (attachment == FramebufferAttachment::DEPTH)
+      {
+         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, m_width, m_height, 0,
+                      GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_textureID, 0);
+         glDrawBuffer(GL_NONE);
+         glReadBuffer(GL_NONE);
+      }
+      else if (attachment == FramebufferAttachment::COLOR)
+      {
+         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_textureID, 0);
+      }
+
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -32,10 +46,6 @@ OpenGLFramebuffer::OpenGLFramebuffer(const glm::ivec2& size, FrameBufferType typ
       GLfloat borderColor[] = {1.0, 1.0, 1.0, 1.0};
       glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
-      glBindFramebuffer(GL_FRAMEBUFFER, m_framebufferID);
-      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_textureID, 0);
-      glDrawBuffer(GL_NONE);
-      glReadBuffer(GL_NONE);
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
    }
    else
@@ -63,23 +73,41 @@ OpenGLFramebuffer::OpenGLFramebuffer(const glm::ivec2& size, FrameBufferType typ
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
    }
 
-   //m_textureHandle = glGetTextureHandleARB(m_textureID);
+   m_textureHandle = glGetTextureHandleARB(m_textureID);
 
    trace::Logger::Debug("Created {} framebuffer! Width:{} Height:{}",
                         type == FrameBufferType::SINGLE ? "single" : "cube", m_width, m_height);
+
 }
 
 void
 OpenGLFramebuffer::Bind()
 {
    glBindFramebuffer(GL_FRAMEBUFFER, m_framebufferID);
-   glBindTextureUnit(0, m_textureID);
 }
 
 void
 OpenGLFramebuffer::Unbind()
 {
    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void
+OpenGLFramebuffer::MakeTextureResident()
+{
+   glMakeTextureHandleResidentARB(m_textureHandle);
+}
+
+void
+OpenGLFramebuffer::MakeTextureNonResident()
+{
+   glMakeTextureHandleNonResidentARB(m_textureHandle);
+}
+
+void
+OpenGLFramebuffer::BindTexture(uint32_t slot)
+{
+   glBindTextureUnit(slot, m_textureID);
 }
 
 

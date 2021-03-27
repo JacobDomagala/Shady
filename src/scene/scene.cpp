@@ -8,8 +8,15 @@
 #include "utils/file_manager.hpp"
 
 #include <fmt/format.h>
+#include <glad/glad.h>
+
+
+namespace shady::render {
+extern GLuint texColorBuffer;
+}
 
 namespace shady::scene {
+
 
 void
 Scene::AddCamera(CameraType type, const glm::vec3& position,
@@ -43,81 +50,61 @@ Scene::GetLight()
 }
 
 void
-Scene::Render()
+Scene::Render(uint32_t windowWidth, uint32_t windowHeight, bool renderDepth)
 {
-   //SCOPED_TIMER("Scene::Render");
+   static bool force_update = false;
 
-
+   // SCOPED_TIMER("Scene::Render");
    m_lightSphere->TranslateModel(m_light->GetPosition());
 
+   ////////////////////////////////////////////////////////
+   ///////////////////// FIRST PASS ///////////////////////
+   ////////////////////////////////////////////////////////
 
    // For now we only use single light
    // First pass -> render depth from camera POV to texture
-   // m_light->BeginRenderToLightmap();
-   // render::Renderer3D::BeginScene(*m_camera);
+   render::RenderCommand::Clear();
+   render::Renderer3D::BeginScene({windowWidth, windowHeight}, *m_camera, *m_light, true);
 
-   // for (auto& model : m_models)
-   //{
-   //   model->Draw();
-   //}
+   for (auto& model : m_models)
+   {
+      model->Draw();
+   }
 
-   // render::Renderer3D::EndScene();
-   // m_light->EndRenderToLightmap();
+   render::Renderer3D::EndScene();
+
+   ////////////////////////////////////////////////////////
+   ///////////////////// SECOND PASS //////////////////////
+   ////////////////////////////////////////////////////////
 
    // Second pass -> use lightmap generated to render shadows
+   render::RenderCommand::Clear();
+
+   m_skybox.Draw(*m_camera, windowWidth, windowHeight);
+
+   render::Renderer3D::BeginScene({windowWidth, windowHeight}, *m_camera, *m_light);
+
+   for (auto& model : m_models)
    {
-     // SCOPED_TIMER("SKYBOX");
-      m_skybox.Draw(*m_camera);
+      model->Draw();
    }
 
-   {
-      //SCOPED_TIMER("MODELS");
-      render::Renderer3D::BeginScene(*m_camera, *m_light);
-
-      for (auto& model : m_models)
-      {
-         model->Draw();
-      }
-
-      render::Renderer3D::EndScene();
-   }
+   render::Renderer3D::EndScene();
 }
 
 void
 Scene::LoadDefault()
 {
-   m_light = std::make_unique< Light >(glm::vec3{2.0f, 5.0f, -10.0f}, glm::vec3{1.0f, 0.7f, 0.8f},
+   m_light = std::make_unique< Light >(glm::vec3{2.0f, 500.0f, -10.0f}, glm::vec3{1.0f, 0.7f, 0.8f},
                                        LightType::DIRECTIONAL_LIGHT);
    time::ScopedTimer loadScope("Scene::LoadDefault");
-   m_camera = std::make_unique< PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 10000.0f);
+   m_camera = std::make_unique< PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 500.0f);
    m_skybox.LoadCubeMap((utils::FileManager::TEXTURES_DIR / "skybox" / "default").u8string());
 
-  AddModel((utils::FileManager::MODELS_DIR / "sponza" / "sponza.obj").u8string(), LoadFlags::FlipUV);
-//   AddModel((utils::FileManager::MODELS_DIR / "Crate" / "Crate1.obj").u8string());
-//    auto& crate = m_models.back();
-//    crate->TranslateModel(glm::vec3{-2.0f, 0.0f, -3.0f});
-//    crate->RotateModel(glm::vec3{0.0f, 1.0f, 0.0f}, 20.0f);
-//    crate->GetMeshes().front().AddTexture(
-//       render::TextureLibrary::GetTexture(render::TextureType::NORMAL_MAP, "196_norm.png"));
-//    crate->GetMeshes().front().AddTexture(
-//       render::TextureLibrary::GetTexture(render::TextureType::SPECULAR_MAP, "196_s.png"));
+   AddModel((utils::FileManager::MODELS_DIR / "sponza" / "sponza.obj").u8string(),
+            LoadFlags::FlipUV);
 
-   // AddModel((utils::FileManager::MODELS_DIR / "suzanne.obj").u8string());
-   // auto& suzanne = m_models.back();
-   // suzanne->GetMeshes().front().AddTexture(render::TextureLibrary::GetTexture(
-   //    render::TextureType::DIFFUSE_MAP, "metal_hammered_diffuse.jpg"));
-   // suzanne->GetMeshes().front().AddTexture(render::TextureLibrary::GetTexture(
-   //    render::TextureType::NORMAL_MAP, "metal_hammered_norm.jpg"));
-   // suzanne->GetMeshes().front().AddTexture(render::TextureLibrary::GetTexture(
-   //    render::TextureType::SPECULAR_MAP, "metal_hammered_rough.jpg"));
-   // suzanne->ScaleModel({0.5f, 0.5f, 0.5f});
-   // suzanne->TranslateModel(glm::vec3{2.0f, 0.0f, -2.0f});
-
-   // AddModel((utils::FileManager::MODELS_DIR / "floor" / "floor.obj").u8string());
-   // auto& floor = m_models.back();
-   // floor->TranslateModel({0.0f, -1.5f, 0.0f});
-   // floor->GetMeshes().front().AddTexture(render::TextureLibrary::GetTexture(
-   //    render::TextureType::DIFFUSE_MAP, "metal_hammered_diffuse.jpg"));
+   m_models.back()->ScaleModel({0.1f, 0.1f, 0.1f});
 
    AddModel((utils::FileManager::MODELS_DIR / "sphere" / "sphere.obj").u8string());
    m_lightSphere = m_models.back().get();

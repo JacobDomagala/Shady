@@ -25,6 +25,9 @@ add_executable(${PROJECT_NAME}
     # app/input
     src/app/input/event.hpp src/app/input/input_manager.hpp src/app/input/input_manager.cpp src/app/input/input_listener.hpp
 
+    # app/gui
+    src/app/gui/gui.hpp src/app/gui/gui.cpp
+
     # trace
     src/trace/logger.hpp src/trace/logger.impl.hpp src/trace/logger.cpp src/trace/formatter_types.hpp
 
@@ -61,6 +64,6 @@ add_subdirectory(lib)
 
 target_include_directories(${PROJECT_NAME}
                     PRIVATE src src/app src/app/input src/trace src/render src/utils src/scene src/time)
-target_link_libraries_system (${PROJECT_NAME} PRIVATE glm glfw glad stb_image assimp fmt)
+target_link_libraries_system (${PROJECT_NAME} PRIVATE glm glfw glad stb_image assimp fmt imgui)
 target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)

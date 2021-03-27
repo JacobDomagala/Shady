@@ -62,6 +62,7 @@ class Window
 
    GLFWwindow* m_pWindow = nullptr;
    std::unique_ptr< render::Context > m_context;
+
 };
 
 } // namespace shady::app

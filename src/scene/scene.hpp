@@ -34,14 +34,14 @@ class Scene
    GetLight();
 
    void
-   Render();
+   Render(uint32_t width, uint32_t height, bool renderDepth);
 
    void
    LoadDefault();
 
  private:
    Skybox m_skybox;
-   std::unique_ptr< scene::Camera > m_camera;
+   std::unique_ptr< Camera > m_camera;
    std::vector< std::unique_ptr< Model > > m_models;
    std::unique_ptr< Light > m_light;
    std::shared_ptr< render::Shader > m_mainShader;

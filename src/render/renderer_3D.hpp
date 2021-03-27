@@ -34,7 +34,8 @@ class Renderer3D
    Shutdown();
 
    static void
-   BeginScene(const scene::Camera& camera, const scene::Light& light);
+   BeginScene(const glm::ivec2& screenSize, const scene::Camera& camera, scene::Light& light,
+              bool shadowMap = false);
 
    static void
    EndScene();
@@ -113,6 +114,7 @@ class Renderer3D
    // SSBOs
    static inline std::shared_ptr< StorageBuffer > s_perMeshDataSSBO;
    static inline std::shared_ptr< Shader > s_textureShader;
+   static inline std::shared_ptr< Shader > s_shadowShader;
 
    static inline std::vector< VertexBufferData > s_renderDataPerObj;
 
@@ -130,6 +132,10 @@ class Renderer3D
    static inline std::shared_ptr< BufferLockManager > s_bufferLockManager;
 
    static inline bool s_sceneChanged = false;
+   static inline bool s_drawingToShadowMap = false;
+   static inline uint32_t s_screenWidth = 0;
+   static inline uint32_t s_screenHeight = 0;
+   static inline scene::Light* s_lightPtr;
 };
 
 } // namespace shady::render

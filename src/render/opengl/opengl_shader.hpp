@@ -24,6 +24,9 @@ class OpenGLShader : public Shader
    void
    SetInt(const std::string& name, int value) override;
    void
+   SetUint(const std::string& name, uint32_t value) override;
+
+   void
    SetIntArray(const std::string& name, int* values, uint32_t count) override;
    void
    SetFloat(const std::string& name, float value) override;
@@ -38,6 +41,9 @@ class OpenGLShader : public Shader
 
    void
    UploadUniformInt(const std::string& name, int value);
+   void
+   UploadUniformUnsignedInt(const std::string& name, uint32_t value);
+
    void
    UploadUniformIntArray(const std::string& name, int* values, uint32_t count);
 

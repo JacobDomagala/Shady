@@ -70,6 +70,8 @@ OpenGLFramebuffer::OpenGLFramebuffer(const glm::ivec2& size, FrameBufferType typ
       glNamedFramebufferTexture(m_framebufferID, GL_DEPTH_ATTACHMENT, m_textureID, 0);
       glDrawBuffer(GL_NONE);
       glReadBuffer(GL_NONE);
+
+      BindTexture(0);
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
    }
 

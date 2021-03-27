@@ -101,10 +101,23 @@ Scene::LoadDefault()
    m_camera = std::make_unique< PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 500.0f);
    m_skybox.LoadCubeMap((utils::FileManager::TEXTURES_DIR / "skybox" / "default").u8string());
 
-   AddModel((utils::FileManager::MODELS_DIR / "sponza" / "sponza.obj").u8string(),
-            LoadFlags::FlipUV);
+   // AddModel((utils::FileManager::MODELS_DIR / "sponza" / "sponza.obj").u8string(),
+   //          LoadFlags::FlipUV);
 
-   m_models.back()->ScaleModel({0.1f, 0.1f, 0.1f});
+   // m_models.back()->ScaleModel({0.1f, 0.1f, 0.1f});
+
+   AddModel((utils::FileManager::MODELS_DIR / "floor" / "floor.obj").u8string());
+   m_models.back()->GetMeshes()[0].AddTexture(render::TextureLibrary::GetTexture(
+      render::TextureType::DIFFUSE_MAP,
+      (utils::FileManager::TEXTURES_DIR / "196.png").string()));
+
+   m_models.back()->GetMeshes()[0].AddTexture(render::TextureLibrary::GetTexture(
+      render::TextureType::NORMAL_MAP,
+      (utils::FileManager::TEXTURES_DIR / "196_norm.png").string()));
+
+   m_models.back()->GetMeshes()[0].AddTexture(render::TextureLibrary::GetTexture(
+      render::TextureType::SPECULAR_MAP,
+      (utils::FileManager::TEXTURES_DIR / "196_s.png").string()));
 
    AddModel((utils::FileManager::MODELS_DIR / "sphere" / "sphere.obj").u8string());
    m_lightSphere = m_models.back().get();

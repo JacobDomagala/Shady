@@ -79,25 +79,24 @@ Renderer3D::BeginScene(const glm::ivec2& screenSize, const scene::Camera& camera
 
       s_textureShader->Bind();
       // @TODO: Mby use uniform buffer for all these?
-      light.BindLightMap(0);
-      s_textureShader->SetInt("u_depthMap", 0);
       s_textureShader->SetMat4("u_lightSpaceMat", light.GetLightSpaceMat());
+      s_textureShader->SetFloat3("u_lightPos", light.GetPosition());
       s_textureShader->SetMat4("u_projectionMat", camera.GetProjection());
       s_textureShader->SetMat4("u_viewMat", camera.GetView());
       s_textureShader->SetFloat3("u_cameraPos", camera.GetPosition());
-      s_textureShader->SetFloat3("u_lightPos", light.GetPosition());
 
-      // const auto size = s_currentVertex * sizeof(Vertex);
+      light.BindLightMap(0);
+      s_textureShader->SetInt("u_depthMap", 0);
    }
    else
    {
       const auto shadowMapSize = light.GetLightmapSize();
       RenderCommand::SetViewport(0, 0, shadowMapSize.x, shadowMapSize.y);
 
-      s_shadowShader->Bind();
-      s_textureShader->SetMat4("u_lightSpaceMat", light.GetLightSpaceMat());
-
       light.BeginRenderToLightmap();
+
+      s_shadowShader->Bind();
+      s_shadowShader->SetMat4("u_lightSpaceMat", light.GetLightSpaceMat());
    }
 
    if (s_sceneChanged)

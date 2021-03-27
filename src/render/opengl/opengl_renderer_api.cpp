@@ -37,16 +37,16 @@ OpenGLRendererAPI::Init()
    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, NULL,
                          GL_FALSE);
 
-   //glEnable(GL_MULTISAMPLE);
+   glEnable(GL_MULTISAMPLE);
    glEnable(GL_DEPTH_TEST);
-   //glDepthMask(GL_TRUE);
+   glDepthMask(GL_TRUE);
 
-   // glEnable(GL_CULL_FACE);
-   // glCullFace(GL_BACK);
-   // glFrontFace(GL_CCW);
+   glEnable(GL_CULL_FACE);
+   glCullFace(GL_BACK);
+   glFrontFace(GL_CCW);
 
-   // glEnable(GL_BLEND);
-   // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void
@@ -97,7 +97,7 @@ OpenGLRendererAPI::DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray
 void
 OpenGLRendererAPI::MultiDrawElemsIndirect(uint32_t drawCount, size_t offset)
 {
-  // glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
+   // glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
    glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, (void*)offset, drawCount, 0);
 }
 
@@ -121,7 +121,8 @@ OpenGLRendererAPI::CheckForErrors()
 
       case GL_NONE: {
          // No error
-      }break;
+      }
+      break;
 
       default: {
          trace::Logger::Fatal("Unspecified error {:#04x} !", value);

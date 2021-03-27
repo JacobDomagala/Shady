@@ -46,8 +46,10 @@ Skybox::LoadCubeMap(const std::string& directoryPath)
 }
 
 void
-Skybox::Draw(const Camera& camera)
+Skybox::Draw(const Camera& camera, uint32_t windowWidth, uint32_t windowHeight)
 {
+   render::RenderCommand::SetViewport(0, 0, windowWidth, windowHeight);
+
    // We draw here directly without calling Renderer because we use unique shader
    // so we wouldn't be able to use batching anyways
    m_shader->Bind();
@@ -58,8 +60,6 @@ Skybox::Draw(const Camera& camera)
    m_shader->SetMat4("u_viewProjection",
                      camera.GetProjection() * glm::mat4(glm::mat3(camera.GetView())));
    m_vertexArray->Bind();
-   m_vertexArray->GetVertexBuffers().front()->Bind();
-   m_vertexArray->GetIndexBuffer()->Bind();
    m_cubeTexture->Bind(0);
 
    m_shader->SetInt("skybox", 0);

@@ -17,7 +17,7 @@ class Skybox
    LoadCubeMap(const std::string& folderPath);
 
    void
-   Draw(const Camera& camera);
+   Draw(const Camera& camera, uint32_t windowWidth, uint32_t windowHeight);
 
  private:
    render::TexturePtr m_cubeTexture;

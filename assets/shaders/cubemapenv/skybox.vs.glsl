@@ -1,20 +1,3 @@
-#version 410 core
-
-out VS_OUT
-{
-    vec3    tc;
-} vs_out;
-
-uniform mat4 view_matrix;
-
-void main(void)
-{
-    vec3[4] vertices = vec3[4](vec3(-1.0, -1.0, 1.0),
-                               vec3( 1.0, -1.0, 1.0),
-                               vec3(-1.0,  1.0, 1.0),
-                               vec3( 1.0,  1.0, 1.0));
-
-    vs_out.tc = mat3(view_matrix) * vertices[gl_VertexID];
-
-    gl_Position = vec4(vertices[gl_VertexID], 1.0);
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:c4611a9970e9c0fc02788014af22dd5a48bd6a49ca445c23a0552efd61c55207
+size 214

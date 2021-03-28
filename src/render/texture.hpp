@@ -18,7 +18,8 @@ enum class TextureType
 
 class Texture;
 
-using TextureHandleType = uint32_t;
+using TextureIDType = uint32_t;
+using TextureHandleType = uint64_t;
 using TexturePtr = std::shared_ptr< Texture >;
 using TexturePtrVec = std::vector< TexturePtr >;
 
@@ -30,16 +31,22 @@ class Texture
    struct ImageData
    {
       ImageHandleType m_bytes;
-      glm::ivec2 m_size;
+      glm::uvec2 m_size;
       int32_t m_channels;
    };
 
  public:
-   Texture(TextureType type = TextureType::DIFFUSE_MAP);
+   Texture(TextureType type = TextureType::DIFFUSE_MAP, const std::string& name = "defaultName");
    virtual ~Texture() = default;
 
    virtual void
    Bind(uint32_t slot = 0) const = 0;
+
+   virtual void
+   MakeResident() = 0;
+
+   virtual void
+   MakeNonResident() = 0;
 
    virtual bool
    operator==(const Texture& other) const = 0;
@@ -50,36 +57,44 @@ class Texture
    uint32_t
    GetHeight() const;
 
-   TextureHandleType
+   TextureIDType
    GetTextureID() const;
+
+   TextureHandleType
+   GetTextureHandle() const;
 
    TextureType
    GetType() const;
 
-   static TexturePtr
-   Create(const std::string& textureName, TextureType type);
+   std::string
+   GetName() const;
 
    static TexturePtr
-   Create(const glm::ivec2& size, TextureType type);
+   Create(TextureType type, const std::string& textureName);
+
+   static TexturePtr
+   Create(TextureType type, const glm::ivec2& size);
 
  protected:
    TextureType m_type;
-   ImageData m_imageData;
-   TextureHandleType m_textureHandle;
+   ImageData m_imageData = {};
+   TextureIDType m_textureID= {};
+   TextureHandleType m_textureHandle= {};
+   std::string m_name;
 };
 
 class TextureLibrary
 {
  public:
    static TexturePtr
-   GetTexture(const std::string& textureName, TextureType type = TextureType::DIFFUSE_MAP);
+   GetTexture(TextureType type, const std::string& textureName);
 
    static void
    Clear();
 
  private:
    static void
-   LoadTexture(const std::string& textureName, TextureType type = TextureType::DIFFUSE_MAP);
+   LoadTexture(TextureType type, const std::string& textureName);
 
  private:
    static inline std::unordered_map< std::string, TexturePtr > s_loadedTextures = {};

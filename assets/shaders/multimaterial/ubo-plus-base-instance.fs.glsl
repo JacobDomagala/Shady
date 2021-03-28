@@ -1,13 +1,3 @@
-#version 420 core
-
-out vec4 color;
-
-in VS_OUT
-{
-    vec4 color;
-} fs_in;
-
-void main(void)
-{
-    color = fs_in.color;
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:60fed3dc6f76e8055480684b0e90e5a1d0f8692f9afc95c37ead9784e0750b49
+size 119

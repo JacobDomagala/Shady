@@ -1,17 +1,3 @@
-#version 430 core
-
-out VS_OUT
-{
-    vec3 E;
-} vs_out;
-
-void main(void)
-{
-    const vec4 vertices[] = vec4[]( vec4(-1.0, -1.0, 0.5, 1.0),
-                                    vec4( 1.0, -1.0, 0.5, 1.0),
-                                    vec4(-1.0,  1.0, 0.5, 1.0),
-                                    vec4( 1.0,  1.0, 0.5, 1.0) );
-
-    gl_Position = vertices[gl_VertexID];
-    vs_out.E = vertices[gl_VertexID].xyz;
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:e8b079bb47df370bd15caa79fa75e4ab1b2052d02a97c167d396062d65e5fc53
+size 417

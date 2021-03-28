@@ -1,21 +1,3 @@
-#version 420 core
-
-uniform mat4 mv_matrix;
-uniform mat4 proj_matrix;
-
-layout (location = 0) in vec4 position;
-layout (location = 4) in vec2 tc;
-
-out VS_OUT
-{
-    vec2 tc;
-} vs_out;
-
-void main(void)
-{
-    vec4 pos_vs = mv_matrix * position;
-
-    vs_out.tc = tc;
-
-    gl_Position = proj_matrix * pos_vs;
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:5e06bb2219d79f2d54f32cb7a92e8ef50cd01dddc7b026553bc638c585cc6d9b
+size 304

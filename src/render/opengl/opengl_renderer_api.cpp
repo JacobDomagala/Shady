@@ -1,7 +1,7 @@
 
 #include "opengl_renderer_api.hpp"
-
 #include "trace/logger.hpp"
+#include "utils/assert.hpp"
 
 #include <glad/glad.h>
 
@@ -14,8 +14,8 @@ OpenGLRendererAPI::Init()
    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
    glDebugMessageCallback(
-      [](GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
-         const GLchar* message, const void* logger) {
+      [](GLenum /*source*/, GLenum /*type*/, GLuint /*id*/, GLenum severity, GLsizei /*length*/,
+         const GLchar* message, const void* /*user_data*/) {
          switch (severity)
          {
             case GL_DEBUG_SEVERITY_HIGH:
@@ -37,6 +37,14 @@ OpenGLRendererAPI::Init()
    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, NULL,
                          GL_FALSE);
 
+   glEnable(GL_MULTISAMPLE);
+   glEnable(GL_DEPTH_TEST);
+   glDepthMask(GL_TRUE);
+
+   glEnable(GL_CULL_FACE);
+   glCullFace(GL_BACK);
+   glFrontFace(GL_CCW);
+
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
@@ -45,6 +53,18 @@ void
 OpenGLRendererAPI::SetDepthFunc(DepthFunc depthFunc)
 {
    glDepthFunc(depthFunc == DepthFunc::LEQUAL ? GL_LEQUAL : GL_LESS);
+}
+
+void
+OpenGLRendererAPI::EnableDepthTesting()
+{
+   glEnable(GL_DEPTH_TEST);
+}
+
+void
+OpenGLRendererAPI::DisableDepthTesting()
+{
+   glDisable(GL_DEPTH_TEST);
 }
 
 void
@@ -66,18 +86,49 @@ OpenGLRendererAPI::Clear()
 }
 
 void
-OpenGLRendererAPI::DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray, size_t indexCount)
+OpenGLRendererAPI::DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray,
+                               uint32_t indexCount)
 {
    auto count =
       static_cast< GLsizei >(indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount());
    glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
-   glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void
+OpenGLRendererAPI::MultiDrawElemsIndirect(uint32_t drawCount, size_t offset)
+{
+   // glMemoryBarrier(GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT);
+   glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, reinterpret_cast< void* >(offset),
+                               drawCount, 0);
 }
 
 void
 OpenGLRendererAPI::DrawLines(uint32_t count)
 {
    glDrawArrays(GL_LINES, 0, count * 2);
+}
+
+void
+OpenGLRendererAPI::CheckForErrors()
+{
+   const auto value = glGetError();
+
+   switch (value)
+   {
+      case GL_INVALID_FRAMEBUFFER_OPERATION: {
+         utils::Assert(false, "Framebuffer error!");
+      }
+      break;
+
+      case GL_NONE: {
+         // No error
+      }
+      break;
+
+      default: {
+         trace::Logger::Fatal("Unspecified error {:#04x} !", value);
+      }
+   }
 }
 
 } // namespace shady::render::opengl

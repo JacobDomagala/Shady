@@ -15,7 +15,7 @@ FileManager::ReadFile(const std::filesystem::path& path, FileType type)
 }
 
 std::string
-FileManager::ReadFile(const std::string& fileName, FileType type)
+FileManager::ReadFile(const std::string& fileName, FileType /*type*/)
 {
    std::ifstream fileHandle;
    fileHandle.open(fileName, std::ifstream::in);
@@ -31,14 +31,14 @@ FileManager::ReadFile(const std::string& fileName, FileType type)
 
    if (returnVal.empty())
    {
-      trace::Logger::Fatal("FileManager::ReadFile -> {} is empty!", returnVal);
+      trace::Logger::Fatal("FileManager::ReadFile -> {} is empty!", fileName);
    }
 
    return returnVal;
 }
 
 void
-FileManager::WriteToFile(const std::string& fileName, const std::string& content, FileType type)
+FileManager::WriteToFile(const std::string& fileName, const std::string& content, FileType /*type*/)
 {
    std::ofstream fileHandle;
    fileHandle.open(fileName);
@@ -46,11 +46,13 @@ FileManager::WriteToFile(const std::string& fileName, const std::string& content
 }
 
 render::Texture::ImageData
-FileManager::ReadTexture(const std::string& fileName)
+FileManager::ReadTexture(const std::string& fileName, bool flipVertical)
 {
    const auto pathToImage = std::filesystem::path(TEXTURES_DIR / fileName).u8string();
    int force_channels = 0;
    int w, h, n;
+
+   stbi_set_flip_vertically_on_load(flipVertical);
 
    render::Texture::ImageHandleType textureData(
       stbi_load(pathToImage.c_str(), &w, &h, &n, force_channels), stbi_image_free);

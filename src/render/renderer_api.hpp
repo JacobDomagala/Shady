@@ -31,6 +31,12 @@ class RendererAPI
    SetDepthFunc(DepthFunc depthFunc) = 0;
 
    virtual void
+   EnableDepthTesting() = 0;
+
+   virtual void
+   DisableDepthTesting() = 0;
+
+   virtual void
    SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
 
    virtual void
@@ -40,10 +46,16 @@ class RendererAPI
    Clear() = 0;
 
    virtual void
-   DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray, size_t indexCount = 0) = 0;
+   DrawIndexed(const std::shared_ptr< VertexArray >& vertexArray, uint32_t indexCount = 0) = 0;
+
+   virtual void
+   MultiDrawElemsIndirect(uint32_t drawCount, size_t offset = 0) = 0;
 
    virtual void
    DrawLines(uint32_t count) = 0;
+
+   virtual void
+   CheckForErrors() = 0;
 
    static API
    GetAPI();

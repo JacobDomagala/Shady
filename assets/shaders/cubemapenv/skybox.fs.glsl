@@ -1,15 +1,3 @@
-#version 410 core
-
-uniform samplerCube tex_cubemap;
-
-in VS_OUT
-{
-    vec3    tc;
-} fs_in;
-
-layout (location = 0) out vec4 color;
-
-void main(void)
-{
-    color = texture(tex_cubemap, fs_in.tc);
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:822e1fb6d60da8bea4356f74222ebd7bd3c86b27f43dd2643b0fde8e73ae09ff
+size 144

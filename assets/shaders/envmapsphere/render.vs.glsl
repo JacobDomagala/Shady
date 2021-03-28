@@ -1,23 +1,3 @@
-#version 410 core
-
-uniform mat4 mv_matrix;
-uniform mat4 proj_matrix;
-
-layout (location = 0) in vec4 position;
-layout (location = 1) in vec3 normal;
-
-out VS_OUT
-{
-    vec3 normal;
-    vec3 view;
-} vs_out;
-
-void main(void)
-{
-    vec4 pos_vs = mv_matrix * position;
-
-    vs_out.normal = mat3(mv_matrix) * normal;
-    vs_out.view = pos_vs.xyz;
-
-    gl_Position = proj_matrix * pos_vs;
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:f820c3fe037c78e1fd36b731141be3f64daaa3379b064f82d9c3a38039050b51
+size 383

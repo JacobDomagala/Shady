@@ -1,8 +1,9 @@
 #pragma once
 
-#include <vector>
-#include <string>
 #include <memory>
+#include <string>
+#include <vector>
+
 
 namespace shady::render {
 
@@ -21,6 +22,9 @@ enum class ShaderDataType
    Bool
 };
 
+/**************************************************************************************************
+ *************************************** BUFFER ELEMENT *******************************************
+ *************************************************************************************************/
 struct BufferElement
 {
    std::string m_name;
@@ -28,19 +32,23 @@ struct BufferElement
    uint32_t m_size;
    size_t m_offset;
    bool m_normalized;
+   uint32_t m_divisor;
 
    BufferElement() = default;
-   BufferElement(ShaderDataType type, const std::string& name, bool normalized = false);
+   BufferElement(ShaderDataType type, const std::string& name, uint32_t divisor = 0, bool normalized = false);
 
    uint32_t
    GetComponentCount() const;
 };
 
+/**************************************************************************************************
+ *************************************** BUFFER LAYOUT ********************************************
+ *************************************************************************************************/
 class BufferLayout
 {
  public:
    BufferLayout() = default;
-   BufferLayout(const std::initializer_list< BufferElement >& elements);
+   explicit BufferLayout(const std::initializer_list< BufferElement >& elements);
 
    uint32_t
    GetStride() const;
@@ -69,6 +77,9 @@ class BufferLayout
    uint32_t m_stride = 0;
 };
 
+/**************************************************************************************************
+ *************************************** VERTEX BUFFER ********************************************
+ *************************************************************************************************/
 class VertexBuffer
 {
  public:
@@ -80,7 +91,7 @@ class VertexBuffer
    Unbind() const = 0;
 
    virtual void
-   SetData(const void* data, size_t size) = 0;
+   SetData(const void* data, size_t size, size_t offsetInBytes = 0) = 0;
 
    virtual const BufferLayout&
    GetLayout() const = 0;
@@ -88,11 +99,16 @@ class VertexBuffer
    SetLayout(const BufferLayout& layout) = 0;
 
    static std::shared_ptr< VertexBuffer >
-   Create(size_t size);
+   CreatePersistanceMap(size_t sizeInBytes);
    static std::shared_ptr< VertexBuffer >
-   Create(float* vertices, size_t size);
+   Create(size_t sizeInBytes);
+   static std::shared_ptr< VertexBuffer >
+   Create(float* vertices, size_t sizeInBytes);
 };
 
+/**************************************************************************************************
+ *************************************** INDEX BUFFER *********************************************
+ *************************************************************************************************/
 class IndexBuffer
 {
  public:
@@ -106,14 +122,50 @@ class IndexBuffer
    virtual void
    SetData(const void* data, size_t size) = 0;
 
-   virtual size_t
+   virtual uint32_t
    GetCount() const = 0;
 
    static std::shared_ptr< IndexBuffer >
-   Create(size_t count);
+   Create(uint32_t count);
 
    static std::shared_ptr< IndexBuffer >
-   Create(uint32_t* indices, size_t count);
+   Create(uint32_t* indices, uint32_t count);
+};
+
+/**************************************************************************************************
+ *************************************** STORAGE BUFFER *******************************************
+ *************************************************************************************************/
+enum class BufferType
+{
+   ShaderStorage,
+   DrawIndirect
+};
+
+class StorageBuffer
+{
+ public:
+   virtual ~StorageBuffer() = default;
+
+   virtual void
+   Bind() const = 0;
+   virtual void
+   Unbind() const = 0;
+
+   virtual void
+   SetData(const void* data, size_t size) = 0;
+
+   virtual void
+   BindBufferRange(uint32_t index, size_t atomCount) = 0;
+
+   virtual void
+   OnUsageComplete(size_t usedBufferSize) = 0;
+
+   // Return current Head offset of storage buffer
+   virtual size_t
+   GetOffset() const = 0;
+
+   static std::shared_ptr< StorageBuffer >
+   Create(BufferType type, size_t size);
 };
 
 } // namespace shady::render

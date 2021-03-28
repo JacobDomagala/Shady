@@ -1,11 +1,3 @@
-#version 420 core
-
-void main(void)
-{
-    vec4 vertices[4] = vec4[4](vec4(-1.0, -1.0, 0.5, 1.0),
-                               vec4( 1.0, -1.0, 0.5, 1.0),
-                               vec4(-1.0,  1.0, 0.5, 1.0),
-                               vec4( 1.0,  1.0, 0.5, 1.0));
-
-    gl_Position = vertices[gl_VertexID];
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:ab00fd71b453ec630ef14a53242353c94ea1a3986e1a6a47c370fa13cca770ba
+size 318

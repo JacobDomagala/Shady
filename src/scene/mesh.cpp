@@ -3,20 +3,26 @@
 
 namespace shady::scene {
 
-Mesh::Mesh(std::vector< render::Vertex >&& vertices, std::vector< uint32_t >&& indices,
-           render::TexturePtrVec&& textures)
+Mesh::Mesh(const std::string& name, std::vector< render::Vertex >&& vertices,
+           std::vector< uint32_t >&& indices, render::TexturePtrVec&& textures)
+   : m_vertices(std::move(vertices)),
+     m_indices(std::move(indices)),
+     m_textures(std::move(textures)),
+     m_name(name)
 {
-   m_vertices = std::move(vertices);
-   m_indices = std::move(indices);
-   m_textures = std::move(textures);
+   render::Renderer3D::AddMesh(m_name, m_vertices, m_indices);
 }
 
 void
-Mesh::Draw(const glm::vec3& translateVal, const glm::vec3& scaleVal, const glm::vec3 rotateAxis,
-           float rotateVal, const glm::vec4& tintColor)
+Mesh::AddTexture(const render::TexturePtr& texture)
 {
-   render::Renderer3D::DrawMesh(m_vertices, m_indices, translateVal, scaleVal, rotateAxis,
-                                rotateVal, m_textures, tintColor);
+   m_textures.push_back(texture);
+}
+
+void
+Mesh::Draw(const std::string& /*modelName*/, const glm::mat4& modelMat, const glm::vec4& tintColor)
+{
+   render::Renderer3D::DrawMesh(m_name, modelMat, m_textures, tintColor);
 }
 
 } // namespace shady::scene

@@ -1,12 +1,14 @@
-#include "renderer.hpp"
-#include "render_command.hpp"
+#include "render/renderer.hpp"
+#include "render/render_command.hpp"
+#include "render/renderer_3D.hpp"
 
 namespace shady::render {
 
 void
 Renderer::Init()
 {
-   RenderCommand::Init();  
+   RenderCommand::Init();
+   Renderer3D::Init();
 }
 
 RendererAPI::API

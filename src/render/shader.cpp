@@ -23,6 +23,7 @@ ShaderLibrary::GetShader(const std::string& name)
 {
    if (s_shaderLibrary.end() == s_shaderLibrary.find(name))
    {
+      trace::Logger::Debug("Shader: {} not found in library. Loading it.", name);
       LoadShader(name);
    }
 

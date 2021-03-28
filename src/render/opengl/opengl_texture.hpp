@@ -2,18 +2,26 @@
 
 #include "texture.hpp"
 
+#include <queue>
+
 namespace shady::render::opengl {
 
 class OpenGLTexture : public Texture
 {
  public:
-   explicit OpenGLTexture(const std::string& name, TextureType type);
-   explicit OpenGLTexture(const glm::ivec2& size, TextureType type);
+   explicit OpenGLTexture(TextureType type, const std::string& name);
+   explicit OpenGLTexture(TextureType type, const glm::ivec2& size);
 
    ~OpenGLTexture() override;
 
    void
    Bind(uint32_t slot = 0) const override;
+
+   void
+   MakeResident() override;
+
+   void
+   MakeNonResident() override;
 
    virtual bool
    operator==(const Texture& other) const override;

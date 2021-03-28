@@ -6,7 +6,7 @@
 #include "render/texture.hpp"
 #include "render/shader.hpp"
 #include "render/vertex_array.hpp"
-#include "render/camera.hpp"
+#include "scene/camera.hpp"
 
 namespace shady::scene {
 
@@ -14,10 +14,10 @@ class Skybox
 {
  public:
    void
-   LoadCubeMap(const std::string& folderPath);
+   LoadCubeMap(const std::string& directoryPath);
 
    void
-   Draw(const render::Camera& camera);
+   Draw(const Camera& camera, uint32_t windowWidth, uint32_t windowHeight);
 
  private:
    render::TexturePtr m_cubeTexture;

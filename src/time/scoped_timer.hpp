@@ -9,12 +9,14 @@ namespace shady::time {
 class ScopedTimer
 {
  public:
-   ScopedTimer(std::string&& logMsg);
+   explicit ScopedTimer(std::string&& logMsg);
    ~ScopedTimer();
 
  private:
    std::string m_logMsg;
    Timer m_timer;
 };
+
+#define SCOPED_TIMER(str) shady::time::ScopedTimer t(std::move(str));
 
 } // namespace shady::time

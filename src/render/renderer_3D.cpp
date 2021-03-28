@@ -1,218 +1,272 @@
-#include "renderer_3D.hpp"
-#include "camera.hpp"
-#include "render_command.hpp"
-#include "shader.hpp"
-#include "texture.hpp"
-#include "vertex.hpp"
-#include "vertex_array.hpp"
+#include "render/renderer_3D.hpp"
+#include "render/buffer_lock.hpp"
+#include "render/render_command.hpp"
+#include "render/shader.hpp"
+#include "render/texture.hpp"
+#include "render/vertex.hpp"
+#include "render/vertex_array.hpp"
+#include "scene/camera.hpp"
+#include "scene/light.hpp"
+#include "time/scoped_timer.hpp"
+#include "trace/logger.hpp"
+#include "utils/assert.hpp"
+#include "utils/file_manager.hpp"
 
-#include <array>
+#include <glad/glad.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <memory>
+#include <numeric>
+
 
 namespace shady::render {
 
-struct RendererData
-{
-   // TODO: Figure out the proper way of setting triangle cap per batch
-   static constexpr uint32_t m_maxTriangles = 20000;
-   static constexpr uint32_t m_maxVertices = m_maxTriangles * 3;
-   static constexpr uint32_t m_maxIndices = m_maxVertices;
-   static constexpr uint32_t m_maxTextureSlots = 32; // TODO: RenderCaps
-
-   std::shared_ptr< VertexArray > m_vertexArray;
-   std::shared_ptr< VertexBuffer > m_vertexBuffer;
-   std::shared_ptr< Shader > m_textureShader;
-   std::shared_ptr< Texture > m_whiteTexture;
-
-   // data batches which are filled with each call to DrawMesh
-   std::vector< render::Vertex > m_verticesBatch;
-   uint32_t m_currentVertex = 0;
-   std::vector< uint32_t > m_indicesBatch;
-   uint32_t m_currentIndex = 0;
-
-   std::array< std::shared_ptr< Texture >, m_maxTextureSlots > m_textureSlots;
-   uint32_t m_textureSlotIndex = 1; // 0 = white texture
-};
-
-static RendererData s_Data;
+GLuint depthMapFBO;
+GLuint depthMap;
+GLuint texColorBuffer;
 
 void
 Renderer3D::Init()
 {
-   s_Data.m_vertexArray = VertexArray::Create();
+   s_verticesBatch.resize(s_maxVertices);
+   s_indicesBatch.resize(s_maxIndices);
 
-   // setup vertex buffer
-   s_Data.m_vertexBuffer = VertexBuffer::Create(s_Data.m_maxVertices * sizeof(render::Vertex));
-   s_Data.m_vertexBuffer->SetLayout({{ShaderDataType::Float3, "a_Position"},
-                                     {ShaderDataType::Float3, "a_Normal"},
-                                     {ShaderDataType::Float2, "a_TexCoord"},
-                                     {ShaderDataType::Float3, "a_Tangent"},
-                                     {ShaderDataType::Float, "a_DiffTexIndex"},
-                                     {ShaderDataType::Float, "a_NormTexIndex"},
-                                     {ShaderDataType::Float, "a_SpecTexIndex"},
-                                     {ShaderDataType::Float4, "a_Color"}});
+   s_commands.resize(s_maxMeshesSlots);
+   s_renderDataPerObj.resize(s_maxMeshesSlots);
 
-   s_Data.m_vertexArray->AddVertexBuffer(s_Data.m_vertexBuffer);
-   s_Data.m_vertexArray->SetIndexBuffer(IndexBuffer::Create(s_Data.m_maxIndices));
+   s_textureShader = ShaderLibrary::GetShader("default");
+   s_shadowShader = ShaderLibrary::GetShader(
+      (utils::FileManager::SHADERS_DIR / "default" / "shadowmap_point").u8string());
 
-   s_Data.m_verticesBatch.reserve(s_Data.m_maxVertices * sizeof(Vertex));
-   s_Data.m_indicesBatch.reserve(s_Data.m_maxIndices * sizeof(uint32_t));
+   // @TODO: For now we hardcode size for 's_maxMeshesSlots' model matrices
+   // which essentially means that we can store up to 's_maxMeshesSlots' unique model/meshes for
+   // now
+   s_perMeshDataSSBO =
+      StorageBuffer::Create(BufferType::ShaderStorage, sizeof(VertexBufferData) * s_maxMeshesSlots);
 
-   s_Data.m_whiteTexture = Texture::Create(glm::ivec2{1, 1}, TextureType::DIFFUSE_MAP);
-   // s_Data.m_whiteTexture->CreateColorTexture({1, 1}, {1.0f, 1.0f, 1.0f});
+   s_drawIndirectBuffer = StorageBuffer::Create(
+      BufferType::DrawIndirect, sizeof(DrawElementsIndirectCommand) * s_maxMeshesSlots);
 
-   int32_t samplers[s_Data.m_maxTextureSlots];
-   for (uint32_t i = 0; i < s_Data.m_maxTextureSlots; i++)
-   {
-      samplers[i] = i;
-   }
+   trace::Logger::Info("Renderer3D::Init: shader:{} maxVertices:{} maxIndices:{}",
+                       s_textureShader->GetName(), s_maxVertices, s_maxIndices);
 
-   s_Data.m_textureShader = ShaderLibrary::GetShader("DefaultShader");
-   s_Data.m_textureShader->Bind();
-   s_Data.m_textureShader->SetIntArray("u_Textures", samplers, s_Data.m_maxTextureSlots);
-
-   // Set all texture slots to 0
-   s_Data.m_textureSlots[0] = s_Data.m_whiteTexture;
+   s_bufferLockManager = BufferLockManager::Create(true);
 }
 
 void
 Renderer3D::Shutdown()
 {
-   s_Data.m_vertexArray.reset();
-   s_Data.m_vertexBuffer.reset();
-   s_Data.m_whiteTexture.reset();
-
-   // TextureLibrary::Clear();
-   // ShaderLibrary::Clear();
-
-   s_Data.m_textureShader.reset();
+   s_vertexArray.reset();
+   s_vertexBuffer.reset();
+   s_textureShader.reset();
 }
 
 void
-Renderer3D::BeginScene(const Camera& camera)
+Renderer3D::BeginScene(const glm::tvec2<uint32_t>& screenSize, const scene::Camera& camera,
+                       scene::Light& light, bool shadowMap)
 {
-   s_Data.m_textureShader->Bind();
-   s_Data.m_textureShader->SetMat4("u_ViewProjection", camera.GetViewProjection());
+   trace::Logger::Debug("Renderer3D::BeginScene: {} shader:{}",
+                        shadowMap ? "FIRST_PASS" : "SECOND_PASS",
+                        shadowMap ? s_shadowShader->GetName() : s_textureShader->GetName());
 
-   s_Data.m_textureSlotIndex = 1;
+   s_screenWidth = screenSize.x;
+   s_screenHeight = screenSize.y;
+   s_drawingToShadowMap = shadowMap;
+   s_lightPtr = &light;
+
+   if (!s_drawingToShadowMap)
+   {
+      RenderCommand::SetViewport(0, 0, s_screenWidth, s_screenHeight);
+
+      s_textureShader->Bind();
+      // @TODO: Mby use uniform buffer for all these?
+      s_textureShader->SetMat4("u_lightSpaceMat", light.GetLightSpaceMat());
+      s_textureShader->SetFloat3("u_lightPos", light.GetPosition());
+      s_textureShader->SetMat4("u_projectionMat", camera.GetProjection());
+      s_textureShader->SetMat4("u_viewMat", camera.GetView());
+      s_textureShader->SetFloat3("u_cameraPos", camera.GetPosition());
+
+      light.BindLightMap(0);
+      s_textureShader->SetInt("u_depthMap", 0);
+   }
+   else
+   {
+      s_shadowShader->Bind();
+      s_shadowShader->SetMat4("u_lightSpaceMat", light.GetLightSpaceMat());
+
+      const auto shadowMapSize = light.GetLightmapSize();
+      RenderCommand::SetViewport(0, 0, shadowMapSize.x, shadowMapSize.y);
+
+      light.BeginRenderToLightmap();
+   }
+
+   if (s_sceneChanged)
+   {
+      s_vertexArray = VertexArray::Create();
+
+      // setup vertex buffer
+      s_vertexBuffer = VertexBuffer::Create(reinterpret_cast< float* >(s_verticesBatch.data()),
+                                            s_maxVertices * sizeof(render::Vertex));
+      s_vertexBuffer->SetLayout(BufferLayout{{ShaderDataType::Float3, "a_position"},
+                                 {ShaderDataType::Float3, "a_normal"},
+                                 {ShaderDataType::Float2, "a_texCoord"},
+                                 {ShaderDataType::Float3, "a_tangent"},
+                                 {ShaderDataType::Float4, "a_color"}});
+
+      s_vertexArray->AddVertexBuffer(s_vertexBuffer);
+
+
+      // Generating drawIDs and passing them via VS input has proven to be faster than
+      // using built in gl_DrawID
+      std::array< float, s_maxMeshesSlots > drawIDs;
+      std::iota(std::begin(drawIDs), std::end(drawIDs), 0);
+      s_drawIDs = VertexBuffer::Create(drawIDs.data(), s_maxMeshesSlots * sizeof(float));
+      s_drawIDs->SetLayout(BufferLayout{{ShaderDataType::Float, "a_drawID", 1}});
+
+      s_vertexArray->AddVertexBuffer(s_drawIDs);
+
+      s_indexBuffer = IndexBuffer::Create(s_indicesBatch.data(), s_maxIndices);
+      s_vertexArray->SetIndexBuffer(s_indexBuffer);
+
+      // s_bufferLockManager->WaitForLockedRange(0, size);
+      // s_vertexBuffer->SetData(s_verticesBatch.data(), size);
+      // s_bufferLockManager->LockRange(0, size);
+
+      // s_indexBuffer->SetData(s_indicesBatch.data(), s_currentIndex * sizeof(uint32_t));
+
+      s_sceneChanged = false;
+   }
 }
 
 void
 Renderer3D::EndScene()
 {
-   SendData();
+   trace::Logger::Debug("Renderer3D::EndScene: {}",
+                        s_drawingToShadowMap ? "FIRST_PASS" : "SECOND_PASS");
+   FlushAndReset();
 }
 
 void
 Renderer3D::SendData()
 {
-   s_Data.m_vertexBuffer->SetData(s_Data.m_verticesBatch.data(), s_Data.m_currentVertex);
    Flush();
 }
 
 void
 Renderer3D::Flush()
 {
-   if (s_Data.m_currentVertex == 0)
+   // SCOPED_TIMER(fmt::format("Renderer3D::Flush: numMeshes:{} numVertices:{} numTextures:{}",
+   //                          s_numMeshes, s_currentVertex, s_textures.size()));
+
+   if (s_currentVertex == 0)
    {
       return; // Nothing to draw
    }
 
-   s_Data.m_vertexArray->Bind();
-   s_Data.m_vertexBuffer->Bind();
-   s_Data.m_textureShader->Bind();
+   s_vertexArray->Bind();
 
-   // Bind textures
-   for (uint32_t i = 0; i < s_Data.m_textureSlotIndex; i++)
+   const auto bufferDataSSBOSize = s_maxMeshesSlots * sizeof(VertexBufferData);
+   const auto elemsIndirectSize = s_maxMeshesSlots * sizeof(DrawElementsIndirectCommand);
+
+   s_perMeshDataSSBO->SetData(s_renderDataPerObj.data(), bufferDataSSBOSize);
+   s_perMeshDataSSBO->BindBufferRange(0, bufferDataSSBOSize);
+
+   s_drawIndirectBuffer->SetData(s_commands.data(), elemsIndirectSize);
+
+   RenderCommand::MultiDrawElemsIndirect(s_numMeshes, s_drawIndirectBuffer->GetOffset());
+
+   s_perMeshDataSSBO->OnUsageComplete(bufferDataSSBOSize);
+   s_drawIndirectBuffer->OnUsageComplete(elemsIndirectSize);
+
+   s_currentMeshIdx = 0;
+
+   for (auto& texture : s_textures)
    {
-      s_Data.m_textureSlots[i]->Bind(i);
+      texture->MakeNonResident();
    }
+   s_textures.clear();
 
-   RenderCommand::DrawIndexed(s_Data.m_vertexArray, s_Data.m_currentIndex);
+   if (s_drawingToShadowMap)
+   {
+      s_lightPtr->EndRenderToLightmap();
+   }
 }
 
 void
 Renderer3D::FlushAndReset()
 {
    SendData();
-
-   s_Data.m_currentIndex = 0;
-   s_Data.m_currentVertex = 0;
-   s_Data.m_textureSlotIndex = 1;
 }
 
 void
-Renderer3D::DrawMesh(std::vector< Vertex >& vertices, const std::vector< uint32_t >& indices,
-                     const glm::vec3& translateVal, const glm::vec3& scaleVal,
-                     const glm::vec3& rotateAxis, float radiansRotation,
-                     const TexturePtrVec& textures, const glm::vec4& tintColor)
+Renderer3D::DrawMesh(const std::string& modelName, const glm::mat4& modelMat,
+                     const TexturePtrVec& textures, const glm::vec4& /*tintColor*/)
 {
-   if (s_Data.m_currentVertex >= RendererData::m_maxVertices
-       || (s_Data.m_textureSlotIndex + textures.size()) >= (RendererData::m_maxTextureSlots - 1))
-   {
-      FlushAndReset();
-   }
+   s_renderDataPerObj[s_currentMeshIdx].modelMat = modelMat;
 
    auto meshTextures = SetupTextures(textures);
 
-   glm::mat4 modelMat = glm::translate(glm::mat4(1.0f), translateVal)
-                        * glm::rotate(glm::mat4(1.0f), radiansRotation, rotateAxis)
-                        * glm::scale(glm::mat4(1.0f), scaleVal);
+   s_renderDataPerObj[s_currentMeshIdx].diffuseTextureID = meshTextures[TextureType::DIFFUSE_MAP];
+   s_renderDataPerObj[s_currentMeshIdx].normalTextureID = meshTextures[TextureType::NORMAL_MAP];
+   s_renderDataPerObj[s_currentMeshIdx].specularTextureID = meshTextures[TextureType::SPECULAR_MAP];
 
-
-   for (auto& vertex : vertices)
-   {
-      vertex.m_color = tintColor;
-      vertex.m_position = modelMat * glm::vec4(vertex.m_position, 1.0f);
-      vertex.m_diffTexIndex = meshTextures[TextureType::DIFFUSE_MAP];
-      vertex.m_specTexIndex = meshTextures[TextureType::SPECULAR_MAP];
-      vertex.m_normTexIndex = meshTextures[TextureType::NORMAL_MAP];
-   }
-
-   s_Data.m_verticesBatch.insert(s_Data.m_verticesBatch.begin() + s_Data.m_currentVertex,
-                                 vertices.begin(), vertices.end());
-   s_Data.m_indicesBatch.insert(s_Data.m_indicesBatch.begin() + s_Data.m_currentIndex,
-                                indices.begin(), indices.end());
-
-   s_Data.m_currentVertex += static_cast< uint32_t >(vertices.size());
-   s_Data.m_currentIndex += static_cast< uint32_t >(indices.size());
+   s_commands[s_modelCommandMap[modelName]].baseInstance = s_currentMeshIdx;
+   ++s_currentMeshIdx;
 }
 
-std::unordered_map< TextureType, float >
+void
+Renderer3D::AddMesh(const std::string& modelName, std::vector< Vertex >& vertices,
+                    const std::vector< uint32_t >& indices)
+{
+   s_verticesBatch.insert(s_verticesBatch.begin() + s_currentVertex, vertices.begin(),
+                          vertices.end());
+
+   s_indicesBatch.insert(s_indicesBatch.begin() + s_currentIndex, indices.begin(), indices.end());
+
+   DrawElementsIndirectCommand newModel;
+   newModel.count = static_cast< uint32_t >(indices.size());
+   newModel.instanceCount = 1;
+   newModel.firstIndex = s_currentIndex;
+   newModel.baseVertex = s_currentVertex;
+   newModel.baseInstance = 0;
+
+   s_commands[s_numMeshes] = newModel;
+   s_modelCommandMap[modelName] = s_numMeshes;
+   ++s_numMeshes;
+
+   s_currentVertex += static_cast< uint32_t >(vertices.size());
+   s_currentIndex += static_cast< uint32_t >(indices.size());
+
+   s_sceneChanged = true;
+}
+
+std::unordered_map< TextureType, TextureHandleType >
 Renderer3D::SetupTextures(const TexturePtrVec& textures)
 {
    if (textures.empty())
    {
-      return {{TextureType::DIFFUSE_MAP, 0.0f},
-              {TextureType::NORMAL_MAP, 0.0f},
-              {TextureType::SPECULAR_MAP, 0.0f}};
+      // TODO: Assign some default texture so it's easly visible
+      // that particular model/mesh doesn't have textures set
+      return {{TextureType::DIFFUSE_MAP, 0},
+              {TextureType::NORMAL_MAP, 0},
+              {TextureType::SPECULAR_MAP, 0}};
    }
 
-   std::unordered_map< TextureType, float > meshTextures;
+   std::unordered_map< TextureType, TextureHandleType > meshTextures;
 
-   // Check whether textures for this mesh are already loaded
    for (auto& texture : textures)
    {
-      float textureIndex = 0.0f;
+      const auto texHandle = texture->GetTextureHandle();
 
-      const auto textureIdxPtr =
-         std::find_if(s_Data.m_textureSlots.begin(), s_Data.m_textureSlots.end(),
-                      [&texture](const auto& textureSlot) { return *textureSlot == *texture; });
+      auto iter = std::find_if(s_textures.begin(), s_textures.end(),
+                               [&texture](const auto& tex) { return *texture == *tex; });
 
-      if (s_Data.m_textureSlots.end() != textureIdxPtr)
+      if (iter == s_textures.end())
       {
-         textureIndex =
-            static_cast< float >(std::distance(s_Data.m_textureSlots.begin(), textureIdxPtr));
-      }
-      else
-      {
-         textureIndex = static_cast< float >(s_Data.m_textureSlotIndex);
-         s_Data.m_textureSlots[s_Data.m_textureSlotIndex] = texture;
-         s_Data.m_textureSlotIndex++;
+         s_textures.push_back(texture);
+         texture->MakeResident();
       }
 
-      meshTextures[texture->GetType()] = textureIndex;
+      meshTextures[texture->GetType()] = texHandle;
    }
 
    return meshTextures;

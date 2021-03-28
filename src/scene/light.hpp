@@ -1,6 +1,6 @@
 #pragma once
 
-#include "framebuffer.hpp"
+#include "render/framebuffer.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -17,21 +17,43 @@ class Light
 {
  public:
    Light(const glm::vec3& position, const glm::vec3& color, LightType type);
+
    void
-   StartDrawingShadows(uint32_t programID);
+   BeginRenderToLightmap();
+
    void
-   StopDrawingShadows();
+   EndRenderToLightmap();
+
+   render::TextureHandleType
+   GetDepthMapHandle();
+
+   render::TextureIDType
+   GetDepthMapID();
+
+   const glm::mat4&
+   GetLightSpaceMat() const;
+
+   const glm::vec3&
+   GetPosition() const;
+
+   glm::tvec2<uint32_t>
+   GetLightmapSize() const;
+
+   void
+   MoveBy(const glm::vec3& moveBy);
+
+   void
+   BindLightMap(uint32_t slot);
 
  private:
-   int32_t m_shadowTextureWidth = 4096;
-   int32_t m_shadowTextureHeight = 4096;
+   uint32_t m_shadowTextureWidth = 4096;
+   uint32_t m_shadowTextureHeight = 4096;
    std::shared_ptr< render::FrameBuffer > m_shadowBuffer;
 
-   glm::vec3 m_color = glm::vec3(1.0f);
    glm::vec3 m_position = glm::vec3(0.0f);
-   float m_intensity = 1.0f;
 
-   glm::mat4 m_modelMatrix = glm::mat4();
+   glm::mat4 m_projectionMatrix = glm::mat4();
+   glm::mat4 m_viewMatrix = glm::mat4();
    glm::mat4 m_lightSpaceMatrix = glm::mat4();
    glm::mat4 m_biasMatrix = glm::mat4();
    glm::mat4 m_shadowMatrix = glm::mat4();

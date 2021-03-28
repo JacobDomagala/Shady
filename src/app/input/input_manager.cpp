@@ -8,7 +8,7 @@
 namespace shady::app::input {
 
 void
-InputManager::InternalKeyCallback(GLFWwindow* window, int32_t key, int32_t scancode, int32_t action,
+InputManager::InternalKeyCallback(GLFWwindow* /* window */, int32_t key, int32_t scancode, int32_t action,
                                   int32_t mods)
 {
    trace::Logger::Trace("GLFW key {} {} scan code - {}", action, key, scancode);
@@ -19,26 +19,28 @@ InputManager::InternalKeyCallback(GLFWwindow* window, int32_t key, int32_t scanc
 }
 
 void
-InputManager::InternalMouseButtonCallback(GLFWwindow* window, int32_t button, int32_t action,
+InputManager::InternalMouseButtonCallback(GLFWwindow* /* window */, int32_t button, int32_t action,
                                           int32_t mods)
 {
    trace::Logger::Trace("GLFW mouse button {} {} {}", button, action, mods);
+   s_mouseButtonMap[button] = action;
 
    BroadcastEvent(MouseButtonEvent{button, action, mods});
 }
 
 void
-InputManager::InternalCursorPositionCallback(GLFWwindow* window, double x, double y)
+InputManager::InternalCursorPositionCallback(GLFWwindow* /* window */, double xpos, double ypos)
 {
-   trace::Logger::Trace("GLFW cursor pos {} {}", x, y);
+   trace::Logger::Trace("GLFW cursor pos {} {}", xpos, ypos);
 
-   s_mousePosition = glm::vec2(x, y);
+   auto deltaPosition = glm::dvec2(xpos, ypos) - s_mousePosition;
+   s_mousePosition = glm::dvec2(xpos, ypos);
 
-   BroadcastEvent(CursorPositionEvent{x, y});
+   BroadcastEvent(CursorPositionEvent{xpos, ypos, deltaPosition.x, deltaPosition.y});
 }
 
 void
-InputManager::InternalMouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+InputManager::InternalMouseScrollCallback(GLFWwindow* /* window */, double xoffset, double yoffset)
 {
    trace::Logger::Trace("GLFW scroll {} {}", xoffset, yoffset);
 
@@ -91,6 +93,7 @@ void
 InputManager::Init(GLFWwindow* mainWindow)
 {
    s_windowHandle = mainWindow;
+   glfwGetCursorPos(s_windowHandle, &s_mousePosition.x, &s_mousePosition.y);
 
    glfwSetKeyCallback(s_windowHandle, InternalKeyCallback);
    glfwSetMouseButtonCallback(s_windowHandle, InternalMouseButtonCallback);
@@ -131,6 +134,12 @@ InputManager::PollEvents()
 }
 
 bool
+InputManager::CheckButtonPressed(int32_t button)
+{
+   return s_mouseButtonMap[button];
+}
+
+bool
 InputManager::CheckKeyPressed(int32_t keyKode)
 {
    return s_keyMap[keyKode];
@@ -145,7 +154,8 @@ InputManager::GetMousePos()
 void
 InputManager::SetMousePos(const glm::vec2& position)
 {
-   glfwSetCursorPos(s_windowHandle, position.x, position.y);
+   glfwSetCursorPos(s_windowHandle, static_cast< double >(position.x),
+                    static_cast< double >(position.y));
 }
 
 } // namespace shady::app::input

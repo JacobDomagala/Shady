@@ -1,11 +1,19 @@
 #include "opengl_texture.hpp"
+#include "trace/logger.hpp"
+#include "utils/assert.hpp"
 #include "utils/file_manager.hpp"
 
+#include <array>
 #include <glad/glad.h>
+#include <glm/glm.hpp>
+
+
+// Undefine leaking 'max' from Windows
+#undef max
 
 namespace shady::render::opengl {
 
-OpenGLTexture::OpenGLTexture(const std::string& name, TextureType type) : Texture(type)
+OpenGLTexture::OpenGLTexture(TextureType type, const std::string& name) : Texture(type, name)
 {
    switch (type)
    {
@@ -24,7 +32,7 @@ OpenGLTexture::OpenGLTexture(const std::string& name, TextureType type) : Textur
    }
 }
 
-OpenGLTexture::OpenGLTexture(const glm::ivec2& size, TextureType type) : Texture(type)
+OpenGLTexture::OpenGLTexture(TextureType type, const glm::ivec2& size) : Texture(type)
 {
    // cast here to avoid overflow warning
    m_imageData.m_bytes = ImageHandleType(
@@ -32,11 +40,13 @@ OpenGLTexture::OpenGLTexture(const glm::ivec2& size, TextureType type) : Texture
 
    m_imageData.m_size = size;
    m_imageData.m_channels = 4;
+
+   CreateTexture();
 }
 
 OpenGLTexture::~OpenGLTexture()
 {
-   glDeleteTextures(1, &m_textureHandle);
+   glDeleteTextures(1, &m_textureID);
 }
 
 void
@@ -44,61 +54,107 @@ OpenGLTexture::CreateTexture()
 {
    const auto width = m_imageData.m_size.x;
    const auto height = m_imageData.m_size.y;
+
+   utils::Assert(width > 0 && height > 0 && m_imageData.m_bytes && (m_imageData.m_channels == 3
+                    || m_imageData.m_channels == 4),
+                 fmt::format("Wrong Texture data: Name:{} Width:{} Height:{} Data:{} Format:{}",
+                             m_name, width, height, m_imageData.m_bytes ? "Valid" : "Invalid",
+                             m_imageData.m_channels));
+
    const auto dataFormat = m_imageData.m_channels == 4 ? GL_RGBA : GL_RGB;
    const auto internalFormat = m_imageData.m_channels == 4 ? GL_RGBA8 : GL_RGB8;
 
-   glCreateTextures(GL_TEXTURE_2D, 1, &m_textureHandle);
-   glTextureStorage2D(m_textureHandle, 1, internalFormat, width, height);
+   const auto numMips = 1
+                        + static_cast< int32_t >(
+                           glm::floor(glm::log2(static_cast< float >(::glm::max(width, height)))));
 
-   glTextureParameteri(m_textureHandle, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-   glTextureParameteri(m_textureHandle, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-   glTextureParameteri(m_textureHandle, GL_TEXTURE_WRAP_S, GL_REPEAT);
-   glTextureParameteri(m_textureHandle, GL_TEXTURE_WRAP_T, GL_REPEAT);
+   glCreateTextures(GL_TEXTURE_2D, 1, &m_textureID);
 
-   glTextureSubImage2D(m_textureHandle, 0, 0, 0, width, height, dataFormat, GL_UNSIGNED_BYTE,
+   glTextureStorage2D(m_textureID, numMips, internalFormat, width, height);
+
+   glTextureParameterf(m_textureID, GL_TEXTURE_MAX_ANISOTROPY, 16.0f);
+   glTextureParameteri(m_textureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+   glTextureParameteri(m_textureID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+   glTextureParameteri(m_textureID, GL_TEXTURE_WRAP_S, GL_REPEAT);
+   glTextureParameteri(m_textureID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+   glTextureSubImage2D(m_textureID, 0, 0, 0, width, height, dataFormat, GL_UNSIGNED_BYTE,
                        m_imageData.m_bytes.get());
+
+   glGenerateTextureMipmap(m_textureID);
+
+   m_textureHandle = glGetTextureHandleARB(m_textureID);
+
+   trace::Logger::Debug("OpenGL texture loaded = {}", m_name);
 }
 
 void
 OpenGLTexture::CreateCubeMap(const std::string& name)
 {
-   std::unordered_map< std::string, GLenum > faces = {
-      {name + "_right.jpg", GL_TEXTURE_CUBE_MAP_POSITIVE_X},
-      {name + "_left.jpg", GL_TEXTURE_CUBE_MAP_NEGATIVE_X},
-      {name + "_top.jpg", GL_TEXTURE_CUBE_MAP_POSITIVE_Y},
-      {name + "_bottom.jpg", GL_TEXTURE_CUBE_MAP_NEGATIVE_Y},
-      {name + "_back.jpg", GL_TEXTURE_CUBE_MAP_POSITIVE_Z},
-      {name + "_front.jpg", GL_TEXTURE_CUBE_MAP_NEGATIVE_Z}};
+   constexpr auto num_faces = 6;
 
-   glGenTextures(1, &m_textureHandle);
-   glBindTexture(GL_TEXTURE_CUBE_MAP, m_textureHandle);
+   const std::unordered_map< GLuint, std::string > textureFaces = {
+      {0, name + "_right.jpg"},  {1, name + "_left.jpg"},  {2, name + "_top.jpg"},
+      {3, name + "_bottom.jpg"}, {4, name + "_front.jpg"}, {5, name + "_back.jpg"}};
 
-   for (auto& [textureName, glFaceOrientation] : faces)
+
+   // Preload faces to know data format
+   std::array< render::Texture::ImageData, num_faces > faces;
+
+   for(auto [key, value] : textureFaces)
    {
-      auto textureData = utils::FileManager::ReadTexture(textureName);
-      glTexImage2D(glFaceOrientation, 0, GL_RGB, textureData.m_size.x, textureData.m_size.y, 0,
-                   GL_RGB, GL_UNSIGNED_BYTE, textureData.m_bytes.get());
+      faces[key] = utils::FileManager::ReadTexture(value);
    }
 
-   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-   glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+   const auto& imageData = faces[0];
+   const auto dataFormat = imageData.m_channels == 4 ? GL_RGBA : GL_RGB;
+   const auto internalFormat = imageData.m_channels == 4 ? GL_RGBA8 : GL_RGB8;
+   const auto width = imageData.m_size.x;
+   const auto height = imageData.m_size.y;
+
+   glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_textureID);
+   glTextureStorage2D(m_textureID, 1, internalFormat, width, height);
+
+   for(auto [key, value] : textureFaces)
+   {
+      const auto& textureData = faces[key];
+
+      glTextureSubImage3D(m_textureID, 0, 0, 0, key, width, height, 1, dataFormat,
+                          GL_UNSIGNED_BYTE, textureData.m_bytes.get());
+      trace::Logger::Debug("OpenGL cubemap texture loaded = {}", value);
+   }
+
+   glTextureParameteri(m_textureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+   glTextureParameteri(m_textureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+   glTextureParameteri(m_textureID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+   glTextureParameteri(m_textureID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+   glTextureParameteri(m_textureID, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 }
 
 void
 OpenGLTexture::Bind(uint32_t slot) const
 {
-   glBindTextureUnit(slot, m_textureHandle);
+   glBindTextureUnit(slot, m_textureID);
+}
+
+void
+OpenGLTexture::MakeResident()
+{
+   glMakeTextureHandleResidentARB(m_textureHandle);
+}
+
+void
+OpenGLTexture::MakeNonResident()
+{
+   glMakeTextureHandleNonResidentARB(m_textureHandle);
 }
 
 bool
 OpenGLTexture::operator==(const Texture& other) const
 {
-   return m_textureHandle == other.GetTextureID();
+   return m_textureID == other.GetTextureID();
 }
 
 } // namespace shady::render::opengl

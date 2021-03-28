@@ -1,22 +1,67 @@
 #include "model.hpp"
 #include "trace/logger.hpp"
+#include "utils/file_manager.hpp"
 
 #include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
 namespace shady::scene {
+
+static render::TextureType
+GetShadyTexFromAssimpTex(aiTextureType assimpTex)
+{
+   switch (assimpTex)
+   {
+      case aiTextureType_SPECULAR:
+         return render::TextureType::SPECULAR_MAP;
+      case aiTextureType_NORMALS:
+         return render::TextureType::NORMAL_MAP;
+      case aiTextureType_DIFFUSE:
+      default: {
+         return render::TextureType::DIFFUSE_MAP;
+      }
+   }
+}
+
+Model::Model(const std::string& path, LoadFlags additionalAssimpFlags)
+{
+   Assimp::Importer importer;
+
+   auto scene = importer.ReadFile(
+      path, aiProcess_GenSmoothNormals | aiProcess_Triangulate | aiProcess_CalcTangentSpace
+               | aiProcess_JoinIdenticalVertices | aiProcess_ValidateDataStructure
+               | static_cast< uint32_t >(additionalAssimpFlags));
+
+   // Check for errors
+   if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+   {
+      trace::Logger::Fatal("Error loading model: {} \n Error message: {}", path,
+                           importer.GetErrorString());
+      return;
+   }
+
+   trace::Logger::Debug("Loading model: {}", path);
+
+   // Process ASSIMP's root node recursively
+   ProcessNode(scene->mRootNode, scene);
+
+   m_name = scene->mRootNode->mName.C_Str();
+   trace::Logger::Info("Loaded model: {} numVertices: {} numIndices: {}", m_name, m_numVertices,
+                       m_numIndices);
+}
 
 void
 Model::ScaleModel(const glm::vec3& scale)
 {
    m_scaleValue = scale;
+   RecalculateModelMat();
 }
 
 void
 Model::TranslateModel(const glm::vec3& translate)
 {
    m_translateValue = translate;
+   RecalculateModelMat();
 }
 
 void
@@ -24,6 +69,7 @@ Model::RotateModel(const glm::vec3& rotate, float angle)
 {
    m_rotateAngle = angle;
    m_rotateValue = rotate;
+   RecalculateModelMat();
 }
 
 void
@@ -31,27 +77,14 @@ Model::Draw()
 {
    for (auto& mesh : m_meshes)
    {
-      mesh.Draw(m_translateValue, m_scaleValue, m_rotateValue, m_rotateAngle,
-                {1.0f, 1.0f, 1.0f, 1.0f});
+      mesh.Draw(m_name, m_modelMat, {1.0f, 1.0f, 1.0f, 1.0f});
    }
 }
 
-void
-Model::LoadModel(const std::string& path)
+std::vector< Mesh >&
+Model::GetMeshes()
 {
-   // Read file via ASSIMP
-   Assimp::Importer importer;
-   auto scene = importer.ReadFile(path, aiProcess_GenSmoothNormals | aiProcess_Triangulate
-                                           | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
-   // Check for errors
-   if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
-   {
-      trace::Logger::Fatal("{}", importer.GetErrorString());
-      return;
-   }
-
-   // Process ASSIMP's root node recursively
-   ProcessNode(scene->mRootNode, scene);
+   return m_meshes;
 }
 
 void
@@ -65,6 +98,8 @@ Model::ProcessNode(aiNode* node, const aiScene* scene)
       auto mesh = scene->mMeshes[node->mMeshes[i]];
       m_meshes.push_back(ProcessMesh(mesh, scene));
    }
+
+   trace::Logger::Debug("Processed node: {}", node->mName.C_Str());
 
    // After we've processed all of the meshes (if any) we then recursively process each of the
    // children nodes
@@ -116,17 +151,20 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
          vertex.m_texCoords = glm::vec2(0.0f, 0.0f);
       }
 
-      // Tangents
-      vector.x = mesh->mTangents[i].x;
-      vector.y = mesh->mTangents[i].y;
-      vector.z = mesh->mTangents[i].z;
-      vertex.m_tangent = vector;
+      if (mesh->HasTangentsAndBitangents())
+      {
+         // Tangents
+         vector.x = mesh->mTangents[i].x;
+         vector.y = mesh->mTangents[i].y;
+         vector.z = mesh->mTangents[i].z;
+         vertex.m_tangent = vector;
+      }
 
       vertices.push_back(vertex);
    }
 
    std::vector< uint32_t > indices;
-   // Now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the
+   // Now walk through each of the mesh's faces (a face is a mesh its triangle) and retrieve the
    // corresponding vertex indices.
    for (uint32_t i = 0; i < mesh->mNumFaces; i++)
    {
@@ -141,17 +179,16 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
    render::TexturePtrVec textures;
 
    // Process materials
-   if (mesh->mMaterialIndex >= 0)
-   {
-      aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+   aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+   LoadMaterialTextures(material, aiTextureType_DIFFUSE, textures);
+   LoadMaterialTextures(material, aiTextureType_SPECULAR, textures);
+   LoadMaterialTextures(material, aiTextureType_NORMALS, textures);
 
-      LoadMaterialTextures(material, aiTextureType_DIFFUSE, textures);
-      LoadMaterialTextures(material, aiTextureType_SPECULAR, textures);
-      LoadMaterialTextures(material, aiTextureType_NORMALS, textures);
-   }
+   trace::Logger::Debug("Processed mesh: {}", mesh->mName.C_Str());
+   m_numVertices += mesh->mNumVertices;
+   m_numIndices += static_cast< uint32_t >(indices.size());
 
-   // Return a mesh object created from the extracted mesh data
-   return Mesh(std::move(vertices), std::move(indices), std::move(textures));
+   return Mesh(mesh->mName.C_Str(), std::move(vertices), std::move(indices), std::move(textures));
 }
 
 void
@@ -162,8 +199,64 @@ Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type, render::Texture
       aiString str;
       mat->GetTexture(type, i, &str);
 
-      textures.push_back(render::TextureLibrary::GetTexture(str.C_Str()));
+      textures.push_back(
+         render::TextureLibrary::GetTexture(GetShadyTexFromAssimpTex(type), str.C_Str()));
    }
+}
+
+void
+Model::RecalculateModelMat()
+{
+   m_modelMat = glm::translate(glm::mat4(1.0f), m_translateValue)
+                * glm::rotate(glm::mat4(1.0f), m_rotateAngle, m_rotateValue)
+                * glm::scale(glm::mat4(1.0f), m_scaleValue);
+}
+
+std::unique_ptr< Model >
+Model::CreatePlane()
+{
+   auto model = std::make_unique< Model >();
+   model->GetMeshes().push_back(
+      {"Plane",
+       {{
+           {25.0f, -0.5f, 25.0f},   // Position
+           {0.0f, 1.0f, 0.0f},      // Normal
+           {25.0f, 0.0f},           // Texcoord
+           {50.0f, 0.0f, 0.0f},     // Tangent
+           {1.0f, 1.0f, 1.0f, 1.0f} // Color
+        },
+        {
+           {-25.0f, -0.5f, 25.0f},  // Position
+           {0.0f, 1.0f, 0.0f},      // Normal
+           {0.0f, 0.0f},            // Texcoord
+           {50.0f, 0.0f, 0.0f},     // Tangent
+           {1.0f, 1.0f, 1.0f, 1.0f} // Color
+        },
+        {
+           {-25.0f, -0.5f, -25.0f}, // Position
+           {0.0f, 1.0f, 0.0f},      // Normal
+           {0.0f, 25.0f},           // Texcoord
+           {50.0f, 0.0f, 0.0f},     // Tangent
+           {1.0f, 1.0f, 1.0f, 1.0f} // Color
+        },
+        {
+           {25.0f, -0.5f, -25.0f},  // Position
+           {0.0f, 1.0f, 0.0f},      // Normal
+           {25.0f, 25.0f},          // Texcoord
+           {50.0f, 0.0f, 0.0f},     // Tangent
+           {1.0f, 1.0f, 1.0f, 1.0f} // Color
+        }},
+       {2, 1, 0, 3, 2, 0}, // Indices
+       {render::TextureLibrary::GetTexture(render::TextureType::DIFFUSE_MAP,
+                                           (utils::FileManager::TEXTURES_DIR / "196.png").string()),
+        render::TextureLibrary::GetTexture(
+           render::TextureType::NORMAL_MAP,
+           (utils::FileManager::TEXTURES_DIR / "196_norm.png").string()),
+        render::TextureLibrary::GetTexture(
+           render::TextureType::SPECULAR_MAP,
+           (utils::FileManager::TEXTURES_DIR / "196_s.png").string())}});
+
+   return model;
 }
 
 } // namespace shady::scene

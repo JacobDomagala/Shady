@@ -1,4 +1,5 @@
 #include "opengl_vertex_array.hpp"
+#include "trace/logger.hpp"
 
 #include <glad/glad.h>
 
@@ -36,10 +37,25 @@ ShaderDataTypeToOpenGLBaseType(ShaderDataType type)
    return 0;
 }
 
+OpenGLVertexArray::OpenGLVertexArray()
+{
+   glGenVertexArrays(1, &m_vertexArrayID);
+}
+
 void
 OpenGLVertexArray::Bind() const
 {
    glBindVertexArray(m_vertexArrayID);
+
+   if (m_vertexBuffers.size())
+   {
+      for (auto& vbo : m_vertexBuffers)
+      {
+         vbo->Bind();
+      }
+
+      m_indexBuffer->Bind();
+   }
 }
 
 void
@@ -72,20 +88,21 @@ OpenGLVertexArray::AddVertexBuffer(const std::shared_ptr< VertexBuffer >& vertex
             glVertexAttribPointer(m_vertexBufferIndex, element.GetComponentCount(),
                                   ShaderDataTypeToOpenGLBaseType(element.m_type),
                                   element.m_normalized ? GL_TRUE : GL_FALSE, layout.GetStride(),
-                                  (const void*)element.m_offset);
+                                  reinterpret_cast<const void*>(element.m_offset));
+            glVertexAttribDivisor(m_vertexBufferIndex, element.m_divisor);
             m_vertexBufferIndex++;
             break;
          }
          case ShaderDataType::Mat3:
          case ShaderDataType::Mat4: {
-            uint8_t count = element.GetComponentCount();
-            for (uint8_t i = 0; i < count; i++)
+            auto count = element.GetComponentCount();
+            for (decltype(count) i = 0; i < count; i++)
             {
                glEnableVertexAttribArray(m_vertexBufferIndex);
                glVertexAttribPointer(m_vertexBufferIndex, count,
                                      ShaderDataTypeToOpenGLBaseType(element.m_type),
                                      element.m_normalized ? GL_TRUE : GL_FALSE, layout.GetStride(),
-                                     (const void*)(sizeof(float) * count * i));
+                                     reinterpret_cast<const void*>(sizeof(float) * count * i));
                glVertexAttribDivisor(m_vertexBufferIndex, 1);
                m_vertexBufferIndex++;
             }

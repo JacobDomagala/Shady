@@ -12,7 +12,7 @@ Light::Light(const glm::vec3& position, const glm::vec3& color, LightType type)
    switch (type)
    {
       case LightType::DIRECTIONAL_LIGHT: {
-         m_projectionMatrix = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 500.0f);
+         m_projectionMatrix = glm::ortho(-200.0f, 200.0f, -200.0f, 200.0f, 1.0f, 500.0f);
       }
       break;
 
@@ -37,7 +37,7 @@ Light::Light(const glm::vec3& position, const glm::vec3& color, LightType type)
 void
 Light::BeginRenderToLightmap()
 {
-   m_viewMatrix = glm::lookAt(m_position, glm::vec3(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+   m_viewMatrix = glm::lookAt(m_position, glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
    m_lightSpaceMatrix = m_projectionMatrix * m_viewMatrix;
    m_shadowMatrix = m_biasMatrix * m_lightSpaceMatrix;
 

@@ -17,9 +17,10 @@ struct aiScene;
 
 namespace shady::scene {
 
-enum class LoadFlags {
-  None = 0,
-  FlipUV = aiProcess_FlipUVs
+enum class LoadFlags
+{
+   None = 0,
+   FlipUV = aiProcess_FlipUVs
 };
 
 class Model
@@ -43,14 +44,13 @@ class Model
    std::vector< Mesh >&
    GetMeshes();
 
-   static std::unique_ptr< Model > CreatePlane();
+   static std::unique_ptr< Model >
+   CreatePlane();
 
-  //  void
-  //  ReloadModel();
+   //  void
+   //  ReloadModel();
 
  private:
-
-
    void
    ProcessNode(aiNode* node, const aiScene* scene);
 

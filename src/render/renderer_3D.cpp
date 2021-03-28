@@ -90,13 +90,13 @@ Renderer3D::BeginScene(const glm::ivec2& screenSize, const scene::Camera& camera
    }
    else
    {
+      s_shadowShader->Bind();
+      s_shadowShader->SetMat4("u_lightSpaceMat", light.GetLightSpaceMat());
+
       const auto shadowMapSize = light.GetLightmapSize();
       RenderCommand::SetViewport(0, 0, shadowMapSize.x, shadowMapSize.y);
 
       light.BeginRenderToLightmap();
-
-      s_shadowShader->Bind();
-      s_shadowShader->SetMat4("u_lightSpaceMat", light.GetLightSpaceMat());
    }
 
    if (s_sceneChanged)

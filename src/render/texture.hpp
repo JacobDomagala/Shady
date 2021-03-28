@@ -77,9 +77,9 @@ class Texture
 
  protected:
    TextureType m_type;
-   ImageData m_imageData;
-   TextureIDType m_textureID;
-   TextureHandleType m_textureHandle;
+   ImageData m_imageData = {};
+   TextureIDType m_textureID= {};
+   TextureHandleType m_textureHandle= {};
    std::string m_name;
 };
 

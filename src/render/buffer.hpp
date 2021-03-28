@@ -48,7 +48,7 @@ class BufferLayout
 {
  public:
    BufferLayout() = default;
-   BufferLayout(const std::initializer_list< BufferElement >& elements);
+   explicit BufferLayout(const std::initializer_list< BufferElement >& elements);
 
    uint32_t
    GetStride() const;

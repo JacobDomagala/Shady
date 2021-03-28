@@ -99,7 +99,7 @@ Shady::KeyCallback(const input::KeyEvent& event)
 }
 
 void
-Shady::MouseButtonCallback(const input::MouseButtonEvent& event)
+Shady::MouseButtonCallback(const input::MouseButtonEvent& /*event*/)
 {
 }
 
@@ -118,7 +118,7 @@ Shady::CursorPositionCallback(const input::CursorPositionEvent& event)
 }
 
 void
-Shady::MouseScrollCallback(const input::MouseScrollEvent& event)
+Shady::MouseScrollCallback(const input::MouseScrollEvent& /*event*/)
 {
 }
 

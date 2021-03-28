@@ -36,10 +36,10 @@ class FrameBuffer
    BindTexture(uint32_t slot) = 0;
 
    TextureHandleType
-   GetDepthMapHandle();
+   GetDepthMapHandle() const;
 
    TextureIDType
-   GetDepthMapID();
+   GetDepthMapID() const;
 
    static std::shared_ptr< FrameBuffer >
    Create(const glm::ivec2& size, FrameBufferType type, FramebufferAttachment attachment = FramebufferAttachment::DEPTH);

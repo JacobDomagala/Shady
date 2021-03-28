@@ -24,7 +24,7 @@ Skybox::LoadCubeMap(const std::string& directoryPath)
 
    auto vertexBuffer =
       render::VertexBuffer::Create(skyboxVertices.data(), skyboxVertices.size() * sizeof(float));
-   vertexBuffer->SetLayout({{render::ShaderDataType::Float3, "a_Position"}});
+   vertexBuffer->SetLayout(shady::render::BufferLayout{{render::ShaderDataType::Float3, "a_Position"}});
 
    std::array< uint32_t, 36 > indicies = {
       3, 2, 0, 0, 2, 1, // face 1

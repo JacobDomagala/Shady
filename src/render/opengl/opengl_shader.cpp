@@ -94,17 +94,17 @@ OpenGLShader::Compile(const std::string& vertexShader, const std::string& fragme
 }
 
 void
-OpenGLShader::CheckCompileStatus(GLuint type, GLuint shaderID)
+OpenGLShader::CheckCompileStatus(GLuint type, GLuint programID)
 {
    GLint isCompleted = 0;
-   glGetShaderiv(shaderID, GL_COMPILE_STATUS, &isCompleted);
+   glGetShaderiv(programID, GL_COMPILE_STATUS, &isCompleted);
    if (isCompleted == GL_FALSE)
    {
       GLint maxLength = 0;
-      glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &maxLength);
+      glGetShaderiv(programID, GL_INFO_LOG_LENGTH, &maxLength);
 
       std::string log(maxLength, 0);
-      glGetShaderInfoLog(shaderID, maxLength, &maxLength, &log[0]);
+      glGetShaderInfoLog(programID, maxLength, &maxLength, &log[0]);
 
       trace::Logger::Fatal(std::move(log));
    }
@@ -208,55 +208,55 @@ OpenGLShader::SetMat4Array(const std::string& name, const glm::mat4* matrices, u
 void
 OpenGLShader::UploadUniformInt(const std::string& name, int value)
 {
-   SetUniformLocation(*this, name.c_str(), glUniform1i, value);
+   SetUniformLocation(*this, name, glUniform1i, value);
 }
 
 void
 OpenGLShader::UploadUniformUnsignedInt(const std::string& name, uint32_t value)
 {
-   SetUniformLocation(*this, name.c_str(), glUniform1ui, value);
+   SetUniformLocation(*this, name, glUniform1ui, value);
 }
 
 void
 OpenGLShader::UploadUniformIntArray(const std::string& name, int* values, uint32_t count)
 {
-   SetUniformLocation(*this, name.c_str(), glUniform1iv, count, values);
+   SetUniformLocation(*this, name, glUniform1iv, count, values);
 }
 
 void
 OpenGLShader::UploadUniformFloat(const std::string& name, float value)
 {
-   SetUniformLocation(*this, name.c_str(), glUniform1f, value);
+   SetUniformLocation(*this, name, glUniform1f, value);
 }
 
 void
 OpenGLShader::UploadUniformFloat2(const std::string& name, const glm::vec2& value)
 {
-   SetUniformLocation(*this, name.c_str(), glUniform2f, value.x, value.y);
+   SetUniformLocation(*this, name, glUniform2f, value.x, value.y);
 }
 
 void
 OpenGLShader::UploadUniformFloat3(const std::string& name, const glm::vec3& value)
 {
-   SetUniformLocation(*this, name.c_str(), glUniform3f, value.x, value.y, value.z);
+   SetUniformLocation(*this, name, glUniform3f, value.x, value.y, value.z);
 }
 
 void
 OpenGLShader::UploadUniformFloat4(const std::string& name, const glm::vec4& value)
 {
-   SetUniformLocation(*this, name.c_str(), glUniform4f, value.x, value.y, value.z, value.w);
+   SetUniformLocation(*this, name, glUniform4f, value.x, value.y, value.z, value.w);
 }
 
 void
 OpenGLShader::UploadUniformMat3(const std::string& name, const glm::mat3& matrix)
 {
-   SetUniformLocation(*this, name.c_str(), glUniformMatrix3fv, 1, GL_FALSE, glm::value_ptr(matrix));
+   SetUniformLocation(*this, name, glUniformMatrix3fv, 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
 void
 OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4* matrices, uint32_t count)
 {
-   SetUniformLocation(*this, name.c_str(), glUniformMatrix4fv, count, GL_FALSE,
+   SetUniformLocation(*this, name, glUniformMatrix4fv, count, GL_FALSE,
                       reinterpret_cast< const GLfloat* >(matrices));
 }
 

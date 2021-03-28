@@ -112,7 +112,7 @@ OpenGLTexture::CreateCubeMap(const std::string& name)
    const auto height = imageData.m_size.y;
 
    glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_textureID);
-   glTextureStorage2D(m_textureID, 1, GL_RGB8, width, height);
+   glTextureStorage2D(m_textureID, 1, internalFormat, width, height);
 
    for (auto faceID : {0, 1, 2, 3, 4, 5})
    {

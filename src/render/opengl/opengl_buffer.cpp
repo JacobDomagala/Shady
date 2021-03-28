@@ -77,10 +77,10 @@ OpenGLMappedVertexBuffer::OpenGLMappedVertexBuffer(size_t size)
 }
 
 void
-OpenGLMappedVertexBuffer::SetData(const void* data, size_t size, size_t offset)
+OpenGLMappedVertexBuffer::SetData(const void* data, size_t sizeInBytes, size_t offsetInBytes)
 {
-   void* dst = (unsigned char*)m_baseMemPtr + offset;
-   memcpy(dst, data, size);
+   void* dst = (unsigned char*)m_baseMemPtr + offsetInBytes;
+   memcpy(dst, data, sizeInBytes);
 }
 
 /**************************************************************************************************
@@ -205,10 +205,10 @@ OpenGLStorageBuffer::SetData(const void* data, size_t size)
 }
 
 void
-OpenGLStorageBuffer::BindBufferRange(uint32_t index, size_t size)
+OpenGLStorageBuffer::BindBufferRange(uint32_t index, size_t usedBufferSize)
 {
    // Should only be used by GL_SHADER_STORAGE_BUFFER
-   glBindBufferRange(m_type, index, m_rendererID, m_currentHead, size);
+   glBindBufferRange(m_type, index, m_rendererID, m_currentHead, usedBufferSize);
 }
 
 size_t

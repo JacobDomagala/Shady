@@ -21,9 +21,9 @@ OpenGLBufferLockManager::~OpenGLBufferLockManager()
 }
 
 void
-OpenGLBufferLockManager::WaitForLockedRange(size_t _lockBeginBytes, size_t _lockLength)
+OpenGLBufferLockManager::WaitForLockedRange(size_t lockBeginBytes, size_t lockLength)
 {
-   BufferRange testRange = {_lockBeginBytes, _lockLength};
+   BufferRange testRange = {lockBeginBytes, lockLength};
    std::vector< BufferLock > swapLocks;
 
    for (auto& lock : m_bufferLocks)
@@ -81,9 +81,9 @@ OpenGLBufferLockManager::Wait(GLsync* syncObj)
 }
 
 void
-OpenGLBufferLockManager::Cleanup(BufferLock* _bufferLock)
+OpenGLBufferLockManager::Cleanup(BufferLock* bufferLock)
 {
-   glDeleteSync(_bufferLock->m_syncObj);
+   glDeleteSync(bufferLock->m_syncObj);
 }
 
 } // namespace shady::render::opengl

@@ -15,8 +15,8 @@ namespace shady::scene {
 
 
 void
-Scene::AddCamera(CameraType type, const glm::vec3& position,
-                 std::initializer_list< float > constructParams)
+Scene::AddCamera(CameraType /*type*/, const glm::vec3& /*position*/,
+                 std::initializer_list< float > /*constructParams*/)
 {
 }
 

@@ -14,8 +14,8 @@ OpenGLRendererAPI::Init()
    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
    glDebugMessageCallback(
-      [](GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
-         const GLchar* message, const void* logger) {
+      [](GLenum /*source*/, GLenum /*type*/, GLuint /*id*/, GLenum severity, GLsizei /*length*/,
+         const GLchar* message, const void* /*user_data*/) {
          switch (severity)
          {
             case GL_DEBUG_SEVERITY_HIGH:

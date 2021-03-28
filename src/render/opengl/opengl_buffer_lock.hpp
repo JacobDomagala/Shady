@@ -16,13 +16,13 @@ struct BufferLock
 class OpenGLBufferLockManager : public BufferLockManager
 {
  public:
-   OpenGLBufferLockManager(bool cpuRead);
+   explicit OpenGLBufferLockManager(bool cpuUpdates);
    ~OpenGLBufferLockManager() override;
 
    void
-   WaitForLockedRange(size_t _lockBeginBytes, size_t _lockLength) override;
+   WaitForLockedRange(size_t lockBeginBytes, size_t lockLength) override;
    void
-   LockRange(size_t _lockBeginBytes, size_t _lockLength) override;
+   LockRange(size_t lockBeginBytes, size_t lockLength) override;
 
  private:
    void

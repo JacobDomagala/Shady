@@ -44,10 +44,7 @@ Gui::Render(const glm::ivec2& windowSize, uint32_t shadowMapID)
 
    auto windowWidth = static_cast< float >(size.x) / 3.0f;
    const auto toolsWindowHeight = 60.0f;
-   const auto levelWindowHeight = size.y - toolsWindowHeight;
-   const auto gameObjectWindowHeight = static_cast<float>(size.y);
-   const auto debugWindowWidth = size.x - 2 * windowWidth;
-   const auto debugWindowHeight = 100;
+   const auto debugWindowHeight = static_cast<float>(size.y);
 
    ImGui::SetNextWindowPos({0, 0});
    ImGui::SetNextWindowSize(ImVec2(windowWidth, toolsWindowHeight));
@@ -71,7 +68,7 @@ Gui::Render(const glm::ivec2& windowSize, uint32_t shadowMapID)
 
 
    ImGui::SetNextWindowPos({size.x - windowWidth, 0});
-   ImGui::SetNextWindowSize(ImVec2(windowWidth, gameObjectWindowHeight));
+   ImGui::SetNextWindowSize(ImVec2(windowWidth, debugWindowHeight));
    ImGui::Begin("Debug Window");
 
    ImGui::SetNextTreeNodeOpen(true);

@@ -27,9 +27,8 @@ TimeStep::GetMilliseconds() const
 }
 
 
-Timer::Timer()
+Timer::Timer() : m_lastTimeStamp(std::chrono::steady_clock::now())
 {
-   m_lastTimeStamp = std::chrono::steady_clock::now();
 }
 
 TimeStep

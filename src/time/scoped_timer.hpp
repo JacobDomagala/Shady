@@ -9,7 +9,7 @@ namespace shady::time {
 class ScopedTimer
 {
  public:
-   ScopedTimer(std::string&& logMsg);
+   explicit ScopedTimer(std::string&& logMsg);
    ~ScopedTimer();
 
  private:

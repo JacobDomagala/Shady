@@ -7,13 +7,13 @@
 namespace shady::render {
 
 TextureHandleType
-FrameBuffer::GetDepthMapHandle()
+FrameBuffer::GetDepthMapHandle() const
 {
    return m_textureHandle;
 }
 
 TextureIDType
-FrameBuffer::GetDepthMapID()
+FrameBuffer::GetDepthMapID() const
 {
    return m_textureID;
 }

@@ -11,7 +11,7 @@ namespace shady::render {
  ****************************************** TEXTURE ***********************************************
  *************************************************************************************************/
 
-Texture::Texture(TextureType type, const std::string& name) : m_name(name), m_type(type)
+Texture::Texture(TextureType type, const std::string& name) : m_type(type), m_name(name)
 {
 }
 

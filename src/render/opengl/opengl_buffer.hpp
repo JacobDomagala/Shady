@@ -7,8 +7,8 @@ namespace shady::render::opengl {
 class OpenGLVertexBuffer : public VertexBuffer
 {
  public:
-   explicit OpenGLVertexBuffer(size_t size);
-   explicit OpenGLVertexBuffer(float* vertices, size_t size);
+   explicit OpenGLVertexBuffer(size_t sizeInBytes);
+   explicit OpenGLVertexBuffer(float* vertices, size_t sizeInBytes);
    ~OpenGLVertexBuffer() override;
 
    void
@@ -48,7 +48,7 @@ class OpenGLMappedVertexBuffer : public OpenGLVertexBuffer
 class OpenGLIndexBuffer : public IndexBuffer
 {
  public:
-   OpenGLIndexBuffer(uint32_t count);
+   explicit OpenGLIndexBuffer(uint32_t count);
    OpenGLIndexBuffer(uint32_t* indices, uint32_t count);
    ~OpenGLIndexBuffer() override;
 

@@ -6,7 +6,7 @@
 namespace shady::scene {
 
 Light::Light(const glm::vec3& position, const glm::vec3& color, LightType type)
-   : m_position(position), m_color(color)
+   : m_color(color), m_position(position)
 {
    auto buffer_type = render::FrameBufferType::SINGLE;
    switch (type)

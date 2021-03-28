@@ -20,7 +20,7 @@ class Gui
    Shutdown();
 
    void
-   Render(const glm::ivec2& windowSize, uint32_t shadowMapHandle);
+   Render(const glm::ivec2& windowSize, uint32_t shadowMapID);
 };
 
 } // namespace shady::app::gui

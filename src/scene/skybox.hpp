@@ -14,7 +14,7 @@ class Skybox
 {
  public:
    void
-   LoadCubeMap(const std::string& folderPath);
+   LoadCubeMap(const std::string& directoryPath);
 
    void
    Draw(const Camera& camera, uint32_t windowWidth, uint32_t windowHeight);

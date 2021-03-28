@@ -51,8 +51,8 @@ BufferElement::BufferElement(ShaderDataType type, const std::string& name, uint3
      m_type(type),
      m_size(ShaderDataTypeSize(type)),
      m_offset(0),
-     m_divisor(divisor),
-     m_normalized(normalized)
+     m_normalized(normalized),
+     m_divisor(divisor)
 {
 }
 

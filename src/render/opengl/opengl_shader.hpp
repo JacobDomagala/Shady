@@ -62,7 +62,7 @@ class OpenGLShader : public Shader
    void
    UploadUniformMat3(const std::string& name, const glm::mat3& matrix);
    void
-   UploadUniformMat4(const std::string& name, const glm::mat4* matrix, uint32_t count = 1);
+   UploadUniformMat4(const std::string& name, const glm::mat4* matrices, uint32_t count = 1);
 
  private:
    void
@@ -70,10 +70,10 @@ class OpenGLShader : public Shader
            const std::string& geometryShader);
 
    void
-   CheckCompileStatus(GLuint type, GLuint shaderID);
+   CheckCompileStatus(GLuint type, GLuint programID);
 
    void
-   CheckLinkStatus(GLuint shaderID);
+   CheckLinkStatus(GLuint programID);
 
  private:
    uint32_t m_shaderID;

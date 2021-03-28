@@ -9,7 +9,6 @@ namespace shady::render::opengl {
 
 OpenGLContext::OpenGLContext(GLFWwindow* window) : m_windowHandle(window)
 {
-   Init();
 }
 
 void

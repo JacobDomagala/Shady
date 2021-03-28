@@ -7,23 +7,25 @@ namespace shady::app::input {
 class InputListener
 {
  public:
+   virtual ~InputListener() = default;
+
    virtual void
-   KeyCallback(const KeyEvent& event)
+   KeyCallback(const KeyEvent& /*event*/)
    {
    }
 
    virtual void
-   MouseButtonCallback(const MouseButtonEvent& event)
+   MouseButtonCallback(const MouseButtonEvent& /*event*/)
    {
    }
 
    virtual void
-   CursorPositionCallback(const CursorPositionEvent& event)
+   CursorPositionCallback(const CursorPositionEvent& /*event*/)
    {
    }
 
    virtual void
-   MouseScrollCallback(const MouseScrollEvent& event)
+   MouseScrollCallback(const MouseScrollEvent& /*event*/)
    {
    }
 };

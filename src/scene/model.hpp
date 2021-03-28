@@ -27,7 +27,7 @@ class Model
 {
  public:
    Model() = default;
-   Model(const std::string& path, LoadFlags additionalAssimpFlags = LoadFlags::None);
+   explicit Model(const std::string& path, LoadFlags additionalAssimpFlags = LoadFlags::None);
 
    void
    ScaleModel(const glm::vec3& scale);

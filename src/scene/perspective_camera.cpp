@@ -9,9 +9,9 @@ PerspectiveCamera::PerspectiveCamera(const glm::mat4& projection) : Camera(proje
 {
 }
 
-PerspectiveCamera::PerspectiveCamera(float fieldOfView, float aspectRation, float nearClip, float farClip)
+PerspectiveCamera::PerspectiveCamera(float fieldOfView, float aspectRatio, float nearClip, float farClip)
 {
-   m_projectionMat = glm::perspective(fieldOfView, aspectRation, nearClip, farClip);
+   m_projectionMat = glm::perspective(fieldOfView, aspectRatio, nearClip, farClip);
 }
 
 void

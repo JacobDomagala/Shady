@@ -33,6 +33,7 @@ Window::Window(int32_t width, int32_t height, const std::string& title)
 
    glfwMakeContextCurrent(m_pWindow);
    m_context = render::Context::Create(m_pWindow);
+   m_context->Init();
 
    glfwSwapInterval(1);
 }
@@ -49,7 +50,7 @@ Window::ShutDown()
 }
 
 void
-Window::SetIcon(const std::string& file)
+Window::SetIcon(const std::string& /*file*/)
 {
    GLFWimage image;
    image.width = 16;
@@ -91,12 +92,12 @@ Window::ShowCursor(bool choice)
 }
 
 glm::vec2
-Window::GetCursorScreenPosition(const glm::mat4& projectionMatrix)
+Window::GetCursorScreenPosition(const glm::mat4& /*projectionMatrix*/)
 {
    auto cursorPos = GetCursor();
 
    cursorPos -= glm::vec2((m_width / 2.0f), (m_height / 2.0f));
-   glm::vec2 tmpCursor = projectionMatrix * glm::vec4(cursorPos, 0.0f, 1.0f);
+   // glm::vec2 tmpCursor = projectionMatrix * glm::vec4(cursorPos, 0.0f, 1.0f);
 
    return cursorPos;
 }

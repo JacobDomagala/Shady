@@ -106,7 +106,7 @@ Renderer3D::BeginScene(const glm::ivec2& screenSize, const scene::Camera& camera
       // setup vertex buffer
       s_vertexBuffer = VertexBuffer::Create(reinterpret_cast< float* >(s_verticesBatch.data()),
                                             s_maxVertices * sizeof(render::Vertex));
-      s_vertexBuffer->SetLayout({{ShaderDataType::Float3, "a_position"},
+      s_vertexBuffer->SetLayout(BufferLayout{{ShaderDataType::Float3, "a_position"},
                                  {ShaderDataType::Float3, "a_normal"},
                                  {ShaderDataType::Float2, "a_texCoord"},
                                  {ShaderDataType::Float3, "a_tangent"},
@@ -120,7 +120,7 @@ Renderer3D::BeginScene(const glm::ivec2& screenSize, const scene::Camera& camera
       std::array< float, s_maxMeshesSlots > drawIDs;
       std::iota(std::begin(drawIDs), std::end(drawIDs), 0);
       s_drawIDs = VertexBuffer::Create(drawIDs.data(), s_maxMeshesSlots * sizeof(float));
-      s_drawIDs->SetLayout({{ShaderDataType::Float, "a_drawID", 1}});
+      s_drawIDs->SetLayout(BufferLayout{{ShaderDataType::Float, "a_drawID", 1}});
 
       s_vertexArray->AddVertexBuffer(s_drawIDs);
 
@@ -199,7 +199,7 @@ Renderer3D::FlushAndReset()
 
 void
 Renderer3D::DrawMesh(const std::string& modelName, const glm::mat4& modelMat,
-                     const TexturePtrVec& textures, const glm::vec4& tintColor)
+                     const TexturePtrVec& textures, const glm::vec4& /*tintColor*/)
 {
    s_renderDataPerObj[s_currentMeshIdx].modelMat = modelMat;
 

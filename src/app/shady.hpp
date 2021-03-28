@@ -1,9 +1,10 @@
 #pragma once
 
 #include "app/window.hpp"
+#include "gui/gui.hpp"
 #include "input/input_listener.hpp"
 #include "scene/scene.hpp"
-#include "gui/gui.hpp"
+
 
 #include <memory>
 
@@ -12,6 +13,7 @@ namespace shady::app {
 class Shady : public input::InputListener
 {
  public:
+   ~Shady() override = default;
    void
    Init();
 

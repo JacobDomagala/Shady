@@ -8,7 +8,7 @@
 namespace shady::app::input {
 
 void
-InputManager::InternalKeyCallback(GLFWwindow* window, int32_t key, int32_t scancode, int32_t action,
+InputManager::InternalKeyCallback(GLFWwindow* /* window */, int32_t key, int32_t scancode, int32_t action,
                                   int32_t mods)
 {
    trace::Logger::Trace("GLFW key {} {} scan code - {}", action, key, scancode);
@@ -19,7 +19,7 @@ InputManager::InternalKeyCallback(GLFWwindow* window, int32_t key, int32_t scanc
 }
 
 void
-InputManager::InternalMouseButtonCallback(GLFWwindow* window, int32_t button, int32_t action,
+InputManager::InternalMouseButtonCallback(GLFWwindow* /* window */, int32_t button, int32_t action,
                                           int32_t mods)
 {
    trace::Logger::Trace("GLFW mouse button {} {} {}", button, action, mods);
@@ -29,18 +29,18 @@ InputManager::InternalMouseButtonCallback(GLFWwindow* window, int32_t button, in
 }
 
 void
-InputManager::InternalCursorPositionCallback(GLFWwindow* window, double x, double y)
+InputManager::InternalCursorPositionCallback(GLFWwindow* /* window */, double xpos, double ypos)
 {
-   trace::Logger::Trace("GLFW cursor pos {} {}", x, y);
+   trace::Logger::Trace("GLFW cursor pos {} {}", xpos, ypos);
 
-   auto deltaPosition = glm::dvec2(x, y) - s_mousePosition;
-   s_mousePosition = glm::dvec2(x, y);
+   auto deltaPosition = glm::dvec2(xpos, ypos) - s_mousePosition;
+   s_mousePosition = glm::dvec2(xpos, ypos);
 
-   BroadcastEvent(CursorPositionEvent{x, y, deltaPosition.x, deltaPosition.y});
+   BroadcastEvent(CursorPositionEvent{xpos, ypos, deltaPosition.x, deltaPosition.y});
 }
 
 void
-InputManager::InternalMouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+InputManager::InternalMouseScrollCallback(GLFWwindow* /* window */, double xoffset, double yoffset)
 {
    trace::Logger::Trace("GLFW scroll {} {}", xoffset, yoffset);
 

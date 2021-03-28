@@ -57,7 +57,7 @@ Renderer2D::Init()
    s_Data.QuadVertexArray = VertexArray::Create();
 
    s_Data.QuadVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(QuadVertex));
-   s_Data.QuadVertexBuffer->SetLayout({{ShaderDataType::Float3, "a_Position"},
+   s_Data.QuadVertexBuffer->SetLayout(BufferLayout{{ShaderDataType::Float3, "a_Position"},
                                        {ShaderDataType::Float4, "a_Color"},
                                        {ShaderDataType::Float2, "a_TexCoord"},
                                        {ShaderDataType::Float, "a_TexIndex"},
@@ -107,7 +107,7 @@ Renderer2D::Init()
 
    s_LineData.LineVertexBuffer = VertexBuffer::Create(s_LineData.MaxVertices * sizeof(LineVertex));
    s_LineData.LineVertexBuffer->SetLayout(
-      {{ShaderDataType::Float3, "a_Position"}, {ShaderDataType::Float4, "a_Color"}});
+      BufferLayout{{ShaderDataType::Float3, "a_Position"}, {ShaderDataType::Float4, "a_Color"}});
    s_LineData.LineVertexArray->AddVertexBuffer(s_LineData.LineVertexBuffer);
 
    s_LineData.LineVertexBufferBase = new LineVertex[s_LineData.MaxVertices];

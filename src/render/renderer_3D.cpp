@@ -61,7 +61,7 @@ Renderer3D::Shutdown()
 }
 
 void
-Renderer3D::BeginScene(const glm::ivec2& screenSize, const scene::Camera& camera,
+Renderer3D::BeginScene(const glm::tvec2<uint32_t>& screenSize, const scene::Camera& camera,
                        scene::Light& light, bool shadowMap)
 {
    trace::Logger::Debug("Renderer3D::BeginScene: {} shader:{}",

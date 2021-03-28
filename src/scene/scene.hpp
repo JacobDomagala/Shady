@@ -46,7 +46,7 @@ class Scene
    std::unique_ptr< Light > m_light;
    std::shared_ptr< render::Shader > m_mainShader;
 
-   Model* m_lightSphere = nullptr;
+   //Model* m_lightSphere = nullptr;
 };
 
 } // namespace shady::scene

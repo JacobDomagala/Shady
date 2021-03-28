@@ -9,7 +9,10 @@ namespace shady::render::opengl {
 class OpenGLFramebuffer : public FrameBuffer
 {
  public:
-   OpenGLFramebuffer(const glm::ivec2& size, FrameBufferType type, FramebufferAttachment attachment);
+   OpenGLFramebuffer(const glm::tvec2<uint32_t>& size, FrameBufferType type,
+                     FramebufferAttachment attachment);
+
+   ~OpenGLFramebuffer() override = default;
 
    void
    Bind() override;

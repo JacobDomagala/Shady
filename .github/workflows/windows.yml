@@ -24,7 +24,9 @@ jobs:
     - name: Build
       working-directory: ${{runner.workspace}}/build
       shell: bash
-      run: cmake --build . --config $BUILD_TYPE >> output.txt 2>&1
+      run: |
+        cmake --build . --config $BUILD_TYPE > output.txt
+        cat output.txt
 
     - name: Post PR comment for warnings/errors
       if: ${{ always() }}

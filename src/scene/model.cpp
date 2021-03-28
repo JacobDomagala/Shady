@@ -179,14 +179,10 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
    render::TexturePtrVec textures;
 
    // Process materials
-   if (mesh->mMaterialIndex >= 0)
-   {
-      aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-
-      LoadMaterialTextures(material, aiTextureType_DIFFUSE, textures);
-      LoadMaterialTextures(material, aiTextureType_SPECULAR, textures);
-      LoadMaterialTextures(material, aiTextureType_NORMALS, textures);
-   }
+   aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+   LoadMaterialTextures(material, aiTextureType_DIFFUSE, textures);
+   LoadMaterialTextures(material, aiTextureType_SPECULAR, textures);
+   LoadMaterialTextures(material, aiTextureType_NORMALS, textures);
 
    trace::Logger::Debug("Processed mesh: {}", mesh->mName.C_Str());
    m_numVertices += mesh->mNumVertices;

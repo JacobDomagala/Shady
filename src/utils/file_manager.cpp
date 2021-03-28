@@ -15,7 +15,7 @@ FileManager::ReadFile(const std::filesystem::path& path, FileType type)
 }
 
 std::string
-FileManager::ReadFile(const std::string& fileName, FileType type)
+FileManager::ReadFile(const std::string& fileName, FileType /*type*/)
 {
    std::ifstream fileHandle;
    fileHandle.open(fileName, std::ifstream::in);
@@ -38,7 +38,7 @@ FileManager::ReadFile(const std::string& fileName, FileType type)
 }
 
 void
-FileManager::WriteToFile(const std::string& fileName, const std::string& content, FileType type)
+FileManager::WriteToFile(const std::string& fileName, const std::string& content, FileType /*type*/)
 {
    std::ofstream fileHandle;
    fileHandle.open(fileName);

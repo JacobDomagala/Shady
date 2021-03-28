@@ -34,7 +34,7 @@ Skybox::LoadCubeMap(const std::string& directoryPath)
       7, 3, 0, 5, 7, 0, // face 5
       2, 6, 4, 1, 2, 4  // face 6
    };
-   auto indexBuffer = render::IndexBuffer::Create(indicies.data(), indicies.size());
+   auto indexBuffer = render::IndexBuffer::Create(indicies.data(), static_cast<uint32_t>(indicies.size()));
 
    m_vertexArray = render::VertexArray::Create();
    m_vertexArray->AddVertexBuffer(vertexBuffer);

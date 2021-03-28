@@ -34,7 +34,7 @@ class Renderer3D
    Shutdown();
 
    static void
-   BeginScene(const glm::ivec2& screenSize, const scene::Camera& camera, scene::Light& light,
+   BeginScene(const glm::tvec2<uint32_t>& screenSize, const scene::Camera& camera, scene::Light& light,
               bool shadowMap = false);
 
    static void

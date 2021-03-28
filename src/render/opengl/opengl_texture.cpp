@@ -55,8 +55,8 @@ OpenGLTexture::CreateTexture()
    const auto width = m_imageData.m_size.x;
    const auto height = m_imageData.m_size.y;
 
-   utils::Assert(width > 0 && height > 0 && m_imageData.m_bytes && m_imageData.m_channels == 3
-                    || m_imageData.m_channels == 4,
+   utils::Assert(width > 0 && height > 0 && m_imageData.m_bytes && (m_imageData.m_channels == 3
+                    || m_imageData.m_channels == 4),
                  fmt::format("Wrong Texture data: Name:{} Width:{} Height:{} Data:{} Format:{}",
                              m_name, width, height, m_imageData.m_bytes ? "Valid" : "Invalid",
                              m_imageData.m_channels));
@@ -93,16 +93,19 @@ OpenGLTexture::CreateTexture()
 void
 OpenGLTexture::CreateCubeMap(const std::string& name)
 {
-   std::unordered_map< GLuint, std::string > textureFaces = {
+   constexpr auto num_faces = 6;
+
+   const std::unordered_map< GLuint, std::string > textureFaces = {
       {0, name + "_right.jpg"},  {1, name + "_left.jpg"},  {2, name + "_top.jpg"},
       {3, name + "_bottom.jpg"}, {4, name + "_front.jpg"}, {5, name + "_back.jpg"}};
 
 
    // Preload faces to know data format
-   std::array< render::Texture::ImageData, 6 > faces;
-   for (auto face : {0, 1, 2, 3, 4, 5})
+   std::array< render::Texture::ImageData, num_faces > faces;
+
+   for(auto [key, value] : textureFaces)
    {
-      faces[face] = utils::FileManager::ReadTexture(textureFaces[face]);
+      faces[key] = utils::FileManager::ReadTexture(value);
    }
 
    const auto& imageData = faces[0];
@@ -114,13 +117,13 @@ OpenGLTexture::CreateCubeMap(const std::string& name)
    glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_textureID);
    glTextureStorage2D(m_textureID, 1, internalFormat, width, height);
 
-   for (auto faceID : {0, 1, 2, 3, 4, 5})
+   for(auto [key, value] : textureFaces)
    {
-      const auto& textureData = faces[faceID];
+      const auto& textureData = faces[key];
 
-      glTextureSubImage3D(m_textureID, 0, 0, 0, faceID, width, height, 1, dataFormat,
+      glTextureSubImage3D(m_textureID, 0, 0, 0, key, width, height, 1, dataFormat,
                           GL_UNSIGNED_BYTE, textureData.m_bytes.get());
-      trace::Logger::Debug("OpenGL cubemap texture loaded = {}", textureFaces[faceID]);
+      trace::Logger::Debug("OpenGL cubemap texture loaded = {}", value);
    }
 
    glTextureParameteri(m_textureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

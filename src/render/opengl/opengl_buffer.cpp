@@ -51,7 +51,7 @@ void
 OpenGLVertexBuffer::SetData(const void* data, size_t size, size_t offsetInBytes)
 {
    glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
-   glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
+   glBufferSubData(GL_ARRAY_BUFFER, offsetInBytes, size, data);
 }
 
 const BufferLayout&
@@ -79,7 +79,7 @@ OpenGLMappedVertexBuffer::OpenGLMappedVertexBuffer(size_t size)
 void
 OpenGLMappedVertexBuffer::SetData(const void* data, size_t sizeInBytes, size_t offsetInBytes)
 {
-   void* dst = (unsigned char*)m_baseMemPtr + offsetInBytes;
+   void* dst = m_baseMemPtr + offsetInBytes;
    memcpy(dst, data, sizeInBytes);
 }
 
@@ -200,7 +200,7 @@ OpenGLStorageBuffer::SetData(const void* data, size_t size)
 
    m_bufferLock.WaitForLockedRange(m_currentHead, size);
 
-   void* dst = (unsigned char*)m_baseMemPtr + m_currentHead;
+   void* dst = m_baseMemPtr + m_currentHead;
    memcpy(dst, data, size);
 }
 

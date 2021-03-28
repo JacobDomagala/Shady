@@ -31,7 +31,7 @@ class Texture
    struct ImageData
    {
       ImageHandleType m_bytes;
-      glm::ivec2 m_size;
+      glm::uvec2 m_size;
       int32_t m_channels;
    };
 

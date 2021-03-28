@@ -10,9 +10,10 @@ enum class FrameBufferType
    CUBE
 };
 
-enum class FramebufferAttachment {
-  DEPTH,
-  COLOR
+enum class FramebufferAttachment
+{
+   DEPTH,
+   COLOR
 };
 
 using FramebufferIDType = uint32_t;
@@ -20,6 +21,8 @@ using FramebufferIDType = uint32_t;
 class FrameBuffer
 {
  public:
+   virtual ~FrameBuffer() = default;
+
    virtual void
    Bind() = 0;
 
@@ -42,7 +45,8 @@ class FrameBuffer
    GetDepthMapID() const;
 
    static std::shared_ptr< FrameBuffer >
-   Create(const glm::ivec2& size, FrameBufferType type, FramebufferAttachment attachment = FramebufferAttachment::DEPTH);
+   Create(const glm::ivec2& size, FrameBufferType type,
+          FramebufferAttachment attachment = FramebufferAttachment::DEPTH);
 
  protected:
    uint32_t m_width;

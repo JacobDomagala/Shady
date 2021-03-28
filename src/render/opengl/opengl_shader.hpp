@@ -25,12 +25,12 @@ class OpenGLShader : public Shader
    GetID() const;
 
    void
-   SetInt(const std::string& name, int value) override;
+   SetInt(const std::string& name, int32_t value) override;
    void
    SetUint(const std::string& name, uint32_t value) override;
 
    void
-   SetIntArray(const std::string& name, int* values, uint32_t count) override;
+   SetIntArray(const std::string& name, int* values, GLsizei count) override;
    void
    SetFloat(const std::string& name, float value) override;
    void
@@ -40,7 +40,7 @@ class OpenGLShader : public Shader
    void
    SetMat4(const std::string& name, const glm::mat4& value) override;
    void
-   SetMat4Array(const std::string& name, const glm::mat4* matrices, uint32_t count) override;
+   SetMat4Array(const std::string& name, const glm::mat4* matrices, GLsizei count) override;
 
    void
    UploadUniformInt(const std::string& name, int value);
@@ -48,7 +48,7 @@ class OpenGLShader : public Shader
    UploadUniformUnsignedInt(const std::string& name, uint32_t value);
 
    void
-   UploadUniformIntArray(const std::string& name, int* values, uint32_t count);
+   UploadUniformIntArray(const std::string& name, int* values, GLsizei count);
 
    void
    UploadUniformFloat(const std::string& name, float value);
@@ -62,7 +62,7 @@ class OpenGLShader : public Shader
    void
    UploadUniformMat3(const std::string& name, const glm::mat3& matrix);
    void
-   UploadUniformMat4(const std::string& name, const glm::mat4* matrices, uint32_t count = 1);
+   UploadUniformMat4(const std::string& name, const glm::mat4* matrices, GLsizei count = 1);
 
  private:
    void

@@ -76,7 +76,6 @@ class Model
    uint32_t m_numIndices = 0;
 
    std::string m_name = "DefaultName";
-   bool m_flipUV = false;
 };
 
 } // namespace shady::scene

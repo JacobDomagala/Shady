@@ -67,7 +67,7 @@ Gui::Render(const glm::ivec2& windowSize, uint32_t shadowMapID)
    ImGui::End();
 
 
-   ImGui::SetNextWindowPos({size.x - windowWidth, 0});
+   ImGui::SetNextWindowPos({static_cast<float>(size.x) - windowWidth, 0.0f});
    ImGui::SetNextWindowSize(ImVec2(windowWidth, debugWindowHeight));
    ImGui::Begin("Debug Window");
 

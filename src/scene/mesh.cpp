@@ -20,7 +20,7 @@ Mesh::AddTexture(const render::TexturePtr& texture)
 }
 
 void
-Mesh::Draw(const std::string& modelName, const glm::mat4& modelMat, const glm::vec4& tintColor)
+Mesh::Draw(const std::string& /*modelName*/, const glm::mat4& modelMat, const glm::vec4& tintColor)
 {
    render::Renderer3D::DrawMesh(m_name, modelMat, m_textures, tintColor);
 }

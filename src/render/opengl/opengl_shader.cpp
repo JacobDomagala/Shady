@@ -14,7 +14,7 @@ void
 SetUniformLocation(const OpenGLShader& program, const std::string& name, FunctionPtr&& ptr,
                    Args&&... args)
 {
-   GLint location = glGetUniformLocation(program.GetID(), name.c_str());
+   const auto location = glGetUniformLocation(program.GetID(), name.c_str());
 
    if (location < 0)
    {
@@ -23,7 +23,7 @@ SetUniformLocation(const OpenGLShader& program, const std::string& name, Functio
    }
    else
    {
-      ptr(location, std::forward<Args>(args)...);
+      ptr(location, std::forward< Args >(args)...);
    }
 }
 
@@ -103,7 +103,7 @@ OpenGLShader::CheckCompileStatus(GLuint type, GLuint programID)
       GLint maxLength = 0;
       glGetShaderiv(programID, GL_INFO_LOG_LENGTH, &maxLength);
 
-      std::string log(maxLength, 0);
+      std::string log(static_cast< std::string::size_type >(maxLength), '\0');
       glGetShaderInfoLog(programID, maxLength, &maxLength, &log[0]);
 
       trace::Logger::Fatal(std::move(log));
@@ -128,7 +128,7 @@ OpenGLShader::CheckLinkStatus(GLuint programID)
       GLint maxLength = 0;
       glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &maxLength);
 
-      std::string log(maxLength, 0);
+      std::string log(static_cast< std::string::size_type >(maxLength), '\0');
       glGetProgramInfoLog(programID, maxLength, &maxLength, &log[0]);
 
       trace::Logger::Fatal(std::move(log));
@@ -158,7 +158,7 @@ OpenGLShader::GetName() const
 }
 
 void
-OpenGLShader::SetInt(const std::string& name, int value)
+OpenGLShader::SetInt(const std::string& name, int32_t value)
 {
    UploadUniformInt(name, value);
 }
@@ -170,7 +170,7 @@ OpenGLShader::SetUint(const std::string& name, uint32_t value)
 }
 
 void
-OpenGLShader::SetIntArray(const std::string& name, int* values, uint32_t count)
+OpenGLShader::SetIntArray(const std::string& name, int* values, GLsizei count)
 {
    UploadUniformIntArray(name, values, count);
 }
@@ -200,7 +200,7 @@ OpenGLShader::SetMat4(const std::string& name, const glm::mat4& value)
 }
 
 void
-OpenGLShader::SetMat4Array(const std::string& name, const glm::mat4* matrices, uint32_t count)
+OpenGLShader::SetMat4Array(const std::string& name, const glm::mat4* matrices, GLsizei count)
 {
    UploadUniformMat4(name, matrices, count);
 }
@@ -218,7 +218,7 @@ OpenGLShader::UploadUniformUnsignedInt(const std::string& name, uint32_t value)
 }
 
 void
-OpenGLShader::UploadUniformIntArray(const std::string& name, int* values, uint32_t count)
+OpenGLShader::UploadUniformIntArray(const std::string& name, int* values, GLsizei count)
 {
    SetUniformLocation(*this, name, glUniform1iv, count, values);
 }
@@ -250,13 +250,14 @@ OpenGLShader::UploadUniformFloat4(const std::string& name, const glm::vec4& valu
 void
 OpenGLShader::UploadUniformMat3(const std::string& name, const glm::mat3& matrix)
 {
-   SetUniformLocation(*this, name, glUniformMatrix3fv, 1, GL_FALSE, glm::value_ptr(matrix));
+   SetUniformLocation(*this, name, glUniformMatrix3fv, 1, static_cast< GLboolean >(GL_FALSE),
+                      glm::value_ptr(matrix));
 }
 
 void
-OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4* matrices, uint32_t count)
+OpenGLShader::UploadUniformMat4(const std::string& name, const glm::mat4* matrices, GLsizei count)
 {
-   SetUniformLocation(*this, name, glUniformMatrix4fv, count, GL_FALSE,
+   SetUniformLocation(*this, name, glUniformMatrix4fv, count, static_cast< GLboolean >(GL_FALSE),
                       reinterpret_cast< const GLfloat* >(matrices));
 }
 

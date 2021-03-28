@@ -1,5 +1,3 @@
-#pragma once
-
 #include "scene/scene.hpp"
 #include "render/render_command.hpp"
 #include "render/renderer_3D.hpp"

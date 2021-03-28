@@ -6,7 +6,7 @@
 
 namespace shady::render::opengl {
 
-OpenGLFramebuffer::OpenGLFramebuffer(const glm::ivec2& size, FrameBufferType type,
+OpenGLFramebuffer::OpenGLFramebuffer(const glm::tvec2<uint32_t>& size, FrameBufferType type,
                                      FramebufferAttachment attachment)
 {
    m_width = size.x;

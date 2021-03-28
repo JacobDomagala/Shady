@@ -5,8 +5,8 @@
 
 namespace shady::scene {
 
-Light::Light(const glm::vec3& position, const glm::vec3& color, LightType type)
-   : m_color(color), m_position(position)
+Light::Light(const glm::vec3& position, const glm::vec3& /*color*/, LightType type)
+   : m_position(position)
 {
    auto buffer_type = render::FrameBufferType::SINGLE;
    switch (type)
@@ -86,7 +86,7 @@ Light::GetPosition() const
    return m_position;
 }
 
-glm::ivec2
+glm::tvec2<uint32_t>
 Light::GetLightmapSize() const
 {
    return {m_shadowTextureWidth, m_shadowTextureHeight};

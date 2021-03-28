@@ -7,13 +7,8 @@
 #include <fmt/format.h>
 #include <imgui.h>
 
-namespace shady::render{
-   extern unsigned int texColorBuffer;
-}
 namespace shady::app::gui {
 
-// render::TextureHandleType HDL = 0;
-// render::TextureIDType ID = 0;
 void
 Gui::Init(GLFWwindow* windowHandle)
 {
@@ -28,13 +23,6 @@ Gui::Init(GLFWwindow* windowHandle)
 
    ImGui_ImplGlfw_InitForOpenGL(windowHandle, true);
    ImGui_ImplOpenGL3_Init("#version 410");
-
-   // auto tex = render::TextureLibrary::GetTexture(render::TextureType::DIFFUSE_MAP,
-   //                                               (utils::FileManager::TEXTURES_DIR
-   //                                                  / "metal_hammered_diffuse.jpg").string());
-   // HDL = tex->GetTextureHandle();
-   // ID = tex->GetTextureID();
-   // tex->MakeResident();
 }
 
 void
@@ -64,11 +52,7 @@ Gui::Render(const glm::ivec2& windowSize, uint32_t shadowMapID)
    ImGui::SetNextWindowPos({0, 0});
    ImGui::SetNextWindowSize(ImVec2(windowWidth, toolsWindowHeight));
    ImGui::Begin("Tools");
-   ImGui::PushStyleColor(ImGuiCol_Button, {0.45f, 0.0f, 0.2f, 0.8f});
-   if (ImGui::Button("Play"))
-   {
-      // m_parent.PlayLevel();
-   }
+   ImGui::PushStyleColor(ImGuiCol_Button, {0.45f, 0.0f, 0.2f, 0.9f});
 
    ImGui::PopStyleColor(1);
    ImGui::SameLine();
@@ -88,13 +72,11 @@ Gui::Render(const glm::ivec2& windowSize, uint32_t shadowMapID)
 
    ImGui::SetNextWindowPos({size.x - windowWidth, 0});
    ImGui::SetNextWindowSize(ImVec2(windowWidth, gameObjectWindowHeight));
-   ImGui::Begin("Game Object");
+   ImGui::Begin("Debug Window");
 
    ImGui::SetNextTreeNodeOpen(true);
-   if (ImGui::CollapsingHeader("Shader"))
+   if (ImGui::CollapsingHeader("Depth Map"))
    {
-      // ImGui::Image(reinterpret_cast< void* >(static_cast<size_t>(::shady::render::texColorBuffer)),
-      //              {windowWidth, windowWidth});
       ImGui::Image(reinterpret_cast< void* >(static_cast<size_t>(shadowMapID)),
                    {windowWidth, windowWidth});
    }

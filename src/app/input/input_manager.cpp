@@ -23,6 +23,7 @@ InputManager::InternalMouseButtonCallback(GLFWwindow* window, int32_t button, in
                                           int32_t mods)
 {
    trace::Logger::Trace("GLFW mouse button {} {} {}", button, action, mods);
+   s_mouseButtonMap[button] = action;
 
    BroadcastEvent(MouseButtonEvent{button, action, mods});
 }
@@ -130,6 +131,12 @@ void
 InputManager::PollEvents()
 {
    glfwPollEvents();
+}
+
+bool
+InputManager::CheckButtonPressed(int32_t button)
+{
+   return s_mouseButtonMap[button];
 }
 
 bool

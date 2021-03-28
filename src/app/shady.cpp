@@ -106,7 +106,11 @@ Shady::MouseButtonCallback(const input::MouseButtonEvent& event)
 void
 Shady::CursorPositionCallback(const input::CursorPositionEvent& event)
 {
-   m_currentScene.GetCamera().MouseMovement({event.m_xDelta, event.m_yDelta});
+   if (input::InputManager::CheckButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
+   {
+      m_currentScene.GetCamera().MouseMovement({event.m_xDelta, event.m_yDelta});
+   }
+
    // const auto upVec = m_currentScene.GetCamera().GetUpVec();
    // const auto lookAt = m_currentScene.GetCamera().GetLookAtVec();
    // trace::Logger::Debug("LookAtVec=({},{},{}); UpVec=({},{},{})", lookAt.x, lookAt.y, lookAt.z,

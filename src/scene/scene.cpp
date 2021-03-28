@@ -11,10 +11,6 @@
 #include <glad/glad.h>
 
 
-namespace shady::render {
-extern GLuint texColorBuffer;
-}
-
 namespace shady::scene {
 
 

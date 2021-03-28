@@ -9,7 +9,7 @@ set(SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/imgui/imgui.cpp" "${CMAKE_CURRENT_SOURC
             "${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends/imgui_impl_glfw.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/imgui/imgui_widgets.cpp")
 
 add_library(imgui STATIC ${HEADERS} ${SOURCES})
-target_include_directories(imgui SYSTEM PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/IMGUI/" "${CMAKE_CURRENT_SOURCE_DIR}/IMGUI/backends")
+target_include_directories(imgui SYSTEM PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/imgui/" "${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends")
 
 # Needed for backend code
 target_link_libraries(imgui PRIVATE glfw glad)

@@ -115,6 +115,8 @@ Renderer3D::BeginScene(const glm::ivec2& screenSize, const scene::Camera& camera
       s_vertexArray->AddVertexBuffer(s_vertexBuffer);
 
 
+      // Generating drawIDs and passing them via VS input has proven to be faster than
+      // using built in gl_DrawID
       std::array< float, s_maxMeshesSlots > drawIDs;
       std::iota(std::begin(drawIDs), std::end(drawIDs), 0);
       s_drawIDs = VertexBuffer::Create(drawIDs.data(), s_maxMeshesSlots * sizeof(float));
@@ -242,6 +244,8 @@ Renderer3D::SetupTextures(const TexturePtrVec& textures)
 {
    if (textures.empty())
    {
+      // TODO: Assign some default texture so it's easly visible
+      // that particular model/mesh doesn't have textures set
       return {{TextureType::DIFFUSE_MAP, 0},
               {TextureType::NORMAL_MAP, 0},
               {TextureType::SPECULAR_MAP, 0}};

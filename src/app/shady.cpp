@@ -38,8 +38,7 @@ Shady::MainLoop()
 
       OnUpdate();
 
-      m_currentScene.Render(m_windowWidth, m_windowHeight,
-                            input::InputManager::CheckKeyPressed(GLFW_KEY_SPACE));
+      m_currentScene.Render(m_windowWidth, m_windowHeight);
       m_gui.Render({m_windowWidth, m_windowHeight}, m_currentScene.GetLight().GetDepthMapID());
 
       m_window->SwapBuffers();

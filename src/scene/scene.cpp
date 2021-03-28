@@ -50,10 +50,8 @@ Scene::GetLight()
 }
 
 void
-Scene::Render(uint32_t windowWidth, uint32_t windowHeight, bool renderDepth)
+Scene::Render(uint32_t windowWidth, uint32_t windowHeight)
 {
-   static bool force_update = false;
-
    // SCOPED_TIMER("Scene::Render");
    m_lightSphere->TranslateModel(m_light->GetPosition());
 
@@ -95,7 +93,7 @@ Scene::Render(uint32_t windowWidth, uint32_t windowHeight, bool renderDepth)
 void
 Scene::LoadDefault()
 {
-   m_light = std::make_unique< Light >(glm::vec3{2.0f, 500.0f, -10.0f}, glm::vec3{1.0f, 0.7f, 0.8f},
+   m_light = std::make_unique< Light >(glm::vec3{2.0f, 200.0f, -10.0f}, glm::vec3{1.0f, 0.7f, 0.8f},
                                        LightType::DIRECTIONAL_LIGHT);
    time::ScopedTimer loadScope("Scene::LoadDefault");
    m_camera = std::make_unique< PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 500.0f);
@@ -106,21 +104,11 @@ Scene::LoadDefault()
 
    // m_models.back()->ScaleModel({0.1f, 0.1f, 0.1f});
 
-   AddModel((utils::FileManager::MODELS_DIR / "floor" / "floor.obj").u8string());
-   m_models.back()->GetMeshes()[0].AddTexture(render::TextureLibrary::GetTexture(
-      render::TextureType::DIFFUSE_MAP,
-      (utils::FileManager::TEXTURES_DIR / "196.png").string()));
-
-   m_models.back()->GetMeshes()[0].AddTexture(render::TextureLibrary::GetTexture(
-      render::TextureType::NORMAL_MAP,
-      (utils::FileManager::TEXTURES_DIR / "196_norm.png").string()));
-
-   m_models.back()->GetMeshes()[0].AddTexture(render::TextureLibrary::GetTexture(
-      render::TextureType::SPECULAR_MAP,
-      (utils::FileManager::TEXTURES_DIR / "196_s.png").string()));
-
    AddModel((utils::FileManager::MODELS_DIR / "sphere" / "sphere.obj").u8string());
    m_lightSphere = m_models.back().get();
+
+    m_models.push_back(std::move(Model::CreatePlane()));
+    m_models.back()->ScaleModel({5.1f, 5.1f, 5.1f});
 }
 
 } // namespace shady::scene

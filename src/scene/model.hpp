@@ -25,6 +25,7 @@ enum class LoadFlags {
 class Model
 {
  public:
+   Model() = default;
    Model(const std::string& path, LoadFlags additionalAssimpFlags = LoadFlags::None);
 
    void
@@ -42,10 +43,14 @@ class Model
    std::vector< Mesh >&
    GetMeshes();
 
+   static std::unique_ptr< Model > CreatePlane();
+
   //  void
   //  ReloadModel();
 
  private:
+
+
    void
    ProcessNode(aiNode* node, const aiScene* scene);
 

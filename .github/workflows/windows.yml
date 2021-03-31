@@ -1,6 +1,11 @@
 name: Windows
 
-on: [pull_request]
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
 
 env:
   BUILD_TYPE: Release
@@ -29,7 +34,7 @@ jobs:
         cat output.txt
 
     - name: Post PR comment for warnings/errors
-      if: ${{ always() }}
+      if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/master'
       uses: JacobDomagala/CompileResultAction@master
       with:
         comment_title: WINDOWS COMPILE RESULT

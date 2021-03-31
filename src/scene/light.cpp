@@ -37,7 +37,7 @@ Light::Light(const glm::vec3& position, const glm::vec3& /*color*/, LightType ty
 void
 Light::BeginRenderToLightmap()
 {
-   m_viewMatrix = glm::lookAt(m_position, glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+   m_viewMatrix = glm::lookAt(m_position, glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 0.5f));
    m_lightSpaceMatrix = m_projectionMatrix * m_viewMatrix;
    m_shadowMatrix = m_biasMatrix * m_lightSpaceMatrix;
 

@@ -48,40 +48,43 @@ Shady::MainLoop()
 void
 Shady::OnUpdate()
 {
+   constexpr auto cameraMoveBy = 0.2f;
+   constexpr auto lightMoveBy = 0.5f;
+
    input::InputManager::PollEvents();
 
    if (input::InputManager::CheckKeyPressed(GLFW_KEY_W))
    {
-      m_currentScene.GetCamera().MoveCamera({0.0f, 2.0f});
+      m_currentScene.GetCamera().MoveCamera({0.0f, cameraMoveBy});
    }
    if (input::InputManager::CheckKeyPressed(GLFW_KEY_S))
    {
-      m_currentScene.GetCamera().MoveCamera({0.0f, -2.0f});
+      m_currentScene.GetCamera().MoveCamera({0.0f, -cameraMoveBy});
    }
    if (input::InputManager::CheckKeyPressed(GLFW_KEY_A))
    {
-      m_currentScene.GetCamera().MoveCamera({-2.0f, 0.0f});
+      m_currentScene.GetCamera().MoveCamera({-cameraMoveBy, 0.0f});
    }
    if (input::InputManager::CheckKeyPressed(GLFW_KEY_D))
    {
-      m_currentScene.GetCamera().MoveCamera({2.0f, 0.0f});
+      m_currentScene.GetCamera().MoveCamera({cameraMoveBy, 0.0f});
    }
 
    if (input::InputManager::CheckKeyPressed(GLFW_KEY_LEFT))
    {
-      m_currentScene.GetLight().MoveBy({0.5f, 0.0f, 0.0f});
+      m_currentScene.GetLight().MoveBy({lightMoveBy, 0.0f, 0.0f});
    }
    if (input::InputManager::CheckKeyPressed(GLFW_KEY_UP))
    {
-      m_currentScene.GetLight().MoveBy({0.0f, 0.5f, 0.0f});
+      m_currentScene.GetLight().MoveBy({0.0f, lightMoveBy, 0.0f});
    }
    if (input::InputManager::CheckKeyPressed(GLFW_KEY_DOWN))
    {
-      m_currentScene.GetLight().MoveBy({0.0f, -0.5f, 0.0f});
+      m_currentScene.GetLight().MoveBy({0.0f, -lightMoveBy, 0.0f});
    }
    if (input::InputManager::CheckKeyPressed(GLFW_KEY_RIGHT))
    {
-      m_currentScene.GetLight().MoveBy({-0.5f, 0.0f, 0.0f});
+      m_currentScene.GetLight().MoveBy({-lightMoveBy, 0.0f, 0.0f});
    }
 
 }

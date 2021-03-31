@@ -15,6 +15,7 @@ Below you can see famous [Sponza](https://en.wikipedia.org/wiki/Sponza_Palace) s
 ## Building
 
 Shady is CMake based project working both on Linux (Ubuntu) and Windows. To build it, you will need at least C++17 compiler and CMake version 3.13.  </br>
+
 Typical build process would look like this:
 ```bash
 # Create build directory

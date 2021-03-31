@@ -4,5 +4,5 @@
 
 ------------------------------------------------------------
 
-![](.github/data/screenshot_1.png)
+![](https://github.com/JacobDomagala/Shady/wiki/screenshot_1.PNG)
 

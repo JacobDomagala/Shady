@@ -1,6 +1,11 @@
 name: Ubuntu
 
-on: [pull_request]
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
 
 env:
   BUILD_TYPE: Release
@@ -36,7 +41,7 @@ jobs:
       run: cmake --build . --config $BUILD_TYPE 2> >(tee "output.txt")
 
     - name: Post PR comment for warnings/errors
-      if: ${{ always() }}
+      if: github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/master'
       uses: JacobDomagala/CompileResultAction@master
       with:
         comment_title: UBUNTU COMPILE RESULT

@@ -45,8 +45,11 @@ class OpenGLRendererAPI : public RendererAPI
    void
    CheckForErrors() override;
 
+   void CreateInstance();
+
   private:
     VkInstance m_instance;
+    VkDebugUtilsMessengerEXT m_debugMessenger;
 
 };
 

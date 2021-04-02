@@ -83,10 +83,47 @@ populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
                             | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
    createInfo.pfnUserCallback = debugCallback;
 }
+
+VkResult
+CreateDebugUtilsMessengerEXT(VkInstance instance,
+                             const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+                             const VkAllocationCallbacks* pAllocator,
+                             VkDebugUtilsMessengerEXT* pDebugMessenger)
+{
+   auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
+      instance, "vkCreateDebugUtilsMessengerEXT");
+   if (func != nullptr)
+   {
+      return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+   }
+   else
+   {
+      return VK_ERROR_EXTENSION_NOT_PRESENT;
+   }
+}
+
 void
 OpenGLRendererAPI::Init()
 {
-   if (enableValidationLayers && !checkValidationLayerSupport())
+   CreateInstance();
+
+   if constexpr (enableValidationLayers)
+   {
+      VkDebugUtilsMessengerCreateInfoEXT createInfo;
+      populateDebugMessengerCreateInfo(createInfo);
+
+      if (CreateDebugUtilsMessengerEXT(m_instance, &createInfo, nullptr, &m_debugMessenger)
+          != VK_SUCCESS)
+      {
+         throw std::runtime_error("failed to set up debug messenger!");
+      }
+   }
+}
+
+void
+OpenGLRendererAPI::CreateInstance()
+{
+ if (enableValidationLayers && !checkValidationLayerSupport())
    {
       throw std::runtime_error("validation layers requested, but not available!");
    }

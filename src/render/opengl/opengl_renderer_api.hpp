@@ -56,6 +56,10 @@ class OpenGLRendererAPI : public RendererAPI
     inline static VkSurfaceKHR m_surface = {};
     inline static VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
     inline static VkSampleCountFlagBits m_msaaSamples = VK_SAMPLE_COUNT_1_BIT;
+    inline static VkDevice m_device = {};
+
+    inline static VkQueue m_graphicsQueue = {};
+    inline static VkQueue m_presentQueue = {};
 
 };
 

@@ -38,9 +38,11 @@ class Shady : public input::InputListener
    OnUpdate();
 
  private:
-   std::unique_ptr< Window > m_window;
+  // Application settings
+   Window m_window;
    uint32_t m_windowWidth = 1920;
    uint32_t m_windowHeight = 1080;
+
    scene::Scene m_currentScene;
 
    bool m_active = true;

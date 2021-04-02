@@ -11,8 +11,22 @@
 namespace shady::app {
 
 Window::Window(int32_t width, int32_t height, const std::string& title)
-   : m_width(width), m_height(height), m_title(title)
 {
+   Create(m_width, m_height, m_title);
+}
+
+Window::~Window()
+{
+   glfwTerminate();
+}
+
+void
+Window::Create(int32_t width, int32_t height, const std::string& title)
+{
+   m_width = width;
+   m_height = height;
+   m_title = title;
+
    glfwSetErrorCallback([](int error, const char* description) {
       trace::Logger::Fatal("GLFW Error={}: {}", error, description);
    });
@@ -29,11 +43,11 @@ Window::Window(int32_t width, int32_t height, const std::string& title)
 
    trace::Logger::Info("GLFW Window created! Name:{} Width:{} Height:{}", m_title, m_width,
                        m_height);
-}
 
-Window::~Window()
-{
-   glfwTerminate();
+   glfwMakeContextCurrent(m_pWindow);
+   glfwSwapInterval(1);
+
+   m_created = true;
 }
 
 void
@@ -101,7 +115,8 @@ Window::GetCursorNormalized()
 {
    auto cursorPos = GetCursor();
 
-   glm::vec2 centerOfScreen(static_cast<float>(m_width) / 2.0f, static_cast<float>(m_height) / 2.0f);
+   glm::vec2 centerOfScreen(static_cast< float >(m_width) / 2.0f,
+                            static_cast< float >(m_height) / 2.0f);
 
    cursorPos -= centerOfScreen;
    cursorPos /= centerOfScreen;

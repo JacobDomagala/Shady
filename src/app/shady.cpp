@@ -15,7 +15,7 @@ Shady::Init()
 {
    m_window = std::make_unique< Window >(m_windowWidth, m_windowHeight, "Shady");
 
-   input::InputManager::Init(m_window->GetWindowHandle());
+   input::InputManager::Init(m_window.GetWindowHandle());
    input::InputManager::RegisterForKeyInput(this);
    input::InputManager::RegisterForMouseButtonInput(this);
    input::InputManager::RegisterForMouseMovementInput(this);
@@ -33,7 +33,7 @@ Shady::MainLoop()
 {
    while (m_active)
    {
-      m_window->Clear();
+      m_window.Clear();
 
       input::InputManager::PollEvents();
 
@@ -47,7 +47,7 @@ Shady::MainLoop()
 
       m_currentScene.Render(m_windowWidth, m_windowHeight);
 
-      m_window->SwapBuffers();
+      m_window.SwapBuffers();
    }
 }
 

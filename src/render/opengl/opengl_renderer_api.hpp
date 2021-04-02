@@ -61,6 +61,11 @@ class OpenGLRendererAPI : public RendererAPI
     inline static VkQueue m_graphicsQueue = {};
     inline static VkQueue m_presentQueue = {};
 
+    inline static VkSwapchainKHR m_swapChain = {};
+    inline static std::vector<VkImage> m_swapChainImages = {};
+    inline static VkFormat m_swapChainImageFormat = {};
+    inline static VkExtent2D m_swapChainExtent = {};
+
 };
 
 } // namespace shady::render::opengl

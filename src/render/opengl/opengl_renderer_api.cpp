@@ -4,10 +4,13 @@
 #include "utils/assert.hpp"
 
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 // #include <glad/glad.h>
 #include <optional>
 #include <set>
 
+#undef max
+#undef min
 namespace shady::render::opengl {
 
 struct QueueFamilyIndices {
@@ -246,6 +249,60 @@ VkSampleCountFlagBits getMaxUsableSampleCount(VkPhysicalDevice& physicalDevice) 
     return VK_SAMPLE_COUNT_1_BIT;
 }
 
+VkSurfaceFormatKHR
+chooseSwapSurfaceFormat(const std::vector< VkSurfaceFormatKHR >& availableFormats)
+{
+   for (const auto& availableFormat : availableFormats)
+   {
+      if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB
+          && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+      {
+         return availableFormat;
+      }
+   }
+
+   return availableFormats[0];
+}
+
+VkPresentModeKHR
+chooseSwapPresentMode(const std::vector< VkPresentModeKHR >& availablePresentModes)
+{
+   for (const auto& availablePresentMode : availablePresentModes)
+   {
+      if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
+      {
+         return availablePresentMode;
+      }
+   }
+
+   return VK_PRESENT_MODE_FIFO_KHR;
+}
+
+VkExtent2D
+chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, GLFWwindow* windowHandle)
+{
+   if (capabilities.currentExtent.width != UINT32_MAX)
+   {
+      return capabilities.currentExtent;
+   }
+   else
+   {
+      int width, height;
+      glfwGetFramebufferSize(windowHandle, &width, &height);
+
+      VkExtent2D actualExtent = {static_cast< uint32_t >(width), static_cast< uint32_t >(height)};
+
+      actualExtent.width =
+         ::glm::max(capabilities.minImageExtent.width,
+                  ::glm::min(capabilities.maxImageExtent.width, actualExtent.width));
+      actualExtent.height =
+         ::glm::max(capabilities.minImageExtent.height,
+                  ::glm::min(capabilities.maxImageExtent.height, actualExtent.height));
+
+      return actualExtent;
+   }
+}
+
 void
 OpenGLRendererAPI::InitializeVulkan(GLFWwindow* windowHandle){
    CreateInstance();
@@ -341,6 +398,61 @@ OpenGLRendererAPI::InitializeVulkan(GLFWwindow* windowHandle){
 
     vkGetDeviceQueue(m_device, indices.graphicsFamily.value(), 0, &m_graphicsQueue);
     vkGetDeviceQueue(m_device, indices.presentFamily.value(), 0, &m_presentQueue);
+
+    SwapChainSupportDetails swapChainSupport = querySwapChainSupport(m_physicalDevice, m_surface);
+
+    VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
+    VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
+    VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities, windowHandle);
+
+    uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
+    if (swapChainSupport.capabilities.maxImageCount > 0
+        && imageCount > swapChainSupport.capabilities.maxImageCount)
+    {
+       imageCount = swapChainSupport.capabilities.maxImageCount;
+    }
+
+    VkSwapchainCreateInfoKHR swapChainCreateInfo{};
+    swapChainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    swapChainCreateInfo.surface = m_surface;
+
+    swapChainCreateInfo.minImageCount = imageCount;
+    swapChainCreateInfo.imageFormat = surfaceFormat.format;
+    swapChainCreateInfo.imageColorSpace = surfaceFormat.colorSpace;
+    swapChainCreateInfo.imageExtent = extent;
+    swapChainCreateInfo.imageArrayLayers = 1;
+    swapChainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+    QueueFamilyIndices indicesSecond = findQueueFamilies(m_physicalDevice, m_surface);
+    uint32_t queueFamilyIndices[2] = {indicesSecond.graphicsFamily.value(), indicesSecond.presentFamily.value()};
+
+    if (indicesSecond.graphicsFamily != indicesSecond.presentFamily)
+    {
+       swapChainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+       swapChainCreateInfo.queueFamilyIndexCount = 2;
+       swapChainCreateInfo.pQueueFamilyIndices = queueFamilyIndices;
+    }
+    else
+    {
+       swapChainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    }
+
+    swapChainCreateInfo.preTransform = swapChainSupport.capabilities.currentTransform;
+    swapChainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    swapChainCreateInfo.presentMode = presentMode;
+    swapChainCreateInfo.clipped = VK_TRUE;
+
+    if (vkCreateSwapchainKHR(m_device, &swapChainCreateInfo, nullptr, &m_swapChain) != VK_SUCCESS)
+    {
+       throw std::runtime_error("failed to create swap chain!");
+    }
+
+    vkGetSwapchainImagesKHR(m_device, m_swapChain, &imageCount, nullptr);
+    m_swapChainImages.resize(imageCount);
+    vkGetSwapchainImagesKHR(m_device, m_swapChain, &imageCount, m_swapChainImages.data());
+
+    m_swapChainImageFormat = surfaceFormat.format;
+    m_swapChainExtent = extent;
 }
 
 void

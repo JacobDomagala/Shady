@@ -8,7 +8,7 @@ void
 Renderer::Init()
 {
    RenderCommand::Init();
-   Renderer3D::Init();
+  // Renderer3D::Init();
 }
 
 RendererAPI::API

@@ -62,8 +62,10 @@ add_executable(${PROJECT_NAME}
 
 add_subdirectory(lib)
 
+find_package(Vulkan REQUIRED FATAL_ERROR)
+
 target_include_directories(${PROJECT_NAME}
                     PRIVATE src src/app src/app/input src/trace src/render src/utils src/scene src/time)
-target_link_libraries_system (${PROJECT_NAME} PRIVATE glm glfw glad stb_image assimp fmt imgui)
+target_link_libraries_system (${PROJECT_NAME} PRIVATE glm glfw glad stb_image assimp fmt imgui Vulkan::Vulkan)
 target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)

@@ -3,6 +3,7 @@
 #include "renderer_api.hpp"
 
 #include <glm/glm.hpp>
+#include <vulkan/vulkan.h>
 
 namespace shady::render::opengl {
 
@@ -43,6 +44,10 @@ class OpenGLRendererAPI : public RendererAPI
 
    void
    CheckForErrors() override;
+
+  private:
+    VkInstance m_instance;
+
 };
 
 } // namespace shady::render::opengl

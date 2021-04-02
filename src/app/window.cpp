@@ -7,6 +7,8 @@
 #include <functional>
 #include <glm/gtc/matrix_transform.hpp>
 
+
+
 namespace shady::app {
 
 Window::Window(int32_t width, int32_t height, const std::string& title)
@@ -18,9 +20,7 @@ Window::Window(int32_t width, int32_t height, const std::string& title)
 
    utils::Assert(glfwInit(), "GLFW Init failed!");
 
-   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
    glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
@@ -30,12 +30,6 @@ Window::Window(int32_t width, int32_t height, const std::string& title)
 
    trace::Logger::Info("GLFW Window created! Name:{} Width:{} Height:{}", m_title, m_width,
                        m_height);
-
-   glfwMakeContextCurrent(m_pWindow);
-   m_context = render::Context::Create(m_pWindow);
-   m_context->Init();
-
-   glfwSwapInterval(1);
 }
 
 Window::~Window()
@@ -73,15 +67,15 @@ Window::Resize(int32_t newWidth, int32_t newHeight)
 void
 Window::Clear()
 {
-   glfwMakeContextCurrent(m_pWindow);
+  //  glfwMakeContextCurrent(m_pWindow);
 
-   render::RenderCommand::Clear();
+   // render::RenderCommand::Clear();
 }
 
 void
 Window::SwapBuffers()
 {
-   m_context->SwapBuffers();
+   // m_context->SwapBuffers();
 }
 
 void

@@ -5,6 +5,8 @@
 #include <glm/glm.hpp>
 #include <string>
 
+#include <vulkan/vulkan.h>
+
 struct GLFWwindow;
 
 namespace shady::app {

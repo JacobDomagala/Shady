@@ -7,6 +7,7 @@
 
 
 #include <GLFW/glfw3.h>
+#include <vulkan/vulkan.h>
 
 namespace shady::app {
 
@@ -14,7 +15,6 @@ void
 Shady::Init()
 {
    m_window = std::make_unique< Window >(m_windowWidth, m_windowHeight, "Shady");
-   render::Renderer::Init();
 
    input::InputManager::Init(m_window->GetWindowHandle());
    input::InputManager::RegisterForKeyInput(this);
@@ -22,11 +22,14 @@ Shady::Init()
    input::InputManager::RegisterForMouseMovementInput(this);
    input::InputManager::RegisterForMouseScrollInput(this);
 
-   m_currentScene.LoadDefault();
+   render::Renderer::Init();
+   //
 
-   render::RenderCommand::SetClearColor({0.4f, 0.1f, 0.3f, 1.0f});
+   // m_currentScene.LoadDefault();
 
-   m_gui.Init(m_window->GetWindowHandle());
+   // render::RenderCommand::SetClearColor({0.4f, 0.1f, 0.3f, 1.0f});
+
+   // m_gui.Init(m_window->GetWindowHandle());
 }
 
 void
@@ -38,8 +41,8 @@ Shady::MainLoop()
 
       OnUpdate();
 
-      m_currentScene.Render(m_windowWidth, m_windowHeight);
-      m_gui.Render({m_windowWidth, m_windowHeight}, m_currentScene.GetLight().GetDepthMapID());
+      // m_currentScene.Render(m_windowWidth, m_windowHeight);
+      // m_gui.Render({m_windowWidth, m_windowHeight}, m_currentScene.GetLight().GetDepthMapID());
 
       m_window->SwapBuffers();
    }
@@ -111,7 +114,7 @@ Shady::CursorPositionCallback(const input::CursorPositionEvent& event)
 {
    if (input::InputManager::CheckButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
    {
-      m_currentScene.GetCamera().MouseMovement({event.m_xDelta, event.m_yDelta});
+      // m_currentScene.GetCamera().MouseMovement({event.m_xDelta, event.m_yDelta});
    }
 
    // const auto upVec = m_currentScene.GetCamera().GetUpVec();

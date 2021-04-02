@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
 
+struct GLFWwindow;
 namespace shady::render::opengl {
 
 class OpenGLRendererAPI : public RendererAPI
@@ -45,11 +46,14 @@ class OpenGLRendererAPI : public RendererAPI
    void
    CheckForErrors() override;
 
-   void CreateInstance();
+   static void CreateInstance();
+
+   static void InitializeVulkan(GLFWwindow* windowHandle);
 
   private:
-    VkInstance m_instance;
-    VkDebugUtilsMessengerEXT m_debugMessenger;
+    inline static VkInstance m_instance = {};
+    inline static VkDebugUtilsMessengerEXT m_debugMessenger = {};
+    inline static VkSurfaceKHR m_surface = {};
 
 };
 

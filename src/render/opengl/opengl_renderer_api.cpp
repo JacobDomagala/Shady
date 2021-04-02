@@ -103,8 +103,7 @@ CreateDebugUtilsMessengerEXT(VkInstance instance,
 }
 
 void
-OpenGLRendererAPI::Init()
-{
+OpenGLRendererAPI::InitializeVulkan(GLFWwindow* windowHandle){
    CreateInstance();
 
    if constexpr (enableValidationLayers)
@@ -117,6 +116,11 @@ OpenGLRendererAPI::Init()
       {
          throw std::runtime_error("failed to set up debug messenger!");
       }
+   }
+
+   if (glfwCreateWindowSurface(m_instance, windowHandle, nullptr, &m_surface) != VK_SUCCESS)
+   {
+      throw std::runtime_error("failed to create window surface!");
    }
 }
 
@@ -163,6 +167,43 @@ OpenGLRendererAPI::CreateInstance()
       throw std::runtime_error("failed to create instance!");
    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void
+OpenGLRendererAPI::Init()
+{
+
+}
+
 
 void
 OpenGLRendererAPI::SetDepthFunc(DepthFunc depthFunc)

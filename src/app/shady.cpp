@@ -1,13 +1,14 @@
 #include "app/shady.hpp"
 #include "app/input/input_manager.hpp"
 #include "render/render_command.hpp"
-#include "render/renderer.hpp"
+// #include "render/renderer.hpp"
 #include "trace/logger.hpp"
 #include "utils/file_manager.hpp"
 
 
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
+#include "render/opengl/opengl_renderer_api.hpp"
 
 namespace shady::app {
 
@@ -22,7 +23,8 @@ Shady::Init()
    input::InputManager::RegisterForMouseMovementInput(this);
    input::InputManager::RegisterForMouseScrollInput(this);
 
-   render::Renderer::Init();
+   render::opengl::OpenGLRendererAPI::InitializeVulkan(m_window->GetWindowHandle());
+   // render::Renderer::Init();
    //
 
    // m_currentScene.LoadDefault();

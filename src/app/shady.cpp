@@ -22,7 +22,7 @@ Shady::Init()
    input::InputManager::RegisterForMouseMovementInput(this);
    input::InputManager::RegisterForMouseScrollInput(this);
 
-   render::vulkan::VulkanRenderer::InitializeVulkan(m_window->GetWindowHandle());
+   render::vulkan::VulkanRenderer::Initialize(m_window->GetWindowHandle());
    // render::Renderer::Init();
    //
 

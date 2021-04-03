@@ -1,5 +1,7 @@
 #pragma once
 
+#include "shader.hpp"
+
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
 
@@ -12,13 +14,17 @@ class VulkanRenderer
 {
  public:
    static void
-   CreateInstance();
-
-   static void
-   InitializeVulkan(GLFWwindow* windowHandle);
+   Initialize(GLFWwindow* windowHandle);
 
    static void
    Draw();
+
+ private:
+   static void
+   CreateInstance();
+
+   static void
+   CreatePipeline();
 
  private:
    inline static VkInstance m_instance = {};

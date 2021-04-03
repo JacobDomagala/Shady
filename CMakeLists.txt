@@ -53,6 +53,9 @@ add_executable(${PROJECT_NAME}
     src/render/opengl/opengl_shader.hpp src/render/opengl/opengl_shader.cpp src/render/opengl/opengl_framebuffer.hpp src/render/opengl/opengl_framebuffer.cpp
     src/render/opengl/opengl_buffer_lock.hpp src/render/opengl/opengl_buffer_lock.cpp
 
+    # render/vulkan
+    src/render/vulkan/vulkan_renderer.hpp src/render/vulkan/vulkan_renderer.cpp
+
     # scene
     src/scene/mesh.hpp src/scene/mesh.cpp src/scene/model.hpp src/scene/model.cpp src/scene/light.hpp src/scene/light.cpp
     src/scene/skybox.hpp src/scene/skybox.cpp src/scene/scene.hpp src/scene/scene.cpp

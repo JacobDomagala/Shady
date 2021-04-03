@@ -7,8 +7,7 @@
 
 
 #include <GLFW/glfw3.h>
-#include <vulkan/vulkan.h>
-#include "render/opengl/opengl_renderer_api.hpp"
+#include "render/vulkan/vulkan_renderer.hpp"
 
 namespace shady::app {
 
@@ -23,7 +22,7 @@ Shady::Init()
    input::InputManager::RegisterForMouseMovementInput(this);
    input::InputManager::RegisterForMouseScrollInput(this);
 
-   render::opengl::OpenGLRendererAPI::InitializeVulkan(m_window->GetWindowHandle());
+   render::vulkan::VulkanRenderer::InitializeVulkan(m_window->GetWindowHandle());
    // render::Renderer::Init();
    //
 
@@ -45,7 +44,7 @@ Shady::MainLoop()
 
       // m_currentScene.Render(m_windowWidth, m_windowHeight);
       // m_gui.Render({m_windowWidth, m_windowHeight}, m_currentScene.GetLight().GetDepthMapID());
-      render::opengl::OpenGLRendererAPI::Draw();
+      render::vulkan::VulkanRenderer::Draw();
       m_window->SwapBuffers();
    }
 }

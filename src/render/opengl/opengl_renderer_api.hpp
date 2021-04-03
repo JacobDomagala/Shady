@@ -68,6 +68,8 @@ class OpenGLRendererAPI : public RendererAPI
     inline static VkExtent2D m_swapChainExtent = {};
 
     inline static VkRenderPass m_renderPass = {};
+    inline static VkPipelineLayout m_pipelineLayout = {};
+    inline static VkPipeline m_graphicsPipeline = {};
 
 };
 

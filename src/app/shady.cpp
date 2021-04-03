@@ -45,7 +45,7 @@ Shady::MainLoop()
 
       // m_currentScene.Render(m_windowWidth, m_windowHeight);
       // m_gui.Render({m_windowWidth, m_windowHeight}, m_currentScene.GetLight().GetDepthMapID());
-
+      render::opengl::OpenGLRendererAPI::Draw();
       m_window->SwapBuffers();
    }
 }

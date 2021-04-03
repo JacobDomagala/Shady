@@ -15,6 +15,7 @@
 #undef min
 namespace shady::render::opengl {
 
+size_t currentFrame = 0;
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
 static constexpr bool enableValidationLayers = true;
@@ -839,6 +840,61 @@ OpenGLRendererAPI::InitializeVulkan(GLFWwindow* windowHandle)
          throw std::runtime_error("failed to create synchronization objects for a frame!");
       }
    }
+}
+
+void
+OpenGLRendererAPI::Draw()
+{
+   vkWaitForFences(m_device, 1, &m_inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+
+   uint32_t imageIndex;
+   vkAcquireNextImageKHR(m_device, m_swapChain, UINT64_MAX, m_imageAvailableSemaphores[currentFrame],
+                         VK_NULL_HANDLE, &imageIndex);
+
+   if (m_imagesInFlight[imageIndex] != VK_NULL_HANDLE)
+   {
+      vkWaitForFences(m_device, 1, &m_imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
+   }
+   m_imagesInFlight[imageIndex] = m_inFlightFences[currentFrame];
+
+   VkSubmitInfo submitInfo{};
+   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+   VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphores[currentFrame]};
+   VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+   submitInfo.waitSemaphoreCount = 1;
+   submitInfo.pWaitSemaphores = waitSemaphores;
+   submitInfo.pWaitDstStageMask = waitStages;
+
+   submitInfo.commandBufferCount = 1;
+   submitInfo.pCommandBuffers = &m_commandBuffers[imageIndex];
+
+   VkSemaphore signalSemaphores[] = {m_renderFinishedSemaphores[currentFrame]};
+   submitInfo.signalSemaphoreCount = 1;
+   submitInfo.pSignalSemaphores = signalSemaphores;
+
+   vkResetFences(m_device, 1, &m_inFlightFences[currentFrame]);
+
+   if (vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFences[currentFrame]) != VK_SUCCESS)
+   {
+      throw std::runtime_error("failed to submit draw command buffer!");
+   }
+
+   VkPresentInfoKHR presentInfo{};
+   presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+   presentInfo.waitSemaphoreCount = 1;
+   presentInfo.pWaitSemaphores = signalSemaphores;
+
+   VkSwapchainKHR swapChains[] = {m_swapChain};
+   presentInfo.swapchainCount = 1;
+   presentInfo.pSwapchains = swapChains;
+
+   presentInfo.pImageIndices = &imageIndex;
+
+   vkQueuePresentKHR(m_presentQueue, &presentInfo);
+
+   currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
 void

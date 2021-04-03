@@ -50,6 +50,8 @@ class OpenGLRendererAPI : public RendererAPI
 
    static void InitializeVulkan(GLFWwindow* windowHandle);
 
+   static void Draw();
+
   private:
     inline static VkInstance m_instance = {};
     inline static VkDebugUtilsMessengerEXT m_debugMessenger = {};
@@ -79,7 +81,6 @@ class OpenGLRendererAPI : public RendererAPI
     inline static std::vector<VkSemaphore> m_renderFinishedSemaphores = {};
     inline static std::vector<VkFence> m_inFlightFences = {};
     inline static std::vector<VkFence> m_imagesInFlight = {};
-
 };
 
 } // namespace shady::render::opengl

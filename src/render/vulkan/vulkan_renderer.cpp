@@ -6,11 +6,11 @@
 #include "vulkan_shader.hpp"
 
 
-
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <optional>
 #include <set>
+#include <array>
 
 
 #undef max
@@ -20,9 +20,9 @@ namespace shady::render::vulkan {
 
 size_t currentFrame = 0;
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
-VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
-static constexpr bool enableValidationLayers = true;
-const std::vector< const char* > validationLayers = {"VK_LAYER_KHRONOS_validation"};
+
+static constexpr bool ENABLE_VALIDATION = true;
+static constexpr std::array< const char*, 1 > VALIDATION_LAYERS = {"VK_LAYER_KHRONOS_validation"};
 
 struct QueueFamilyIndices
 {
@@ -45,17 +45,6 @@ struct SwapChainSupportDetails
 
 const std::vector< const char* > deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
-
-static VKAPI_ATTR VkBool32 VKAPI_CALL
-debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-              VkDebugUtilsMessageTypeFlagsEXT messageType,
-              const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
-{
-   trace::Logger::Debug("validation layer: {}", pCallbackData->pMessage);
-
-   return VK_FALSE;
-}
-
 std::vector< const char* >
 getRequiredExtensions()
 {
@@ -65,7 +54,7 @@ getRequiredExtensions()
 
    std::vector< const char* > extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
-   if (enableValidationLayers)
+   if constexpr (ENABLE_VALIDATION)
    {
       extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
    }
@@ -82,21 +71,18 @@ checkValidationLayerSupport()
    std::vector< VkLayerProperties > availableLayers(layerCount);
    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-   for (const char* layerName : validationLayers)
+
+   for (const auto& layerName : VALIDATION_LAYERS)
    {
-      bool layerFound = false;
+      const auto iter =
+         std::find_if(availableLayers.begin(), availableLayers.end(), [layerName](const auto& layer) {
+            return strcmp(layerName, layer.layerName) == 0;
+         });
 
-      for (const auto& layerProperties : availableLayers)
-      {
-         if (strcmp(layerName, layerProperties.layerName) == 0)
-         {
-            layerFound = true;
-            break;
-         }
-      }
 
-      if (!layerFound)
+      if (iter == availableLayers.end())
       {
+         trace::Logger::Fatal("Unable to find validation layer {}!", layerName);
          return false;
       }
    }
@@ -107,6 +93,39 @@ checkValidationLayerSupport()
 void
 populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
 {
+   auto callback = [](VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                      VkDebugUtilsMessageTypeFlagsEXT /*messageType*/,
+                      const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                      void* /*pUserData*/) -> VKAPI_ATTR VkBool32 VKAPI_CALL {
+      switch (messageSeverity)
+      {
+         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT: {
+            trace::Logger::Debug("validation layer: {}", pCallbackData->pMessage);
+         }
+         break;
+
+         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: {
+            trace::Logger::Info("validation layer: {}", pCallbackData->pMessage);
+         }
+         break;
+
+         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT: {
+            trace::Logger::Warn("validation layer: {}", pCallbackData->pMessage);
+         }
+         break;
+
+         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: {
+            trace::Logger::Fatal("validation layer: {}", pCallbackData->pMessage);
+         }break;
+
+         default: {
+            trace::Logger::Fatal("validation layer: {}", pCallbackData->pMessage);
+         }
+      }
+
+      return VK_FALSE;
+   };
+
    createInfo = {};
    createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
    createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
@@ -115,7 +134,7 @@ populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
    createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
                             | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT
                             | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-   createInfo.pfnUserCallback = debugCallback;
+   createInfo.pfnUserCallback = callback;
 }
 
 VkResult
@@ -340,30 +359,23 @@ VulkanRenderer::Initialize(GLFWwindow* windowHandle)
 {
    CreateInstance();
 
-   if constexpr (enableValidationLayers)
+   if constexpr (ENABLE_VALIDATION)
    {
       VkDebugUtilsMessengerCreateInfoEXT createInfo;
       populateDebugMessengerCreateInfo(createInfo);
 
-      if (CreateDebugUtilsMessengerEXT(m_instance, &createInfo, nullptr, &m_debugMessenger)
-          != VK_SUCCESS)
-      {
-         throw std::runtime_error("failed to set up debug messenger!");
-      }
+      auto result =
+         CreateDebugUtilsMessengerEXT(m_instance, &createInfo, nullptr, &m_debugMessenger);
+
+      utils::Assert(result == VK_SUCCESS, "failed to set up debug messenger!");
    }
 
-   if (glfwCreateWindowSurface(m_instance, windowHandle, nullptr, &m_surface) != VK_SUCCESS)
-   {
-      throw std::runtime_error("failed to create window surface!");
-   }
+   auto result = glfwCreateWindowSurface(m_instance, windowHandle, nullptr, &m_surface);
+   utils::Assert(result == VK_SUCCESS, "failed to create window surface!");
 
    uint32_t deviceCount = 0;
    vkEnumeratePhysicalDevices(m_instance, &deviceCount, nullptr);
-
-   if (deviceCount == 0)
-   {
-      throw std::runtime_error("failed to find GPUs with Vulkan support!");
-   }
+   utils::Assert(deviceCount > 0, "failed to find GPUs with Vulkan support!");
 
    std::vector< VkPhysicalDevice > devices(deviceCount);
    vkEnumeratePhysicalDevices(m_instance, &deviceCount, devices.data());
@@ -378,10 +390,7 @@ VulkanRenderer::Initialize(GLFWwindow* windowHandle)
       }
    }
 
-   if (m_physicalDevice == VK_NULL_HANDLE)
-   {
-      throw std::runtime_error("failed to find a suitable GPU!");
-   }
+   utils::Assert(m_physicalDevice != VK_NULL_HANDLE, "failed to find a suitable GPU!");
 
    QueueFamilyIndices indices = findQueueFamilies(m_physicalDevice, m_surface);
 
@@ -414,10 +423,10 @@ VulkanRenderer::Initialize(GLFWwindow* windowHandle)
    createInfo.enabledExtensionCount = static_cast< uint32_t >(deviceExtensions.size());
    createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
-   if (enableValidationLayers)
+   if (ENABLE_VALIDATION)
    {
-      createInfo.enabledLayerCount = static_cast< uint32_t >(validationLayers.size());
-      createInfo.ppEnabledLayerNames = validationLayers.data();
+      createInfo.enabledLayerCount = static_cast< uint32_t >(VALIDATION_LAYERS.size());
+      createInfo.ppEnabledLayerNames = VALIDATION_LAYERS.data();
    }
    else
    {
@@ -564,10 +573,6 @@ VulkanRenderer::Initialize(GLFWwindow* windowHandle)
    {
       throw std::runtime_error("failed to create render pass!");
    }
-
-   /*
-    *     CREATE GRAPHICS PIPELINE
-    */
 
    CreatePipeline();
 
@@ -754,9 +759,9 @@ VulkanRenderer::Draw()
 void
 VulkanRenderer::CreateInstance()
 {
-   if (enableValidationLayers && !checkValidationLayerSupport())
+   if (ENABLE_VALIDATION && !checkValidationLayerSupport())
    {
-      throw std::runtime_error("validation layers requested, but not available!");
+      utils::Assert(false, "validation layers asked but not supported!");
    }
 
    VkApplicationInfo appInfo{};
@@ -769,17 +774,17 @@ VulkanRenderer::CreateInstance()
    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
    createInfo.pApplicationInfo = &appInfo;
 
-   auto extensions = getRequiredExtensions();
+   const auto extensions = getRequiredExtensions();
    createInfo.enabledExtensionCount = static_cast< uint32_t >(extensions.size());
    createInfo.ppEnabledExtensionNames = extensions.data();
 
-   if constexpr (enableValidationLayers)
+   if constexpr (ENABLE_VALIDATION)
    {
-      createInfo.enabledLayerCount = static_cast< uint32_t >(validationLayers.size());
-      createInfo.ppEnabledLayerNames = validationLayers.data();
+      createInfo.enabledLayerCount = static_cast< uint32_t >(VALIDATION_LAYERS.size());
+      createInfo.ppEnabledLayerNames = VALIDATION_LAYERS.data();
 
-      populateDebugMessengerCreateInfo(debugCreateInfo);
-      createInfo.pNext = (void*)&debugCreateInfo;
+      populateDebugMessengerCreateInfo(m_debugCreateInfo);
+      createInfo.pNext = (void*)&m_debugCreateInfo;
    }
    else
    {
@@ -787,10 +792,8 @@ VulkanRenderer::CreateInstance()
       createInfo.pNext = nullptr;
    }
 
-   if (vkCreateInstance(&createInfo, nullptr, &m_instance) != VK_SUCCESS)
-   {
-      throw std::runtime_error("failed to create instance!");
-   }
+   const auto result = vkCreateInstance(&createInfo, nullptr, &m_instance);
+   utils::Assert(result == VK_SUCCESS, "instance not created properly!");
 }
 
 void
@@ -798,7 +801,8 @@ VulkanRenderer::CreatePipeline()
 {
    auto [vertexInfo, fragmentInfo] =
       VulkanShader::CreateShader(m_device, "default/vert.spv", "default/frag.spv");
-   VkPipelineShaderStageCreateInfo shaderStages[] = {vertexInfo.shaderInfo, fragmentInfo.shaderInfo};
+   VkPipelineShaderStageCreateInfo shaderStages[] = {vertexInfo.shaderInfo,
+                                                     fragmentInfo.shaderInfo};
 
    VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
    vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;

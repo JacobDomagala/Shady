@@ -28,6 +28,7 @@ class VulkanRenderer
 
  private:
    inline static VkInstance m_instance = {};
+   inline static VkDebugUtilsMessengerCreateInfoEXT m_debugCreateInfo = {};
    inline static VkDebugUtilsMessengerEXT m_debugMessenger = {};
    inline static VkSurfaceKHR m_surface = {};
    inline static VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;

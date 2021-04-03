@@ -5,11 +5,13 @@
 #include <vulkan/vulkan.h>
 
 
-
 namespace shady::render::vulkan {
 
 struct ShaderInfoWrapper
 {
+   /*
+    * This should be called after the pipeline is created
+    */
    void
    Destroy()
    {

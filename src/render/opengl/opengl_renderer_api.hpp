@@ -75,6 +75,11 @@ class OpenGLRendererAPI : public RendererAPI
     inline static VkCommandPool m_commandPool = {};
     inline static std::vector<VkCommandBuffer> m_commandBuffers = {};
 
+    inline static std::vector<VkSemaphore> m_imageAvailableSemaphores = {};
+    inline static std::vector<VkSemaphore> m_renderFinishedSemaphores = {};
+    inline static std::vector<VkFence> m_inFlightFences = {};
+    inline static std::vector<VkFence> m_imagesInFlight = {};
+
 };
 
 } // namespace shady::render::opengl

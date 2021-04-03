@@ -15,6 +15,11 @@
 #undef min
 namespace shady::render::opengl {
 
+constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
+static constexpr bool enableValidationLayers = true;
+const std::vector< const char* > validationLayers = {"VK_LAYER_KHRONOS_validation"};
+
 struct QueueFamilyIndices
 {
    std::optional< uint32_t > graphicsFamily;
@@ -35,10 +40,6 @@ struct SwapChainSupportDetails
 };
 
 const std::vector< const char* > deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-
-VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
-static constexpr bool enableValidationLayers = true;
-const std::vector< const char* > validationLayers = {"VK_LAYER_KHRONOS_validation"};
 
 static std::vector< char >
 readFile(const std::string& filename)
@@ -808,6 +809,34 @@ OpenGLRendererAPI::InitializeVulkan(GLFWwindow* windowHandle)
       if (vkEndCommandBuffer(m_commandBuffers[i]) != VK_SUCCESS)
       {
          throw std::runtime_error("failed to record command buffer!");
+      }
+   }
+
+   /*
+   *  CREATE SYNC OBJECTSs
+   */
+
+   m_imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+   m_renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+   m_inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+   m_imagesInFlight.resize(m_swapChainImages.size(), VK_NULL_HANDLE);
+
+   VkSemaphoreCreateInfo semaphoreInfo{};
+   semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+   VkFenceCreateInfo fenceInfo{};
+   fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+   fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+   for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+   {
+      if (vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_imageAvailableSemaphores[i])
+             != VK_SUCCESS
+          || vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_renderFinishedSemaphores[i])
+                != VK_SUCCESS
+          || vkCreateFence(m_device, &fenceInfo, nullptr, &m_inFlightFences[i]) != VK_SUCCESS)
+      {
+         throw std::runtime_error("failed to create synchronization objects for a frame!");
       }
    }
 }

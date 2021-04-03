@@ -741,6 +741,22 @@ OpenGLRendererAPI::InitializeVulkan(GLFWwindow* windowHandle)
          throw std::runtime_error("failed to create framebuffer!");
       }
    }
+
+
+   /*
+   *  CREATE COMMAND POOL
+   */
+
+   QueueFamilyIndices queueFamilyIndicesTwo = findQueueFamilies(m_physicalDevice, m_surface);
+
+   VkCommandPoolCreateInfo poolInfo{};
+   poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+   poolInfo.queueFamilyIndex = queueFamilyIndicesTwo.graphicsFamily.value();
+
+   if (vkCreateCommandPool(m_device, &poolInfo, nullptr, &m_commandPool) != VK_SUCCESS)
+   {
+      throw std::runtime_error("failed to create command pool!");
+   }
 }
 
 void

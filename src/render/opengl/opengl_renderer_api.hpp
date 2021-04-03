@@ -72,6 +72,8 @@ class OpenGLRendererAPI : public RendererAPI
     inline static VkPipelineLayout m_pipelineLayout = {};
     inline static VkPipeline m_graphicsPipeline = {};
 
+    inline static VkCommandPool m_commandPool = {};
+
 };
 
 } // namespace shady::render::opengl

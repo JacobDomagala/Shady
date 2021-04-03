@@ -67,6 +67,8 @@ class OpenGLRendererAPI : public RendererAPI
     inline static VkFormat m_swapChainImageFormat = {};
     inline static VkExtent2D m_swapChainExtent = {};
 
+    inline static VkRenderPass m_renderPass = {};
+
 };
 
 } // namespace shady::render::opengl

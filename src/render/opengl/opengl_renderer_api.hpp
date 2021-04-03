@@ -73,6 +73,7 @@ class OpenGLRendererAPI : public RendererAPI
     inline static VkPipeline m_graphicsPipeline = {};
 
     inline static VkCommandPool m_commandPool = {};
+    inline static std::vector<VkCommandBuffer> m_commandBuffers = {};
 
 };
 

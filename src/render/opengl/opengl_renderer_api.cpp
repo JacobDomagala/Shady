@@ -757,6 +757,59 @@ OpenGLRendererAPI::InitializeVulkan(GLFWwindow* windowHandle)
    {
       throw std::runtime_error("failed to create command pool!");
    }
+
+
+   /*
+   *  CREATE COMMAND BUFFERS
+   */
+
+   m_commandBuffers.resize(m_swapChainFramebuffers.size());
+
+   VkCommandBufferAllocateInfo allocInfo{};
+   allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+   allocInfo.commandPool = m_commandPool;
+   allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+   allocInfo.commandBufferCount = (uint32_t)m_commandBuffers.size();
+
+   if (vkAllocateCommandBuffers(m_device, &allocInfo, m_commandBuffers.data()) != VK_SUCCESS)
+   {
+      throw std::runtime_error("failed to allocate command buffers!");
+   }
+
+   for (size_t i = 0; i < m_commandBuffers.size(); i++)
+   {
+      VkCommandBufferBeginInfo beginInfo{};
+      beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+      if (vkBeginCommandBuffer(m_commandBuffers[i], &beginInfo) != VK_SUCCESS)
+      {
+         throw std::runtime_error("failed to begin recording command buffer!");
+      }
+
+      VkRenderPassBeginInfo renderPassInfoTwo{};
+      renderPassInfoTwo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+      renderPassInfoTwo.renderPass = m_renderPass;
+      renderPassInfoTwo.framebuffer = m_swapChainFramebuffers[i];
+      renderPassInfoTwo.renderArea.offset = {0, 0};
+      renderPassInfoTwo.renderArea.extent = m_swapChainExtent;
+
+      VkClearValue clearColor = {0.3f, 0.5f, 0.1f, 1.0f};
+      renderPassInfoTwo.clearValueCount = 1;
+      renderPassInfoTwo.pClearValues = &clearColor;
+
+      vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfoTwo, VK_SUBPASS_CONTENTS_INLINE);
+
+      vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
+
+      vkCmdDraw(m_commandBuffers[i], 3, 1, 0, 0);
+
+      vkCmdEndRenderPass(m_commandBuffers[i]);
+
+      if (vkEndCommandBuffer(m_commandBuffers[i]) != VK_SUCCESS)
+      {
+         throw std::runtime_error("failed to record command buffer!");
+      }
+   }
 }
 
 void

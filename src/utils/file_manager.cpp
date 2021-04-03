@@ -9,20 +9,19 @@
 namespace shady::utils {
 
 std::string
-FileManager::ReadFile(const std::filesystem::path& path, FileType type)
+FileManager::ReadTextFile(const std::filesystem::path& path)
 {
-   return ReadFile(path.u8string(), type);
+   return ReadTextFile(path.string());
 }
 
 std::string
-FileManager::ReadFile(const std::string& fileName, FileType /*type*/)
+FileManager::ReadTextFile(const std::string& fileName)
 {
-   std::ifstream fileHandle;
-   fileHandle.open(fileName, std::ifstream::in);
+   std::ifstream fileHandle(fileName);
 
    if (!fileHandle.is_open())
    {
-      trace::Logger::Fatal("FileManager::ReadFile -> {} can't be opened!", fileName);
+      trace::Logger::Fatal("FileManager::ReadTextFile -> {} can't be opened!", fileName);
    }
 
    std::string returnVal((std::istreambuf_iterator< char >(fileHandle)),
@@ -31,14 +30,47 @@ FileManager::ReadFile(const std::string& fileName, FileType /*type*/)
 
    if (returnVal.empty())
    {
-      trace::Logger::Fatal("FileManager::ReadFile -> {} is empty!", fileName);
+      trace::Logger::Fatal("FileManager::ReadTextFile -> {} is empty!", fileName);
    }
 
    return returnVal;
 }
 
+std::vector<char>
+FileManager::ReadBinaryFile(const std::filesystem::path& path)
+{
+   return ReadBinaryFile(path.string());
+}
+
+std::vector<char>
+FileManager::ReadBinaryFile(const std::string& fileName)
+{
+   std::ifstream fileHandle(fileName, std::ios::binary);
+
+   if (!fileHandle.is_open())
+   {
+      trace::Logger::Fatal("FileManager::ReadBinaryFile -> {} can't be opened!", fileName);
+      return {};
+   }
+
+   const auto size = std::filesystem::file_size(fileName);
+
+   if (!size)
+   {
+      trace::Logger::Fatal("FileManager::ReadBinaryFile -> {} is empty!", fileName);
+      return {};
+   }
+
+
+   std::vector< char > buffer(size);
+
+   fileHandle.read(buffer.data(), static_cast<size_t>(size));
+
+   return buffer;
+}
+
 void
-FileManager::WriteToFile(const std::string& fileName, const std::string& content, FileType /*type*/)
+FileManager::WriteToFile(const std::string& fileName, const std::string& content)
 {
    std::ofstream fileHandle;
    fileHandle.open(fileName);

@@ -18,22 +18,21 @@ class FileManager
    static inline const std::filesystem::path SHADERS_DIR = ASSETS_DIR / "shaders";
    static inline const std::filesystem::path MODELS_DIR = ASSETS_DIR / "models";
 
-   enum class FileType
-   {
-      BINARY = 0,
-      TEXT
-   };
-
  public:
    static std::string
-   ReadFile(const std::filesystem::path& path, FileType type = FileType::TEXT);
+   ReadTextFile(const std::filesystem::path& path);
 
    static std::string
-   ReadFile(const std::string& fileName, FileType type = FileType::TEXT);
+   ReadTextFile(const std::string& fileName);
+
+   static std::vector<char>
+   ReadBinaryFile(const std::filesystem::path& path);
+
+   static std::vector<char>
+   ReadBinaryFile(const std::string& fileName);
 
    static void
-   WriteToFile(const std::string& fileName, const std::string& content,
-               FileType type = FileType::TEXT);
+   WriteToFile(const std::string& fileName, const std::string& content);
 
    static render::Texture::ImageData
    ReadTexture(const std::string& fileName, bool flipVertical = false);

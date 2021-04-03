@@ -29,11 +29,11 @@ SetUniformLocation(const OpenGLShader& program, const std::string& name, Functio
 
 OpenGLShader::OpenGLShader(const std::string& name) : m_name(name)
 {
-   Compile(utils::FileManager::ReadFile(utils::FileManager::SHADERS_DIR / name
+   Compile(utils::FileManager::ReadTextFile(utils::FileManager::SHADERS_DIR / name
                                         / fmt::format("{}.vs.glsl", name)),
-           utils::FileManager::ReadFile(utils::FileManager::SHADERS_DIR / name
+           utils::FileManager::ReadTextFile(utils::FileManager::SHADERS_DIR / name
                                         / fmt::format("{}.fs.glsl", name)),
-           utils::FileManager::ReadFile(utils::FileManager::SHADERS_DIR / name
+           utils::FileManager::ReadTextFile(utils::FileManager::SHADERS_DIR / name
                                         / fmt::format("{}.gs.glsl", name)));
 }
 

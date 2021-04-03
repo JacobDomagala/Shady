@@ -5,7 +5,6 @@
 #include "utils/file_manager.hpp"
 
 #include <GLFW/glfw3.h>
-#include <fstream>
 #include <glm/glm.hpp>
 #include <optional>
 #include <set>
@@ -42,28 +41,6 @@ struct SwapChainSupportDetails
 };
 
 const std::vector< const char* > deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-
-static std::vector< char >
-readFile(const std::string& filename)
-{
-   std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-   if (!file.is_open())
-   {
-      trace::Logger::Fatal("failed to open file! {}", filename);
-      throw std::runtime_error("failed to open file!");
-   }
-
-   size_t fileSize = (size_t)file.tellg();
-   std::vector< char > buffer(fileSize);
-
-   file.seekg(0);
-   file.read(buffer.data(), fileSize);
-
-   file.close();
-
-   return buffer;
-}
 
 VkShaderModule
 createShaderModule(const std::vector< char >& code, VkDevice device)
@@ -604,8 +581,10 @@ VulkanRenderer::InitializeVulkan(GLFWwindow* windowHandle)
    /*
     *     CREATE GRAPHICS PIPELINE
     */
-   auto vertShaderCode = readFile((utils::FileManager::SHADERS_DIR / "default/vert.spv").string());
-   auto fragShaderCode = readFile((utils::FileManager::SHADERS_DIR / "default/frag.spv").string());
+   auto vertShaderCode =
+      utils::FileManager::ReadBinaryFile(utils::FileManager::SHADERS_DIR / "default/vert.spv");
+   auto fragShaderCode =
+      utils::FileManager::ReadBinaryFile(utils::FileManager::SHADERS_DIR / "default/frag.spv");
 
    VkShaderModule vertShaderModule = createShaderModule(vertShaderCode, m_device);
    VkShaderModule fragShaderModule = createShaderModule(fragShaderCode, m_device);

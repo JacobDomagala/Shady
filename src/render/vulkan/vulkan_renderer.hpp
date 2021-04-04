@@ -24,6 +24,27 @@ class VulkanRenderer
    CreateInstance();
 
    static void
+   CreateDevice();
+
+   static void
+   CreateSwapchain(GLFWwindow* windowHandle);
+
+   static void
+   CreateImageViews();
+
+   static void
+   CreateRenderPass();
+
+   static void
+   CreateFramebuffers();
+
+   static void
+   CreateCommandPoolAndBuffers();
+
+   static void
+   CreateSyncObjects();
+
+   static void
    CreatePipeline();
 
  private:

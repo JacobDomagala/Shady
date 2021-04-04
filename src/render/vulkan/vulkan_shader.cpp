@@ -1,26 +1,24 @@
 #include "vulkan_shader.hpp"
 #include "trace/logger.hpp"
+#include "utils/assert.hpp"
 #include "utils/file_manager.hpp"
 
 namespace shady::render::vulkan {
 
 static VkShaderModule
-CreateShaderModule(VkDevice device, std::vector< char >&& shaderBinaryCode)
+CreateShaderModule(VkDevice device, std::vector< char >&& shaderByteCode)
 {
    VkShaderModuleCreateInfo createInfo{};
    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-   createInfo.codeSize = shaderBinaryCode.size();
-   createInfo.pCode = reinterpret_cast< const uint32_t* >(shaderBinaryCode.data());
+   createInfo.codeSize = shaderByteCode.size();
+   createInfo.pCode = reinterpret_cast< const uint32_t* >(shaderByteCode.data());
 
    VkShaderModule shaderModule;
-   if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
-   {
-      throw std::runtime_error("failed to create shader module!");
-   }
-
+   utils::Assert(vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) == VK_SUCCESS,
+                 "failed to create shader module!");
+  
    return shaderModule;
 }
-
 
 std::pair< VertexShaderInfo, FragmentShaderInfo >
 VulkanShader::CreateShader(VkDevice device, std::string_view vertex, std::string_view fragment)

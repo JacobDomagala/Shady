@@ -4,7 +4,6 @@
 #include <utility>
 #include <vulkan/vulkan.h>
 
-
 namespace shady::render::vulkan {
 
 struct ShaderInfoWrapper

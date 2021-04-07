@@ -47,6 +47,16 @@ class VulkanRenderer
    static void
    CreatePipeline();
 
+   static void
+   CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
+                VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+
+   static void
+   CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+
+   static void
+   CreateVertexBuffer();
+
  private:
    inline static VkInstance m_instance = {};
    inline static VkDebugUtilsMessengerCreateInfoEXT m_debugCreateInfo = {};

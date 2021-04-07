@@ -57,6 +57,9 @@ class VulkanRenderer
    static void
    CreateVertexBuffer();
 
+   static void
+   CreateIndexBuffer();
+
  private:
    inline static VkInstance m_instance = {};
    inline static VkDebugUtilsMessengerCreateInfoEXT m_debugCreateInfo = {};
@@ -90,6 +93,8 @@ class VulkanRenderer
 
    inline static VkBuffer m_vertexBuffer = {};
    inline static VkDeviceMemory m_vertexBufferMemory = {};
+   inline static VkBuffer m_indexBuffer = {};
+   inline static VkDeviceMemory m_indexBufferMemory = {};
 };
 
 } // namespace shady::render::vulkan

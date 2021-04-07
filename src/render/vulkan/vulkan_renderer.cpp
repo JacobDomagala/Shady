@@ -60,9 +60,11 @@ struct Vertexx
    }
 };
 
-static const std::array< Vertexx, 3 > vertices = {Vertexx{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-                                                  Vertexx{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-                                                  Vertexx{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
+static const std::array< Vertexx, 4 > vertices = {
+   Vertexx{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}}, Vertexx{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+   Vertexx{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}, Vertexx{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}};
+
+static const std::vector< uint16_t > indices = {0, 1, 2, 2, 3, 0};
 
 struct QueueFamilyIndices
 {
@@ -390,8 +392,9 @@ findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties,
 }
 
 void
-VulkanRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
-             VkBuffer& buffer, VkDeviceMemory& bufferMemory)
+VulkanRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
+                             VkMemoryPropertyFlags properties, VkBuffer& buffer,
+                             VkDeviceMemory& bufferMemory)
 {
    VkBufferCreateInfo bufferInfo{};
    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -410,7 +413,8 @@ VulkanRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemo
    VkMemoryAllocateInfo allocInfo{};
    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
    allocInfo.allocationSize = memRequirements.size;
-   allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties, m_physicalDevice);
+   allocInfo.memoryTypeIndex =
+      findMemoryType(memRequirements.memoryTypeBits, properties, m_physicalDevice);
 
    if (vkAllocateMemory(m_device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
    {
@@ -475,6 +479,31 @@ VulkanRenderer::CreateVertexBuffer()
                 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_vertexBuffer, m_vertexBufferMemory);
 
    CopyBuffer(stagingBuffer, m_vertexBuffer, bufferSize);
+
+   vkDestroyBuffer(m_device, stagingBuffer, nullptr);
+   vkFreeMemory(m_device, stagingBufferMemory, nullptr);
+}
+
+void
+VulkanRenderer::CreateIndexBuffer()
+{
+   VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+
+   VkBuffer stagingBuffer;
+   VkDeviceMemory stagingBufferMemory;
+   CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                stagingBuffer, stagingBufferMemory);
+
+   void* data;
+   vkMapMemory(m_device, stagingBufferMemory, 0, bufferSize, 0, &data);
+   memcpy(data, indices.data(), (size_t)bufferSize);
+   vkUnmapMemory(m_device, stagingBufferMemory);
+
+   CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_indexBuffer, m_indexBufferMemory);
+
+   CopyBuffer(stagingBuffer, m_indexBuffer, bufferSize);
 
    vkDestroyBuffer(m_device, stagingBuffer, nullptr);
    vkFreeMemory(m_device, stagingBufferMemory, nullptr);
@@ -836,6 +865,8 @@ VulkanRenderer::CreateCommandPoolAndBuffers()
 
 
    CreateVertexBuffer();
+   CreateIndexBuffer();
+
    /*
     *  CREATE COMMAND BUFFERS
     */
@@ -880,7 +911,9 @@ VulkanRenderer::CreateCommandPoolAndBuffers()
       VkDeviceSize offsets[] = {0};
       vkCmdBindVertexBuffers(m_commandBuffers[i], 0, 1, vertexBuffers, offsets);
 
-      vkCmdDraw(m_commandBuffers[i], static_cast< uint32_t >(vertices.size()), 1, 0, 0);
+      vkCmdBindIndexBuffer(m_commandBuffers[i], m_indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+
+      vkCmdDrawIndexed(m_commandBuffers[i], static_cast< uint32_t >(indices.size()), 1, 0, 0, 0);
 
       vkCmdEndRenderPass(m_commandBuffers[i]);
 

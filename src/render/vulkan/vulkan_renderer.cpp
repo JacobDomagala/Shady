@@ -13,7 +13,6 @@
 #include <set>
 
 
-
 #undef max
 #undef min
 
@@ -25,6 +24,45 @@ constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 static constexpr bool ENABLE_VALIDATION = true;
 static constexpr std::array< const char*, 1 > VALIDATION_LAYERS = {"VK_LAYER_KHRONOS_validation"};
 static constexpr std::array< const char*, 1 > DEVICE_EXTENSIONS = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+
+struct Vertexx
+{
+   glm::vec2 pos;
+   glm::vec3 color;
+
+   static VkVertexInputBindingDescription
+   getBindingDescription()
+   {
+      VkVertexInputBindingDescription bindingDescription{};
+      bindingDescription.binding = 0;
+      bindingDescription.stride = sizeof(Vertexx);
+      bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+      return bindingDescription;
+   }
+
+   static std::array< VkVertexInputAttributeDescription, 2 >
+   getAttributeDescriptions()
+   {
+      std::array< VkVertexInputAttributeDescription, 2 > attributeDescriptions{};
+
+      attributeDescriptions[0].binding = 0;
+      attributeDescriptions[0].location = 0;
+      attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+      attributeDescriptions[0].offset = offsetof(Vertexx, pos);
+
+      attributeDescriptions[1].binding = 0;
+      attributeDescriptions[1].location = 1;
+      attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+      attributeDescriptions[1].offset = offsetof(Vertexx, color);
+
+      return attributeDescriptions;
+   }
+};
+
+static const std::array< Vertexx, 3 > vertices = {Vertexx{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+                                                  Vertexx{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+                                                  Vertexx{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
 
 struct QueueFamilyIndices
 {
@@ -321,15 +359,75 @@ chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, GLFWwindow* windo
 
       VkExtent2D actualExtent = {static_cast< uint32_t >(width), static_cast< uint32_t >(height)};
 
-      actualExtent.width  = glm::clamp(actualExtent.width, capabilities.maxImageExtent.width,
-                 capabilities.minImageExtent.width);
-      
+      actualExtent.width = glm::clamp(actualExtent.width, capabilities.maxImageExtent.width,
+                                      capabilities.minImageExtent.width);
+
       actualExtent.height = glm::clamp(actualExtent.height, capabilities.maxImageExtent.height,
-                                      capabilities.minImageExtent.height);
+                                       capabilities.minImageExtent.height);
 
       return actualExtent;
    }
 }
+
+
+
+
+uint32_t
+findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties, VkPhysicalDevice physicalDevice)
+{
+   VkPhysicalDeviceMemoryProperties memProperties;
+   vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+
+   for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+   {
+      if ((typeFilter & (1 << i))
+          && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+      {
+         return i;
+      }
+   }
+
+   throw std::runtime_error("failed to find suitable memory type!");
+}
+
+void
+createVertexBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VkBuffer& vertexBuffer, VkDeviceMemory& vertexBufferMemory)
+{
+   VkBufferCreateInfo bufferInfo{};
+   bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+   bufferInfo.size = sizeof(vertices[0]) * vertices.size();
+   bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+   bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+   if (vkCreateBuffer(device, &bufferInfo, nullptr, &vertexBuffer) != VK_SUCCESS)
+   {
+      throw std::runtime_error("failed to create vertex buffer!");
+   }
+
+   VkMemoryRequirements memRequirements;
+   vkGetBufferMemoryRequirements(device, vertexBuffer, &memRequirements);
+
+   VkMemoryAllocateInfo allocInfo{};
+   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+   allocInfo.allocationSize = memRequirements.size;
+   allocInfo.memoryTypeIndex =
+      findMemoryType(memRequirements.memoryTypeBits,
+                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, physicalDevice);
+
+   if (vkAllocateMemory(device, &allocInfo, nullptr, &vertexBufferMemory) != VK_SUCCESS)
+   {
+      throw std::runtime_error("failed to allocate vertex buffer memory!");
+   }
+
+   vkBindBufferMemory(device, vertexBuffer, vertexBufferMemory, 0);
+
+   void* data;
+   vkMapMemory(device, vertexBufferMemory, 0, bufferInfo.size, 0, &data);
+   memcpy(data, vertices.data(), (size_t)bufferInfo.size);
+   vkUnmapMemory(device, vertexBufferMemory);
+}
+
+
 
 void
 VulkanRenderer::Initialize(GLFWwindow* windowHandle)
@@ -432,7 +530,7 @@ VulkanRenderer::CreateInstance()
       createInfo.ppEnabledLayerNames = VALIDATION_LAYERS.data();
 
       populateDebugMessengerCreateInfo(m_debugCreateInfo);
-      createInfo.pNext = (void*)&m_debugCreateInfo;
+      createInfo.pNext = reinterpret_cast< void* >(&m_debugCreateInfo);
    }
 
    const auto result = vkCreateInstance(&createInfo, nullptr, &m_instance);
@@ -506,7 +604,7 @@ VulkanRenderer::CreateDevice()
 
    utils::Assert(vkCreateDevice(m_physicalDevice, &createInfo, nullptr, &m_device) == VK_SUCCESS,
                  "failed to create logical device!");
-  
+
    vkGetDeviceQueue(m_device, indices.graphicsFamily.value(), 0, &m_graphicsQueue);
    vkGetDeviceQueue(m_device, indices.presentFamily.value(), 0, &m_presentQueue);
 }
@@ -527,7 +625,7 @@ VulkanRenderer::CreateSwapchain(GLFWwindow* windowHandle)
       imageCount = swapChainSupport.capabilities.maxImageCount;
    }
 
- 
+
    VkSwapchainCreateInfoKHR swapChainCreateInfo{};
    swapChainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
    swapChainCreateInfo.surface = m_surface;
@@ -686,6 +784,7 @@ VulkanRenderer::CreateCommandPoolAndBuffers()
                  "failed to create command pool!");
 
 
+   createVertexBuffer(m_physicalDevice, m_device, m_vertexBuffer, m_vertexBufferMemory);
    /*
     *  CREATE COMMAND BUFFERS
     */
@@ -696,7 +795,7 @@ VulkanRenderer::CreateCommandPoolAndBuffers()
    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
    allocInfo.commandPool = m_commandPool;
    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-   allocInfo.commandBufferCount = (uint32_t)m_commandBuffers.size();
+   allocInfo.commandBufferCount = static_cast< uint32_t >(m_commandBuffers.size());
 
    utils::Assert(vkAllocateCommandBuffers(m_device, &allocInfo, m_commandBuffers.data())
                     == VK_SUCCESS,
@@ -718,6 +817,7 @@ VulkanRenderer::CreateCommandPoolAndBuffers()
       renderPassInfoTwo.renderArea.extent = m_swapChainExtent;
 
       VkClearValue clearColor = {0.3f, 0.5f, 0.1f, 1.0f};
+
       renderPassInfoTwo.clearValueCount = 1;
       renderPassInfoTwo.pClearValues = &clearColor;
 
@@ -725,7 +825,11 @@ VulkanRenderer::CreateCommandPoolAndBuffers()
 
       vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
 
-      vkCmdDraw(m_commandBuffers[i], 3, 1, 0, 0);
+      VkBuffer vertexBuffers[] = {m_vertexBuffer};
+      VkDeviceSize offsets[] = {0};
+      vkCmdBindVertexBuffers(m_commandBuffers[i], 0, 1, vertexBuffers, offsets);
+
+      vkCmdDraw(m_commandBuffers[i], static_cast< uint32_t >(vertices.size()), 1, 0, 0);
 
       vkCmdEndRenderPass(m_commandBuffers[i]);
 
@@ -757,7 +861,7 @@ VulkanRenderer::CreateSyncObjects()
             && vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_renderFinishedSemaphores[i])
                   == VK_SUCCESS
             && vkCreateFence(m_device, &fenceInfo, nullptr, &m_inFlightFences[i]) == VK_SUCCESS,
-         "failed to create synchronization objects for a frame!");   
+         "failed to create synchronization objects for a frame!");
    }
 }
 
@@ -771,8 +875,13 @@ VulkanRenderer::CreatePipeline()
 
    VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
    vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-   vertexInputInfo.vertexBindingDescriptionCount = 0;
-   vertexInputInfo.vertexAttributeDescriptionCount = 0;
+   auto bindingDescription = Vertexx::getBindingDescription();
+   auto attributeDescriptions = Vertexx::getAttributeDescriptions();
+   vertexInputInfo.vertexBindingDescriptionCount = 1;
+   vertexInputInfo.vertexAttributeDescriptionCount =
+      static_cast< uint32_t >(attributeDescriptions.size());
+   vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+   vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
    VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
    inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -782,8 +891,8 @@ VulkanRenderer::CreatePipeline()
    VkViewport viewport{};
    viewport.x = 0.0f;
    viewport.y = 0.0f;
-   viewport.width = (float)m_swapChainExtent.width;
-   viewport.height = (float)m_swapChainExtent.height;
+   viewport.width = static_cast< float >(m_swapChainExtent.width);
+   viewport.height = static_cast< float >(m_swapChainExtent.height);
    viewport.minDepth = 0.0f;
    viewport.maxDepth = 1.0f;
 
@@ -836,7 +945,7 @@ VulkanRenderer::CreatePipeline()
 
    utils::Assert(vkCreatePipelineLayout(m_device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout)
                     == VK_SUCCESS,
-                 "failed to create pipeline layout!"); 
+                 "failed to create pipeline layout!");
 
    VkGraphicsPipelineCreateInfo pipelineInfo{};
    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;

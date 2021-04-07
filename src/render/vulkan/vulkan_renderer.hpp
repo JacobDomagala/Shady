@@ -77,6 +77,9 @@ class VulkanRenderer
    inline static std::vector< VkSemaphore > m_renderFinishedSemaphores = {};
    inline static std::vector< VkFence > m_inFlightFences = {};
    inline static std::vector< VkFence > m_imagesInFlight = {};
+
+   inline static VkBuffer m_vertexBuffer = {};
+   inline static VkDeviceMemory m_vertexBufferMemory = {};
 };
 
 } // namespace shady::render::vulkan

@@ -55,6 +55,7 @@ add_executable(${PROJECT_NAME}
 
     # render/vulkan
     src/render/vulkan/vulkan_renderer.hpp src/render/vulkan/vulkan_renderer.cpp src/render/vulkan/vulkan_shader.hpp src/render/vulkan/vulkan_shader.cpp
+    src/render/vulkan/vulkan_buffer.hpp src/render/vulkan/vulkan_buffer.cpp
 
     # scene
     src/scene/mesh.hpp src/scene/mesh.cpp src/scene/model.hpp src/scene/model.cpp src/scene/light.hpp src/scene/light.cpp

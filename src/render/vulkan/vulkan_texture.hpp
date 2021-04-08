@@ -22,13 +22,24 @@ class Texture
 
    Texture() = default;
 
-   void Destroy();
+   void
+   Destroy();
 
    void
    CreateTextureImage(TextureType type, std::string_view textureName);
 
    void
    CreateImage(VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties);
+
+   static VkImageView
+   CreateImageView(VkImage image, VkFormat format);
+
+   std::pair<VkImageView, VkSampler>
+   GetImageViewAndSampler() const;
+
+
+   void
+   CreateTextureSampler();
 
  private:
    void
@@ -40,6 +51,8 @@ class Texture
    TextureType m_type = {};
    VkImage m_textureImage = {};
    VkDeviceMemory m_textureImageMemory = {};
+   VkImageView m_textureImageView = {};
+   VkSampler m_textureSampler = {};
    VkFormat m_format = {};
    int32_t m_channels = {};
    uint32_t m_width = {};

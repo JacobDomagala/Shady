@@ -70,9 +70,16 @@ class VulkanRenderer
    CreateDescriptorSets();
 
 
+   static void
+   CreateTextureImageView();
+
+   static void
+   CreateTextureSampler();
+
+   static VkImageView
+   CreateImageView(VkImage image, VkFormat format);
 
  private:
-
    inline static VkDebugUtilsMessengerCreateInfoEXT m_debugCreateInfo = {};
    inline static VkDebugUtilsMessengerEXT m_debugMessenger = {};
    inline static VkSurfaceKHR m_surface = {};
@@ -112,8 +119,6 @@ class VulkanRenderer
 
    inline static std::vector< VkBuffer > m_uniformBuffers = {};
    inline static std::vector< VkDeviceMemory > m_uniformBuffersMemory = {};
-
-
 };
 
 } // namespace shady::render::vulkan

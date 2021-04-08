@@ -102,12 +102,57 @@ Texture::CreateImage(VkImageTiling tiling, VkImageUsageFlags usage,
                  "failed to allocate image memory!");
 
    vkBindImageMemory(Data::vk_device, m_textureImage, m_textureImageMemory, 0);
-   m_textureImageView = CreateImageView(m_textureImage, m_format);
+   m_textureImageView = CreateImageView(m_textureImage, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
    CreateTextureSampler();
 }
 
+std::pair<VkImage, VkDeviceMemory>
+Texture::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling,
+            VkImageUsageFlags usage, VkMemoryPropertyFlags properties)
+{
+   VkImage image;
+   VkDeviceMemory imageMemory;
+
+   VkImageCreateInfo imageInfo{};
+   imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+   imageInfo.imageType = VK_IMAGE_TYPE_2D;
+   imageInfo.extent.width = width;
+   imageInfo.extent.height = height;
+   imageInfo.extent.depth = 1;
+   imageInfo.mipLevels = 1;
+   imageInfo.arrayLayers = 1;
+   imageInfo.format = format;
+   imageInfo.tiling = tiling;
+   imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+   imageInfo.usage = usage;
+   imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+   imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+   if (vkCreateImage(Data::vk_device, &imageInfo, nullptr, &image) != VK_SUCCESS)
+   {
+      throw std::runtime_error("failed to create image!");
+   }
+
+   VkMemoryRequirements memRequirements;
+   vkGetImageMemoryRequirements(Data::vk_device, image, &memRequirements);
+
+   VkMemoryAllocateInfo allocInfo{};
+   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+   allocInfo.allocationSize = memRequirements.size;
+   allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
+
+   if (vkAllocateMemory(Data::vk_device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
+   {
+      throw std::runtime_error("failed to allocate image memory!");
+   }
+
+   vkBindImageMemory(Data::vk_device, image, imageMemory, 0);
+
+   return {image, imageMemory};
+}
+
 VkImageView
-Texture::CreateImageView(VkImage image, VkFormat format)
+Texture::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
 {
    VkImageViewCreateInfo viewInfo{};
    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -117,6 +162,7 @@ Texture::CreateImageView(VkImage image, VkFormat format)
    viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
    viewInfo.subresourceRange.baseMipLevel = 0;
    viewInfo.subresourceRange.levelCount = 1;
+   viewInfo.subresourceRange.aspectMask = aspectFlags;
    viewInfo.subresourceRange.baseArrayLayer = 0;
    viewInfo.subresourceRange.layerCount = 1;
 

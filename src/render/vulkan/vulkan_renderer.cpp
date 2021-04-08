@@ -34,7 +34,7 @@ struct UniformBufferObject
 
 struct Vertexx
 {
-   glm::vec2 pos;
+   glm::vec3 pos;
    glm::vec3 color;
    glm::vec2 texCoord;
 
@@ -56,7 +56,7 @@ struct Vertexx
 
       attributeDescriptions[0].binding = 0;
       attributeDescriptions[0].location = 0;
-      attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+      attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
       attributeDescriptions[0].offset = offsetof(Vertexx, pos);
 
       attributeDescriptions[1].binding = 0;
@@ -73,14 +73,17 @@ struct Vertexx
    }
 };
 
-static const std::array< Vertexx, 4 > vertices = {
-   Vertexx{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-   Vertexx{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-   Vertexx{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-   Vertexx{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
-};
+const std::vector< Vertexx > vertices = {{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+                                         {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+                                         {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+                                         {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
 
-static const std::vector< uint16_t > indices = {0, 1, 2, 2, 3, 0};
+                                         {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+                                         {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+                                         {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+                                         {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}};
+
+const std::vector< uint16_t > indices = {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
 
 struct QueueFamilyIndices
 {
@@ -547,8 +550,10 @@ VulkanRenderer::Initialize(GLFWwindow* windowHandle)
    CreateRenderPass();
    CreateDescriptorSetLayout();
    CreatePipeline();
+   CreateCommandPool();
+   CreateDepthResources();
    CreateFramebuffers();
-   CreateCommandPoolAndBuffers();
+   CreateCommandBuffers();
    CreateSyncObjects();
 }
 
@@ -574,6 +579,58 @@ VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage)
    vkMapMemory(Data::vk_device, m_uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
    memcpy(data, &ubo, sizeof(ubo));
    vkUnmapMemory(Data::vk_device, m_uniformBuffersMemory[currentImage]);
+}
+
+void
+VulkanRenderer::CreateDepthResources()
+{
+   VkFormat depthFormat = FindDepthFormat();
+
+   const auto [depthImage, depthImageMemory] = Texture::CreateImage(
+      m_swapChainExtent.width, m_swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL,
+      VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+   m_depthImage = depthImage;
+   m_depthImageMemory = depthImageMemory;
+
+   m_depthImageView = Texture::CreateImageView(m_depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+}
+
+VkFormat
+VulkanRenderer::FindSupportedFormat(const std::vector< VkFormat >& candidates, VkImageTiling tiling,
+                                    VkFormatFeatureFlags features)
+{
+   for (VkFormat format : candidates)
+   {
+      VkFormatProperties props;
+      vkGetPhysicalDeviceFormatProperties(Data::vk_physicalDevice, format, &props);
+
+      if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features)
+      {
+         return format;
+      }
+      else if (tiling == VK_IMAGE_TILING_OPTIMAL
+               && (props.optimalTilingFeatures & features) == features)
+      {
+         return format;
+      }
+   }
+
+   throw std::runtime_error("failed to find supported format!");
+}
+
+VkFormat
+VulkanRenderer::FindDepthFormat()
+{
+   return FindSupportedFormat(
+      {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
+      VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+}
+
+bool
+VulkanRenderer::HasStencilComponent(VkFormat format)
+{
+   return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
 }
 
 void
@@ -806,10 +863,10 @@ VulkanRenderer::CreateImageViews()
 {
    m_swapChainImageViews.resize(m_swapChainImages.size());
 
-   for (size_t i = 0; i < m_swapChainImages.size(); i++)
+   for (uint32_t i = 0; i < m_swapChainImages.size(); i++)
    {
-      m_swapChainImageViews[i] =
-         Texture::CreateImageView(m_swapChainImages[i], m_swapChainImageFormat);
+      m_swapChainImageViews[i] = Texture::CreateImageView(
+         m_swapChainImages[i], m_swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
    }
 }
 
@@ -858,14 +915,29 @@ VulkanRenderer::CreateRenderPass()
    colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
+   VkAttachmentDescription depthAttachment{};
+   depthAttachment.format = FindDepthFormat();
+   depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+   depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+   depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+   depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+   depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+   depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+   depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
    VkAttachmentReference colorAttachmentRef{};
    colorAttachmentRef.attachment = 0;
    colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+   VkAttachmentReference depthAttachmentRef{};
+   depthAttachmentRef.attachment = 1;
+   depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
    VkSubpassDescription subpass{};
    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
    subpass.colorAttachmentCount = 1;
    subpass.pColorAttachments = &colorAttachmentRef;
+   subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
    VkSubpassDependency dependency{};
    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -875,10 +947,11 @@ VulkanRenderer::CreateRenderPass()
    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
+   std::array< VkAttachmentDescription, 2 > attachments = {colorAttachment, depthAttachment};
    VkRenderPassCreateInfo renderPassInfo{};
    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-   renderPassInfo.attachmentCount = 1;
-   renderPassInfo.pAttachments = &colorAttachment;
+   renderPassInfo.attachmentCount = static_cast< uint32_t >(attachments.size());
+   renderPassInfo.pAttachments = attachments.data();
    renderPassInfo.subpassCount = 1;
    renderPassInfo.pSubpasses = &subpass;
    renderPassInfo.dependencyCount = 1;
@@ -896,13 +969,13 @@ VulkanRenderer::CreateFramebuffers()
 
    for (size_t i = 0; i < m_swapChainImageViews.size(); i++)
    {
-      VkImageView attachments[] = {m_swapChainImageViews[i]};
+      std::array< VkImageView, 2 > attachments = {m_swapChainImageViews[i], m_depthImageView};
 
       VkFramebufferCreateInfo framebufferInfo{};
       framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
       framebufferInfo.renderPass = m_renderPass;
-      framebufferInfo.attachmentCount = 1;
-      framebufferInfo.pAttachments = attachments;
+      framebufferInfo.attachmentCount = static_cast< uint32_t >(attachments.size());
+      framebufferInfo.pAttachments = attachments.data();
       framebufferInfo.width = m_swapChainExtent.width;
       framebufferInfo.height = m_swapChainExtent.height;
       framebufferInfo.layers = 1;
@@ -915,7 +988,7 @@ VulkanRenderer::CreateFramebuffers()
 }
 
 void
-VulkanRenderer::CreateCommandPoolAndBuffers()
+VulkanRenderer::CreateCommandPool()
 {
    /*
     *  CREATE COMMAND POOL
@@ -930,8 +1003,11 @@ VulkanRenderer::CreateCommandPoolAndBuffers()
    utils::Assert(vkCreateCommandPool(Data::vk_device, &poolInfo, nullptr, &Data::vk_commandPool)
                     == VK_SUCCESS,
                  "failed to create command pool!");
+}
 
-
+void
+VulkanRenderer::CreateCommandBuffers()
+{
    auto tex = TextureLibrary::GetTexture(TextureType::DIFFUSE_MAP, "196.png");
    CreateVertexBuffer();
    CreateIndexBuffer();
@@ -971,10 +1047,12 @@ VulkanRenderer::CreateCommandPoolAndBuffers()
       renderPassInfoTwo.renderArea.offset = {0, 0};
       renderPassInfoTwo.renderArea.extent = m_swapChainExtent;
 
-      VkClearValue clearColor = {0.3f, 0.5f, 0.1f, 1.0f};
+      std::array< VkClearValue, 2 > clearValues{};
+      clearValues[0].color = {0.3f, 0.5f, 0.1f, 1.0f};
+      clearValues[1].depthStencil = {1.0f, 0};
 
-      renderPassInfoTwo.clearValueCount = 1;
-      renderPassInfoTwo.pClearValues = &clearColor;
+      renderPassInfoTwo.clearValueCount = static_cast< uint32_t >(clearValues.size());
+      renderPassInfoTwo.pClearValues = clearValues.data();
 
       vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfoTwo, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -1086,6 +1164,14 @@ VulkanRenderer::CreatePipeline()
    multisampling.sampleShadingEnable = VK_FALSE;
    multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
+   VkPipelineDepthStencilStateCreateInfo depthStencil{};
+   depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+   depthStencil.depthTestEnable = VK_TRUE;
+   depthStencil.depthWriteEnable = VK_TRUE;
+   depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+   depthStencil.depthBoundsTestEnable = VK_FALSE;
+   depthStencil.stencilTestEnable = VK_FALSE;
+
    VkPipelineColorBlendAttachmentState colorBlendAttachment{};
    colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT
                                          | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
@@ -1122,6 +1208,7 @@ VulkanRenderer::CreatePipeline()
    pipelineInfo.pViewportState = &viewportState;
    pipelineInfo.pRasterizationState = &rasterizer;
    pipelineInfo.pMultisampleState = &multisampling;
+   pipelineInfo.pDepthStencilState = &depthStencil;
    pipelineInfo.pColorBlendState = &colorBlending;
    pipelineInfo.layout = m_pipelineLayout;
    pipelineInfo.renderPass = m_renderPass;

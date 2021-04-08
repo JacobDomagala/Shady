@@ -39,10 +39,13 @@ class VulkanRenderer
    CreateRenderPass();
 
    static void
+   CreateCommandPool();
+
+   static void
    CreateFramebuffers();
 
    static void
-   CreateCommandPoolAndBuffers();
+   CreateCommandBuffers();
 
    static void
    CreateSyncObjects();
@@ -78,6 +81,19 @@ class VulkanRenderer
 
    static VkImageView
    CreateImageView(VkImage image, VkFormat format);
+
+   static void
+   CreateDepthResources();
+
+   static VkFormat
+   FindSupportedFormat(const std::vector< VkFormat >& candidates, VkImageTiling tiling,
+                       VkFormatFeatureFlags features);
+
+   static VkFormat
+   FindDepthFormat();
+
+   static bool
+   HasStencilComponent(VkFormat format);
 
  private:
    inline static VkDebugUtilsMessengerCreateInfoEXT m_debugCreateInfo = {};
@@ -119,6 +135,10 @@ class VulkanRenderer
 
    inline static std::vector< VkBuffer > m_uniformBuffers = {};
    inline static std::vector< VkDeviceMemory > m_uniformBuffersMemory = {};
+
+   inline static VkImage m_depthImage = {};
+   inline static VkDeviceMemory m_depthImageMemory = {};
+   inline static VkImageView m_depthImageView = {};
 };
 
 } // namespace shady::render::vulkan

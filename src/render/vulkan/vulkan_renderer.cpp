@@ -4,9 +4,11 @@
 #include "utils/assert.hpp"
 #include "utils/file_manager.hpp"
 #include "vulkan_shader.hpp"
+#include "vulkan_texture.hpp"
 #include "vulkan_buffer.hpp"
 #include "vulkan_command.hpp"
 #include "vulkan_common.hpp"
+
 
 #include <GLFW/glfw3.h>
 #include <array>
@@ -904,6 +906,7 @@ VulkanRenderer::CreateCommandPoolAndBuffers()
                  "failed to create command pool!");
 
 
+   auto tex = TextureLibrary::GetTexture(TextureType::DIFFUSE_MAP, "196.png");
    CreateVertexBuffer();
    CreateIndexBuffer();
    CreateUniformBuffers();

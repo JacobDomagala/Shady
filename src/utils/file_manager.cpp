@@ -82,7 +82,7 @@ render::Texture::ImageData
 FileManager::ReadTexture(std::string_view fileName, bool flipVertical)
 {
    const auto pathToImage = std::filesystem::path(TEXTURES_DIR / fileName).string();
-   int force_channels = 0;
+   int force_channels = STBI_rgb_alpha;
    int w, h, n;
 
    stbi_set_flip_vertically_on_load(flipVertical);

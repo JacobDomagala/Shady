@@ -19,8 +19,10 @@ class Texture
 {
  public:
    Texture(TextureType type, std::string_view textureName);
+
    Texture() = default;
-   ~Texture();
+
+   void Destroy();
 
    void
    CreateTextureImage(TextureType type, std::string_view textureName);
@@ -48,7 +50,7 @@ class Texture
 class TextureLibrary
 {
  public:
-   static Texture
+   static const Texture&
    GetTexture(TextureType type, const std::string& textureName);
 
    static void

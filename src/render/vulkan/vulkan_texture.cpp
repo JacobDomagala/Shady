@@ -15,7 +15,7 @@ namespace shady::render::vulkan {
  ****************************************** TEXTURE ***********************************************
  *************************************************************************************************/
 
-Texture::~Texture()
+void Texture::Destroy()
 {
    vkDestroyImage(Data::vk_device, m_textureImage, nullptr);
    vkFreeMemory(Data::vk_device, m_textureImageMemory, nullptr);
@@ -29,9 +29,11 @@ Texture::Texture(TextureType type, std::string_view textureName)
 void
 Texture::CreateTextureImage(TextureType type, std::string_view textureName)
 {
+   m_type = type;
    auto textureData = utils::FileManager::ReadTexture(textureName);
    m_width = textureData.m_size.x;
    m_height = textureData.m_size.y;
+
    m_format = VK_FORMAT_R8G8B8A8_SRGB;
 
    VkDeviceSize imageSize = m_width * m_height * 4;
@@ -43,7 +45,9 @@ Texture::CreateTextureImage(TextureType type, std::string_view textureName)
                         stagingBuffer, stagingBufferMemory);
 
    void* data;
-   vkMapMemory(Data::vk_device, stagingBufferMemory, 0, imageSize, 0, &data);
+   utils::Assert(vkMapMemory(Data::vk_device, stagingBufferMemory, 0, imageSize, 0, &data)
+                    == VK_SUCCESS,
+                 "Failed to map memory");
    memcpy(data, textureData.m_bytes.get(), static_cast< size_t >(imageSize));
    vkUnmapMemory(Data::vk_device, stagingBufferMemory);
 
@@ -51,8 +55,7 @@ Texture::CreateTextureImage(TextureType type, std::string_view textureName)
                VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-   TransitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED,
-                         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+   TransitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
    CopyBufferToImage(stagingBuffer);
    TransitionImageLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -80,10 +83,8 @@ Texture::CreateImage(VkImageTiling tiling, VkImageUsageFlags usage,
    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-   if (vkCreateImage(Data::vk_device, &imageInfo, nullptr, &m_textureImage) != VK_SUCCESS)
-   {
-      throw std::runtime_error("failed to create image!");
-   }
+   utils::Assert(vkCreateImage(Data::vk_device, &imageInfo, nullptr, &m_textureImage) == VK_SUCCESS,
+                 "failed to create image!");
 
    VkMemoryRequirements memRequirements;
    vkGetImageMemoryRequirements(Data::vk_device, m_textureImage, &memRequirements);
@@ -93,10 +94,9 @@ Texture::CreateImage(VkImageTiling tiling, VkImageUsageFlags usage,
    allocInfo.allocationSize = memRequirements.size;
    allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
 
-   if (vkAllocateMemory(Data::vk_device, &allocInfo, nullptr, &m_textureImageMemory) != VK_SUCCESS)
-   {
-      throw std::runtime_error("failed to allocate image memory!");
-   }
+   utils::Assert(vkAllocateMemory(Data::vk_device, &allocInfo, nullptr, &m_textureImageMemory)
+                    == VK_SUCCESS,
+                 "failed to allocate image memory!");
 
    vkBindImageMemory(Data::vk_device, m_textureImage, m_textureImageMemory, 0);
 }
@@ -177,7 +177,7 @@ Texture::TransitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout)
 /**************************************************************************************************
  *************************************** TEXTURE LIBRARY ******************************************
  *************************************************************************************************/
-Texture
+const Texture&
 TextureLibrary::GetTexture(TextureType type, const std::string& textureName)
 {
    if (s_loadedTextures.find(textureName) == s_loadedTextures.end())

@@ -79,8 +79,6 @@ class VulkanRenderer
 
    inline static VkSampleCountFlagBits m_msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 
-
-
    inline static VkQueue m_presentQueue = {};
 
    inline static VkSwapchainKHR m_swapChain = {};

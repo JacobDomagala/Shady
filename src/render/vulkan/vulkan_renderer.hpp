@@ -50,12 +50,6 @@ class VulkanRenderer
    static void
    CreatePipeline();
 
-   static void
-   CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
-                VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-
-   static void
-   CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
    static void
    CreateVertexBuffer();
@@ -75,16 +69,18 @@ class VulkanRenderer
    static void
    CreateDescriptorSets();
 
+
+
  private:
-   inline static VkInstance m_instance = {};
+
    inline static VkDebugUtilsMessengerCreateInfoEXT m_debugCreateInfo = {};
    inline static VkDebugUtilsMessengerEXT m_debugMessenger = {};
    inline static VkSurfaceKHR m_surface = {};
-   inline static VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
-   inline static VkSampleCountFlagBits m_msaaSamples = VK_SAMPLE_COUNT_1_BIT;
-   inline static VkDevice m_device = {};
 
-   inline static VkQueue m_graphicsQueue = {};
+   inline static VkSampleCountFlagBits m_msaaSamples = VK_SAMPLE_COUNT_1_BIT;
+
+
+
    inline static VkQueue m_presentQueue = {};
 
    inline static VkSwapchainKHR m_swapChain = {};
@@ -103,7 +99,7 @@ class VulkanRenderer
    inline static VkPipelineLayout m_pipelineLayout = {};
    inline static VkPipeline m_graphicsPipeline = {};
 
-   inline static VkCommandPool m_commandPool = {};
+
    inline static std::vector< VkCommandBuffer > m_commandBuffers = {};
 
    inline static std::vector< VkSemaphore > m_imageAvailableSemaphores = {};
@@ -118,6 +114,8 @@ class VulkanRenderer
 
    inline static std::vector< VkBuffer > m_uniformBuffers = {};
    inline static std::vector< VkDeviceMemory > m_uniformBuffersMemory = {};
+
+
 };
 
 } // namespace shady::render::vulkan

@@ -4,6 +4,7 @@
 #define STB_IMAGE_STATIC
 #define STB_IMAGE_IMPLEMENTATION
 #include <fstream>
+#include <string>
 #include <stb_image.h>
 
 namespace shady::utils {
@@ -11,11 +12,11 @@ namespace shady::utils {
 std::string
 FileManager::ReadTextFile(const std::filesystem::path& path)
 {
-   return ReadTextFile(path.string());
+   return ReadTextFile(std::string_view{path.string()});
 }
 
 std::string
-FileManager::ReadTextFile(const std::string& fileName)
+FileManager::ReadTextFile(std::string_view fileName)
 {
    std::ifstream fileHandle(fileName);
 
@@ -39,11 +40,11 @@ FileManager::ReadTextFile(const std::string& fileName)
 std::vector<char>
 FileManager::ReadBinaryFile(const std::filesystem::path& path)
 {
-   return ReadBinaryFile(path.string());
+   return ReadBinaryFile(std::string_view{path.string()});
 }
 
 std::vector<char>
-FileManager::ReadBinaryFile(const std::string& fileName)
+FileManager::ReadBinaryFile(std::string_view fileName)
 {
    std::ifstream fileHandle(fileName, std::ios::binary);
 
@@ -70,7 +71,7 @@ FileManager::ReadBinaryFile(const std::string& fileName)
 }
 
 void
-FileManager::WriteToFile(const std::string& fileName, const std::string& content)
+FileManager::WriteToFile(std::string_view fileName, std::string_view content)
 {
    std::ofstream fileHandle;
    fileHandle.open(fileName);
@@ -78,9 +79,9 @@ FileManager::WriteToFile(const std::string& fileName, const std::string& content
 }
 
 render::Texture::ImageData
-FileManager::ReadTexture(const std::string& fileName, bool flipVertical)
+FileManager::ReadTexture(std::string_view fileName, bool flipVertical)
 {
-   const auto pathToImage = std::filesystem::path(TEXTURES_DIR / fileName).u8string();
+   const auto pathToImage = std::filesystem::path(TEXTURES_DIR / fileName).string();
    int force_channels = 0;
    int w, h, n;
 

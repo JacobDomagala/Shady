@@ -3,7 +3,7 @@
 #include "render/texture.hpp"
 
 #include <filesystem>
-#include <string>
+#include <string_view>
 
 
 namespace shady::utils {
@@ -23,19 +23,19 @@ class FileManager
    ReadTextFile(const std::filesystem::path& path);
 
    static std::string
-   ReadTextFile(const std::string& fileName);
+   ReadTextFile(std::string_view fileName);
 
    static std::vector<char>
    ReadBinaryFile(const std::filesystem::path& path);
 
    static std::vector<char>
-   ReadBinaryFile(const std::string& fileName);
+   ReadBinaryFile(std::string_view fileName);
 
    static void
-   WriteToFile(const std::string& fileName, const std::string& content);
+   WriteToFile(std::string_view fileName, std::string_view content);
 
    static render::Texture::ImageData
-   ReadTexture(const std::string& fileName, bool flipVertical = false);
+   ReadTexture(std::string_view fileName, bool flipVertical = false);
 };
 
 } // namespace shady::utils

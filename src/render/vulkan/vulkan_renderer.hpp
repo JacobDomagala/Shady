@@ -33,6 +33,9 @@ class VulkanRenderer
    CreateImageViews();
 
    static void
+   CreateDescriptorSetLayout();
+
+   static void
    CreateRenderPass();
 
    static void
@@ -60,6 +63,18 @@ class VulkanRenderer
    static void
    CreateIndexBuffer();
 
+   static void
+   CreateUniformBuffers();
+
+   static void
+   UpdateUniformBuffer(uint32_t currentImage);
+
+   static void
+   CreateDescriptorPool();
+
+   static void
+   CreateDescriptorSets();
+
  private:
    inline static VkInstance m_instance = {};
    inline static VkDebugUtilsMessengerCreateInfoEXT m_debugCreateInfo = {};
@@ -80,6 +95,11 @@ class VulkanRenderer
    inline static VkExtent2D m_swapChainExtent = {};
 
    inline static VkRenderPass m_renderPass = {};
+
+   inline static VkDescriptorSetLayout m_descriptorSetLayout = {};
+   inline static VkDescriptorPool m_descriptorPool = {};
+   inline static std::vector< VkDescriptorSet > m_descriptorSets = {};
+
    inline static VkPipelineLayout m_pipelineLayout = {};
    inline static VkPipeline m_graphicsPipeline = {};
 
@@ -95,6 +115,9 @@ class VulkanRenderer
    inline static VkDeviceMemory m_vertexBufferMemory = {};
    inline static VkBuffer m_indexBuffer = {};
    inline static VkDeviceMemory m_indexBufferMemory = {};
+
+   inline static std::vector< VkBuffer > m_uniformBuffers = {};
+   inline static std::vector< VkDeviceMemory > m_uniformBuffersMemory = {};
 };
 
 } // namespace shady::render::vulkan

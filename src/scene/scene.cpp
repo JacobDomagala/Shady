@@ -34,7 +34,7 @@ Scene::AddModel(const std::string& fileName, LoadFlags additionalFlags)
 void
 Scene::AddLight(LightType type, const glm::vec3& position, const glm::vec3& color)
 {
-   m_light = std::make_unique< Light >(position, color, type);
+   // m_light = std::make_unique< Light >(position, color, type);
 }
 
 Light&
@@ -72,7 +72,7 @@ Scene::Render(uint32_t windowWidth, uint32_t windowHeight)
    // Second pass -> use lightmap generated to render shadows
    render::RenderCommand::Clear();
 
-   m_skybox.Draw(*m_camera, windowWidth, windowHeight);
+  // m_skybox.Draw(*m_camera, windowWidth, windowHeight);
 
    render::Renderer3D::BeginScene({windowWidth, windowHeight}, *m_camera, *m_light);
 
@@ -89,16 +89,16 @@ Scene::LoadDefault()
 {
    time::ScopedTimer loadScope("Scene::LoadDefault");
 
-   m_light = std::make_unique< Light >(glm::vec3{0.0f, 200.0f, 0.0f}, glm::vec3{1.0f, 0.7f, 0.8f},
-                                       LightType::DIRECTIONAL_LIGHT);
+   // m_light = std::make_unique< Light >(glm::vec3{0.0f, 200.0f, 0.0f}, glm::vec3{1.0f, 0.7f, 0.8f},
+   //                                     LightType::DIRECTIONAL_LIGHT);
 
    m_camera = std::make_unique< PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 500.0f);
-   m_skybox.LoadCubeMap((utils::FileManager::TEXTURES_DIR / "skybox" / "default").u8string());
+   // m_skybox.LoadCubeMap((utils::FileManager::TEXTURES_DIR / "skybox" / "default").u8string());
 
-   AddModel((utils::FileManager::MODELS_DIR / "sponza" / "sponza.obj").u8string(),
-            LoadFlags::FlipUV);
+   // AddModel((utils::FileManager::MODELS_DIR / "sponza" / "sponza.obj").u8string(),
+   //          LoadFlags::FlipUV);
 
-   m_models.back()->ScaleModel({0.1f, 0.1f, 0.1f});
+   // m_models.back()->ScaleModel({0.1f, 0.1f, 0.1f});
 }
 
 } // namespace shady::scene

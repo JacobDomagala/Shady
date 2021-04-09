@@ -57,6 +57,7 @@ add_executable(${PROJECT_NAME}
     src/render/vulkan/vulkan_renderer.hpp src/render/vulkan/vulkan_renderer.cpp src/render/vulkan/vulkan_shader.hpp src/render/vulkan/vulkan_shader.cpp
     src/render/vulkan/vulkan_buffer.hpp src/render/vulkan/vulkan_buffer.cpp src/render/vulkan/vulkan_texture.hpp src/render/vulkan/vulkan_texture.cpp
     src/render/vulkan/vulkan_command.hpp src/render/vulkan/vulkan_command.cpp src/render/vulkan/vulkan_common.hpp src/render/vulkan/vulkan_common.cpp
+    src/render/vulkan/vertex.hpp
 
     # scene
     src/scene/mesh.hpp src/scene/mesh.cpp src/scene/model.hpp src/scene/model.cpp src/scene/light.hpp src/scene/light.cpp
@@ -79,6 +80,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 include(cmake/compile_shaders.cmake)
-compile_shader(SOURCE_FILE "${SHADERS_PATH}/default/shader.vert"  OUTPUT_FILE_NAME "${SHADERS_PATH}/default/vert.spv")
-compile_shader(SOURCE_FILE "${SHADERS_PATH}/default/shader.frag"  OUTPUT_FILE_NAME "${SHADERS_PATH}/default/frag.spv")
+compile_shader(SOURCE_FILE "${SHADERS_PATH}/default/default.vert"  OUTPUT_FILE_NAME "${SHADERS_PATH}/default/vert.spv")
+compile_shader(SOURCE_FILE "${SHADERS_PATH}/default/default.frag"  OUTPUT_FILE_NAME "${SHADERS_PATH}/default/frag.spv")
 

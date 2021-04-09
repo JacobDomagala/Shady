@@ -11,6 +11,7 @@
 
 namespace shady::app {
 
+scene::Model model;
 void
 Shady::Init()
 {
@@ -22,11 +23,13 @@ Shady::Init()
    input::InputManager::RegisterForMouseMovementInput(this);
    input::InputManager::RegisterForMouseScrollInput(this);
 
+
+   model = scene::Model((utils::FileManager::MODELS_DIR / "suzanne.obj").string());
    render::vulkan::VulkanRenderer::Initialize(m_window->GetWindowHandle());
    // render::Renderer::Init();
    //
 
-   // m_currentScene.LoadDefault();
+   m_currentScene.LoadDefault();
 
    // render::RenderCommand::SetClearColor({0.4f, 0.1f, 0.3f, 1.0f});
 
@@ -44,6 +47,10 @@ Shady::MainLoop()
 
       // m_currentScene.Render(m_windowWidth, m_windowHeight);
       // m_gui.Render({m_windowWidth, m_windowHeight}, m_currentScene.GetLight().GetDepthMapID());
+
+      render::vulkan::VulkanRenderer::view_mat = m_currentScene.GetCamera().GetView();
+      render::vulkan::VulkanRenderer::proj_mat = m_currentScene.GetCamera().GetProjection();
+
       render::vulkan::VulkanRenderer::Draw();
       m_window->SwapBuffers();
    }
@@ -52,7 +59,7 @@ Shady::MainLoop()
 void
 Shady::OnUpdate()
 {
-   constexpr auto cameraMoveBy = 0.2f;
+   constexpr auto cameraMoveBy = 0.02f;
    constexpr auto lightMoveBy = 0.5f;
 
    input::InputManager::PollEvents();
@@ -74,22 +81,22 @@ Shady::OnUpdate()
       m_currentScene.GetCamera().MoveCamera({cameraMoveBy, 0.0f});
    }
 
-   if (input::InputManager::CheckKeyPressed(GLFW_KEY_LEFT))
-   {
-      m_currentScene.GetLight().MoveBy({lightMoveBy, 0.0f, 0.0f});
-   }
-   if (input::InputManager::CheckKeyPressed(GLFW_KEY_UP))
-   {
-      m_currentScene.GetLight().MoveBy({0.0f, lightMoveBy, 0.0f});
-   }
-   if (input::InputManager::CheckKeyPressed(GLFW_KEY_DOWN))
-   {
-      m_currentScene.GetLight().MoveBy({0.0f, -lightMoveBy, 0.0f});
-   }
-   if (input::InputManager::CheckKeyPressed(GLFW_KEY_RIGHT))
-   {
-      m_currentScene.GetLight().MoveBy({-lightMoveBy, 0.0f, 0.0f});
-   }
+   // if (input::InputManager::CheckKeyPressed(GLFW_KEY_LEFT))
+   // {
+   //    m_currentScene.GetLight().MoveBy({lightMoveBy, 0.0f, 0.0f});
+   // }
+   // if (input::InputManager::CheckKeyPressed(GLFW_KEY_UP))
+   // {
+   //    m_currentScene.GetLight().MoveBy({0.0f, lightMoveBy, 0.0f});
+   // }
+   // if (input::InputManager::CheckKeyPressed(GLFW_KEY_DOWN))
+   // {
+   //    m_currentScene.GetLight().MoveBy({0.0f, -lightMoveBy, 0.0f});
+   // }
+   // if (input::InputManager::CheckKeyPressed(GLFW_KEY_RIGHT))
+   // {
+   //    m_currentScene.GetLight().MoveBy({-lightMoveBy, 0.0f, 0.0f});
+   // }
 
 }
 
@@ -115,7 +122,7 @@ Shady::CursorPositionCallback(const input::CursorPositionEvent& event)
 {
    if (input::InputManager::CheckButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
    {
-      // m_currentScene.GetCamera().MouseMovement({event.m_xDelta, event.m_yDelta});
+      m_currentScene.GetCamera().MouseMovement({event.m_xDelta, event.m_yDelta});
    }
 
    // const auto upVec = m_currentScene.GetCamera().GetUpVec();

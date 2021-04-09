@@ -1,6 +1,7 @@
 #include "model.hpp"
 #include "trace/logger.hpp"
 #include "utils/file_manager.hpp"
+#include "render/vulkan/vertex.hpp"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -113,12 +114,12 @@ Mesh
 Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 {
    // Data to fill
-   std::vector< render::Vertex > vertices;
+   std::vector< render::vulkan::Vertex > vertices;
 
    // Walk through each of the mesh's vertices
    for (uint32_t i = 0; i < mesh->mNumVertices; i++)
    {
-      render::Vertex vertex;
+      render::vulkan::Vertex vertex;
       glm::vec3 vector;
       // Positions
       vector.x = mesh->mVertices[i].x;
@@ -180,9 +181,9 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 
    // Process materials
    aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-   LoadMaterialTextures(material, aiTextureType_DIFFUSE, textures);
-   LoadMaterialTextures(material, aiTextureType_SPECULAR, textures);
-   LoadMaterialTextures(material, aiTextureType_NORMALS, textures);
+   // LoadMaterialTextures(material, aiTextureType_DIFFUSE, textures);
+   // LoadMaterialTextures(material, aiTextureType_SPECULAR, textures);
+   // LoadMaterialTextures(material, aiTextureType_NORMALS, textures);
 
    trace::Logger::Debug("Processed mesh: {}", mesh->mName.C_Str());
    m_numVertices += mesh->mNumVertices;

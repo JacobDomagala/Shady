@@ -27,63 +27,22 @@ constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
 struct UniformBufferObject
 {
-   alignas(16) glm::mat4 model;
-   alignas(16) glm::mat4 view;
+   // alignas(16) glm::mat4 lightspace;
    alignas(16) glm::mat4 proj;
+   alignas(16) glm::mat4 view;
+   alignas(16) glm::mat4 model;
 };
 
-struct Vertexx
+std::vector< vulkan::Vertex > vertices;
+std::vector< uint32_t > indices;
+
+void
+VulkanRenderer::MeshLoaded(const std::vector< vulkan::Vertex >& vertices_in,
+                           const std::vector< uint32_t >& indicies_in)
 {
-   glm::vec3 pos;
-   glm::vec3 color;
-   glm::vec2 texCoord;
-
-   static VkVertexInputBindingDescription
-   getBindingDescription()
-   {
-      VkVertexInputBindingDescription bindingDescription{};
-      bindingDescription.binding = 0;
-      bindingDescription.stride = sizeof(Vertexx);
-      bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-      return bindingDescription;
-   }
-
-   static std::array< VkVertexInputAttributeDescription, 3 >
-   getAttributeDescriptions()
-   {
-      std::array< VkVertexInputAttributeDescription, 3 > attributeDescriptions{};
-
-      attributeDescriptions[0].binding = 0;
-      attributeDescriptions[0].location = 0;
-      attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-      attributeDescriptions[0].offset = offsetof(Vertexx, pos);
-
-      attributeDescriptions[1].binding = 0;
-      attributeDescriptions[1].location = 1;
-      attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-      attributeDescriptions[1].offset = offsetof(Vertexx, color);
-
-      attributeDescriptions[2].binding = 0;
-      attributeDescriptions[2].location = 2;
-      attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-      attributeDescriptions[2].offset = offsetof(Vertexx, texCoord);
-
-      return attributeDescriptions;
-   }
-};
-
-const std::vector< Vertexx > vertices = {{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-                                         {{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-                                         {{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-                                         {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
-
-                                         {{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-                                         {{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-                                         {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-                                         {{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}};
-
-const std::vector< uint16_t > indices = {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4};
+   std::copy(vertices_in.begin(), vertices_in.end(), std::back_inserter(vertices));
+   std::copy(indicies_in.begin(), indicies_in.end(), std::back_inserter(indices));
+}
 
 struct QueueFamilyIndices
 {
@@ -538,6 +497,7 @@ VulkanRenderer::CreateDescriptorSets()
 void
 VulkanRenderer::Initialize(GLFWwindow* windowHandle)
 {
+
    CreateInstance();
 
    utils::Assert(glfwCreateWindowSurface(Data::vk_instance, windowHandle, nullptr, &m_surface)
@@ -560,20 +520,17 @@ VulkanRenderer::Initialize(GLFWwindow* windowHandle)
 void
 VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage)
 {
-   static auto startTime = std::chrono::high_resolution_clock::now();
-
-   auto currentTime = std::chrono::high_resolution_clock::now();
-   float time =
-      std::chrono::duration< float, std::chrono::seconds::period >(currentTime - startTime).count();
-
    UniformBufferObject ubo{};
-   ubo.model =
-      glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-   ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f),
-                          glm::vec3(0.0f, 0.0f, 1.0f));
-   ubo.proj = glm::perspective(
-      glm::radians(45.0f), m_swapChainExtent.width / (float)m_swapChainExtent.height, 0.1f, 10.0f);
-   ubo.proj[1][1] *= -1;
+   ubo.model = glm::mat4(1.0f);
+
+   ubo.view = view_mat;
+   ubo.proj = proj_mat;
+
+   // ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f),
+   //                        glm::vec3(0.0f, 0.0f, 1.0f));
+   // ubo.proj = glm::perspective(
+   //    glm::radians(45.0f), m_swapChainExtent.width / (float)m_swapChainExtent.height, 0.1f, 10.0f);
+  // ubo.proj[1][1] *= -1;
 
    void* data;
    vkMapMemory(Data::vk_device, m_uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
@@ -1009,6 +966,9 @@ void
 VulkanRenderer::CreateCommandBuffers()
 {
    auto tex = TextureLibrary::GetTexture(TextureType::DIFFUSE_MAP, "196.png");
+
+
+   // LoadModel();
    CreateVertexBuffer();
    CreateIndexBuffer();
    CreateUniformBuffers();
@@ -1062,7 +1022,7 @@ VulkanRenderer::CreateCommandBuffers()
       VkDeviceSize offsets[] = {0};
       vkCmdBindVertexBuffers(m_commandBuffers[i], 0, 1, vertexBuffers, offsets);
 
-      vkCmdBindIndexBuffer(m_commandBuffers[i], m_indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+      vkCmdBindIndexBuffer(m_commandBuffers[i], m_indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
       vkCmdBindDescriptorSets(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
                               m_pipelineLayout, 0, 1, &m_descriptorSets[i], 0, nullptr);
@@ -1115,8 +1075,8 @@ VulkanRenderer::CreatePipeline()
 
    VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
    vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-   auto bindingDescription = Vertexx::getBindingDescription();
-   auto attributeDescriptions = Vertexx::getAttributeDescriptions();
+   auto bindingDescription = Vertex::getBindingDescription();
+   auto attributeDescriptions = Vertex::getAttributeDescriptions();
    vertexInputInfo.vertexBindingDescriptionCount = 1;
    vertexInputInfo.vertexAttributeDescriptionCount =
       static_cast< uint32_t >(attributeDescriptions.size());
@@ -1155,8 +1115,8 @@ VulkanRenderer::CreatePipeline()
    rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
    rasterizer.lineWidth = 1.0f;
    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-   // rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
-   rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+   rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+   // rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
    rasterizer.depthBiasEnable = VK_FALSE;
 
    VkPipelineMultisampleStateCreateInfo multisampling{};

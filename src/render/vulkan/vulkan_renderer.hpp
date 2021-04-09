@@ -2,8 +2,10 @@
 
 #include "shader.hpp"
 
+#include "render/vulkan/vertex.hpp"
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
+
 
 #include <vector>
 
@@ -18,6 +20,13 @@ class VulkanRenderer
 
    static void
    Draw();
+
+   static void
+   MeshLoaded(const std::vector< vulkan::Vertex >& vertices,
+              const std::vector< uint32_t >& indicies);
+
+   inline static glm::mat4 view_mat = glm::mat4(1.0f);
+   inline static glm::mat4 proj_mat = glm::mat4(1.0f);
 
  private:
    static void
@@ -94,6 +103,12 @@ class VulkanRenderer
 
    static bool
    HasStencilComponent(VkFormat format);
+
+   //  static void
+   //  LoadModel();
+
+   // static glm::mat4 model_mat;
+
 
  private:
    inline static VkDebugUtilsMessengerCreateInfoEXT m_debugCreateInfo = {};

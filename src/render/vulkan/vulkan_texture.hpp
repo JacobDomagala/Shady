@@ -28,9 +28,6 @@ class Texture
    void
    CreateTextureImage(TextureType type, std::string_view textureName);
 
-   void
-   CreateImage(VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties);
-
    static std::pair< VkImage, VkDeviceMemory >
    CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling,
                VkImageUsageFlags usage, VkMemoryPropertyFlags properties);
@@ -40,7 +37,6 @@ class Texture
 
    std::pair<VkImageView, VkSampler>
    GetImageViewAndSampler() const;
-
 
    void
    CreateTextureSampler();

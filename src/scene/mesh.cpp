@@ -1,16 +1,18 @@
 #include "mesh.hpp"
 #include "render/renderer_3D.hpp"
+#include "vulkan/vulkan_renderer.hpp"
 
 namespace shady::scene {
 
-Mesh::Mesh(const std::string& name, std::vector< render::Vertex >&& vertices,
+Mesh::Mesh(const std::string& name, std::vector< render::vulkan::Vertex >&& vertices,
            std::vector< uint32_t >&& indices, render::TexturePtrVec&& textures)
    : m_vertices(std::move(vertices)),
      m_indices(std::move(indices)),
      m_textures(std::move(textures)),
      m_name(name)
 {
-   render::Renderer3D::AddMesh(m_name, m_vertices, m_indices);
+   // render::Renderer3D::AddMesh(m_name, m_vertices, m_indices);
+   render::vulkan::VulkanRenderer::MeshLoaded(m_vertices, m_indices);
 }
 
 void

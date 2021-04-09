@@ -40,7 +40,7 @@ class Scene
    LoadDefault();
 
  private:
-   Skybox m_skybox;
+   // Skybox m_skybox;
    std::unique_ptr< Camera > m_camera;
    std::vector< std::unique_ptr< Model > > m_models;
    std::unique_ptr< Light > m_light;

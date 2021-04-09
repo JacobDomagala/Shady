@@ -8,6 +8,40 @@
 
 namespace shady::render::vulkan {
 
+static void
+AllocateMemory(VkMemoryRequirements memReq, VkDeviceMemory& bufferMemory,
+               VkMemoryPropertyFlags properties)
+{
+   VkMemoryAllocateInfo allocInfo{};
+   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+   allocInfo.allocationSize = memReq.size;
+   allocInfo.memoryTypeIndex = FindMemoryType(memReq.memoryTypeBits, properties);
+
+   utils::Assert(vkAllocateMemory(Data::vk_device, &allocInfo, nullptr, &bufferMemory)
+                    == VK_SUCCESS,
+                 "failed to allocate buffer memory!");
+}
+
+void
+Buffer::AllocateImageMemory(VkImage image, VkDeviceMemory& bufferMemory,
+                            VkMemoryPropertyFlags properties)
+{
+   VkMemoryRequirements memRequirements;
+   vkGetImageMemoryRequirements(Data::vk_device, image, &memRequirements);
+
+   AllocateMemory(memRequirements, bufferMemory, properties);
+}
+
+void
+Buffer::AllocateBufferMemory(VkBuffer buffer, VkDeviceMemory& bufferMemory,
+                             VkMemoryPropertyFlags properties)
+{
+   VkMemoryRequirements memRequirements;
+   vkGetBufferMemoryRequirements(Data::vk_device, buffer, &memRequirements);
+
+   AllocateMemory(memRequirements, bufferMemory, properties);
+}
+
 void
 Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
                      VkBuffer& buffer, VkDeviceMemory& bufferMemory)
@@ -18,23 +52,10 @@ Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryProper
    bufferInfo.usage = usage;
    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-   if (vkCreateBuffer(Data::vk_device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
-   {
-      throw std::runtime_error("failed to create buffer!");
-   }
+   utils::Assert(vkCreateBuffer(Data::vk_device, &bufferInfo, nullptr, &buffer) == VK_SUCCESS,
+                 "failed to create buffer!");
 
-   VkMemoryRequirements memRequirements;
-   vkGetBufferMemoryRequirements(Data::vk_device, buffer, &memRequirements);
-
-   VkMemoryAllocateInfo allocInfo{};
-   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-   allocInfo.allocationSize = memRequirements.size;
-   allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
-
-   if (vkAllocateMemory(Data::vk_device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
-   {
-      throw std::runtime_error("failed to allocate buffer memory!");
-   }
+   AllocateBufferMemory(buffer, bufferMemory, properties);
 
    vkBindBufferMemory(Data::vk_device, buffer, bufferMemory, 0);
 }

@@ -89,17 +89,7 @@ Texture::CreateImage(VkImageTiling tiling, VkImageUsageFlags usage,
    utils::Assert(vkCreateImage(Data::vk_device, &imageInfo, nullptr, &m_textureImage) == VK_SUCCESS,
                  "failed to create image!");
 
-   VkMemoryRequirements memRequirements;
-   vkGetImageMemoryRequirements(Data::vk_device, m_textureImage, &memRequirements);
-
-   VkMemoryAllocateInfo allocInfo{};
-   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-   allocInfo.allocationSize = memRequirements.size;
-   allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
-
-   utils::Assert(vkAllocateMemory(Data::vk_device, &allocInfo, nullptr, &m_textureImageMemory)
-                    == VK_SUCCESS,
-                 "failed to allocate image memory!");
+   Buffer::AllocateImageMemory(m_textureImage, m_textureImageMemory, properties);
 
    vkBindImageMemory(Data::vk_device, m_textureImage, m_textureImageMemory, 0);
    m_textureImageView = CreateImageView(m_textureImage, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
@@ -128,23 +118,10 @@ Texture::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTi
    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-   if (vkCreateImage(Data::vk_device, &imageInfo, nullptr, &image) != VK_SUCCESS)
-   {
-      throw std::runtime_error("failed to create image!");
-   }
+   utils::Assert(vkCreateImage(Data::vk_device, &imageInfo, nullptr, &image) == VK_SUCCESS,
+                 "failed to create image!");
 
-   VkMemoryRequirements memRequirements;
-   vkGetImageMemoryRequirements(Data::vk_device, image, &memRequirements);
-
-   VkMemoryAllocateInfo allocInfo{};
-   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-   allocInfo.allocationSize = memRequirements.size;
-   allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
-
-   if (vkAllocateMemory(Data::vk_device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
-   {
-      throw std::runtime_error("failed to allocate image memory!");
-   }
+   Buffer::AllocateImageMemory(image, imageMemory, properties);
 
    vkBindImageMemory(Data::vk_device, image, imageMemory, 0);
 

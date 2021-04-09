@@ -4,8 +4,16 @@
 
 namespace shady::render::vulkan {
 
-class Buffer {
-  public:
+class Buffer
+{
+ public:
+   static void
+   AllocateImageMemory(VkImage image, VkDeviceMemory& bufferMemory,
+                       VkMemoryPropertyFlags properties);
+
+   static void
+   AllocateBufferMemory(VkBuffer buffer, VkDeviceMemory& bufferMemory,
+                        VkMemoryPropertyFlags properties);
 
    static void
    CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,

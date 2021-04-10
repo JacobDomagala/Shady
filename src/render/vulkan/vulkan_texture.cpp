@@ -54,9 +54,10 @@ Texture::CreateTextureImage(TextureType type, std::string_view textureName)
    memcpy(data, textureData.m_bytes.get(), static_cast< size_t >(imageSize));
    vkUnmapMemory(Data::vk_device, stagingBufferMemory);
 
-   std::tie(m_textureImage, m_textureImageMemory) = CreateImage(m_width, m_height, m_format, VK_IMAGE_TILING_OPTIMAL,
-               VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-               VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+   std::tie(m_textureImage, m_textureImageMemory) =
+      CreateImage(m_width, m_height, VK_SAMPLE_COUNT_1_BIT, m_format, VK_IMAGE_TILING_OPTIMAL,
+                  VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                  VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
    m_textureImageView = CreateImageView(m_textureImage, m_format, VK_IMAGE_ASPECT_COLOR_BIT);
    CreateTextureSampler();
@@ -71,7 +72,7 @@ Texture::CreateTextureImage(TextureType type, std::string_view textureName)
 }
 
 std::pair<VkImage, VkDeviceMemory>
-Texture::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling,
+Texture::CreateImage(uint32_t width, uint32_t height, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling,
             VkImageUsageFlags usage, VkMemoryPropertyFlags properties)
 {
    VkImage image;
@@ -89,7 +90,7 @@ Texture::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTi
    imageInfo.tiling = tiling;
    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
    imageInfo.usage = usage;
-   imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+   imageInfo.samples = numSamples;
    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
    utils::Assert(vkCreateImage(Data::vk_device, &imageInfo, nullptr, &image) == VK_SUCCESS,

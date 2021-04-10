@@ -29,8 +29,8 @@ class Texture
    CreateTextureImage(TextureType type, std::string_view textureName);
 
    static std::pair< VkImage, VkDeviceMemory >
-   CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling,
-               VkImageUsageFlags usage, VkMemoryPropertyFlags properties);
+   CreateImage(uint32_t width, uint32_t height, VkSampleCountFlagBits numSamples, VkFormat format,
+               VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties);
 
    static VkImageView
    CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);

@@ -94,6 +94,9 @@ class VulkanRenderer
    static void
    CreateDepthResources();
 
+   static void
+   CreateColorResources();
+
    static VkFormat
    FindSupportedFormat(const std::vector< VkFormat >& candidates, VkImageTiling tiling,
                        VkFormatFeatureFlags features);
@@ -154,6 +157,10 @@ class VulkanRenderer
    inline static VkImage m_depthImage = {};
    inline static VkDeviceMemory m_depthImageMemory = {};
    inline static VkImageView m_depthImageView = {};
+
+   inline static VkImage m_colorImage = {};
+   inline static VkDeviceMemory m_colorImageMemory = {};
+   inline static VkImageView m_colorImageView = {};
 };
 
 } // namespace shady::render::vulkan

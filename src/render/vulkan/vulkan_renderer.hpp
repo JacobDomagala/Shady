@@ -83,15 +83,6 @@ class VulkanRenderer
 
 
    static void
-   CreateTextureImageView();
-
-   static void
-   CreateTextureSampler();
-
-   static VkImageView
-   CreateImageView(VkImage image, VkFormat format);
-
-   static void
    CreateDepthResources();
 
    static void
@@ -106,12 +97,6 @@ class VulkanRenderer
 
    static bool
    HasStencilComponent(VkFormat format);
-
-   //  static void
-   //  LoadModel();
-
-   // static glm::mat4 model_mat;
-
 
  private:
    inline static VkDebugUtilsMessengerCreateInfoEXT m_debugCreateInfo = {};

@@ -538,11 +538,11 @@ VulkanRenderer::CreateColorResources()
    VkFormat colorFormat = m_swapChainImageFormat;
 
    std::tie(m_colorImage, m_colorImageMemory) = Texture::CreateImage(
-      m_swapChainExtent.width, m_swapChainExtent.height, m_msaaSamples, colorFormat,
+      m_swapChainExtent.width, m_swapChainExtent.height, 1, m_msaaSamples, colorFormat,
       VK_IMAGE_TILING_OPTIMAL,
       VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-   m_colorImageView = Texture::CreateImageView(m_colorImage, colorFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+   m_colorImageView = Texture::CreateImageView(m_colorImage, colorFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 }
 
 void
@@ -551,7 +551,7 @@ VulkanRenderer::CreateDepthResources()
    VkFormat depthFormat = FindDepthFormat();
 
    const auto [depthImage, depthImageMemory] = Texture::CreateImage(
-      m_swapChainExtent.width, m_swapChainExtent.height, m_msaaSamples, depthFormat,
+      m_swapChainExtent.width, m_swapChainExtent.height, 1, m_msaaSamples, depthFormat,
       VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
@@ -559,7 +559,7 @@ VulkanRenderer::CreateDepthResources()
    m_depthImageMemory = depthImageMemory;
 
    m_depthImageView =
-      Texture::CreateImageView(m_depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+      Texture::CreateImageView(m_depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
 }
 
 VkFormat
@@ -832,7 +832,7 @@ VulkanRenderer::CreateImageViews()
    for (uint32_t i = 0; i < m_swapChainImages.size(); i++)
    {
       m_swapChainImageViews[i] = Texture::CreateImageView(
-         m_swapChainImages[i], m_swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+         m_swapChainImages[i], m_swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
    }
 }
 

@@ -89,8 +89,8 @@ Scene::LoadDefault()
 {
    time::ScopedTimer loadScope("Scene::LoadDefault");
 
-   // m_light = std::make_unique< Light >(glm::vec3{0.0f, 200.0f, 0.0f}, glm::vec3{1.0f, 0.7f, 0.8f},
-   //                                     LightType::DIRECTIONAL_LIGHT);
+    m_light = std::make_unique< Light >(glm::vec3{0.0f, 200.0f, 0.0f}, glm::vec3{1.0f, 0.7f, 0.8f},
+                                        LightType::DIRECTIONAL_LIGHT);
 
    m_camera = std::make_unique< PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 500.0f);
    // m_skybox.LoadCubeMap((utils::FileManager::TEXTURES_DIR / "skybox" / "default").u8string());

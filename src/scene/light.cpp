@@ -9,7 +9,7 @@ Light::Light(const glm::vec3& position, const glm::vec3& /*color*/, LightType ty
    : m_position(position)
 {
    auto buffer_type = render::FrameBufferType::SINGLE;
-   switch (type)
+ /*  switch (type)
    {
       case LightType::DIRECTIONAL_LIGHT: {
          m_projectionMatrix = glm::ortho(-200.0f, 200.0f, -200.0f, 200.0f, 1.0f, 500.0f);
@@ -29,7 +29,7 @@ Light::Light(const glm::vec3& position, const glm::vec3& /*color*/, LightType ty
 
    m_shadowBuffer = render::FrameBuffer::Create({m_shadowTextureWidth, m_shadowTextureHeight}, buffer_type);
    m_biasMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f))
-                  * glm::scale(glm::mat4(1.0f), glm::vec3(0.5f));
+                  * glm::scale(glm::mat4(1.0f), glm::vec3(0.5f));*/
 
    //m_shadowBuffer->MakeTextureResident();
 }

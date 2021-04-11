@@ -650,6 +650,8 @@ VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage)
 
    ubo.view = view_mat;
    ubo.proj = proj_mat;
+   ubo.cameraPos = camera_pos;
+   ubo.lightPos = light_pos;
 
    void* data;
    vkMapMemory(Data::vk_device, m_uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);

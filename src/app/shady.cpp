@@ -6,8 +6,8 @@
 #include "utils/file_manager.hpp"
 
 
-#include <GLFW/glfw3.h>
 #include "render/vulkan/vulkan_renderer.hpp"
+#include <GLFW/glfw3.h>
 
 namespace shady::app {
 
@@ -25,11 +25,12 @@ Shady::Init()
 
    render::vulkan::VulkanRenderer::Initialize(m_window->GetWindowHandle());
 
-   model = scene::Model((utils::FileManager::MODELS_DIR / "sponza" / "sponza.obj").string(), scene::LoadFlags::FlipUV);
+   model = scene::Model((utils::FileManager::MODELS_DIR / "sponza" / "sponza.obj").string(),
+                        scene::LoadFlags::FlipUV);
    model.RotateModel(glm::vec3(0.0f, 0.0f, 1.0f), glm::radians(180.0f));
    model.ScaleModel(glm::vec3(0.1f, 0.1f, 0.1f));
    model.Draw();
-      
+
    // model = scene::Model((utils::FileManager::MODELS_DIR / "suzanne.obj").string());
    // model = scene::Model((utils::FileManager::MODELS_DIR / "viking_room.obj").string());
    // model = scene::Model((utils::FileManager::MODELS_DIR / "viking_room.obj").string());
@@ -58,11 +59,17 @@ Shady::MainLoop()
       // m_currentScene.Render(m_windowWidth, m_windowHeight);
       // m_gui.Render({m_windowWidth, m_windowHeight}, m_currentScene.GetLight().GetDepthMapID());
 
-      // Vulkan has inverted Y axis ( no idea why ) so we either have to rotate 
+      // Vulkan has inverted Y axis ( no idea why ) so we either have to rotate
       // meshes by 180 or use 'projection_mat[1][1] *= -1'
 
       render::vulkan::VulkanRenderer::view_mat = m_currentScene.GetCamera().GetView();
       render::vulkan::VulkanRenderer::proj_mat = m_currentScene.GetCamera().GetProjection();
+      render::vulkan::VulkanRenderer::camera_pos =
+         glm::vec4(m_currentScene.GetCamera().GetPosition(), 0.0f);
+
+      render::vulkan::VulkanRenderer::light_pos =
+         glm::vec4(m_currentScene.GetLight().GetPosition(), 0.0f);
+
 
       render::vulkan::VulkanRenderer::Draw();
       m_window->SwapBuffers();
@@ -94,23 +101,22 @@ Shady::OnUpdate()
       m_currentScene.GetCamera().MoveCamera({cameraMoveBy, 0.0f});
    }
 
-   // if (input::InputManager::CheckKeyPressed(GLFW_KEY_LEFT))
-   // {
-   //    m_currentScene.GetLight().MoveBy({lightMoveBy, 0.0f, 0.0f});
-   // }
-   // if (input::InputManager::CheckKeyPressed(GLFW_KEY_UP))
-   // {
-   //    m_currentScene.GetLight().MoveBy({0.0f, lightMoveBy, 0.0f});
-   // }
-   // if (input::InputManager::CheckKeyPressed(GLFW_KEY_DOWN))
-   // {
-   //    m_currentScene.GetLight().MoveBy({0.0f, -lightMoveBy, 0.0f});
-   // }
-   // if (input::InputManager::CheckKeyPressed(GLFW_KEY_RIGHT))
-   // {
-   //    m_currentScene.GetLight().MoveBy({-lightMoveBy, 0.0f, 0.0f});
-   // }
-
+   if (input::InputManager::CheckKeyPressed(GLFW_KEY_LEFT))
+   {
+      m_currentScene.GetLight().MoveBy({lightMoveBy, 0.0f, 0.0f});
+   }
+   if (input::InputManager::CheckKeyPressed(GLFW_KEY_UP))
+   {
+      m_currentScene.GetLight().MoveBy({0.0f, lightMoveBy, 0.0f});
+   }
+   if (input::InputManager::CheckKeyPressed(GLFW_KEY_DOWN))
+   {
+      m_currentScene.GetLight().MoveBy({0.0f, -lightMoveBy, 0.0f});
+   }
+   if (input::InputManager::CheckKeyPressed(GLFW_KEY_RIGHT))
+   {
+      m_currentScene.GetLight().MoveBy({-lightMoveBy, 0.0f, 0.0f});
+   }
 }
 
 void

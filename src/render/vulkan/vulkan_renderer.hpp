@@ -32,7 +32,8 @@ class VulkanRenderer
 
    inline static glm::mat4 view_mat = glm::mat4(1.0f);
    inline static glm::mat4 proj_mat = glm::mat4(1.0f);
-   inline static glm::mat4 model_mat = glm::mat4(1.0f);
+   inline static glm::vec4 camera_pos = {};
+   inline static glm::vec4 light_pos = {};
 
  private:
    static void

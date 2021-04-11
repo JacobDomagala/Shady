@@ -30,18 +30,18 @@ struct UniformBufferObject
    alignas(16) glm::mat4 lightspace;
    alignas(16) glm::mat4 proj;
    alignas(16) glm::mat4 view;
-   glm::vec4  cameraPos;
-   glm::vec4  lightPos;
+   glm::vec4 cameraPos;
+   glm::vec4 lightPos;
 };
 
 struct PerInstanceBuffer
 {
    alignas(16) glm::mat4 model;
-   /*int32_t diffuse;
-   int32_t norm;
-   int32_t spec;
+   int32_t diffuse = {};
+   int32_t norm = {};
+   int32_t spec = {};
 
-   int32_t padding;*/
+  //  int32_t padding;
 };
 
 std::vector< PerInstanceBuffer > perInstance;
@@ -49,7 +49,8 @@ std::vector< vulkan::Vertex > vertices;
 std::vector< uint32_t > indices;
 // std::array< std::pair<std::string, VkImageView, 256 > imageViews;
 static int32_t currTexIdx = 0;
-std::unordered_map< std::string, std::pair<int32_t, VkImageView> > textures = {};
+std::unordered_map< std::string, std::pair< int32_t, VkImageView > > textures = {};
+std::vector< VkImageView > texturesVec = {};
 
 void
 VulkanRenderer::MeshLoaded(const std::vector< vulkan::Vertex >& vertices_in,
@@ -86,6 +87,8 @@ VulkanRenderer::MeshLoaded(const std::vector< vulkan::Vertex >& vertices_in,
       {
          textures[texture] = {currTexIdx++,
                               TextureLibrary::GetTexture(texture).GetImageViewAndSampler().first};
+
+         texturesVec.push_back(TextureLibrary::GetTexture(texture).GetImageViewAndSampler().first);
       }
 
       const auto idx = textures[texture].first;
@@ -93,22 +96,22 @@ VulkanRenderer::MeshLoaded(const std::vector< vulkan::Vertex >& vertices_in,
       switch (tex.GetType())
       {
          case TextureType::DIFFUSE_MAP: {
-          //  newInstance.diffuse = idx;
+            newInstance.diffuse = idx;
          }
          break;
 
          case TextureType::NORMAL_MAP: {
-          //  newInstance.norm = idx;
+            newInstance.norm = idx;
          }
          break;
 
          case TextureType::SPECULAR_MAP: {
-          //  newInstance.spec = idx;
+            newInstance.spec = idx;
          }
          break;
-      }      
+      }
    }
-   
+
    perInstance.push_back(newInstance);
 
    ++m_numMeshes;
@@ -549,7 +552,7 @@ VulkanRenderer::CreateDescriptorSets()
       instanceBufferInfo.buffer = m_ssbo[i];
       instanceBufferInfo.offset = 0;
       instanceBufferInfo.range = perInstance.size() * sizeof(PerInstanceBuffer);
-      
+
       /*VkDescriptorImageInfo imageInfo{};
       imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       imageInfo.imageView = imageView;
@@ -557,13 +560,13 @@ VulkanRenderer::CreateDescriptorSets()
 
       VkDescriptorImageInfo* descriptorImageInfos = new VkDescriptorImageInfo[textures.size()];
 
-      uint32_t texI = 0; 
-      for (const auto& texture : textures)
+      uint32_t texI = 0;
+      for (const auto& texture : texturesVec)
       {
          descriptorImageInfos[texI].sampler = nullptr;
          descriptorImageInfos[texI].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-         descriptorImageInfos[texI].imageView = texture.second.second;
-         
+         descriptorImageInfos[texI].imageView = texture;
+
          ++texI;
       }
 
@@ -623,7 +626,7 @@ VulkanRenderer::Initialize(GLFWwindow* windowHandle)
 
    CreateDevice();
    CreateSwapchain(windowHandle);
-   CreateImageViews();  
+   CreateImageViews();
    CreateCommandPool();
 }
 
@@ -654,7 +657,8 @@ VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage)
    vkUnmapMemory(Data::vk_device, m_uniformBuffersMemory[currentImage]);
 
    void* data2;
-   vkMapMemory(Data::vk_device, m_ssboMemory[currentImage], 0, perInstance.size() * sizeof(PerInstanceBuffer), 0, &data2);
+   vkMapMemory(Data::vk_device, m_ssboMemory[currentImage], 0,
+               perInstance.size() * sizeof(PerInstanceBuffer), 0, &data2);
    memcpy(data2, perInstance.data(), perInstance.size() * sizeof(PerInstanceBuffer));
    vkUnmapMemory(Data::vk_device, m_ssboMemory[currentImage]);
 }
@@ -669,7 +673,8 @@ VulkanRenderer::CreateColorResources()
       VK_IMAGE_TILING_OPTIMAL,
       VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-   m_colorImageView = Texture::CreateImageView(m_colorImage, colorFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+   m_colorImageView =
+      Texture::CreateImageView(m_colorImage, colorFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 }
 
 void
@@ -812,7 +817,8 @@ VulkanRenderer::CreateInstance()
       createInfo.pNext = reinterpret_cast< void* >(&m_debugCreateInfo);
    }
 
-   VK_CHECK(vkCreateInstance(&createInfo, nullptr, &Data::vk_instance), "instance not created properly!");
+   VK_CHECK(vkCreateInstance(&createInfo, nullptr, &Data::vk_instance),
+            "instance not created properly!");
 }
 
 void
@@ -1146,28 +1152,27 @@ VulkanRenderer::CreateCommandBuffers()
    // Commands + draw count
    VkDeviceSize bufferSize = commandsSize + sizeof(uint32_t);
 
-   Buffer::CreateBuffer(bufferSize,
-                        VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
+   Buffer::CreateBuffer(bufferSize, VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                         m_indirectDrawsBuffer, m_indirectDrawsBufferMemory);
 
    void* data;
    vkMapMemory(Data::vk_device, m_indirectDrawsBufferMemory, 0, bufferSize, 0, &data);
-   memcpy(data, m_renderCommands.data(), static_cast<size_t>(bufferSize));
-   memcpy(static_cast<uint8_t*>(data) + commandsSize, &m_numMeshes, sizeof(uint32_t));
+   memcpy(data, m_renderCommands.data(), static_cast< size_t >(bufferSize));
+   memcpy(static_cast< uint8_t* >(data) + commandsSize, &m_numMeshes, sizeof(uint32_t));
 
 
+   // vkUnmapMemory(Data::vk_device, stagingBufferMemory);
 
-   //vkUnmapMemory(Data::vk_device, stagingBufferMemory);
-
-   //Buffer::CreateBuffer(bufferSize,
+   // Buffer::CreateBuffer(bufferSize,
    //                     VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-   //                     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_indirectDrawsBuffer, m_indirectDrawsBufferMemory);
+   //                     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_indirectDrawsBuffer,
+   //                     m_indirectDrawsBufferMemory);
 
-   //Buffer::CopyBuffer(stagingBuffer, m_indirectDrawsBuffer, bufferSize);
+   // Buffer::CopyBuffer(stagingBuffer, m_indirectDrawsBuffer, bufferSize);
 
-   //vkDestroyBuffer(Data::vk_device, stagingBuffer, nullptr);
-   //vkFreeMemory(Data::vk_device, stagingBufferMemory, nullptr);
+   // vkDestroyBuffer(Data::vk_device, stagingBuffer, nullptr);
+   // vkFreeMemory(Data::vk_device, stagingBufferMemory, nullptr);
 
    CreateDescriptorPool();
    CreateDescriptorSets();
@@ -1228,13 +1233,13 @@ VulkanRenderer::CreateCommandBuffers()
                         sizeof(VkDrawIndexedIndirectCommand));*/
 
       // This allows for dynamic number of meshes in the scene
-      // For static scenes, vkCmdDrawIndexedIndirect should probably be used with DEVICE_LOCAL 
+      // For static scenes, vkCmdDrawIndexedIndirect should probably be used with DEVICE_LOCAL
       // memory type
       vkCmdDrawIndexedIndirectCount(m_commandBuffers[i], m_indirectDrawsBuffer, 0,
                                     m_indirectDrawsBuffer,
                                     sizeof(VkDrawIndexedIndirectCommand) * m_numMeshes, m_numMeshes,
                                     sizeof(VkDrawIndexedIndirectCommand));
-      
+
       vkCmdEndRenderPass(m_commandBuffers[i]);
 
       VK_CHECK(vkEndCommandBuffer(m_commandBuffers[i]), "failed to record command buffer!");

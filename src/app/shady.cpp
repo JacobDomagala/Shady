@@ -25,7 +25,7 @@ Shady::Init()
 
    render::vulkan::VulkanRenderer::Initialize(m_window->GetWindowHandle());
 
-   model = scene::Model((utils::FileManager::MODELS_DIR / "sponza" / "sponza.obj").string());
+   model = scene::Model((utils::FileManager::MODELS_DIR / "sponza" / "sponza.obj").string(), scene::LoadFlags::FlipUV);
    model.RotateModel(glm::vec3(0.0f, 0.0f, 1.0f), glm::radians(180.0f));
    model.ScaleModel(glm::vec3(0.1f, 0.1f, 0.1f));
    model.Draw();

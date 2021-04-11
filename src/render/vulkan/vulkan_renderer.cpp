@@ -35,6 +35,7 @@ struct UniformBufferObject
 
 std::vector< vulkan::Vertex > vertices;
 std::vector< uint32_t > indices;
+std::unordered_map< uint32_t, std::tuple< uint32_t, uint32_t, uint32_t > > perModelIndices = {};
 
 void
 VulkanRenderer::MeshLoaded(const std::vector< vulkan::Vertex >& vertices_in,
@@ -42,6 +43,21 @@ VulkanRenderer::MeshLoaded(const std::vector< vulkan::Vertex >& vertices_in,
 {
    std::copy(vertices_in.begin(), vertices_in.end(), std::back_inserter(vertices));
    std::copy(indicies_in.begin(), indicies_in.end(), std::back_inserter(indices));
+
+   VkDrawIndexedIndirectCommand newModel = {};
+   newModel.firstIndex = m_currentIndex;
+   newModel.indexCount = static_cast< uint32_t >(indicies_in.size());
+   newModel.firstInstance = 0;
+   newModel.instanceCount = 1;
+   newModel.vertexOffset = m_currentVertex;
+   m_renderCommands.push_back(newModel);
+
+   perModelIndices[m_numMeshes] = {newModel.indexCount, m_currentVertex, m_currentIndex};
+
+   m_currentVertex += static_cast< uint32_t >(vertices_in.size());
+   m_currentIndex += static_cast< uint32_t >(indicies_in.size());
+
+   ++m_numMeshes;
 }
 
 struct QueueFamilyIndices
@@ -257,7 +273,7 @@ isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface)
    vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
    return indices.isComplete() && extensionsSupported && swapChainAdequate
-          && supportedFeatures.samplerAnisotropy;
+          && supportedFeatures.samplerAnisotropy && supportedFeatures.multiDrawIndirect;
 }
 
 VkSampleCountFlagBits
@@ -521,8 +537,8 @@ void
 VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage)
 {
    UniformBufferObject ubo{};
-   ubo.model = glm::mat4(1.0f);
 
+   ubo.model = model_mat;
    ubo.view = view_mat;
    ubo.proj = proj_mat;
 
@@ -633,10 +649,15 @@ VulkanRenderer::Draw()
 
    vkResetFences(Data::vk_device, 1, &m_inFlightFences[currentFrame]);
 
-   utils::Assert(
-      vkQueueSubmit(Data::vk_graphicsQueue, 1, &submitInfo, m_inFlightFences[currentFrame])
-         == VK_SUCCESS,
-      "failed to submit draw command buffer!");
+   const auto result =
+      vkQueueSubmit(Data::vk_graphicsQueue, 1, &submitInfo, m_inFlightFences[currentFrame]);
+
+   if (result != VK_SUCCESS)
+   {
+      utils::Assert(
+         false, "failed to submit draw command buffer!");
+   }
+
 
    VkPresentInfoKHR presentInfo{};
    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -1000,6 +1021,29 @@ VulkanRenderer::CreateCommandBuffers()
    CreateVertexBuffer();
    CreateIndexBuffer();
    CreateUniformBuffers();
+
+   VkBuffer stagingBuffer;
+   VkDeviceMemory stagingBufferMemory;
+   VkDeviceSize bufferSize = m_renderCommands.size() * sizeof(VkDrawIndexedIndirectCommand);
+
+   Buffer::CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                        stagingBuffer, stagingBufferMemory);
+
+   void* data;
+   vkMapMemory(Data::vk_device, stagingBufferMemory, 0, bufferSize, 0, &data);
+   memcpy(data, m_renderCommands.data(), (size_t)bufferSize);
+   vkUnmapMemory(Data::vk_device, stagingBufferMemory);
+
+   Buffer::CreateBuffer(bufferSize,
+                        VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_indirectDrawsBuffer, m_indirectDrawsBufferMemory);
+
+   Buffer::CopyBuffer(stagingBuffer, m_indirectDrawsBuffer, bufferSize);
+
+   vkDestroyBuffer(Data::vk_device, stagingBuffer, nullptr);
+   vkFreeMemory(Data::vk_device, stagingBufferMemory, nullptr);
+
    CreateDescriptorPool();
    CreateDescriptorSets();
 
@@ -1055,7 +1099,24 @@ VulkanRenderer::CreateCommandBuffers()
       vkCmdBindDescriptorSets(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
                               m_pipelineLayout, 0, 1, &m_descriptorSets[i], 0, nullptr);
 
-      vkCmdDrawIndexed(m_commandBuffers[i], static_cast< uint32_t >(indices.size()), 1, 0, 0, 0);
+
+      // for (int j = 0; j < m_numMeshes; ++j)
+      // {
+      //    const auto [indexCount, vertexOffset, firstIndex] = perModelIndices[j];
+      //    vkCmdDrawIndexed(m_commandBuffers[i], indexCount, 1, firstIndex, vertexOffset, 0);
+      // }
+
+      vkCmdDrawIndexedIndirect(m_commandBuffers[i], m_indirectDrawsBuffer, 0, m_numMeshes,
+                        sizeof(VkDrawIndexedIndirectCommand));
+       /*for (int j = 0; j < m_numMeshes; ++j)
+       {
+          vkCmdDrawIndexedIndirect(m_commandBuffers[i], m_indirectDrawsBuffer,
+                                   j * sizeof(VkDrawIndexedIndirectCommand), 1,
+                                   sizeof(VkDrawIndexedIndirectCommand));
+       }*/
+
+
+
 
       vkCmdEndRenderPass(m_commandBuffers[i]);
 

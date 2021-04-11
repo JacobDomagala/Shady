@@ -27,6 +27,7 @@ class VulkanRenderer
 
    inline static glm::mat4 view_mat = glm::mat4(1.0f);
    inline static glm::mat4 proj_mat = glm::mat4(1.0f);
+   inline static glm::mat4 model_mat = glm::mat4(1.0f);
 
  private:
    static void
@@ -146,6 +147,13 @@ class VulkanRenderer
    inline static VkImage m_colorImage = {};
    inline static VkDeviceMemory m_colorImageMemory = {};
    inline static VkImageView m_colorImageView = {};
+
+   inline static std::vector<VkDrawIndexedIndirectCommand> m_renderCommands = {};
+   inline static VkBuffer m_indirectDrawsBuffer = {};
+   inline static VkDeviceMemory m_indirectDrawsBufferMemory = {};
+   inline static uint32_t m_currentVertex = {};
+   inline static uint32_t m_currentIndex = {};
+   inline static uint32_t m_numMeshes = {};
 };
 
 } // namespace shady::render::vulkan

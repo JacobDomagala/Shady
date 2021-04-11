@@ -23,8 +23,12 @@ Shady::Init()
    input::InputManager::RegisterForMouseMovementInput(this);
    input::InputManager::RegisterForMouseScrollInput(this);
 
+   model = scene::Model((utils::FileManager::MODELS_DIR / "sponza" / "sponza.obj").string());
+   // model = scene::Model((utils::FileManager::MODELS_DIR / "suzanne.obj").string());
+   // model = scene::Model((utils::FileManager::MODELS_DIR / "viking_room.obj").string());
+   // model = scene::Model((utils::FileManager::MODELS_DIR / "viking_room.obj").string());
+   // model = scene::Model((utils::FileManager::MODELS_DIR / "viking_room.obj").string());
 
-   model = scene::Model((utils::FileManager::MODELS_DIR / "suzanne.obj").string());
    render::vulkan::VulkanRenderer::Initialize(m_window->GetWindowHandle());
    // render::Renderer::Init();
    //
@@ -48,6 +52,11 @@ Shady::MainLoop()
       // m_currentScene.Render(m_windowWidth, m_windowHeight);
       // m_gui.Render({m_windowWidth, m_windowHeight}, m_currentScene.GetLight().GetDepthMapID());
 
+      // Vulkan has inverted Y axis ( no idea why ) so we either have to rotate 
+      // meshes by 180 or use 'projection_mat[1][1] *= -1'
+      render::vulkan::VulkanRenderer::model_mat =
+         glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f))
+         * glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.1f));
       render::vulkan::VulkanRenderer::view_mat = m_currentScene.GetCamera().GetView();
       render::vulkan::VulkanRenderer::proj_mat = m_currentScene.GetCamera().GetProjection();
 

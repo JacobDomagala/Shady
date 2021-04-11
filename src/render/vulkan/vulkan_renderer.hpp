@@ -140,6 +140,9 @@ class VulkanRenderer
    inline static std::vector< VkBuffer > m_uniformBuffers = {};
    inline static std::vector< VkDeviceMemory > m_uniformBuffersMemory = {};
 
+   inline static std::vector< VkBuffer > m_ssbo = {};
+   inline static VkDeviceMemory m_ssboMemory= {};
+
    inline static VkImage m_depthImage = {};
    inline static VkDeviceMemory m_depthImageMemory = {};
    inline static VkImageView m_depthImageView = {};

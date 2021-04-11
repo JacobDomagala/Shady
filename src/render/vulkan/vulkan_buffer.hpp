@@ -15,12 +15,19 @@ class Buffer
    AllocateBufferMemory(VkBuffer buffer, VkDeviceMemory& bufferMemory,
                         VkMemoryPropertyFlags properties);
 
+   static Buffer
+   CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
+
    static void
    CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
                 VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 
    static void
    CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+
+ public:
+   VkBuffer m_buffer = {};
+   VkDeviceMemory m_bufferMemory = {};
 };
 
 

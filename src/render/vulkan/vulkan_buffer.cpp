@@ -42,6 +42,15 @@ Buffer::AllocateBufferMemory(VkBuffer buffer, VkDeviceMemory& bufferMemory,
    AllocateMemory(memRequirements, bufferMemory, properties);
 }
 
+Buffer
+Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
+{
+   Buffer newBuffer;
+   CreateBuffer(size, usage, properties, newBuffer.m_buffer, newBuffer.m_bufferMemory);
+   
+   return newBuffer;
+}
+
 void
 Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
                      VkBuffer& buffer, VkDeviceMemory& bufferMemory)

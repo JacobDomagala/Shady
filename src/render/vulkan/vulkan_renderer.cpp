@@ -27,10 +27,12 @@ constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
 struct UniformBufferObject
 {
-   // alignas(16) glm::mat4 lightspace;
+   alignas(16) glm::mat4 lightspace;
    alignas(16) glm::mat4 proj;
    alignas(16) glm::mat4 view;
    alignas(16) glm::mat4 model;
+   glm::vec4  cameraPos;
+   glm::vec4  lightPos;
 };
 
 std::vector< vulkan::Vertex > vertices;
@@ -271,6 +273,9 @@ isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface)
 
    VkPhysicalDeviceFeatures supportedFeatures;
    vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
+
+   /*VkPhysicalDeviceVulkan12Features supportedFeatures2;
+   vkGetPhysicalDeviceVulk(device, &supportedFeatures2);*/
 
    return indices.isComplete() && extensionsSupported && swapChainAdequate
           && supportedFeatures.samplerAnisotropy && supportedFeatures.multiDrawIndirect;
@@ -756,11 +761,17 @@ VulkanRenderer::CreateDevice()
       queueCreateInfos.push_back(queueCreateInfo);
    }
 
+   VkPhysicalDeviceVulkan12Features deviceFeatures_12{};
+   deviceFeatures_12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+   deviceFeatures_12.drawIndirectCount = VK_TRUE;
+
    VkPhysicalDeviceFeatures deviceFeatures{};
    deviceFeatures.samplerAnisotropy = VK_TRUE;
+   deviceFeatures.multiDrawIndirect = VK_TRUE;
 
    VkDeviceCreateInfo createInfo{};
    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+   createInfo.pNext = &deviceFeatures_12;
 
    createInfo.queueCreateInfoCount = static_cast< uint32_t >(queueCreateInfos.size());
    createInfo.pQueueCreateInfos = queueCreateInfos.data();
@@ -1022,27 +1033,32 @@ VulkanRenderer::CreateCommandBuffers()
    CreateIndexBuffer();
    CreateUniformBuffers();
 
-   VkBuffer stagingBuffer;
-   VkDeviceMemory stagingBufferMemory;
-   VkDeviceSize bufferSize = m_renderCommands.size() * sizeof(VkDrawIndexedIndirectCommand);
+   const auto commandsSize = m_renderCommands.size() * sizeof(VkDrawIndexedIndirectCommand);
+   /*VkBuffer stagingBuffer;
+   VkDeviceMemory stagingBufferMemory;*/
 
-   Buffer::CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                        stagingBuffer, stagingBufferMemory);
-
-   void* data;
-   vkMapMemory(Data::vk_device, stagingBufferMemory, 0, bufferSize, 0, &data);
-   memcpy(data, m_renderCommands.data(), (size_t)bufferSize);
-   vkUnmapMemory(Data::vk_device, stagingBufferMemory);
+   // Commands + draw count
+   VkDeviceSize bufferSize = commandsSize + sizeof(uint32_t);
 
    Buffer::CreateBuffer(bufferSize,
-                        VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_indirectDrawsBuffer, m_indirectDrawsBufferMemory);
+                        VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
+                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                        m_indirectDrawsBuffer, m_indirectDrawsBufferMemory);
 
-   Buffer::CopyBuffer(stagingBuffer, m_indirectDrawsBuffer, bufferSize);
+   void* data;
+   vkMapMemory(Data::vk_device, m_indirectDrawsBufferMemory, 0, bufferSize, 0, &data);
+   memcpy(data, m_renderCommands.data(), static_cast<size_t>(bufferSize));
+   memcpy(static_cast<uint8_t*>(data) + commandsSize, &m_numMeshes, sizeof(uint32_t));
+   //vkUnmapMemory(Data::vk_device, stagingBufferMemory);
 
-   vkDestroyBuffer(Data::vk_device, stagingBuffer, nullptr);
-   vkFreeMemory(Data::vk_device, stagingBufferMemory, nullptr);
+   //Buffer::CreateBuffer(bufferSize,
+   //                     VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+   //                     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_indirectDrawsBuffer, m_indirectDrawsBufferMemory);
+
+   //Buffer::CopyBuffer(stagingBuffer, m_indirectDrawsBuffer, bufferSize);
+
+   //vkDestroyBuffer(Data::vk_device, stagingBuffer, nullptr);
+   //vkFreeMemory(Data::vk_device, stagingBufferMemory, nullptr);
 
    CreateDescriptorPool();
    CreateDescriptorSets();
@@ -1100,24 +1116,17 @@ VulkanRenderer::CreateCommandBuffers()
                               m_pipelineLayout, 0, 1, &m_descriptorSets[i], 0, nullptr);
 
 
-      // for (int j = 0; j < m_numMeshes; ++j)
-      // {
-      //    const auto [indexCount, vertexOffset, firstIndex] = perModelIndices[j];
-      //    vkCmdDrawIndexed(m_commandBuffers[i], indexCount, 1, firstIndex, vertexOffset, 0);
-      // }
+      /*vkCmdDrawIndexedIndirect(m_commandBuffers[i], m_indirectDrawsBuffer, 0, m_numMeshes,
+                        sizeof(VkDrawIndexedIndirectCommand));*/
 
-      vkCmdDrawIndexedIndirect(m_commandBuffers[i], m_indirectDrawsBuffer, 0, m_numMeshes,
-                        sizeof(VkDrawIndexedIndirectCommand));
-       /*for (int j = 0; j < m_numMeshes; ++j)
-       {
-          vkCmdDrawIndexedIndirect(m_commandBuffers[i], m_indirectDrawsBuffer,
-                                   j * sizeof(VkDrawIndexedIndirectCommand), 1,
-                                   sizeof(VkDrawIndexedIndirectCommand));
-       }*/
-
-
-
-
+      // This allows for dynamic number of meshes in the scene
+      // For static scenes, vkCmdDrawIndexedIndirect should probably be used with DEVICE_LOCAL 
+      // memory type
+      vkCmdDrawIndexedIndirectCount(m_commandBuffers[i], m_indirectDrawsBuffer, 0,
+                                    m_indirectDrawsBuffer,
+                                    sizeof(VkDrawIndexedIndirectCommand) * m_numMeshes, m_numMeshes,
+                                    sizeof(VkDrawIndexedIndirectCommand));
+      
       vkCmdEndRenderPass(m_commandBuffers[i]);
 
       utils::Assert(vkEndCommandBuffer(m_commandBuffers[i]) == VK_SUCCESS,

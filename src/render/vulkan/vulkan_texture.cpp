@@ -218,6 +218,12 @@ Texture::GetImageViewAndSampler() const
    return {m_textureImageView, m_textureSampler};
 }
 
+TextureType
+Texture::GetType() const
+{
+   return m_type;
+}
+
 void
 Texture::CreateTextureSampler()
 {
@@ -331,6 +337,12 @@ TextureLibrary::GetTexture(TextureType type, const std::string& textureName)
    }
 
    return s_loadedTextures[textureName];
+}
+
+const Texture&
+TextureLibrary::GetTexture(const std::string& textureName)
+{
+   return GetTexture(TextureType::DIFFUSE_MAP, textureName);
 }
 
 void

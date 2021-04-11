@@ -30,17 +30,31 @@ struct UniformBufferObject
    alignas(16) glm::mat4 lightspace;
    alignas(16) glm::mat4 proj;
    alignas(16) glm::mat4 view;
-   alignas(16) glm::mat4 model;
    glm::vec4  cameraPos;
    glm::vec4  lightPos;
 };
 
+struct PerInstanceBuffer
+{
+   alignas(16) glm::mat4 model;
+   /*int32_t diffuse;
+   int32_t norm;
+   int32_t spec;
+
+   int32_t padding;*/
+};
+
+std::vector< PerInstanceBuffer > perInstance;
 std::vector< vulkan::Vertex > vertices;
 std::vector< uint32_t > indices;
+// std::array< std::pair<std::string, VkImageView, 256 > imageViews;
+static int32_t currTexIdx = 0;
+std::unordered_map< std::string, std::pair<int32_t, VkImageView> > textures = {};
 
 void
 VulkanRenderer::MeshLoaded(const std::vector< vulkan::Vertex >& vertices_in,
-                           const std::vector< uint32_t >& indicies_in)
+                           const std::vector< uint32_t >& indicies_in,
+                           const TextureMaps& textures_in, const glm::mat4& modelMat)
 {
    std::copy(vertices_in.begin(), vertices_in.end(), std::back_inserter(vertices));
    std::copy(indicies_in.begin(), indicies_in.end(), std::back_inserter(indices));
@@ -55,6 +69,47 @@ VulkanRenderer::MeshLoaded(const std::vector< vulkan::Vertex >& vertices_in,
 
    m_currentVertex += static_cast< uint32_t >(vertices_in.size());
    m_currentIndex += static_cast< uint32_t >(indicies_in.size());
+
+   PerInstanceBuffer newInstance;
+   newInstance.model = modelMat;
+
+   for (const auto& texture : textures_in)
+   {
+      if (texture.empty())
+      {
+         continue;
+      }
+
+      const auto it = std::find_if(textures.begin(), textures.end(),
+                                   [texture](const auto& tex) { return texture == tex.first; });
+      if (it == textures.end())
+      {
+         textures[texture] = {currTexIdx++,
+                              TextureLibrary::GetTexture(texture).GetImageViewAndSampler().first};
+      }
+
+      const auto idx = textures[texture].first;
+      const auto tex = TextureLibrary::GetTexture(texture);
+      switch (tex.GetType())
+      {
+         case TextureType::DIFFUSE_MAP: {
+          //  newInstance.diffuse = idx;
+         }
+         break;
+
+         case TextureType::NORMAL_MAP: {
+          //  newInstance.norm = idx;
+         }
+         break;
+
+         case TextureType::SPECULAR_MAP: {
+          //  newInstance.spec = idx;
+         }
+         break;
+      }      
+   }
+   
+   perInstance.push_back(newInstance);
 
    ++m_numMeshes;
 }
@@ -420,11 +475,14 @@ void
 VulkanRenderer::CreateUniformBuffers()
 {
    VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+   VkDeviceSize SSBObufferSize = perInstance.size() * sizeof(PerInstanceBuffer);
 
    const auto swapchainImagesSize = m_swapChainImages.size();
 
    m_uniformBuffers.resize(swapchainImagesSize);
    m_uniformBuffersMemory.resize(swapchainImagesSize);
+   m_ssbo.resize(swapchainImagesSize);
+   m_ssboMemory.resize(swapchainImagesSize);
 
    for (size_t i = 0; i < swapchainImagesSize; i++)
    {
@@ -432,6 +490,11 @@ VulkanRenderer::CreateUniformBuffers()
                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
                               | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                            m_uniformBuffers[i], m_uniformBuffersMemory[i]);
+
+      Buffer::CreateBuffer(SSBObufferSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                           VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+                              | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                           m_ssbo[i], m_ssboMemory[i]);
    }
 }
 void
@@ -481,12 +544,30 @@ VulkanRenderer::CreateDescriptorSets()
       bufferInfo.offset = 0;
       bufferInfo.range = sizeof(UniformBufferObject);
 
-      VkDescriptorImageInfo imageInfo{};
+
+      VkDescriptorBufferInfo instanceBufferInfo;
+      instanceBufferInfo.buffer = m_ssbo[i];
+      instanceBufferInfo.offset = 0;
+      instanceBufferInfo.range = perInstance.size() * sizeof(PerInstanceBuffer);
+      
+      /*VkDescriptorImageInfo imageInfo{};
       imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       imageInfo.imageView = imageView;
-      imageInfo.sampler = sampler;
+      imageInfo.sampler = sampler;*/
 
-      std::array< VkWriteDescriptorSet, 2 > descriptorWrites{};
+      VkDescriptorImageInfo* descriptorImageInfos = new VkDescriptorImageInfo[textures.size()];
+
+      uint32_t texI = 0; 
+      for (const auto& texture : textures)
+      {
+         descriptorImageInfos[texI].sampler = nullptr;
+         descriptorImageInfos[texI].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+         descriptorImageInfos[texI].imageView = texture.second.second;
+         
+         ++texI;
+      }
+
+      std::array< VkWriteDescriptorSet, 4 > descriptorWrites{};
 
       descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
       descriptorWrites[0].dstSet = m_descriptorSets[i];
@@ -500,12 +581,34 @@ VulkanRenderer::CreateDescriptorSets()
       descriptorWrites[1].dstSet = m_descriptorSets[i];
       descriptorWrites[1].dstBinding = 1;
       descriptorWrites[1].dstArrayElement = 0;
-      descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
       descriptorWrites[1].descriptorCount = 1;
-      descriptorWrites[1].pImageInfo = &imageInfo;
+      descriptorWrites[1].pBufferInfo = &instanceBufferInfo;
+
+      VkDescriptorImageInfo samplerInfo = {};
+      samplerInfo.sampler = sampler;
+
+      descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+      descriptorWrites[2].dstSet = m_descriptorSets[i];
+      descriptorWrites[2].dstBinding = 2;
+      descriptorWrites[2].dstArrayElement = 0;
+      descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+      descriptorWrites[2].descriptorCount = 1;
+      descriptorWrites[2].pImageInfo = &samplerInfo;
+
+      descriptorWrites[3].pImageInfo = descriptorImageInfos;
+      descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+      descriptorWrites[3].dstSet = m_descriptorSets[i];
+      descriptorWrites[3].dstBinding = 3;
+      descriptorWrites[3].dstArrayElement = 0;
+      descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+      descriptorWrites[3].descriptorCount = textures.size();
+      descriptorWrites[3].pImageInfo = descriptorImageInfos;
 
       vkUpdateDescriptorSets(Data::vk_device, static_cast< uint32_t >(descriptorWrites.size()),
                              descriptorWrites.data(), 0, nullptr);
+
+      delete[] descriptorImageInfos;
    }
 }
 
@@ -542,7 +645,6 @@ VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage)
 {
    UniformBufferObject ubo{};
 
-   ubo.model = model_mat;
    ubo.view = view_mat;
    ubo.proj = proj_mat;
 
@@ -550,6 +652,11 @@ VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage)
    vkMapMemory(Data::vk_device, m_uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
    memcpy(data, &ubo, sizeof(ubo));
    vkUnmapMemory(Data::vk_device, m_uniformBuffersMemory[currentImage]);
+
+   void* data2;
+   vkMapMemory(Data::vk_device, m_ssboMemory[currentImage], 0, perInstance.size() * sizeof(PerInstanceBuffer), 0, &data2);
+   memcpy(data2, perInstance.data(), perInstance.size() * sizeof(PerInstanceBuffer));
+   vkUnmapMemory(Data::vk_device, m_ssboMemory[currentImage]);
 }
 
 void
@@ -868,26 +975,38 @@ VulkanRenderer::CreateDescriptorSetLayout()
    uboLayoutBinding.pImmutableSamplers = nullptr;
    uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
+   VkDescriptorSetLayoutBinding perInstanceBinding{};
+   perInstanceBinding.binding = 1;
+   perInstanceBinding.descriptorCount = 1;
+   perInstanceBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+   perInstanceBinding.pImmutableSamplers = nullptr;
+   perInstanceBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
    VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-   samplerLayoutBinding.binding = 1;
-   samplerLayoutBinding.descriptorCount = 8;
-   samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+   samplerLayoutBinding.binding = 2;
+   samplerLayoutBinding.descriptorCount = 1;
+   samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
    samplerLayoutBinding.pImmutableSamplers = nullptr;
    samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-   std::array< VkDescriptorSetLayoutBinding, 2 > bindings = {uboLayoutBinding,
-                                                             samplerLayoutBinding};
+   VkDescriptorSetLayoutBinding texturesLayoutBinding{};
+   texturesLayoutBinding.binding = 3;
+   texturesLayoutBinding.descriptorCount = textures.size();
+   texturesLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+   texturesLayoutBinding.pImmutableSamplers = nullptr;
+   texturesLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+   std::array< VkDescriptorSetLayoutBinding, 4 > bindings = {
+      uboLayoutBinding, perInstanceBinding, samplerLayoutBinding, texturesLayoutBinding};
+
    VkDescriptorSetLayoutCreateInfo layoutInfo{};
    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
    layoutInfo.bindingCount = static_cast< uint32_t >(bindings.size());
    layoutInfo.pBindings = bindings.data();
 
-
-   if (vkCreateDescriptorSetLayout(Data::vk_device, &layoutInfo, nullptr, &m_descriptorSetLayout)
-       != VK_SUCCESS)
-   {
-      throw std::runtime_error("failed to create descriptor set layout!");
-   }
+   VK_CHECK(
+      vkCreateDescriptorSetLayout(Data::vk_device, &layoutInfo, nullptr, &m_descriptorSetLayout),
+      "Failed to create descriptor set layout!");
 }
 
 void
@@ -1036,6 +1155,9 @@ VulkanRenderer::CreateCommandBuffers()
    vkMapMemory(Data::vk_device, m_indirectDrawsBufferMemory, 0, bufferSize, 0, &data);
    memcpy(data, m_renderCommands.data(), static_cast<size_t>(bufferSize));
    memcpy(static_cast<uint8_t*>(data) + commandsSize, &m_numMeshes, sizeof(uint32_t));
+
+
+
    //vkUnmapMemory(Data::vk_device, stagingBufferMemory);
 
    //Buffer::CreateBuffer(bufferSize,

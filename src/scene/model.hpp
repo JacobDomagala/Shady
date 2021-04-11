@@ -3,9 +3,9 @@
 #include "mesh.hpp"
 #include "render/vulkan/types.hpp"
 
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
 #include <assimp/material.h>
 #include <assimp/postprocess.h>
@@ -61,17 +61,7 @@ class Model
    void
    LoadMaterialTextures(aiMaterial* mat, aiTextureType type, render::vulkan::TextureMaps& textures);
 
-   void
-   RecalculateModelMat();
-
  private:
-   // Model matrix data
-   glm::mat4 m_modelMat = glm::mat4(1.0f);
-   glm::vec3 m_translateValue = {0.0f, 0.0f, 0.0f};
-   glm::vec3 m_scaleValue = {1.0f, 1.0f, 1.0f};
-   glm::vec3 m_rotateValue = {1.0f, 1.0f, 1.0f};
-   float m_rotateAngle = 0.0f;
-
    std::vector< Mesh > m_meshes = {};
    uint32_t m_numVertices = 0;
    uint32_t m_numIndices = 0;

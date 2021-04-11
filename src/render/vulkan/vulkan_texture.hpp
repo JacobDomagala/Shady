@@ -37,6 +37,9 @@ class Texture
    void
    CreateTextureSampler();
 
+   TextureType
+   GetType() const;
+
  private:
    void
    TransitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
@@ -62,6 +65,9 @@ class TextureLibrary
  public:
    static const Texture&
    GetTexture(TextureType type, const std::string& textureName);
+
+   static const Texture&
+   GetTexture(const std::string& textureName);
 
    static void 
    CreateTexture(TextureType type, const std::string& textureName);

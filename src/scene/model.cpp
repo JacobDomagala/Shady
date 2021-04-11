@@ -55,23 +55,28 @@ Model::Model(const std::string& path, LoadFlags additionalAssimpFlags)
 void
 Model::ScaleModel(const glm::vec3& scale)
 {
-   m_scaleValue = scale;
-   RecalculateModelMat();
+   for (auto& mesh : m_meshes)
+   {
+      mesh.Scale(scale);
+   }
 }
 
 void
 Model::TranslateModel(const glm::vec3& translate)
 {
-   m_translateValue = translate;
-   RecalculateModelMat();
+   for (auto& mesh : m_meshes)
+   {
+      mesh.Translate(translate);
+   }
 }
 
 void
 Model::RotateModel(const glm::vec3& rotate, float angle)
 {
-   m_rotateAngle = angle;
-   m_rotateValue = rotate;
-   RecalculateModelMat();
+   for (auto& mesh : m_meshes)
+   {
+      mesh.Rotate(angle, rotate);
+   }
 }
 
 void
@@ -79,7 +84,7 @@ Model::Draw()
 {
    for (auto& mesh : m_meshes)
    {
-      mesh.Draw(m_name, m_modelMat, {1.0f, 1.0f, 1.0f, 1.0f});
+      mesh.Draw(m_name, glm::mat4(1.0f), {1.0f, 1.0f, 1.0f, 1.0f});
    }
 }
 
@@ -206,14 +211,6 @@ Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type, render::vulkan:
       render::vulkan::TextureLibrary::CreateTexture(texType, str.C_Str());
       textures[static_cast< int32_t >(texType)] = str.C_Str();
    }
-}
-
-void
-Model::RecalculateModelMat()
-{
-   m_modelMat = glm::translate(glm::mat4(1.0f), m_translateValue)
-                * glm::rotate(glm::mat4(1.0f), m_rotateAngle, m_rotateValue)
-                * glm::scale(glm::mat4(1.0f), m_scaleValue);
 }
 
 std::unique_ptr< Model >

@@ -3,13 +3,14 @@
 #include "shader.hpp"
 
 #include "render/vulkan/vertex.hpp"
+#include "vulkan/types.hpp"
+
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
-
-
 #include <vector>
 
 struct GLFWwindow;
+
 namespace shady::render::vulkan {
 
 class VulkanRenderer
@@ -26,7 +27,8 @@ class VulkanRenderer
 
    static void
    MeshLoaded(const std::vector< vulkan::Vertex >& vertices,
-              const std::vector< uint32_t >& indicies);
+              const std::vector< uint32_t >& indicies, const TextureMaps& textures,
+              const glm::mat4& modelMat);
 
    inline static glm::mat4 view_mat = glm::mat4(1.0f);
    inline static glm::mat4 proj_mat = glm::mat4(1.0f);
@@ -144,7 +146,7 @@ class VulkanRenderer
    inline static std::vector< VkDeviceMemory > m_uniformBuffersMemory = {};
 
    inline static std::vector< VkBuffer > m_ssbo = {};
-   inline static VkDeviceMemory m_ssboMemory= {};
+   inline static std::vector < VkDeviceMemory > m_ssboMemory = {};
 
    inline static VkImage m_depthImage = {};
    inline static VkDeviceMemory m_depthImageMemory = {};

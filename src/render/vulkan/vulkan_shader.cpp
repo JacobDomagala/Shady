@@ -1,4 +1,5 @@
 #include "vulkan_shader.hpp"
+#include "vulkan_common.hpp"
 #include "trace/logger.hpp"
 #include "utils/assert.hpp"
 #include "utils/file_manager.hpp"
@@ -14,8 +15,8 @@ CreateShaderModule(VkDevice device, std::vector< char >&& shaderByteCode)
    createInfo.pCode = reinterpret_cast< const uint32_t* >(shaderByteCode.data());
 
    VkShaderModule shaderModule;
-   utils::Assert(vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) == VK_SUCCESS,
-                 "failed to create shader module!");
+   VK_CHECK(vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule),
+            "Failed to create shader module!");
   
    return shaderModule;
 }

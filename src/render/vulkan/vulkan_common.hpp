@@ -1,9 +1,24 @@
 #pragma once
 
+#include "utils/assert.hpp"
+
 #include <vulkan/vulkan.h>
 #include <array>
 
+#define VK_CHECK(vkFunction, errorMessage)                                              \
+   do                                                                                   \
+   {                                                                                    \
+      const auto result = vkFunction;                                                   \
+      if (result != VK_SUCCESS)                                                         \
+      {                                                                                 \
+         utils::Assert(false, fmt::format("{} Return value {}", errorMessage, result)); \
+      }                                                                                 \
+   } while (0);								                                              
+
+
 namespace shady::render::vulkan {
+
+
 
 static constexpr bool ENABLE_VALIDATION = true;
 static constexpr std::array< const char*, 1 > VALIDATION_LAYERS = {"VK_LAYER_KHRONOS_validation"};

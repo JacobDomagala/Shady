@@ -23,13 +23,15 @@ Shady::Init()
    input::InputManager::RegisterForMouseMovementInput(this);
    input::InputManager::RegisterForMouseScrollInput(this);
 
+   render::vulkan::VulkanRenderer::Initialize(m_window->GetWindowHandle());
+
    model = scene::Model((utils::FileManager::MODELS_DIR / "sponza" / "sponza.obj").string());
    // model = scene::Model((utils::FileManager::MODELS_DIR / "suzanne.obj").string());
    // model = scene::Model((utils::FileManager::MODELS_DIR / "viking_room.obj").string());
    // model = scene::Model((utils::FileManager::MODELS_DIR / "viking_room.obj").string());
    // model = scene::Model((utils::FileManager::MODELS_DIR / "viking_room.obj").string());
 
-   render::vulkan::VulkanRenderer::Initialize(m_window->GetWindowHandle());
+   render::vulkan::VulkanRenderer::CreateRenderPipeline();
    // render::Renderer::Init();
    //
 

@@ -50,9 +50,7 @@ Texture::CreateTextureImage(TextureType type, std::string_view textureName)
                         stagingBuffer, stagingBufferMemory);
 
    void* data;
-   utils::Assert(vkMapMemory(Data::vk_device, stagingBufferMemory, 0, imageSize, 0, &data)
-                    == VK_SUCCESS,
-                 "Failed to map memory");
+   vkMapMemory(Data::vk_device, stagingBufferMemory, 0, imageSize, 0, &data);
    memcpy(data, textureData.m_bytes.get(), static_cast< size_t >(imageSize));
    vkUnmapMemory(Data::vk_device, stagingBufferMemory);
 
@@ -98,8 +96,7 @@ Texture::CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels,
    imageInfo.samples = numSamples;
    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-   utils::Assert(vkCreateImage(Data::vk_device, &imageInfo, nullptr, &image) == VK_SUCCESS,
-                 "failed to create image!");
+   VK_CHECK(vkCreateImage(Data::vk_device, &imageInfo, nullptr, &image), "failed to create image!");
 
    Buffer::AllocateImageMemory(image, imageMemory, properties);
 
@@ -124,11 +121,9 @@ Texture::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspe
    viewInfo.subresourceRange.layerCount = 1;
 
    VkImageView imageView;
-   if (vkCreateImageView(Data::vk_device, &viewInfo, nullptr, &imageView) != VK_SUCCESS)
-   {
-      throw std::runtime_error("failed to create texture image view!");
-   }
-
+   VK_CHECK(vkCreateImageView(Data::vk_device, &viewInfo, nullptr, &imageView),
+            "Failed to create texture image view!");
+   
    return imageView;
 }
 
@@ -143,7 +138,7 @@ Texture::GenerateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, 
    if (!(formatProperties.optimalTilingFeatures
          & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
    {
-      throw std::runtime_error("texture image format does not support linear blitting!");
+      utils::Assert(false, "Texture image format does not support linear blitting!");
    }
 
    VkCommandBuffer commandBuffer = Command::BeginSingleTimeCommands();
@@ -247,10 +242,8 @@ Texture::CreateTextureSampler()
    samplerInfo.maxLod = static_cast< float >(m_mips);
    samplerInfo.mipLodBias = 0.0f;
 
-   if (vkCreateSampler(Data::vk_device, &samplerInfo, nullptr, &m_textureSampler) != VK_SUCCESS)
-   {
-      throw std::runtime_error("failed to create texture sampler!");
-   }
+   VK_CHECK(vkCreateSampler(Data::vk_device, &samplerInfo, nullptr, &m_textureSampler),
+            "Failed to create texture sampler!");            
 }
 
 void
@@ -315,7 +308,7 @@ Texture::TransitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout,
    }
    else
    {
-      throw std::invalid_argument("unsupported layout transition!");
+      utils::Assert(false, "Unsupported layout transition!");
    }
 
    vkCmdPipelineBarrier(commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1,
@@ -338,6 +331,20 @@ TextureLibrary::GetTexture(TextureType type, const std::string& textureName)
    }
 
    return s_loadedTextures[textureName];
+}
+
+void
+TextureLibrary::CreateTexture(TextureType type, const std::string& textureName)
+{
+   if (s_loadedTextures.find(textureName) == s_loadedTextures.end())
+   {
+      trace::Logger::Debug("Creating texture {}", textureName);
+      LoadTexture(type, textureName);
+   }
+   else
+   {
+      trace::Logger::Debug("Texture {} already loaded!", textureName);
+   }
 }
 
 void

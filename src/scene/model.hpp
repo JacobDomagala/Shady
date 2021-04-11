@@ -1,10 +1,11 @@
 #pragma once
 
 #include "mesh.hpp"
-#include "render/texture.hpp"
+#include "render/vulkan/types.hpp"
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include <assimp/material.h>
 #include <assimp/postprocess.h>
@@ -58,7 +59,7 @@ class Model
    ProcessMesh(aiMesh* mesh, const aiScene* scene);
 
    void
-   LoadMaterialTextures(aiMaterial* mat, aiTextureType type, render::TexturePtrVec& textures);
+   LoadMaterialTextures(aiMaterial* mat, aiTextureType type, render::vulkan::TextureMaps& textures);
 
    void
    RecalculateModelMat();

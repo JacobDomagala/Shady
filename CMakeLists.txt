@@ -57,7 +57,7 @@ add_executable(${PROJECT_NAME}
     src/render/vulkan/vulkan_renderer.hpp src/render/vulkan/vulkan_renderer.cpp src/render/vulkan/vulkan_shader.hpp src/render/vulkan/vulkan_shader.cpp
     src/render/vulkan/vulkan_buffer.hpp src/render/vulkan/vulkan_buffer.cpp src/render/vulkan/vulkan_texture.hpp src/render/vulkan/vulkan_texture.cpp
     src/render/vulkan/vulkan_command.hpp src/render/vulkan/vulkan_command.cpp src/render/vulkan/vulkan_common.hpp src/render/vulkan/vulkan_common.cpp
-    src/render/vulkan/vertex.hpp
+    src/render/vulkan/vertex.hpp src/render/vulkan/types.hpp
 
     # scene
     src/scene/mesh.hpp src/scene/mesh.cpp src/scene/model.hpp src/scene/model.cpp src/scene/light.hpp src/scene/light.cpp

@@ -1,20 +1,12 @@
 #pragma once
 
 #include "vulkan_texture.hpp"
+#include "types.hpp"
 
 #include <unordered_map>
 #include <vulkan/vulkan.h>
 
 namespace shady::render::vulkan {
-
-enum class TextureType
-{
-   DIFFUSE_MAP,
-   SPECULAR_MAP,
-   NORMAL_MAP,
-   CUBE_MAP
-};
-
 class Texture
 {
  public:
@@ -70,6 +62,9 @@ class TextureLibrary
  public:
    static const Texture&
    GetTexture(TextureType type, const std::string& textureName);
+
+   static void 
+   CreateTexture(TextureType type, const std::string& textureName);
 
    static void
    Clear();

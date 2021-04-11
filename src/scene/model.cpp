@@ -2,24 +2,25 @@
 #include "trace/logger.hpp"
 #include "utils/file_manager.hpp"
 #include "render/vulkan/vertex.hpp"
+#include "render/vulkan/vulkan_texture.hpp"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 
 namespace shady::scene {
 
-static render::TextureType
+static render::vulkan::TextureType
 GetShadyTexFromAssimpTex(aiTextureType assimpTex)
 {
    switch (assimpTex)
    {
       case aiTextureType_SPECULAR:
-         return render::TextureType::SPECULAR_MAP;
+         return render::vulkan::TextureType::SPECULAR_MAP;
       case aiTextureType_NORMALS:
-         return render::TextureType::NORMAL_MAP;
+         return render::vulkan::TextureType::NORMAL_MAP;
       case aiTextureType_DIFFUSE:
       default: {
-         return render::TextureType::DIFFUSE_MAP;
+         return render::vulkan::TextureType::DIFFUSE_MAP;
       }
    }
 }
@@ -177,13 +178,14 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
       }
    }
 
-   render::TexturePtrVec textures;
+   // render::TexturePtrVec textures;
+   render::vulkan::TextureMaps textures = {};
 
    // Process materials
    aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-   // LoadMaterialTextures(material, aiTextureType_DIFFUSE, textures);
-   // LoadMaterialTextures(material, aiTextureType_SPECULAR, textures);
-   // LoadMaterialTextures(material, aiTextureType_NORMALS, textures);
+    LoadMaterialTextures(material, aiTextureType_DIFFUSE, textures);
+    LoadMaterialTextures(material, aiTextureType_SPECULAR, textures);
+    LoadMaterialTextures(material, aiTextureType_NORMALS, textures);
 
    trace::Logger::Debug("Processed mesh: {}", mesh->mName.C_Str());
    m_numVertices += mesh->mNumVertices;
@@ -193,15 +195,16 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 }
 
 void
-Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type, render::TexturePtrVec& textures)
+Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type, render::vulkan::TextureMaps& textures)
 {
    for (uint32_t i = 0; i < mat->GetTextureCount(type); i++)
    {
       aiString str;
       mat->GetTexture(type, i, &str);
 
-      textures.push_back(
-         render::TextureLibrary::GetTexture(GetShadyTexFromAssimpTex(type), str.C_Str()));
+      const auto texType = GetShadyTexFromAssimpTex(type);
+      render::vulkan::TextureLibrary::CreateTexture(texType, str.C_Str());
+      textures[static_cast< int32_t >(texType)] = str.C_Str();
    }
 }
 
@@ -217,45 +220,37 @@ std::unique_ptr< Model >
 Model::CreatePlane()
 {
    auto model = std::make_unique< Model >();
-   model->GetMeshes().push_back(
-      {"Plane",
-       {{
-           {25.0f, -0.5f, 25.0f},   // Position
-           {0.0f, 1.0f, 0.0f},      // Normal
-           {25.0f, 0.0f},           // Texcoord
-           {50.0f, 0.0f, 0.0f},     // Tangent
-           {1.0f, 1.0f, 1.0f, 1.0f} // Color
-        },
-        {
-           {-25.0f, -0.5f, 25.0f},  // Position
-           {0.0f, 1.0f, 0.0f},      // Normal
-           {0.0f, 0.0f},            // Texcoord
-           {50.0f, 0.0f, 0.0f},     // Tangent
-           {1.0f, 1.0f, 1.0f, 1.0f} // Color
-        },
-        {
-           {-25.0f, -0.5f, -25.0f}, // Position
-           {0.0f, 1.0f, 0.0f},      // Normal
-           {0.0f, 25.0f},           // Texcoord
-           {50.0f, 0.0f, 0.0f},     // Tangent
-           {1.0f, 1.0f, 1.0f, 1.0f} // Color
-        },
-        {
-           {25.0f, -0.5f, -25.0f},  // Position
-           {0.0f, 1.0f, 0.0f},      // Normal
-           {25.0f, 25.0f},          // Texcoord
-           {50.0f, 0.0f, 0.0f},     // Tangent
-           {1.0f, 1.0f, 1.0f, 1.0f} // Color
-        }},
-       {2, 1, 0, 3, 2, 0}, // Indices
-       {render::TextureLibrary::GetTexture(render::TextureType::DIFFUSE_MAP,
-                                           (utils::FileManager::TEXTURES_DIR / "196.png").string()),
-        render::TextureLibrary::GetTexture(
-           render::TextureType::NORMAL_MAP,
-           (utils::FileManager::TEXTURES_DIR / "196_norm.png").string()),
-        render::TextureLibrary::GetTexture(
-           render::TextureType::SPECULAR_MAP,
-           (utils::FileManager::TEXTURES_DIR / "196_s.png").string())}});
+   model->GetMeshes().push_back({"Plane",
+                                 {{
+                                     {25.0f, -0.5f, 25.0f},   // Position
+                                     {0.0f, 1.0f, 0.0f},      // Normal
+                                     {25.0f, 0.0f},           // Texcoord
+                                     {50.0f, 0.0f, 0.0f},     // Tangent
+                                     {1.0f, 1.0f, 1.0f, 1.0f} // Color
+                                  },
+                                  {
+                                     {-25.0f, -0.5f, 25.0f},  // Position
+                                     {0.0f, 1.0f, 0.0f},      // Normal
+                                     {0.0f, 0.0f},            // Texcoord
+                                     {50.0f, 0.0f, 0.0f},     // Tangent
+                                     {1.0f, 1.0f, 1.0f, 1.0f} // Color
+                                  },
+                                  {
+                                     {-25.0f, -0.5f, -25.0f}, // Position
+                                     {0.0f, 1.0f, 0.0f},      // Normal
+                                     {0.0f, 25.0f},           // Texcoord
+                                     {50.0f, 0.0f, 0.0f},     // Tangent
+                                     {1.0f, 1.0f, 1.0f, 1.0f} // Color
+                                  },
+                                  {
+                                     {25.0f, -0.5f, -25.0f},  // Position
+                                     {0.0f, 1.0f, 0.0f},      // Normal
+                                     {25.0f, 25.0f},          // Texcoord
+                                     {50.0f, 0.0f, 0.0f},     // Tangent
+                                     {1.0f, 1.0f, 1.0f, 1.0f} // Color
+                                  }},
+                                 {2, 1, 0, 3, 2, 0}, // Indices
+                                 {}});
 
    return model;
 }

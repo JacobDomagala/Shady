@@ -17,9 +17,8 @@ AllocateMemory(VkMemoryRequirements memReq, VkDeviceMemory& bufferMemory,
    allocInfo.allocationSize = memReq.size;
    allocInfo.memoryTypeIndex = FindMemoryType(memReq.memoryTypeBits, properties);
 
-   utils::Assert(vkAllocateMemory(Data::vk_device, &allocInfo, nullptr, &bufferMemory)
-                    == VK_SUCCESS,
-                 "failed to allocate buffer memory!");
+   VK_CHECK(vkAllocateMemory(Data::vk_device, &allocInfo, nullptr, &bufferMemory),
+            "failed to allocate buffer memory!");
 }
 
 void
@@ -61,8 +60,7 @@ Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryProper
    bufferInfo.usage = usage;
    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-   utils::Assert(vkCreateBuffer(Data::vk_device, &bufferInfo, nullptr, &buffer) == VK_SUCCESS,
-                 "failed to create buffer!");
+   VK_CHECK(vkCreateBuffer(Data::vk_device, &bufferInfo, nullptr, &buffer), "failed to create buffer!");
 
    AllocateBufferMemory(buffer, bufferMemory, properties);
 

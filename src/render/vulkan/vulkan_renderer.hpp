@@ -19,6 +19,9 @@ class VulkanRenderer
    Initialize(GLFWwindow* windowHandle);
 
    static void
+   CreateRenderPipeline();
+
+   static void
    Draw();
 
    static void

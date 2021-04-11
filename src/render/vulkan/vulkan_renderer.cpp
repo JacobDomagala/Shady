@@ -37,7 +37,6 @@ struct UniformBufferObject
 
 std::vector< vulkan::Vertex > vertices;
 std::vector< uint32_t > indices;
-std::unordered_map< uint32_t, std::tuple< uint32_t, uint32_t, uint32_t > > perModelIndices = {};
 
 void
 VulkanRenderer::MeshLoaded(const std::vector< vulkan::Vertex >& vertices_in,
@@ -53,8 +52,6 @@ VulkanRenderer::MeshLoaded(const std::vector< vulkan::Vertex >& vertices_in,
    newModel.instanceCount = 1;
    newModel.vertexOffset = m_currentVertex;
    m_renderCommands.push_back(newModel);
-
-   perModelIndices[m_numMeshes] = {newModel.indexCount, m_currentVertex, m_currentIndex};
 
    m_currentVertex += static_cast< uint32_t >(vertices_in.size());
    m_currentIndex += static_cast< uint32_t >(indicies_in.size());
@@ -273,9 +270,6 @@ isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface)
 
    VkPhysicalDeviceFeatures supportedFeatures;
    vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
-
-   /*VkPhysicalDeviceVulkan12Features supportedFeatures2;
-   vkGetPhysicalDeviceVulk(device, &supportedFeatures2);*/
 
    return indices.isComplete() && extensionsSupported && swapChainAdequate
           && supportedFeatures.samplerAnisotropy && supportedFeatures.multiDrawIndirect;
@@ -526,11 +520,16 @@ VulkanRenderer::Initialize(GLFWwindow* windowHandle)
 
    CreateDevice();
    CreateSwapchain(windowHandle);
-   CreateImageViews();
+   CreateImageViews();  
+   CreateCommandPool();
+}
+
+void
+VulkanRenderer::CreateRenderPipeline()
+{
    CreateRenderPass();
    CreateDescriptorSetLayout();
    CreatePipeline();
-   CreateCommandPool();
    CreateColorResources();
    CreateDepthResources();
    CreateFramebuffers();
@@ -603,7 +602,8 @@ VulkanRenderer::FindSupportedFormat(const std::vector< VkFormat >& candidates, V
       }
    }
 
-   throw std::runtime_error("failed to find supported format!");
+   utils::Assert(false, "failed to find supported format!");
+   return {};
 }
 
 VkFormat
@@ -654,15 +654,8 @@ VulkanRenderer::Draw()
 
    vkResetFences(Data::vk_device, 1, &m_inFlightFences[currentFrame]);
 
-   const auto result =
-      vkQueueSubmit(Data::vk_graphicsQueue, 1, &submitInfo, m_inFlightFences[currentFrame]);
-
-   if (result != VK_SUCCESS)
-   {
-      utils::Assert(
-         false, "failed to submit draw command buffer!");
-   }
-
+   VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &submitInfo, m_inFlightFences[currentFrame]),
+            "failed to submit draw command buffer!");
 
    VkPresentInfoKHR presentInfo{};
    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -712,8 +705,7 @@ VulkanRenderer::CreateInstance()
       createInfo.pNext = reinterpret_cast< void* >(&m_debugCreateInfo);
    }
 
-   const auto result = vkCreateInstance(&createInfo, nullptr, &Data::vk_instance);
-   utils::Assert(result == VK_SUCCESS, "instance not created properly!");
+   VK_CHECK(vkCreateInstance(&createInfo, nullptr, &Data::vk_instance), "instance not created properly!");
 }
 
 void
@@ -787,9 +779,8 @@ VulkanRenderer::CreateDevice()
       createInfo.ppEnabledLayerNames = VALIDATION_LAYERS.data();
    }
 
-   utils::Assert(vkCreateDevice(Data::vk_physicalDevice, &createInfo, nullptr, &Data::vk_device)
-                    == VK_SUCCESS,
-                 "failed to create logical device!");
+   VK_CHECK(vkCreateDevice(Data::vk_physicalDevice, &createInfo, nullptr, &Data::vk_device),
+            "failed to create logical device!");
 
    vkGetDeviceQueue(Data::vk_device, indices.graphicsFamily.value(), 0, &Data::vk_graphicsQueue);
    vkGetDeviceQueue(Data::vk_device, indices.presentFamily.value(), 0, &m_presentQueue);
@@ -844,9 +835,8 @@ VulkanRenderer::CreateSwapchain(GLFWwindow* windowHandle)
    swapChainCreateInfo.presentMode = presentMode;
    swapChainCreateInfo.clipped = VK_TRUE;
 
-   utils::Assert(vkCreateSwapchainKHR(Data::vk_device, &swapChainCreateInfo, nullptr, &m_swapChain)
-                    == VK_SUCCESS,
-                 "failed to create swap chain!");
+   VK_CHECK(vkCreateSwapchainKHR(Data::vk_device, &swapChainCreateInfo, nullptr, &m_swapChain),
+            "failed to create swap chain!");
 
    vkGetSwapchainImagesKHR(Data::vk_device, m_swapChain, &imageCount, nullptr);
    m_swapChainImages.resize(imageCount);
@@ -880,7 +870,7 @@ VulkanRenderer::CreateDescriptorSetLayout()
 
    VkDescriptorSetLayoutBinding samplerLayoutBinding{};
    samplerLayoutBinding.binding = 1;
-   samplerLayoutBinding.descriptorCount = 1;
+   samplerLayoutBinding.descriptorCount = 8;
    samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
    samplerLayoutBinding.pImmutableSamplers = nullptr;
    samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -973,9 +963,8 @@ VulkanRenderer::CreateRenderPass()
    renderPassInfo.dependencyCount = 1;
    renderPassInfo.pDependencies = &dependency;
 
-   utils::Assert(vkCreateRenderPass(Data::vk_device, &renderPassInfo, nullptr, &m_renderPass)
-                    == VK_SUCCESS,
-                 "failed to create render pass!");
+   VK_CHECK(vkCreateRenderPass(Data::vk_device, &renderPassInfo, nullptr, &m_renderPass),
+            "failed to create render pass!");
 }
 
 void
@@ -997,10 +986,9 @@ VulkanRenderer::CreateFramebuffers()
       framebufferInfo.height = m_swapChainExtent.height;
       framebufferInfo.layers = 1;
 
-      utils::Assert(vkCreateFramebuffer(Data::vk_device, &framebufferInfo, nullptr,
-                                        &m_swapChainFramebuffers[i])
-                       == VK_SUCCESS,
-                    "failed to create framebuffer!");
+      VK_CHECK(vkCreateFramebuffer(Data::vk_device, &framebufferInfo, nullptr,
+                                   &m_swapChainFramebuffers[i]),
+               "failed to create framebuffer!");
    }
 }
 
@@ -1017,9 +1005,8 @@ VulkanRenderer::CreateCommandPool()
    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
    poolInfo.queueFamilyIndex = queueFamilyIndicesTwo.graphicsFamily.value();
 
-   utils::Assert(vkCreateCommandPool(Data::vk_device, &poolInfo, nullptr, &Data::vk_commandPool)
-                    == VK_SUCCESS,
-                 "failed to create command pool!");
+   VK_CHECK(vkCreateCommandPool(Data::vk_device, &poolInfo, nullptr, &Data::vk_commandPool),
+            "failed to create command pool!");
 }
 
 void
@@ -1076,17 +1063,16 @@ VulkanRenderer::CreateCommandBuffers()
    allocInfo.commandPool = Data::vk_commandPool;
    allocInfo.commandBufferCount = static_cast< uint32_t >(m_commandBuffers.size());
 
-   utils::Assert(vkAllocateCommandBuffers(Data::vk_device, &allocInfo, m_commandBuffers.data())
-                    == VK_SUCCESS,
-                 "failed to allocate command buffers!");
+   VK_CHECK(vkAllocateCommandBuffers(Data::vk_device, &allocInfo, m_commandBuffers.data()),
+            "failed to allocate command buffers!");
 
    for (size_t i = 0; i < m_commandBuffers.size(); i++)
    {
       VkCommandBufferBeginInfo beginInfo{};
       beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-      utils::Assert(vkBeginCommandBuffer(m_commandBuffers[i], &beginInfo) == VK_SUCCESS,
-                    "failed to begin recording command buffer!");
+      VK_CHECK(vkBeginCommandBuffer(m_commandBuffers[i], &beginInfo),
+               "failed to begin recording command buffer!");
 
       VkRenderPassBeginInfo renderPassInfoTwo{};
       renderPassInfoTwo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -1129,8 +1115,7 @@ VulkanRenderer::CreateCommandBuffers()
       
       vkCmdEndRenderPass(m_commandBuffers[i]);
 
-      utils::Assert(vkEndCommandBuffer(m_commandBuffers[i]) == VK_SUCCESS,
-                    "failed to record command buffer!");
+      VK_CHECK(vkEndCommandBuffer(m_commandBuffers[i]), "failed to record command buffer!");
    }
 }
 
@@ -1151,15 +1136,14 @@ VulkanRenderer::CreateSyncObjects()
 
    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
    {
-      utils::Assert(
-         vkCreateSemaphore(Data::vk_device, &semaphoreInfo, nullptr, &m_imageAvailableSemaphores[i])
-               == VK_SUCCESS
-            && vkCreateSemaphore(Data::vk_device, &semaphoreInfo, nullptr,
-                                 &m_renderFinishedSemaphores[i])
-                  == VK_SUCCESS
-            && vkCreateFence(Data::vk_device, &fenceInfo, nullptr, &m_inFlightFences[i])
-                  == VK_SUCCESS,
-         "failed to create synchronization objects for a frame!");
+      VK_CHECK(vkCreateSemaphore(Data::vk_device, &semaphoreInfo, nullptr,
+                                 &m_imageAvailableSemaphores[i]),
+               fmt::format("Failed to create m_imageAvailableSemaphores[{}]!", i));
+      VK_CHECK(vkCreateSemaphore(Data::vk_device, &semaphoreInfo, nullptr,
+                                 &m_renderFinishedSemaphores[i]),
+               fmt::format("Failed to create m_renderFinishedSemaphores[{}]!", i));
+      VK_CHECK(vkCreateFence(Data::vk_device, &fenceInfo, nullptr, &m_inFlightFences[i]),
+               fmt::format("Failed to create m_inFlightFences[{}]!", i));
    }
 }
 
@@ -1253,9 +1237,8 @@ VulkanRenderer::CreatePipeline()
    pipelineLayoutInfo.pSetLayouts = &m_descriptorSetLayout;
 
 
-   utils::Assert(
-      vkCreatePipelineLayout(Data::vk_device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout)
-         == VK_SUCCESS,
+   VK_CHECK(
+      vkCreatePipelineLayout(Data::vk_device, &pipelineLayoutInfo, nullptr, &m_pipelineLayout),
       "failed to create pipeline layout!");
 
    VkGraphicsPipelineCreateInfo pipelineInfo{};
@@ -1275,10 +1258,9 @@ VulkanRenderer::CreatePipeline()
    pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
 
-   utils::Assert(vkCreateGraphicsPipelines(Data::vk_device, VK_NULL_HANDLE, 1, &pipelineInfo,
-                                           nullptr, &m_graphicsPipeline)
-                    == VK_SUCCESS,
-                 "failed to create graphics pipeline!");
+   VK_CHECK(vkCreateGraphicsPipelines(Data::vk_device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr,
+                                      &m_graphicsPipeline),
+            "failed to create graphics pipeline!");
 
    // Shader info can be destroyed after the pipeline is created
    vertexInfo.Destroy();

@@ -18,12 +18,15 @@ class PerspectiveCamera : public Camera
    void
    MoveCamera(const glm::vec2& leftRightVec) override;
 
+   void
+   RotateCamera(float angle, const glm::vec3& axis) override;
+
  private:
    float m_yaw = -90.0f;
    float m_pitch = 0.0f;
    bool m_constrainPitch = true;
 
-   const glm::vec3 m_worldUp = {0.0f, 1.0f, 0.0f};
+   const glm::vec3 m_worldUp = {0.0f, -1.0f, 0.0f};
 };
 
 } // namespace shady::scene

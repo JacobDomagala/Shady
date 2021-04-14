@@ -6,6 +6,7 @@ namespace shady::scene {
 
 Camera::Camera(const glm::mat4& projection) : m_projectionMat(projection)
 {
+   UpdateViewMatrix();
 }
 
 void

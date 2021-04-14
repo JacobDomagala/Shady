@@ -25,9 +25,9 @@ Shady::Init()
 
    render::vulkan::VulkanRenderer::Initialize(m_window->GetWindowHandle());
 
-   model = scene::Model((utils::FileManager::MODELS_DIR / "sponza" / "sponza.obj").string(),
+   model = scene::Model((utils::FileManager::MODELS_DIR / "sponza" / "glTF" / "sponza.gltf").string(),
                         scene::LoadFlags::FlipUV);
-   model.RotateModel(glm::vec3(0.0f, 0.0f, 1.0f), glm::radians(180.0f));
+   // model.RotateModel(glm::vec3(0.0f, 0.0f, 1.0f), glm::radians(180.0f));
    model.ScaleModel(glm::vec3(0.1f, 0.1f, 0.1f));
    model.Draw();
 
@@ -41,7 +41,7 @@ Shady::Init()
    //
 
    m_currentScene.LoadDefault();
-
+   // m_currentScene.GetCamera().RotateCamera(glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
    // render::RenderCommand::SetClearColor({0.4f, 0.1f, 0.3f, 1.0f});
 
    // m_gui.Init(m_window->GetWindowHandle());
@@ -107,11 +107,11 @@ Shady::OnUpdate()
    }
    if (input::InputManager::CheckKeyPressed(GLFW_KEY_UP))
    {
-      m_currentScene.GetLight().MoveBy({0.0f, lightMoveBy, 0.0f});
+      m_currentScene.GetLight().MoveBy({0.0f, -lightMoveBy, 0.0f});
    }
    if (input::InputManager::CheckKeyPressed(GLFW_KEY_DOWN))
    {
-      m_currentScene.GetLight().MoveBy({0.0f, -lightMoveBy, 0.0f});
+      m_currentScene.GetLight().MoveBy({0.0f, lightMoveBy, 0.0f});
    }
    if (input::InputManager::CheckKeyPressed(GLFW_KEY_RIGHT))
    {

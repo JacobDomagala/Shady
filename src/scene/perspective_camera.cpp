@@ -49,4 +49,14 @@ PerspectiveCamera::MoveCamera(const glm::vec2& leftRightVec)
    UpdateViewMatrix();
 }
 
+void
+PerspectiveCamera::RotateCamera(float angle, const glm::vec3& axis)
+{
+   m_lookAtDirection = glm::normalize(m_lookAtDirection);
+
+   m_rightVector = glm::normalize(glm::cross(m_lookAtDirection, m_worldUp));
+   m_upVector = glm::normalize(glm::cross(m_rightVector, m_lookAtDirection));
+   UpdateViewMatrix();
+}
+
 } // namespace shady::scene

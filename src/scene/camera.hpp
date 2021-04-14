@@ -48,6 +48,9 @@ class Camera
    virtual void
    MoveCamera(const glm::vec2& leftRightVec) = 0;
 
+   virtual void
+   RotateCamera(float angle, const glm::vec3& axis) = 0;
+
  protected:
    void
    UpdateViewMatrix();
@@ -58,7 +61,7 @@ class Camera
    glm::mat4 m_viewProjectionMat = glm::mat4(1.0f);
 
    glm::vec3 m_position = glm::vec3(0.0f);
-   glm::vec3 m_upVector = glm::vec3(0.0f, 1.0f, 0.0f);
+   glm::vec3 m_upVector = glm::vec3(0.0f, -1.0f, 0.0f);
    glm::vec3 m_rightVector = glm::vec3(1.0f, 0.0f, 0.0f);
    glm::vec3 m_lookAtDirection = glm::vec3(0.0f, 0.0f, 1.0f);
 };

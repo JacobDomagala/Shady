@@ -15,6 +15,12 @@ Framebuffer::Create(int32_t width, int32_t height)
    SetupRenderPass();
 }
 
+VkRenderPass
+Framebuffer::GetRenderPass()
+{
+   return m_renderPass;
+}
+
 void
 Framebuffer::CreateAttachments()
 {

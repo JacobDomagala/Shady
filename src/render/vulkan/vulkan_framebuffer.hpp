@@ -18,10 +18,14 @@ class Framebuffer
    void
    Create(int32_t width, int32_t height);
 
+   VkRenderPass
+   GetRenderPass();
+
    void
    CreateAttachments();
 
-   void SetupRenderPass();
+   void
+   SetupRenderPass();
 
  private:
    void

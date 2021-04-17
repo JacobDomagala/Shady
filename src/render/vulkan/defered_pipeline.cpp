@@ -155,6 +155,67 @@ DeferedPipeline::PrepareUniformBuffers()
 void
 DeferedPipeline::SetupDescriptorSetLayout()
 {
+   // Binding 0 : Vertex shader uniform buffer
+   VkDescriptorSetLayoutBinding vertexShaderUniform{};
+   vertexShaderUniform.binding = 0;
+   vertexShaderUniform.descriptorCount = 1;
+   vertexShaderUniform.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+   vertexShaderUniform.pImmutableSamplers = nullptr;
+   vertexShaderUniform.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+   // Binding 1 : Position texture target / Scene colormap
+   VkDescriptorSetLayoutBinding positionsTexture{};
+   positionsTexture.binding = 1;
+   positionsTexture.descriptorCount = 1;
+   positionsTexture.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+   positionsTexture.pImmutableSamplers = nullptr;
+   positionsTexture.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+   // Binding 2 : Normals texture target
+   VkDescriptorSetLayoutBinding normalsTexture{};
+   normalsTexture.binding = 2;
+   normalsTexture.descriptorCount = 1;
+   normalsTexture.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+   normalsTexture.pImmutableSamplers = nullptr;
+   normalsTexture.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+   // Binding 3 : Albedo texture target
+   VkDescriptorSetLayoutBinding albedoTexture{};
+   albedoTexture.binding = 3;
+   albedoTexture.descriptorCount = 1;
+   albedoTexture.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+   albedoTexture.pImmutableSamplers = nullptr;
+   albedoTexture.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+   // Binding 4 : Fragment shader uniform buffer
+   VkDescriptorSetLayoutBinding fragmentShaderUniform{};
+   fragmentShaderUniform.binding = 4;
+   fragmentShaderUniform.descriptorCount = 1;
+   fragmentShaderUniform.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+   fragmentShaderUniform.pImmutableSamplers = nullptr;
+   fragmentShaderUniform.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+   std::array< VkDescriptorSetLayoutBinding, 5 > bindings = {
+      vertexShaderUniform, positionsTexture, normalsTexture, albedoTexture, fragmentShaderUniform};
+
+   VkDescriptorSetLayoutCreateInfo layoutInfo{};
+   layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+   layoutInfo.bindingCount = static_cast< uint32_t >(bindings.size());
+   layoutInfo.pBindings = bindings.data();
+
+   VK_CHECK(
+      vkCreateDescriptorSetLayout(Data::vk_device, &layoutInfo, nullptr, &m_descriptorSetLayout),
+      "");
+
+   // Shared pipeline layout used by all pipelines
+   VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
+   pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+   pipelineLayoutCreateInfo.setLayoutCount = 1;
+   pipelineLayoutCreateInfo.pSetLayouts = &m_descriptorSetLayout;
+
+   VK_CHECK(vkCreatePipelineLayout(Data::vk_device, &pipelineLayoutCreateInfo, nullptr,
+                                   &m_pipelineLayout),
+            "");
 }
 
 void

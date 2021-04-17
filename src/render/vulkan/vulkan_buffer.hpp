@@ -4,6 +4,8 @@
 
 namespace shady::render::vulkan {
 
+static constexpr VkDeviceSize WHOLE_BUFFER = -1;
+
 class Buffer
 {
  public:
@@ -26,7 +28,7 @@ class Buffer
    CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
    void
-   Map(VkDeviceSize size);
+   Map(VkDeviceSize size = WHOLE_BUFFER);
 
    void
    Unmap();

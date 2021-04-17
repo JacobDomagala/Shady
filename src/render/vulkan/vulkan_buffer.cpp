@@ -7,6 +7,32 @@
 
 namespace shady::render::vulkan {
 
+void
+Buffer::Map(VkDeviceSize size)
+{
+   vkMapMemory(Data::vk_device, m_bufferMemory, 0, size, 0, &m_mappedMemory);
+   m_mapped = true;
+   m_bufferSize = size;
+}
+
+void
+Buffer::Unmap()
+{
+   utils::Assert(m_mapped, "Buffer is not mapped!");
+
+   vkUnmapMemory(Data::vk_device, m_bufferMemory);
+   m_mapped = false;
+   m_mappedMemory = nullptr;
+   m_bufferSize = {};
+}
+
+void
+Buffer::CopyData(const void* data)
+{
+   utils::Assert(m_mapped, "Buffer is not mapped!");
+   memcpy(m_mappedMemory, data, m_bufferSize);
+}
+
 static void
 AllocateMemory(VkMemoryRequirements memReq, VkDeviceMemory& bufferMemory,
                VkMemoryPropertyFlags properties)
@@ -45,7 +71,7 @@ Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryProper
 {
    Buffer newBuffer;
    CreateBuffer(size, usage, properties, newBuffer.m_buffer, newBuffer.m_bufferMemory);
-   
+
    return newBuffer;
 }
 
@@ -59,7 +85,8 @@ Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryProper
    bufferInfo.usage = usage;
    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-   VK_CHECK(vkCreateBuffer(Data::vk_device, &bufferInfo, nullptr, &buffer), "failed to create buffer!");
+   VK_CHECK(vkCreateBuffer(Data::vk_device, &bufferInfo, nullptr, &buffer),
+            "failed to create buffer!");
 
    AllocateBufferMemory(buffer, bufferMemory, properties);
 

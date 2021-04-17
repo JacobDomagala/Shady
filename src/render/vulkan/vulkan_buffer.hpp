@@ -25,9 +25,21 @@ class Buffer
    static void
    CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
+   void
+   Map(VkDeviceSize size);
+
+   void
+   Unmap();
+
+   void
+   CopyData(const void* data);
+
  public:
+   void* m_mappedMemory = nullptr;
+   bool m_mapped = false;
    VkBuffer m_buffer = {};
    VkDeviceMemory m_bufferMemory = {};
+   VkDeviceSize m_bufferSize = {};
 };
 
 

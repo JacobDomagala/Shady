@@ -15,6 +15,7 @@ GetShadyTexFromAssimpTex(aiTextureType assimpTex)
    switch (assimpTex)
    {
       case aiTextureType_SPECULAR:
+      case aiTextureType_UNKNOWN:
          return render::vulkan::TextureType::SPECULAR_MAP;
       case aiTextureType_NORMALS:
          return render::vulkan::TextureType::NORMAL_MAP;
@@ -30,9 +31,9 @@ Model::Model(const std::string& path, LoadFlags additionalAssimpFlags)
    Assimp::Importer importer;
 
    auto scene = importer.ReadFile(
-      path, aiProcess_GenSmoothNormals | aiProcess_Triangulate | aiProcess_CalcTangentSpace
-               | aiProcess_JoinIdenticalVertices | aiProcess_ValidateDataStructure
-               | static_cast< uint32_t >(additionalAssimpFlags));
+      path, aiProcess_FlipWindingOrder | aiProcess_GenSmoothNormals | aiProcess_Triangulate
+               | /*aiProcess_CalcTangentSpace |*/ aiProcess_JoinIdenticalVertices
+               | aiProcess_ValidateDataStructure | static_cast< uint32_t >(additionalAssimpFlags));
 
    // Check for errors
    if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
@@ -165,6 +166,11 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
          vector.y = mesh->mTangents[i].y;
          vector.z = mesh->mTangents[i].z;
          vertex.m_tangent = vector;
+
+         vector.x = mesh->mBitangents[i].x;
+         vector.y = mesh->mBitangents[i].y;
+         vector.z = mesh->mBitangents[i].z;
+         vertex.m_bitangent = vector;
       }
 
       vertices.push_back(vertex);
@@ -189,8 +195,11 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
    // Process materials
    aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
     LoadMaterialTextures(material, aiTextureType_DIFFUSE, textures);
-    LoadMaterialTextures(material, aiTextureType_SPECULAR, textures);
+    // LoadMaterialTextures(material, aiTextureType_SPECULAR, textures);
+    LoadMaterialTextures(material, aiTextureType_UNKNOWN, textures);
     LoadMaterialTextures(material, aiTextureType_NORMALS, textures);
+
+
 
    trace::Logger::Debug("Processed mesh: {}", mesh->mName.C_Str());
    m_numVertices += mesh->mNumVertices;
@@ -223,28 +232,28 @@ Model::CreatePlane()
                                      {0.0f, 1.0f, 0.0f},      // Normal
                                      {25.0f, 0.0f},           // Texcoord
                                      {50.0f, 0.0f, 0.0f},     // Tangent
-                                     {1.0f, 1.0f, 1.0f, 1.0f} // Color
+                                     {0.0f, 1.0f, 0.0f}     // Bitangent
                                   },
                                   {
                                      {-25.0f, -0.5f, 25.0f},  // Position
                                      {0.0f, 1.0f, 0.0f},      // Normal
                                      {0.0f, 0.0f},            // Texcoord
                                      {50.0f, 0.0f, 0.0f},     // Tangent
-                                     {1.0f, 1.0f, 1.0f, 1.0f} // Color
+                                     {0.0f, 1.0f, 0.0f}      // Bitangent
                                   },
                                   {
                                      {-25.0f, -0.5f, -25.0f}, // Position
                                      {0.0f, 1.0f, 0.0f},      // Normal
                                      {0.0f, 25.0f},           // Texcoord
                                      {50.0f, 0.0f, 0.0f},     // Tangent
-                                     {1.0f, 1.0f, 1.0f, 1.0f} // Color
+                                     {0.0f, 1.0f, 0.0f}       // Bitangent
                                   },
                                   {
                                      {25.0f, -0.5f, -25.0f},  // Position
                                      {0.0f, 1.0f, 0.0f},      // Normal
                                      {25.0f, 25.0f},          // Texcoord
                                      {50.0f, 0.0f, 0.0f},     // Tangent
-                                     {1.0f, 1.0f, 1.0f, 1.0f} // Color
+                                     {0.0f, 1.0f, 0.0f}       // Bitangent
                                   }},
                                  {2, 1, 0, 3, 2, 0}, // Indices
                                  {}});

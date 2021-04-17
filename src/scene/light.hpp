@@ -33,7 +33,7 @@ class Light
    const glm::mat4&
    GetLightSpaceMat() const;
 
-   const glm::vec3&
+   glm::vec3
    GetPosition() const;
 
    glm::tvec2<uint32_t>

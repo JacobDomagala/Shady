@@ -1,5 +1,6 @@
 #include "scene/light.hpp"
 #include "render/render_command.hpp"
+#include "trace/logger.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -80,7 +81,7 @@ Light::GetLightSpaceMat() const
    return m_lightSpaceMatrix;
 }
 
-const glm::vec3&
+glm::vec3
 Light::GetPosition() const
 {
    return m_position;
@@ -96,6 +97,7 @@ void
 Light::MoveBy(const glm::vec3& moveBy)
 {
    m_position += moveBy;
+   trace::Logger::Info("Light position {}", m_position);
 }
 
 } // namespace shady::scene

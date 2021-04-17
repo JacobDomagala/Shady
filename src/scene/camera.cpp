@@ -1,4 +1,5 @@
 #include "scene/camera.hpp"
+#include "trace/logger.hpp"
 
 #include <glm/gtx/transform.hpp>
 
@@ -74,6 +75,9 @@ Camera::UpdateViewMatrix()
 {
    m_viewMat = glm::lookAt(m_position, m_position + m_lookAtDirection, m_upVector);
    m_viewProjectionMat = m_projectionMat * m_viewMat;
+
+   trace::Logger::Info("Camera position = {}, upVec = {}, rightVec = {}, lookAt = {}", m_position,
+                       m_upVector, m_rightVector, m_lookAtDirection);
 }
 
 } // namespace shady::scene

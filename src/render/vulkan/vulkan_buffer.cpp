@@ -3,7 +3,6 @@
 #include "vulkan_command.hpp"
 #include "vulkan_common.hpp"
 
-
 #include <fmt/format.h>
 
 namespace shady::render::vulkan {

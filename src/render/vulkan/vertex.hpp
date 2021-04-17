@@ -12,7 +12,7 @@ struct Vertex
    glm::vec3 m_normal;
    glm::vec2 m_texCoords;
    glm::vec3 m_tangent;
-   glm::vec4 m_color;
+   glm::vec3 m_bitangent;
 
    static VkVertexInputBindingDescription
    getBindingDescription()
@@ -52,8 +52,8 @@ struct Vertex
 
       attributeDescriptions[4].binding = 0;
       attributeDescriptions[4].location = 4;
-      attributeDescriptions[4].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-      attributeDescriptions[4].offset = offsetof(Vertex, m_color);
+      attributeDescriptions[4].format = VK_FORMAT_R32G32B32_SFLOAT;
+      attributeDescriptions[4].offset = offsetof(Vertex, m_bitangent);
 
       return attributeDescriptions;
    }

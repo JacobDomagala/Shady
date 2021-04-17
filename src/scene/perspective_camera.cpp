@@ -12,6 +12,10 @@ PerspectiveCamera::PerspectiveCamera(const glm::mat4& projection) : Camera(proje
 PerspectiveCamera::PerspectiveCamera(float fieldOfView, float aspectRatio, float nearClip, float farClip)
 {
    m_projectionMat = glm::perspective(fieldOfView, aspectRatio, nearClip, farClip);
+   //trace::Logger::Info("Camera position = {}, upVec = {}, rightVec = {}, lookAt = {}", m_position,
+   //                    m_upVector, m_rightVector, m_lookAtDirection);
+
+   UpdateViewMatrix();
 }
 
 void

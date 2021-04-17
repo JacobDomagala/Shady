@@ -95,13 +95,6 @@ class VulkanRenderer
    static void
    CreateColorResources();
 
-   static VkFormat
-   FindSupportedFormat(const std::vector< VkFormat >& candidates, VkImageTiling tiling,
-                       VkFormatFeatureFlags features);
-
-   static VkFormat
-   FindDepthFormat();
-
    static bool
    HasStencilComponent(VkFormat format);
 

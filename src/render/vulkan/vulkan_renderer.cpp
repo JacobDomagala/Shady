@@ -36,18 +36,18 @@ struct UniformBufferObject
 
 struct PerInstanceBuffer
 {
-   alignas(16) glm::mat4 model;
+   glm::mat4 model;
+
    int32_t diffuse = {};
    int32_t norm = {};
    int32_t spec = {};
 
-  //  int32_t padding;
+   int32_t padding;
 };
 
 std::vector< PerInstanceBuffer > perInstance;
 std::vector< vulkan::Vertex > vertices;
 std::vector< uint32_t > indices;
-// std::array< std::pair<std::string, VkImageView, 256 > imageViews;
 static int32_t currTexIdx = 0;
 std::unordered_map< std::string, std::pair< int32_t, VkImageView > > textures = {};
 std::vector< VkImageView > texturesVec = {};
@@ -389,12 +389,14 @@ chooseSwapPresentMode(const std::vector< VkPresentModeKHR >& availablePresentMod
 {
    for (const auto& availablePresentMode : availablePresentModes)
    {
+      // VK_PRESENT_MODE_MAILBOX_KHR is the lowest latency non-tearing present mode available
       if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
       {
          return availablePresentMode;
       }
    }
 
+   // VK_PRESENT_MODE_FIFO_KHR is v-sync
    return VK_PRESENT_MODE_FIFO_KHR;
 }
 
@@ -694,38 +696,6 @@ VulkanRenderer::CreateDepthResources()
 
    m_depthImageView =
       Texture::CreateImageView(m_depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
-}
-
-VkFormat
-VulkanRenderer::FindSupportedFormat(const std::vector< VkFormat >& candidates, VkImageTiling tiling,
-                                    VkFormatFeatureFlags features)
-{
-   for (VkFormat format : candidates)
-   {
-      VkFormatProperties props;
-      vkGetPhysicalDeviceFormatProperties(Data::vk_physicalDevice, format, &props);
-
-      if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features)
-      {
-         return format;
-      }
-      else if (tiling == VK_IMAGE_TILING_OPTIMAL
-               && (props.optimalTilingFeatures & features) == features)
-      {
-         return format;
-      }
-   }
-
-   utils::Assert(false, "failed to find supported format!");
-   return {};
-}
-
-VkFormat
-VulkanRenderer::FindDepthFormat()
-{
-   return FindSupportedFormat(
-      {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
-      VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 }
 
 bool
@@ -1071,6 +1041,24 @@ VulkanRenderer::CreateRenderPass()
    subpass.pDepthStencilAttachment = &depthAttachmentRef;
    subpass.pResolveAttachments = &colorAttachmentResolveRef;
 
+	// std::array<VkSubpassDependency, 2> dependencies;
+
+	// dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+	// dependencies[0].dstSubpass = 0;
+	// dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+	// dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	// dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+	// dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+	// dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+	// dependencies[1].srcSubpass = 0;
+	// dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+	// dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	// dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+	// dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+	// dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+	// dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
    VkSubpassDependency dependency{};
    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
    dependency.dstSubpass = 0;
@@ -1195,29 +1183,29 @@ VulkanRenderer::CreateCommandBuffers()
    VK_CHECK(vkAllocateCommandBuffers(Data::vk_device, &allocInfo, m_commandBuffers.data()),
             "failed to allocate command buffers!");
 
+   VkCommandBufferBeginInfo beginInfo{};
+   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+   std::array< VkClearValue, 2 > clearValues{};
+   clearValues[0].color = {0.3f, 0.5f, 0.1f, 1.0f};
+   clearValues[1].depthStencil = {1.0f, 0};
+
+   VkRenderPassBeginInfo renderPassInfo{};
+   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+   renderPassInfo.renderPass = m_renderPass;
+   renderPassInfo.renderArea.offset = {0, 0};
+   renderPassInfo.renderArea.extent = m_swapChainExtent;
+   renderPassInfo.clearValueCount = static_cast< uint32_t >(clearValues.size());
+   renderPassInfo.pClearValues = clearValues.data();
+
    for (size_t i = 0; i < m_commandBuffers.size(); i++)
    {
-      VkCommandBufferBeginInfo beginInfo{};
-      beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
       VK_CHECK(vkBeginCommandBuffer(m_commandBuffers[i], &beginInfo),
                "failed to begin recording command buffer!");
 
-      VkRenderPassBeginInfo renderPassInfoTwo{};
-      renderPassInfoTwo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-      renderPassInfoTwo.renderPass = m_renderPass;
-      renderPassInfoTwo.framebuffer = m_swapChainFramebuffers[i];
-      renderPassInfoTwo.renderArea.offset = {0, 0};
-      renderPassInfoTwo.renderArea.extent = m_swapChainExtent;
+      renderPassInfo.framebuffer = m_swapChainFramebuffers[i];
 
-      std::array< VkClearValue, 2 > clearValues{};
-      clearValues[0].color = {0.3f, 0.5f, 0.1f, 1.0f};
-      clearValues[1].depthStencil = {1.0f, 0};
-
-      renderPassInfoTwo.clearValueCount = static_cast< uint32_t >(clearValues.size());
-      renderPassInfoTwo.pClearValues = clearValues.data();
-
-      vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfoTwo, VK_SUBPASS_CONTENTS_INLINE);
+      vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
       vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
 
@@ -1326,8 +1314,8 @@ VulkanRenderer::CreatePipeline()
    rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
    rasterizer.lineWidth = 1.0f;
    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-   rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
-   // rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+   //rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+   rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
    rasterizer.depthBiasEnable = VK_FALSE;
 
    VkPipelineMultisampleStateCreateInfo multisampling{};

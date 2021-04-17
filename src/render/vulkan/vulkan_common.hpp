@@ -2,8 +2,11 @@
 
 #include "utils/assert.hpp"
 
-#include <vulkan/vulkan.h>
+#include <fmt/format.h>
 #include <array>
+#include <vector>
+#include <vulkan/vulkan.h>
+
 
 #define VK_CHECK(vkFunction, errorMessage)                                              \
    do                                                                                   \
@@ -13,11 +16,10 @@
       {                                                                                 \
          utils::Assert(false, fmt::format("{} Return value {}", errorMessage, result)); \
       }                                                                                 \
-   } while (0);								                                              
+   } while (0);
 
 
 namespace shady::render::vulkan {
-
 
 
 static constexpr bool ENABLE_VALIDATION = true;
@@ -40,5 +42,12 @@ struct Data
 
 uint32_t
 FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
+VkFormat
+FindSupportedFormat(const std::vector< VkFormat >& candidates, VkImageTiling tiling,
+                    VkFormatFeatureFlags features);
+
+VkFormat
+FindDepthFormat();
 
 } // namespace shady::render::vulkan

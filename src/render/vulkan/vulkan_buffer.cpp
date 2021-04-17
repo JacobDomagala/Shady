@@ -10,9 +10,7 @@ namespace shady::render::vulkan {
 void
 Buffer::Map(VkDeviceSize size)
 {
-   const auto sizeToMap = size == WHOLE_BUFFER ? m_bufferSize : size;
-
-   vkMapMemory(Data::vk_device, m_bufferMemory, 0, sizeToMap, 0, &m_mappedMemory);
+   vkMapMemory(Data::vk_device, m_bufferMemory, 0, size, 0, &m_mappedMemory);
    m_mapped = true;
 }
 
@@ -31,6 +29,13 @@ Buffer::CopyData(const void* data)
 {
    utils::Assert(m_mapped, "Buffer is not mapped!");
    memcpy(m_mappedMemory, data, m_bufferSize);
+}
+
+void
+Buffer::SetupDescriptor(VkDeviceSize size, VkDeviceSize offset){
+   m_descriptor.offset = offset;
+	m_descriptor.buffer = m_buffer;
+	m_descriptor.range = m_bufferSize;
 }
 
 static void

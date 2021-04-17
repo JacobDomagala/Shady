@@ -69,6 +69,14 @@ class DeferedPipeline
    inline static Buffer m_compositionBuffer = {};
    inline static int32_t m_debugDisplayTarget = 0;
    inline static std::unique_ptr< scene::Camera > m_camera = {};
+
+   inline static VkSampler m_colorSampler = {};
+
+   inline static std::vector< VkCommandBuffer > m_commandBuffers = {};
+   inline static VkCommandBuffer m_offscreenCommandBuffer = {};
+   inline static VkSemaphore m_offscreenSemaphore = {};
+
+   inline static VkViewport m_viewport = {};
 };
 
 } // namespace shady::render::vulkan

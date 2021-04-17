@@ -15,10 +15,40 @@ Framebuffer::Create(int32_t width, int32_t height)
    SetupRenderPass();
 }
 
+glm::ivec2
+Framebuffer::GetSize()
+{
+   return {m_width, m_height};
+}
+
 VkRenderPass
 Framebuffer::GetRenderPass()
 {
    return m_renderPass;
+}
+
+VkFramebuffer
+Framebuffer::GetFramebuffer()
+{
+   return m_frameBuffer;
+}
+
+VkImageView
+Framebuffer::GetPositionsImageView()
+{
+   return m_position.view;
+}
+
+VkImageView
+Framebuffer::GetNormalsImageView()
+{
+   return m_normal.view;
+}
+
+VkImageView
+Framebuffer::GetAlbedoImageView()
+{
+   return m_albedo.view;
 }
 
 void

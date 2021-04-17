@@ -384,6 +384,109 @@ DeferedPipeline::SetupDescriptorPool()
 void
 DeferedPipeline::SetupDescriptorSet()
 {
+   std::array< VkWriteDescriptorSet, 4 > descriptorWrites{};
+
+   VkDescriptorSetAllocateInfo allocInfo{};
+   allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+   allocInfo.descriptorPool = m_descriptorPool;
+   allocInfo.descriptorSetCount = 1;
+   allocInfo.pSetLayouts = &m_descriptorSetLayout;
+
+   // Image descriptors for the offscreen color attachments
+   VkDescriptorImageInfo positionsImageInfo{};
+   positionsImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+   positionsImageInfo.imageView = m_offscreenFrameBuffer.GetPositionsImageView();
+   positionsImageInfo.sampler = m_colorSampler;
+
+   VkDescriptorImageInfo normalsImageInfo{};
+   normalsImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+   normalsImageInfo.imageView = m_offscreenFrameBuffer.GetNormalsImageView();
+   normalsImageInfo.sampler = m_colorSampler;
+
+   VkDescriptorImageInfo albedoImageInfo{};
+   albedoImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+   albedoImageInfo.imageView = m_offscreenFrameBuffer.GetAlbedoImageView();
+   albedoImageInfo.sampler = m_colorSampler;
+
+   // Deferred composition
+   VK_CHECK(vkAllocateDescriptorSets(Data::vk_device, &allocInfo, &m_descriptorSet), "");
+
+   // Binding 1 : Position texture target
+   descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+   descriptorWrites[0].dstSet = m_descriptorSet;
+   descriptorWrites[0].dstBinding = 1;
+   descriptorWrites[0].dstArrayElement = 0;
+   descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+   descriptorWrites[0].descriptorCount = 1;
+   descriptorWrites[0].pImageInfo = &positionsImageInfo;
+
+   // Binding 2 : Normals texture target
+   descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+   descriptorWrites[1].dstSet = m_descriptorSet;
+   descriptorWrites[1].dstBinding = 2;
+   descriptorWrites[1].dstArrayElement = 0;
+   descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+   descriptorWrites[1].descriptorCount = 1;
+   descriptorWrites[1].pImageInfo = &normalsImageInfo;
+
+   // Binding 3 : Albedo texture target
+   descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+   descriptorWrites[2].dstSet = m_descriptorSet;
+   descriptorWrites[2].dstBinding = 3;
+   descriptorWrites[2].dstArrayElement = 0;
+   descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+   descriptorWrites[2].descriptorCount = 1;
+   descriptorWrites[2].pImageInfo = &albedoImageInfo;
+
+   // Binding 4 : Fragment shader uniform buffer
+   descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+   descriptorWrites[3].dstSet = m_descriptorSet;
+   descriptorWrites[3].dstBinding = 4;
+   descriptorWrites[3].dstArrayElement = 0;
+   descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+   descriptorWrites[3].descriptorCount = 1;
+   descriptorWrites[3].pBufferInfo = &m_compositionBuffer.m_descriptor;
+
+   vkUpdateDescriptorSets(Data::vk_device, static_cast< uint32_t >(descriptorWrites.size()),
+                          descriptorWrites.data(), 0, nullptr);
+
+   // Offscreen (scene)
+
+   // Model
+   //    VK_CHECK(vkAllocateDescriptorSets(Data::vk_device, &allocInfo, &descriptorSets.model), "");
+   //    writeDescriptorSets = {
+   //       // Binding 0: Vertex shader uniform buffer
+   //       vks::initializers::writeDescriptorSet(descriptorSets.model,
+   //       VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+   //                                             0, &uniformBuffers.offscreen.descriptor),
+   //       // Binding 1: Color map
+   //       vks::initializers::writeDescriptorSet(descriptorSets.model,
+   //                                             VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1,
+   //                                             &textures.model.colorMap.descriptor),
+   //       // Binding 2: Normal map
+   //       vks::initializers::writeDescriptorSet(descriptorSets.model,
+   //                                             VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 2,
+   //                                             &textures.model.normalMap.descriptor)};
+   //    vkUpdateDescriptorSets(device, static_cast< uint32_t >(writeDescriptorSets.size()),
+   //                           writeDescriptorSets.data(), 0, nullptr);
+
+   //    // Background
+   //    VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &allocInfo, &descriptorSets.floor));
+   //    writeDescriptorSets = {
+   //       // Binding 0: Vertex shader uniform buffer
+   //       vks::initializers::writeDescriptorSet(descriptorSets.floor,
+   //       VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+   //                                             0, &uniformBuffers.offscreen.descriptor),
+   //       // Binding 1: Color map
+   //       vks::initializers::writeDescriptorSet(descriptorSets.floor,
+   //                                             VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1,
+   //                                             &textures.floor.colorMap.descriptor),
+   //       // Binding 2: Normal map
+   //       vks::initializers::writeDescriptorSet(descriptorSets.floor,
+   //                                             VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 2,
+   //                                             &textures.floor.normalMap.descriptor)};
+   //    vkUpdateDescriptorSets(device, static_cast< uint32_t >(writeDescriptorSets.size()),
+   //                           writeDescriptorSets.data(), 0, nullptr);
 }
 
 void
@@ -394,6 +497,81 @@ DeferedPipeline::BuildCommandBuffers()
 void
 DeferedPipeline::BuildDeferredCommandBuffer()
 {
+   if (m_offscreenCommandBuffer == VK_NULL_HANDLE)
+   {
+      VkCommandBufferAllocateInfo allocInfo{};
+      allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+      allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+      allocInfo.commandPool = Data::vk_commandPool;
+      allocInfo.commandBufferCount = static_cast< uint32_t >(m_commandBuffers.size());
+
+      VK_CHECK(vkAllocateCommandBuffers(Data::vk_device, &allocInfo, &m_offscreenCommandBuffer),
+               "");
+   }
+
+   // Create a semaphore used to synchronize offscreen rendering and usage
+   VkSemaphoreCreateInfo semaphoreCreateInfo{};
+   semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+   VK_CHECK(
+      vkCreateSemaphore(Data::vk_device, &semaphoreCreateInfo, nullptr, &m_offscreenSemaphore), "");
+
+   VkCommandBufferBeginInfo cmdBufInfo{};
+   cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+   // Clear values for all attachments written in the fragment shader
+   std::array< VkClearValue, 4 > clearValues;
+   clearValues[0].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
+   clearValues[1].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
+   clearValues[2].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
+   clearValues[3].depthStencil = {1.0f, 0};
+
+   VkRenderPassBeginInfo renderPassBeginInfo = {};
+   renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+   renderPassBeginInfo.renderPass = m_offscreenFrameBuffer.GetRenderPass();
+   renderPassBeginInfo.framebuffer = m_offscreenFrameBuffer.GetFramebuffer();
+   renderPassBeginInfo.renderArea.extent.width = m_offscreenFrameBuffer.GetSize().x;
+   renderPassBeginInfo.renderArea.extent.height = m_offscreenFrameBuffer.GetSize().y;
+   renderPassBeginInfo.clearValueCount = static_cast< uint32_t >(clearValues.size());
+   renderPassBeginInfo.pClearValues = clearValues.data();
+
+   VK_CHECK(vkBeginCommandBuffer(m_offscreenCommandBuffer, &cmdBufInfo), "");
+
+   vkCmdBeginRenderPass(m_offscreenCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+			VkViewport viewport {};
+			viewport.width = m_offscreenFrameBuffer.GetSize().x;
+			viewport.height = m_offscreenFrameBuffer.GetSize().y;
+			viewport.minDepth = 0.0f;
+			viewport.maxDepth = 1.0f;
+
+   vkCmdSetViewport(m_offscreenCommandBuffer, 0, 1, &viewport);
+
+			VkRect2D scissor {};
+			scissor.extent.width = m_offscreenFrameBuffer.GetSize().x;
+			scissor.extent.height =  m_offscreenFrameBuffer.GetSize().y;
+			scissor.offset.x = 0;
+			scissor.offset.y = 0;
+
+   vkCmdSetScissor(m_offscreenCommandBuffer, 0, 1, &scissor);
+
+   vkCmdBindPipeline(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                     m_offscreenPipeline);
+
+//    // Background
+//    vkCmdBindDescriptorSets(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+//                            m_pipelineLayout, 0, 1, &descriptorSets.floor, 0, nullptr);
+//    models.floor.draw(m_offscreenCommandBuffer);
+
+//    // Instanced object
+//    vkCmdBindDescriptorSets(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+//                            m_pipelineLayout, 0, 1, &descriptorSets.model, 0, nullptr);
+//    models.model.bindBuffers(m_offscreenCommandBuffer);
+//    vkCmdDrawIndexed(m_offscreenCommandBuffer, models.model.indices.count, 3, 0, 0, 0);
+
+   vkCmdEndRenderPass(m_offscreenCommandBuffer);
+
+   VK_CHECK(vkEndCommandBuffer(m_offscreenCommandBuffer), "");
 }
 
 

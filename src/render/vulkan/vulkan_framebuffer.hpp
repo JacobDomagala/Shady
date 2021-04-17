@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
+#include <glm/glm.hpp>
 
 namespace shady::render::vulkan {
 
@@ -18,14 +19,31 @@ class Framebuffer
    void
    Create(int32_t width, int32_t height);
 
+   glm::ivec2
+   GetSize();
+
    VkRenderPass
    GetRenderPass();
+
+   VkFramebuffer
+   GetFramebuffer();
 
    void
    CreateAttachments();
 
    void
    SetupRenderPass();
+
+   VkImageView
+   GetPositionsImageView();
+
+   VkImageView
+   GetNormalsImageView();
+
+   VkImageView
+   GetAlbedoImageView();
+
+
 
  private:
    void

@@ -4,6 +4,7 @@
 
 #include "render/vulkan/vertex.hpp"
 #include "vulkan/types.hpp"
+#include "defered_pipeline.hpp"
 
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
@@ -62,6 +63,9 @@ class VulkanRenderer
 
    static void
    CreateCommandBuffers();
+
+   static void
+   CreateCommandBufferForDeferred();
 
    static void
    CreateSyncObjects();
@@ -156,6 +160,8 @@ class VulkanRenderer
    inline static uint32_t m_currentVertex = {};
    inline static uint32_t m_currentIndex = {};
    inline static uint32_t m_numMeshes = {};
+
+  inline static DeferedPipeline m_deferredPipeline = {};
 };
 
 } // namespace shady::render::vulkan

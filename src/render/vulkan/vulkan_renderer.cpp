@@ -24,6 +24,7 @@ namespace shady::render::vulkan {
 
 size_t currentFrame = 0;
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+static bool is_deferred = false;
 
 struct UniformBufferObject
 {
@@ -630,18 +631,30 @@ VulkanRenderer::Initialize(GLFWwindow* windowHandle)
    CreateSwapchain(windowHandle);
    CreateImageViews();
    CreateCommandPool();
+
+
 }
 
 void
 VulkanRenderer::CreateRenderPipeline()
 {
    CreateRenderPass();
-   CreateDescriptorSetLayout();
-   CreatePipeline();
-   CreateColorResources();
-   CreateDepthResources();
-   CreateFramebuffers();
-   CreateCommandBuffers();
+
+   if (!is_deferred)
+   {
+      CreateDescriptorSetLayout();
+      CreatePipeline();
+      CreateColorResources();
+      CreateDepthResources();
+      CreateFramebuffers();
+      CreateCommandBuffers();
+   }
+   else
+   {
+      m_deferredPipeline.Initialize(m_renderPass);
+      CreateCommandBufferForDeferred();
+   }
+
    CreateSyncObjects();
 }
 
@@ -1041,23 +1054,25 @@ VulkanRenderer::CreateRenderPass()
    subpass.pDepthStencilAttachment = &depthAttachmentRef;
    subpass.pResolveAttachments = &colorAttachmentResolveRef;
 
-	std::array<VkSubpassDependency, 2> dependencies;
+   std::array< VkSubpassDependency, 2 > dependencies;
 
-	dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-	dependencies[0].dstSubpass = 0;
-	dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-	dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-	dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-	dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+   dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+   dependencies[0].dstSubpass = 0;
+   dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+   dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+   dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+   dependencies[0].dstAccessMask =
+      VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+   dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-	dependencies[1].srcSubpass = 0;
-	dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-	dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-	dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-	dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-	dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+   dependencies[1].srcSubpass = 0;
+   dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+   dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+   dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+   dependencies[1].srcAccessMask =
+      VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+   dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+   dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
    // VkSubpassDependency dependency{};
    // dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -1075,7 +1090,8 @@ VulkanRenderer::CreateRenderPass()
    renderPassInfo.pAttachments = attachments.data();
    renderPassInfo.subpassCount = 1;
    renderPassInfo.pSubpasses = &subpass;
-   renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());;
+   renderPassInfo.dependencyCount = static_cast< uint32_t >(dependencies.size());
+   ;
    renderPassInfo.pDependencies = dependencies.data();
 
    VK_CHECK(vkCreateRenderPass(Data::vk_device, &renderPassInfo, nullptr, &m_renderPass),
@@ -1237,6 +1253,78 @@ VulkanRenderer::CreateCommandBuffers()
 }
 
 void
+VulkanRenderer::CreateCommandBufferForDeferred()
+{
+   m_commandBuffers.resize(m_swapChainFramebuffers.size());
+
+   VkCommandBufferAllocateInfo allocInfo{};
+   allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+   allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+   allocInfo.commandPool = Data::vk_commandPool;
+   allocInfo.commandBufferCount = static_cast< uint32_t >(m_commandBuffers.size());
+
+   VK_CHECK(vkAllocateCommandBuffers(Data::vk_device, &allocInfo, m_commandBuffers.data()),
+            "failed to allocate command buffers!");
+
+   VkCommandBufferBeginInfo beginInfo{};
+   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+   std::array< VkClearValue, 2 > clearValues{};
+   clearValues[0].color = {0.3f, 0.5f, 0.1f, 1.0f};
+   clearValues[1].depthStencil = {1.0f, 0};
+
+   VkRenderPassBeginInfo renderPassInfo{};
+   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+   renderPassInfo.renderPass = m_renderPass;
+   renderPassInfo.renderArea.offset = {0, 0};
+   renderPassInfo.renderArea.extent = m_swapChainExtent;
+   renderPassInfo.clearValueCount = static_cast< uint32_t >(clearValues.size());
+   renderPassInfo.pClearValues = clearValues.data();
+
+   for (int32_t i = 0; i < m_commandBuffers.size(); ++i)
+   {
+      renderPassInfo.framebuffer = m_swapChainFramebuffers[i];
+
+      VK_CHECK(vkBeginCommandBuffer(m_commandBuffers[i], &beginInfo), "");
+
+      vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+      VkViewport viewport{};
+      viewport.width = m_swapChainExtent.width;
+      viewport.height = m_swapChainExtent.height;
+      viewport.minDepth = 0.0f;
+      viewport.maxDepth = 1.0f;
+
+      vkCmdSetViewport(m_commandBuffers[i], 0, 1, &viewport);
+
+      VkRect2D scissor{};
+      scissor.extent.width = m_swapChainExtent.width;
+      scissor.extent.height = m_swapChainExtent.height;
+      scissor.offset.x = 0;
+      scissor.offset.y = 0;
+
+      vkCmdSetScissor(m_commandBuffers[i], 0, 1, &scissor);
+
+
+      vkCmdBindDescriptorSets(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
+                              m_pipelineLayout, 0, 1, &m_deferredPipeline.GetDescriptorSet(), 0,
+                              nullptr);
+
+      vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
+                        m_deferredPipeline.GetCompositionPipeline());
+      // Final composition as full screen quad
+      // Note: Also used for debug display if debugDisplayTarget > 0
+      vkCmdDraw(m_commandBuffers[i], 3, 1, 0, 0);
+
+      // drawUI(drawCmdBuffers[i]);
+
+      vkCmdEndRenderPass(m_commandBuffers[i]);
+
+      VK_CHECK(vkEndCommandBuffer(m_commandBuffers[i]), "");
+   }
+}
+
+void
 VulkanRenderer::CreateSyncObjects()
 {
    m_imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -1314,7 +1402,7 @@ VulkanRenderer::CreatePipeline()
    rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
    rasterizer.lineWidth = 1.0f;
    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-   //rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+   // rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
    rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
    rasterizer.depthBiasEnable = VK_FALSE;
 

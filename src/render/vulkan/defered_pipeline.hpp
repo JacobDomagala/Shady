@@ -18,6 +18,13 @@ class DeferedPipeline
    void
    Initialize(VkRenderPass mainRenderPass);
 
+   VkDescriptorSet&
+   GetDescriptorSet();
+
+    VkPipeline
+    GetCompositionPipeline();
+
+
  private:
    // Prepare a new framebuffer and attachments for offscreen rendering (G-Buffer)
    void
@@ -37,9 +44,6 @@ class DeferedPipeline
 
    void
    SetupDescriptorSet();
-
-   void
-   BuildCommandBuffers();
 
    void
    BuildDeferredCommandBuffer();

@@ -35,6 +35,18 @@ struct
    int debugDisplayTarget = 0;
 } uboComposition;
 
+VkDescriptorSet&
+DeferedPipeline::GetDescriptorSet()
+{
+   return m_descriptorSet;
+}
+
+VkPipeline
+DeferedPipeline::GetCompositionPipeline()
+{
+   return m_compositionPipeline;
+}
+
 // Update matrices used for the offscreen rendering of the scene
 void
 DeferedPipeline::UpdateUniformBufferOffscreen()
@@ -113,7 +125,6 @@ DeferedPipeline::Initialize(VkRenderPass mainRenderPass)
    SetupDescriptorPool();
    SetupDescriptorSet();
 
-   BuildCommandBuffers();
    BuildDeferredCommandBuffer();
 }
 
@@ -490,11 +501,6 @@ DeferedPipeline::SetupDescriptorSet()
 }
 
 void
-DeferedPipeline::BuildCommandBuffers()
-{
-}
-
-void
 DeferedPipeline::BuildDeferredCommandBuffer()
 {
    if (m_offscreenCommandBuffer == VK_NULL_HANDLE)
@@ -539,35 +545,35 @@ DeferedPipeline::BuildDeferredCommandBuffer()
 
    vkCmdBeginRenderPass(m_offscreenCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-			VkViewport viewport {};
-			viewport.width = m_offscreenFrameBuffer.GetSize().x;
-			viewport.height = m_offscreenFrameBuffer.GetSize().y;
-			viewport.minDepth = 0.0f;
-			viewport.maxDepth = 1.0f;
+   VkViewport viewport{};
+   viewport.width = m_offscreenFrameBuffer.GetSize().x;
+   viewport.height = m_offscreenFrameBuffer.GetSize().y;
+   viewport.minDepth = 0.0f;
+   viewport.maxDepth = 1.0f;
 
    vkCmdSetViewport(m_offscreenCommandBuffer, 0, 1, &viewport);
 
-			VkRect2D scissor {};
-			scissor.extent.width = m_offscreenFrameBuffer.GetSize().x;
-			scissor.extent.height =  m_offscreenFrameBuffer.GetSize().y;
-			scissor.offset.x = 0;
-			scissor.offset.y = 0;
+   VkRect2D scissor{};
+   scissor.extent.width = m_offscreenFrameBuffer.GetSize().x;
+   scissor.extent.height = m_offscreenFrameBuffer.GetSize().y;
+   scissor.offset.x = 0;
+   scissor.offset.y = 0;
 
    vkCmdSetScissor(m_offscreenCommandBuffer, 0, 1, &scissor);
 
    vkCmdBindPipeline(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                      m_offscreenPipeline);
 
-//    // Background
-//    vkCmdBindDescriptorSets(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-//                            m_pipelineLayout, 0, 1, &descriptorSets.floor, 0, nullptr);
-//    models.floor.draw(m_offscreenCommandBuffer);
+   //    // Background
+   //    vkCmdBindDescriptorSets(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+   //                            m_pipelineLayout, 0, 1, &descriptorSets.floor, 0, nullptr);
+   //    models.floor.draw(m_offscreenCommandBuffer);
 
-//    // Instanced object
-//    vkCmdBindDescriptorSets(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-//                            m_pipelineLayout, 0, 1, &descriptorSets.model, 0, nullptr);
-//    models.model.bindBuffers(m_offscreenCommandBuffer);
-//    vkCmdDrawIndexed(m_offscreenCommandBuffer, models.model.indices.count, 3, 0, 0, 0);
+   //    // Instanced object
+   //    vkCmdBindDescriptorSets(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+   //                            m_pipelineLayout, 0, 1, &descriptorSets.model, 0, nullptr);
+   //    models.model.bindBuffers(m_offscreenCommandBuffer);
+   //    vkCmdDrawIndexed(m_offscreenCommandBuffer, models.model.indices.count, 3, 0, 0, 0);
 
    vkCmdEndRenderPass(m_offscreenCommandBuffer);
 

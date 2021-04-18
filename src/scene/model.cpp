@@ -166,11 +166,6 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
          vector.y = mesh->mTangents[i].y;
          vector.z = mesh->mTangents[i].z;
          vertex.m_tangent = vector;
-
-         vector.x = mesh->mBitangents[i].x;
-         vector.y = mesh->mBitangents[i].y;
-         vector.z = mesh->mBitangents[i].z;
-         vertex.m_bitangent = vector;
       }
 
       vertices.push_back(vertex);
@@ -231,29 +226,25 @@ Model::CreatePlane()
                                      {25.0f, -0.5f, 25.0f},   // Position
                                      {0.0f, 1.0f, 0.0f},      // Normal
                                      {25.0f, 0.0f},           // Texcoord
-                                     {50.0f, 0.0f, 0.0f},     // Tangent
-                                     {0.0f, 1.0f, 0.0f}     // Bitangent
+                                     {50.0f, 0.0f, 0.0f}     // Tangent
                                   },
                                   {
                                      {-25.0f, -0.5f, 25.0f},  // Position
                                      {0.0f, 1.0f, 0.0f},      // Normal
                                      {0.0f, 0.0f},            // Texcoord
-                                     {50.0f, 0.0f, 0.0f},     // Tangent
-                                     {0.0f, 1.0f, 0.0f}      // Bitangent
+                                     {50.0f, 0.0f, 0.0f}     // Tangent
                                   },
                                   {
                                      {-25.0f, -0.5f, -25.0f}, // Position
                                      {0.0f, 1.0f, 0.0f},      // Normal
                                      {0.0f, 25.0f},           // Texcoord
-                                     {50.0f, 0.0f, 0.0f},     // Tangent
-                                     {0.0f, 1.0f, 0.0f}       // Bitangent
+                                     {50.0f, 0.0f, 0.0f}     // Tangent
                                   },
                                   {
                                      {25.0f, -0.5f, -25.0f},  // Position
                                      {0.0f, 1.0f, 0.0f},      // Normal
                                      {25.0f, 25.0f},          // Texcoord
-                                     {50.0f, 0.0f, 0.0f},     // Tangent
-                                     {0.0f, 1.0f, 0.0f}       // Bitangent
+                                     {50.0f, 0.0f, 0.0f}     // Tangent
                                   }},
                                  {2, 1, 0, 3, 2, 0}, // Indices
                                  {}});

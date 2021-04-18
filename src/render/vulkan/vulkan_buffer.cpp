@@ -77,6 +77,7 @@ Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryProper
    Buffer newBuffer;
    newBuffer.m_bufferSize = size;
    CreateBuffer(size, usage, properties, newBuffer.m_buffer, newBuffer.m_bufferMemory);
+   newBuffer.SetupDescriptor();
 
    return newBuffer;
 }

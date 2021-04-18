@@ -113,7 +113,8 @@ DeferedPipeline::UpdateUniformBufferComposition()
 }
 
 void
-DeferedPipeline::Initialize(VkRenderPass mainRenderPass)
+DeferedPipeline::Initialize(VkRenderPass mainRenderPass,
+                            const std::vector< VkImageView >& swapchainFramebuffers)
 {
    m_mainRenderPass = mainRenderPass;
    m_camera = std::make_unique< scene::PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 500.0f);
@@ -125,7 +126,7 @@ DeferedPipeline::Initialize(VkRenderPass mainRenderPass)
    SetupDescriptorPool();
    SetupDescriptorSet();
 
-   BuildDeferredCommandBuffer();
+   BuildDeferredCommandBuffer(swapchainFramebuffers);
 }
 
 void
@@ -302,6 +303,8 @@ DeferedPipeline::PreparePipelines()
    pipelineInfo.pColorBlendState = &colorBlending;
    pipelineInfo.layout = m_pipelineLayout;
    pipelineInfo.renderPass = m_mainRenderPass;
+   pipelineInfo.pDynamicState = &pipelineDynamicStateCreateInfo;
+
    pipelineInfo.subpass = 0;
    pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
@@ -407,17 +410,17 @@ DeferedPipeline::SetupDescriptorSet()
    VkDescriptorImageInfo positionsImageInfo{};
    positionsImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
    positionsImageInfo.imageView = m_offscreenFrameBuffer.GetPositionsImageView();
-   positionsImageInfo.sampler = m_colorSampler;
+   positionsImageInfo.sampler = m_offscreenFrameBuffer.GetSampler();
 
    VkDescriptorImageInfo normalsImageInfo{};
    normalsImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
    normalsImageInfo.imageView = m_offscreenFrameBuffer.GetNormalsImageView();
-   normalsImageInfo.sampler = m_colorSampler;
+   normalsImageInfo.sampler = m_offscreenFrameBuffer.GetSampler();
 
    VkDescriptorImageInfo albedoImageInfo{};
    albedoImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
    albedoImageInfo.imageView = m_offscreenFrameBuffer.GetAlbedoImageView();
-   albedoImageInfo.sampler = m_colorSampler;
+   albedoImageInfo.sampler = m_offscreenFrameBuffer.GetSampler();
 
    // Deferred composition
    VK_CHECK(vkAllocateDescriptorSets(Data::vk_device, &allocInfo, &m_descriptorSet), "");
@@ -501,10 +504,12 @@ DeferedPipeline::SetupDescriptorSet()
 }
 
 void
-DeferedPipeline::BuildDeferredCommandBuffer()
+DeferedPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& swapChainImageViews)
 {
    if (m_offscreenCommandBuffer == VK_NULL_HANDLE)
    {
+      m_commandBuffers.resize(swapChainImageViews.size());
+
       VkCommandBufferAllocateInfo allocInfo{};
       allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
       allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -578,6 +583,50 @@ DeferedPipeline::BuildDeferredCommandBuffer()
    vkCmdEndRenderPass(m_offscreenCommandBuffer);
 
    VK_CHECK(vkEndCommandBuffer(m_offscreenCommandBuffer), "");
+}
+
+void
+DeferedPipeline::DrawDeferred()
+{
+   // swapChain.acquireNextImage
+   // VulkanExampleBase::prepareFrame();
+
+   // The scene render command buffer has to wait for the offscreen
+   // rendering to be finished before we can use the framebuffer
+   // color image for sampling during final rendering
+   // To ensure this we use a dedicated offscreen synchronization
+   // semaphore that will be signaled when offscreen renderin
+   // has been finished
+   // This is necessary as an implementation may start both
+   // command buffers at the same time, there is no guarantee
+   // that command buffers will be executed in the order they
+   // have been submitted by the application
+
+   // Offscreen rendering
+
+   // Wait for swap chain presentation to finish
+   //submitInfo.pWaitSemaphores = &semaphores.presentComplete;
+   //// Signal ready with offscreen semaphore
+   //submitInfo.pSignalSemaphores = &offscreenSemaphore;
+
+   //// Submit work
+   //submitInfo.commandBufferCount = 1;
+   //submitInfo.pCommandBuffers = &offScreenCmdBuffer;
+   //VK_CHECK(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE), "");
+
+   //// Scene rendering
+
+   //// Wait for offscreen semaphore
+   //submitInfo.pWaitSemaphores = &offscreenSemaphore;
+   //// Signal ready with render complete semaphore
+   //submitInfo.pSignalSemaphores = &semaphores.renderComplete;
+
+   //// Submit work
+   //submitInfo.pCommandBuffers = &drawCmdBuffers[currentBuffer];
+   //VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
+
+   // swapChain.acquireNextImage
+   // VulkanExampleBase::submitFrame();
 }
 
 

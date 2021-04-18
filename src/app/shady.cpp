@@ -71,7 +71,8 @@ Shady::MainLoop()
          glm::vec4(m_currentScene.GetLight().GetPosition(), 0.0f);
 
 
-      render::vulkan::VulkanRenderer::Draw();
+      // render::vulkan::VulkanRenderer::Draw();
+      render::vulkan::VulkanRenderer::DrawDeferred();
       m_window->SwapBuffers();
    }
 }

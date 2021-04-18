@@ -27,6 +27,9 @@ class VulkanRenderer
    Draw();
 
    static void
+   DrawDeferred();
+
+   static void
    MeshLoaded(const std::vector< vulkan::Vertex >& vertices,
               const std::vector< uint32_t >& indicies, const TextureMaps& textures,
               const glm::mat4& modelMat);

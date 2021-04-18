@@ -24,7 +24,7 @@ namespace shady::render::vulkan {
 
 size_t currentFrame = 0;
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
-static bool is_deferred = false;
+static bool is_deferred = true;
 
 struct UniformBufferObject
 {
@@ -651,7 +651,7 @@ VulkanRenderer::CreateRenderPipeline()
    }
    else
    {
-      m_deferredPipeline.Initialize(m_renderPass);
+      m_deferredPipeline.Initialize(m_renderPass, m_swapChainImageViews);
       CreateCommandBufferForDeferred();
    }
 
@@ -715,6 +715,27 @@ bool
 VulkanRenderer::HasStencilComponent(VkFormat format)
 {
    return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
+}
+
+void
+VulkanRenderer::DrawDeferred()
+{
+   // vkWaitForFences(Data::vk_device, 1, &m_inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+   // uint32_t imageIndex;
+   // vkAcquireNextImageKHR(Data::vk_device, m_swapChain, UINT64_MAX,
+   //                       m_imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+   // if (m_imagesInFlight[imageIndex] != VK_NULL_HANDLE)
+   // {
+   //    vkWaitForFences(Data::vk_device, 1, &m_imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
+   // }
+
+   //  m_imagesInFlight[imageIndex] = m_inFlightFences[currentFrame];
+
+   //     VkSubmitInfo submitInfo{};
+   // submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+   // VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphores[currentFrame]};
+   Draw();
 }
 
 void
@@ -1005,8 +1026,8 @@ VulkanRenderer::CreateRenderPass()
 {
    VkAttachmentDescription colorAttachment{};
    colorAttachment.format = m_swapChainImageFormat;
-   // colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-   colorAttachment.samples = m_msaaSamples;
+   colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+   // colorAttachment.samples = m_msaaSamples;
    colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
    colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
    colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -1016,8 +1037,8 @@ VulkanRenderer::CreateRenderPass()
 
    VkAttachmentDescription depthAttachment{};
    depthAttachment.format = FindDepthFormat();
-   // depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-   depthAttachment.samples = m_msaaSamples;
+   depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+   //depthAttachment.samples = m_msaaSamples;
    depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
    depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
    depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -1052,7 +1073,7 @@ VulkanRenderer::CreateRenderPass()
    subpass.colorAttachmentCount = 1;
    subpass.pColorAttachments = &colorAttachmentRef;
    subpass.pDepthStencilAttachment = &depthAttachmentRef;
-   subpass.pResolveAttachments = &colorAttachmentResolveRef;
+   // subpass.pResolveAttachments = &colorAttachmentResolveRef;
 
    std::array< VkSubpassDependency, 2 > dependencies;
 
@@ -1086,12 +1107,12 @@ VulkanRenderer::CreateRenderPass()
                                                            colorAttachmentResolve};
    VkRenderPassCreateInfo renderPassInfo{};
    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-   renderPassInfo.attachmentCount = static_cast< uint32_t >(attachments.size());
+   renderPassInfo.attachmentCount = 2;
+   //static_cast< uint32_t >(attachments.size());
    renderPassInfo.pAttachments = attachments.data();
    renderPassInfo.subpassCount = 1;
    renderPassInfo.pSubpasses = &subpass;
    renderPassInfo.dependencyCount = static_cast< uint32_t >(dependencies.size());
-   ;
    renderPassInfo.pDependencies = dependencies.data();
 
    VK_CHECK(vkCreateRenderPass(Data::vk_device, &renderPassInfo, nullptr, &m_renderPass),
@@ -1255,7 +1276,7 @@ VulkanRenderer::CreateCommandBuffers()
 void
 VulkanRenderer::CreateCommandBufferForDeferred()
 {
-   m_commandBuffers.resize(m_swapChainFramebuffers.size());
+   m_commandBuffers.resize(m_swapChainImageViews.size());
 
    VkCommandBufferAllocateInfo allocInfo{};
    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;

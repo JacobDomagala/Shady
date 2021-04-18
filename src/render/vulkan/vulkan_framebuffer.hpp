@@ -43,7 +43,8 @@ class Framebuffer
    VkImageView
    GetAlbedoImageView();
 
-
+   VkSampler
+   GetSampler();
 
  private:
    void

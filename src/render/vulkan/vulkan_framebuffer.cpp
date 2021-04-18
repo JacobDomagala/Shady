@@ -33,6 +33,12 @@ Framebuffer::GetFramebuffer()
    return m_frameBuffer;
 }
 
+VkSampler
+Framebuffer::GetSampler()
+{
+   return m_colorSampler;
+}
+
 VkImageView
 Framebuffer::GetPositionsImageView()
 {

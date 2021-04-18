@@ -16,16 +16,20 @@ class DeferedPipeline
 {
  public:
    void
-   Initialize(VkRenderPass mainRenderPass, const std::vector< VkImageView >& swapChainImageViews);
+   Initialize(VkRenderPass mainRenderPass, const std::vector< VkImageView >& swapChainImageViews,
+              VkPipelineCache pipelineCache);
 
    VkDescriptorSet&
    GetDescriptorSet();
 
-    VkPipeline
-    GetCompositionPipeline();
+   VkPipelineLayout
+   GetPipelineLayout();
 
-    void
-    DrawDeferred();
+   VkPipeline
+   GetCompositionPipeline();
+
+   void
+   DrawDeferred();
 
  private:
    // Prepare a new framebuffer and attachments for offscreen rendering (G-Buffer)

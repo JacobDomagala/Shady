@@ -2,13 +2,15 @@
 
 #include "shader.hpp"
 
+#include "defered_pipeline.hpp"
 #include "render/vulkan/vertex.hpp"
 #include "vulkan/types.hpp"
-#include "defered_pipeline.hpp"
+
 
 #include <glm/glm.hpp>
-#include <vulkan/vulkan.h>
 #include <vector>
+#include <vulkan/vulkan.h>
+
 
 struct GLFWwindow;
 
@@ -72,6 +74,9 @@ class VulkanRenderer
 
    static void
    CreateSyncObjects();
+
+   static void
+   CreatePipelineCache();
 
    static void
    CreatePipeline();
@@ -147,7 +152,7 @@ class VulkanRenderer
    inline static std::vector< VkDeviceMemory > m_uniformBuffersMemory = {};
 
    inline static std::vector< VkBuffer > m_ssbo = {};
-   inline static std::vector < VkDeviceMemory > m_ssboMemory = {};
+   inline static std::vector< VkDeviceMemory > m_ssboMemory = {};
 
    inline static VkImage m_depthImage = {};
    inline static VkDeviceMemory m_depthImageMemory = {};
@@ -157,14 +162,15 @@ class VulkanRenderer
    inline static VkDeviceMemory m_colorImageMemory = {};
    inline static VkImageView m_colorImageView = {};
 
-   inline static std::vector<VkDrawIndexedIndirectCommand> m_renderCommands = {};
+   inline static std::vector< VkDrawIndexedIndirectCommand > m_renderCommands = {};
    inline static VkBuffer m_indirectDrawsBuffer = {};
    inline static VkDeviceMemory m_indirectDrawsBufferMemory = {};
    inline static uint32_t m_currentVertex = {};
    inline static uint32_t m_currentIndex = {};
    inline static uint32_t m_numMeshes = {};
 
-  inline static DeferedPipeline m_deferredPipeline = {};
+   inline static VkPipelineCache m_pipelineCache = {};
+   inline static DeferedPipeline m_deferredPipeline = {};
 };
 
 } // namespace shady::render::vulkan

@@ -631,8 +631,16 @@ VulkanRenderer::Initialize(GLFWwindow* windowHandle)
    CreateSwapchain(windowHandle);
    CreateImageViews();
    CreateCommandPool();
+}
 
-
+void
+VulkanRenderer::CreatePipelineCache()
+{
+   VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
+   pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+   VK_CHECK(
+      vkCreatePipelineCache(Data::vk_device, &pipelineCacheCreateInfo, nullptr, &m_pipelineCache),
+      "");
 }
 
 void
@@ -640,18 +648,20 @@ VulkanRenderer::CreateRenderPipeline()
 {
    CreateRenderPass();
 
+   // CreateDescriptorSetLayout();
+   // CreatePipeline();
+   CreateColorResources();
+   CreateDepthResources();
+   CreateFramebuffers();
+   CreatePipelineCache();
+   // CreateCommandBuffers();
+
    if (!is_deferred)
    {
-      CreateDescriptorSetLayout();
-      CreatePipeline();
-      CreateColorResources();
-      CreateDepthResources();
-      CreateFramebuffers();
-      CreateCommandBuffers();
    }
    else
    {
-      m_deferredPipeline.Initialize(m_renderPass, m_swapChainImageViews);
+      m_deferredPipeline.Initialize(m_renderPass, m_swapChainImageViews, m_pipelineCache);
       CreateCommandBufferForDeferred();
    }
 
@@ -686,7 +696,8 @@ VulkanRenderer::CreateColorResources()
    VkFormat colorFormat = m_swapChainImageFormat;
 
    std::tie(m_colorImage, m_colorImageMemory) = Texture::CreateImage(
-      m_swapChainExtent.width, m_swapChainExtent.height, 1, m_msaaSamples, colorFormat,
+      m_swapChainExtent.width, m_swapChainExtent.height, 1, VK_SAMPLE_COUNT_1_BIT /*m_msaaSamples*/,
+      colorFormat,
       VK_IMAGE_TILING_OPTIMAL,
       VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
@@ -700,7 +711,8 @@ VulkanRenderer::CreateDepthResources()
    VkFormat depthFormat = FindDepthFormat();
 
    const auto [depthImage, depthImageMemory] = Texture::CreateImage(
-      m_swapChainExtent.width, m_swapChainExtent.height, 1, m_msaaSamples, depthFormat,
+      m_swapChainExtent.width, m_swapChainExtent.height, 1, VK_SAMPLE_COUNT_1_BIT /*m_msaaSamples*/,
+      depthFormat,
       VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
@@ -747,7 +759,7 @@ VulkanRenderer::Draw()
    vkAcquireNextImageKHR(Data::vk_device, m_swapChain, UINT64_MAX,
                          m_imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
-   UpdateUniformBuffer(imageIndex);
+   // UpdateUniformBuffer(imageIndex);
    if (m_imagesInFlight[imageIndex] != VK_NULL_HANDLE)
    {
       vkWaitForFences(Data::vk_device, 1, &m_imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
@@ -1038,7 +1050,7 @@ VulkanRenderer::CreateRenderPass()
    VkAttachmentDescription depthAttachment{};
    depthAttachment.format = FindDepthFormat();
    depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-   //depthAttachment.samples = m_msaaSamples;
+   // depthAttachment.samples = m_msaaSamples;
    depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
    depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
    depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -1108,7 +1120,7 @@ VulkanRenderer::CreateRenderPass()
    VkRenderPassCreateInfo renderPassInfo{};
    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
    renderPassInfo.attachmentCount = 2;
-   //static_cast< uint32_t >(attachments.size());
+   // static_cast< uint32_t >(attachments.size());
    renderPassInfo.pAttachments = attachments.data();
    renderPassInfo.subpassCount = 1;
    renderPassInfo.pSubpasses = &subpass;
@@ -1132,7 +1144,7 @@ VulkanRenderer::CreateFramebuffers()
       VkFramebufferCreateInfo framebufferInfo{};
       framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
       framebufferInfo.renderPass = m_renderPass;
-      framebufferInfo.attachmentCount = static_cast< uint32_t >(attachments.size());
+      framebufferInfo.attachmentCount = 2; // static_cast< uint32_t >(attachments.size());
       framebufferInfo.pAttachments = attachments.data();
       framebufferInfo.width = m_swapChainExtent.width;
       framebufferInfo.height = m_swapChainExtent.height;
@@ -1164,20 +1176,20 @@ VulkanRenderer::CreateCommandPool()
 void
 VulkanRenderer::CreateCommandBuffers()
 {
-   auto tex = TextureLibrary::GetTexture(TextureType::DIFFUSE_MAP, "196.png");
+   // auto tex = TextureLibrary::GetTexture(TextureType::DIFFUSE_MAP, "196.png");
 
 
    // LoadModel();
-   CreateVertexBuffer();
-   CreateIndexBuffer();
-   CreateUniformBuffers();
+   // CreateVertexBuffer();
+   // CreateIndexBuffer();
+   // CreateUniformBuffers();
 
-   const auto commandsSize = m_renderCommands.size() * sizeof(VkDrawIndexedIndirectCommand);
+   // const auto commandsSize = m_renderCommands.size() * sizeof(VkDrawIndexedIndirectCommand);
    /*VkBuffer stagingBuffer;
    VkDeviceMemory stagingBufferMemory;*/
 
    // Commands + draw count
-   VkDeviceSize bufferSize = commandsSize + sizeof(uint32_t);
+   /*VkDeviceSize bufferSize = commandsSize + sizeof(uint32_t);
 
    Buffer::CreateBuffer(bufferSize, VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
@@ -1186,7 +1198,7 @@ VulkanRenderer::CreateCommandBuffers()
    void* data;
    vkMapMemory(Data::vk_device, m_indirectDrawsBufferMemory, 0, bufferSize, 0, &data);
    memcpy(data, m_renderCommands.data(), static_cast< size_t >(bufferSize));
-   memcpy(static_cast< uint8_t* >(data) + commandsSize, &m_numMeshes, sizeof(uint32_t));
+   memcpy(static_cast< uint8_t* >(data) + commandsSize, &m_numMeshes, sizeof(uint32_t));*/
 
 
    // vkUnmapMemory(Data::vk_device, stagingBufferMemory);
@@ -1276,7 +1288,7 @@ VulkanRenderer::CreateCommandBuffers()
 void
 VulkanRenderer::CreateCommandBufferForDeferred()
 {
-   m_commandBuffers.resize(m_swapChainImageViews.size());
+   m_commandBuffers.resize(m_swapChainFramebuffers.size());
 
    VkCommandBufferAllocateInfo allocInfo{};
    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -1328,7 +1340,8 @@ VulkanRenderer::CreateCommandBufferForDeferred()
 
 
       vkCmdBindDescriptorSets(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                              m_pipelineLayout, 0, 1, &m_deferredPipeline.GetDescriptorSet(), 0,
+                              m_deferredPipeline.GetPipelineLayout(), 0, 1,
+                              &m_deferredPipeline.GetDescriptorSet(), 0,
                               nullptr);
 
       vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,

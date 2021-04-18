@@ -47,6 +47,12 @@ DeferedPipeline::GetCompositionPipeline()
    return m_compositionPipeline;
 }
 
+VkPipelineLayout
+DeferedPipeline::GetPipelineLayout()
+{
+   return m_pipelineLayout;
+}
+
 // Update matrices used for the offscreen rendering of the scene
 void
 DeferedPipeline::UpdateUniformBufferOffscreen()
@@ -114,8 +120,10 @@ DeferedPipeline::UpdateUniformBufferComposition()
 
 void
 DeferedPipeline::Initialize(VkRenderPass mainRenderPass,
-                            const std::vector< VkImageView >& swapchainFramebuffers)
+                            const std::vector< VkImageView >& swapchainFramebuffers,
+                            VkPipelineCache pipelineCache)
 {
+   m_pipelineCache = pipelineCache;
    m_mainRenderPass = mainRenderPass;
    m_camera = std::make_unique< scene::PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 500.0f);
    PrepareOffscreenFramebuffer();
@@ -605,25 +613,25 @@ DeferedPipeline::DrawDeferred()
    // Offscreen rendering
 
    // Wait for swap chain presentation to finish
-   //submitInfo.pWaitSemaphores = &semaphores.presentComplete;
+   // submitInfo.pWaitSemaphores = &semaphores.presentComplete;
    //// Signal ready with offscreen semaphore
-   //submitInfo.pSignalSemaphores = &offscreenSemaphore;
+   // submitInfo.pSignalSemaphores = &offscreenSemaphore;
 
    //// Submit work
-   //submitInfo.commandBufferCount = 1;
-   //submitInfo.pCommandBuffers = &offScreenCmdBuffer;
-   //VK_CHECK(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE), "");
+   // submitInfo.commandBufferCount = 1;
+   // submitInfo.pCommandBuffers = &offScreenCmdBuffer;
+   // VK_CHECK(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE), "");
 
    //// Scene rendering
 
    //// Wait for offscreen semaphore
-   //submitInfo.pWaitSemaphores = &offscreenSemaphore;
+   // submitInfo.pWaitSemaphores = &offscreenSemaphore;
    //// Signal ready with render complete semaphore
-   //submitInfo.pSignalSemaphores = &semaphores.renderComplete;
+   // submitInfo.pSignalSemaphores = &semaphores.renderComplete;
 
    //// Submit work
-   //submitInfo.pCommandBuffers = &drawCmdBuffers[currentBuffer];
-   //VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
+   // submitInfo.pCommandBuffers = &drawCmdBuffers[currentBuffer];
+   // VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
 
    // swapChain.acquireNextImage
    // VulkanExampleBase::submitFrame();

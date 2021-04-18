@@ -53,6 +53,12 @@ DeferedPipeline::GetPipelineLayout()
    return m_pipelineLayout;
 }
 
+VkSemaphore&
+DeferedPipeline::GetOffscreenSemaphore()
+{
+   return m_offscreenSemaphore;
+}
+
 // Update matrices used for the offscreen rendering of the scene
 void
 DeferedPipeline::UpdateUniformBufferOffscreen()
@@ -62,6 +68,12 @@ DeferedPipeline::UpdateUniformBufferOffscreen()
    uboOffscreenVS.model = glm::mat4(1.0f);
    m_offscreenBuffer.CopyData(&uboOffscreenVS);
    // memcpy(m_offscreenBuffer.mapped, , sizeof(uboOffscreenVS));
+}
+
+VkCommandBuffer&
+DeferedPipeline::GetOffscreenCmdBuffer()
+{
+   return m_offscreenCommandBuffer;
 }
 
 // Update lights and parameters passed to the composition shaders
@@ -446,7 +458,7 @@ DeferedPipeline::SetupDescriptorSet()
    // Binding 1 : Position texture target
    descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
    descriptorWrites[0].dstSet = m_descriptorSet;
-   descriptorWrites[0].dstBinding = 1;
+   descriptorWrites[0].dstBinding = 2;
    descriptorWrites[0].dstArrayElement = 0;
    descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
    descriptorWrites[0].descriptorCount = 1;
@@ -455,7 +467,7 @@ DeferedPipeline::SetupDescriptorSet()
    // Binding 2 : Normals texture target
    descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
    descriptorWrites[1].dstSet = m_descriptorSet;
-   descriptorWrites[1].dstBinding = 2;
+   descriptorWrites[1].dstBinding = 3;
    descriptorWrites[1].dstArrayElement = 0;
    descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
    descriptorWrites[1].descriptorCount = 1;
@@ -464,7 +476,7 @@ DeferedPipeline::SetupDescriptorSet()
    // Binding 3 : Albedo texture target
    descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
    descriptorWrites[2].dstSet = m_descriptorSet;
-   descriptorWrites[2].dstBinding = 3;
+   descriptorWrites[2].dstBinding = 4;
    descriptorWrites[2].dstArrayElement = 0;
    descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
    descriptorWrites[2].descriptorCount = 1;
@@ -473,7 +485,7 @@ DeferedPipeline::SetupDescriptorSet()
    // Binding 4 : Fragment shader uniform buffer
    descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
    descriptorWrites[3].dstSet = m_descriptorSet;
-   descriptorWrites[3].dstBinding = 4;
+   descriptorWrites[3].dstBinding = 5;
    descriptorWrites[3].dstArrayElement = 0;
    descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
    descriptorWrites[3].descriptorCount = 1;

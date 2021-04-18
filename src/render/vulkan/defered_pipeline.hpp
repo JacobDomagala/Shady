@@ -28,6 +28,12 @@ class DeferedPipeline
    VkPipeline
    GetCompositionPipeline();
 
+   VkCommandBuffer&
+   GetOffscreenCmdBuffer();
+
+   VkSemaphore&
+   GetOffscreenSemaphore();
+
    void
    DrawDeferred();
 

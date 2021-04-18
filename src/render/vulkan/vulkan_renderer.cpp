@@ -753,53 +753,78 @@ VulkanRenderer::DrawDeferred()
 void
 VulkanRenderer::Draw()
 {
-   vkWaitForFences(Data::vk_device, 1, &m_inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+   // vkWaitForFences(Data::vk_device, 1, &m_inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
    uint32_t imageIndex;
    vkAcquireNextImageKHR(Data::vk_device, m_swapChain, UINT64_MAX,
                          m_imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
    // UpdateUniformBuffer(imageIndex);
-   if (m_imagesInFlight[imageIndex] != VK_NULL_HANDLE)
-   {
-      vkWaitForFences(Data::vk_device, 1, &m_imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
-   }
-   m_imagesInFlight[imageIndex] = m_inFlightFences[currentFrame];
+   //if (m_imagesInFlight[imageIndex] != VK_NULL_HANDLE)
+   //{
+   //   vkWaitForFences(Data::vk_device, 1, &m_imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
+   //}
+   //m_imagesInFlight[imageIndex] = m_inFlightFences[currentFrame];
+
+
+   // 
+   // Offscreen rendering
+   //
 
    VkSubmitInfo submitInfo{};
    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-   VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphores[currentFrame]};
    VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-   submitInfo.waitSemaphoreCount = 1;
-   submitInfo.pWaitSemaphores = waitSemaphores;
    submitInfo.pWaitDstStageMask = waitStages;
 
-   submitInfo.commandBufferCount = 1;
-   submitInfo.pCommandBuffers = &m_commandBuffers[imageIndex];
+   // Wait for swap chain presentation to finish
+   submitInfo.pWaitSemaphores = &m_imageAvailableSemaphores[currentFrame];
+   submitInfo.waitSemaphoreCount = 1;
 
-   VkSemaphore signalSemaphores[] = {m_renderFinishedSemaphores[currentFrame]};
+   // Signal ready with offscreen semaphore
+   submitInfo.pSignalSemaphores = &m_deferredPipeline.GetOffscreenSemaphore();
    submitInfo.signalSemaphoreCount = 1;
-   submitInfo.pSignalSemaphores = signalSemaphores;
+  
+   // Submit work
+   submitInfo.commandBufferCount = 1;
+   submitInfo.pCommandBuffers = &m_deferredPipeline.GetOffscreenCmdBuffer();
+   VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE),
+            "failed to submit offscreen draw command buffer!");
 
-   vkResetFences(Data::vk_device, 1, &m_inFlightFences[currentFrame]);
 
-   VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &submitInfo, m_inFlightFences[currentFrame]),
+   //
+   // Scene rendering 
+   //
+
+   submitInfo.pWaitSemaphores = &m_deferredPipeline.GetOffscreenSemaphore();
+   
+   submitInfo.pSignalSemaphores = &m_renderFinishedSemaphores[currentFrame];
+ 
+   submitInfo.pCommandBuffers = &m_commandBuffers[imageIndex];
+   submitInfo.commandBufferCount = 1;
+   
+ 
+   // vkResetFences(Data::vk_device, 1, &m_inFlightFences[currentFrame]);
+
+   //VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &submitInfo, m_inFlightFences[currentFrame]),
+   //         "failed to submit draw command buffer!");
+
+    VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE),
             "failed to submit draw command buffer!");
 
    VkPresentInfoKHR presentInfo{};
    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
    presentInfo.waitSemaphoreCount = 1;
-   presentInfo.pWaitSemaphores = signalSemaphores;
+   presentInfo.pWaitSemaphores = &m_renderFinishedSemaphores[currentFrame];
 
-   VkSwapchainKHR swapChains[] = {m_swapChain};
    presentInfo.swapchainCount = 1;
-   presentInfo.pSwapchains = swapChains;
+   presentInfo.pSwapchains = &m_swapChain;
 
    presentInfo.pImageIndices = &imageIndex;
 
    vkQueuePresentKHR(m_presentQueue, &presentInfo);
+
+   vkQueueWaitIdle(Data::vk_graphicsQueue);
 
    currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
@@ -1058,15 +1083,15 @@ VulkanRenderer::CreateRenderPass()
    depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
    depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-   VkAttachmentDescription colorAttachmentResolve{};
-   colorAttachmentResolve.format = m_swapChainImageFormat;
-   colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
-   colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-   colorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-   colorAttachmentResolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-   colorAttachmentResolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-   colorAttachmentResolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-   colorAttachmentResolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+   //VkAttachmentDescription colorAttachmentResolve{};
+   //colorAttachmentResolve.format = m_swapChainImageFormat;
+   //colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
+   //colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+   //colorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+   //colorAttachmentResolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+   //colorAttachmentResolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+   //colorAttachmentResolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+   //colorAttachmentResolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
    VkAttachmentReference colorAttachmentRef{};
    colorAttachmentRef.attachment = 0;
@@ -1115,8 +1140,8 @@ VulkanRenderer::CreateRenderPass()
    // dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
    // dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-   std::array< VkAttachmentDescription, 3 > attachments = {colorAttachment, depthAttachment,
-                                                           colorAttachmentResolve};
+   std::array< VkAttachmentDescription, 2 > attachments = {colorAttachment, depthAttachment
+                                                           /*,colorAttachmentResolve*/};
    VkRenderPassCreateInfo renderPassInfo{};
    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
    renderPassInfo.attachmentCount = 2;
@@ -1138,13 +1163,15 @@ VulkanRenderer::CreateFramebuffers()
 
    for (size_t i = 0; i < m_swapChainImageViews.size(); i++)
    {
-      std::array< VkImageView, 3 > attachments = {m_colorImageView, m_depthImageView,
-                                                  m_swapChainImageViews[i]};
+      //std::array< VkImageView, 2 > attachments = {/*m_colorImageView,*/ m_depthImageView,
+      //                                            m_swapChainImageViews[i]};
+
+      std::array< VkImageView, 2 > attachments = {m_swapChainImageViews[i], m_depthImageView};
 
       VkFramebufferCreateInfo framebufferInfo{};
       framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
       framebufferInfo.renderPass = m_renderPass;
-      framebufferInfo.attachmentCount = 2; // static_cast< uint32_t >(attachments.size());
+      framebufferInfo.attachmentCount = static_cast< uint32_t >(attachments.size());
       framebufferInfo.pAttachments = attachments.data();
       framebufferInfo.width = m_swapChainExtent.width;
       framebufferInfo.height = m_swapChainExtent.height;

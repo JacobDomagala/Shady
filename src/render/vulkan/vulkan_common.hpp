@@ -1,12 +1,14 @@
 #pragma once
 
+#include "types.hpp"
 #include "utils/assert.hpp"
+#include "vertex.hpp"
 
-#include <fmt/format.h>
 #include <array>
+#include <fmt/format.h>
+#include <glm/glm.hpp>
 #include <vector>
 #include <vulkan/vulkan.h>
-
 
 #define VK_CHECK(vkFunction, errorMessage)                                              \
    do                                                                                   \
@@ -21,6 +23,17 @@
 
 namespace shady::render::vulkan {
 
+struct UniformBufferObject
+{
+   alignas(16) glm::mat4 proj;
+   alignas(16) glm::mat4 view;
+};
+
+struct PerInstanceBuffer
+{
+   glm::mat4 model;
+   glm::vec4 textures = {};
+};
 
 static constexpr bool ENABLE_VALIDATION = true;
 static constexpr std::array< const char*, 1 > VALIDATION_LAYERS = {"VK_LAYER_KHRONOS_validation"};
@@ -38,6 +51,31 @@ struct Data
    inline static VkPhysicalDevice vk_physicalDevice = VK_NULL_HANDLE;
    inline static VkQueue vk_graphicsQueue = {};
    inline static VkCommandPool vk_commandPool = {};
+
+   inline static std::vector< VkDrawIndexedIndirectCommand > m_renderCommands = {};
+   inline static VkBuffer m_indirectDrawsBuffer = {};
+   inline static VkDeviceMemory m_indirectDrawsBufferMemory = {};
+   inline static uint32_t m_currentVertex = {};
+   inline static uint32_t m_currentIndex = {};
+   inline static uint32_t m_numMeshes = {};
+
+   inline static std::vector< VkBuffer > m_ssbo = {};
+   inline static std::vector< VkDeviceMemory > m_ssboMemory = {};
+
+   inline static std::vector< VkBuffer > m_uniformBuffers = {};
+   inline static std::vector< VkDeviceMemory > m_uniformBuffersMemory = {};
+
+   inline static VkBuffer m_vertexBuffer = {};
+   inline static VkDeviceMemory m_vertexBufferMemory = {};
+   inline static VkBuffer m_indexBuffer = {};
+   inline static VkDeviceMemory m_indexBufferMemory = {};
+
+   inline static std::vector< PerInstanceBuffer > perInstance;
+   inline static std::vector< vulkan::Vertex > vertices;
+   inline static std::vector< uint32_t > indices;
+   inline static int32_t currTexIdx = 0;
+   inline static std::unordered_map< std::string, std::pair< int32_t, VkImageView > > textures = {};
+   inline static std::vector< VkImageView > texturesVec = {};
 };
 
 uint32_t

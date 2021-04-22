@@ -43,6 +43,9 @@ class VulkanRenderer
 
  private:
    static void
+   SetupData();
+
+   static void
    CreateInstance();
 
    static void
@@ -143,16 +146,6 @@ class VulkanRenderer
    inline static std::vector< VkFence > m_inFlightFences = {};
    inline static std::vector< VkFence > m_imagesInFlight = {};
 
-   inline static VkBuffer m_vertexBuffer = {};
-   inline static VkDeviceMemory m_vertexBufferMemory = {};
-   inline static VkBuffer m_indexBuffer = {};
-   inline static VkDeviceMemory m_indexBufferMemory = {};
-
-   inline static std::vector< VkBuffer > m_uniformBuffers = {};
-   inline static std::vector< VkDeviceMemory > m_uniformBuffersMemory = {};
-
-   inline static std::vector< VkBuffer > m_ssbo = {};
-   inline static std::vector< VkDeviceMemory > m_ssboMemory = {};
 
    inline static VkImage m_depthImage = {};
    inline static VkDeviceMemory m_depthImageMemory = {};
@@ -162,12 +155,7 @@ class VulkanRenderer
    inline static VkDeviceMemory m_colorImageMemory = {};
    inline static VkImageView m_colorImageView = {};
 
-   inline static std::vector< VkDrawIndexedIndirectCommand > m_renderCommands = {};
-   inline static VkBuffer m_indirectDrawsBuffer = {};
-   inline static VkDeviceMemory m_indirectDrawsBufferMemory = {};
-   inline static uint32_t m_currentVertex = {};
-   inline static uint32_t m_currentIndex = {};
-   inline static uint32_t m_numMeshes = {};
+ 
 
    inline static VkPipelineCache m_pipelineCache = {};
    inline static DeferedPipeline m_deferredPipeline = {};

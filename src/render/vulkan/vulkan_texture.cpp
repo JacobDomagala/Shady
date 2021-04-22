@@ -38,7 +38,7 @@ Texture::CreateTextureImage(TextureType type, std::string_view textureName)
    m_width = textureData.m_size.x;
    m_height = textureData.m_size.y;
 
-   m_format = VK_FORMAT_R8G8B8A8_SRGB;
+   m_format = type == TextureType::DIFFUSE_MAP ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8A8_UNORM;
    m_mips = static_cast<uint32_t>(std::floor(std::log2(std::max(m_width, m_height)))) + 1;
 
    VkDeviceSize imageSize = m_width * m_height * 4;

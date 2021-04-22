@@ -78,7 +78,7 @@ FileManager::WriteToFile(std::string_view fileName, std::string_view content)
    fileHandle << content;
 }
 
-render::Texture::ImageData
+render::ImageData
 FileManager::ReadTexture(std::string_view fileName, bool flipVertical)
 {
    const auto pathToImage = std::filesystem::path(TEXTURES_DIR / fileName).string();
@@ -87,7 +87,7 @@ FileManager::ReadTexture(std::string_view fileName, bool flipVertical)
 
    stbi_set_flip_vertically_on_load(flipVertical);
 
-   render::Texture::ImageHandleType textureData(
+   render::ImageHandleType textureData(
       stbi_load(pathToImage.c_str(), &w, &h, &n, force_channels), stbi_image_free);
 
    if (!textureData)

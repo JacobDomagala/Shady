@@ -641,9 +641,9 @@ DeferedPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& sw
 
    // Clear values for all attachments written in the fragment shader
    std::array< VkClearValue, 4 > clearValues;
-   clearValues[0].color = {{1.0f, 0.0f, 0.0f, 0.0f}};
-   clearValues[1].color = {{0.0f, 1.0f, 0.0f, 0.0f}};
-   clearValues[2].color = {{0.0f, 0.0f, 1.0f, 0.0f}};
+   clearValues[0].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
+   clearValues[1].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
+   clearValues[2].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
    clearValues[3].depthStencil = {1.0f, 0};
 
    VkRenderPassBeginInfo renderPassBeginInfo = {};
@@ -693,18 +693,6 @@ DeferedPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& sw
                                  sizeof(VkDrawIndexedIndirectCommand) * Data::m_numMeshes,
                                  Data::m_numMeshes,
                                  sizeof(VkDrawIndexedIndirectCommand));
-
-   //    // Background
-   //    vkCmdBindDescriptorSets(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-   //                            m_pipelineLayout, 0, 1, &descriptorSets.floor, 0, nullptr);
-   //    models.floor.draw(m_offscreenCommandBuffer);
-
-   //    // Instanced object
-   //    vkCmdBindDescriptorSets(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-   //                            m_pipelineLayout, 0, 1, &descriptorSets.model, 0, nullptr);
-   //    models.model.bindBuffers(m_offscreenCommandBuffer);
-   //    vkCmdDrawIndexed(m_offscreenCommandBuffer, models.model.indices.count, 3, 0, 0, 0);
-
 
    vkCmdEndRenderPass(m_offscreenCommandBuffer);
 

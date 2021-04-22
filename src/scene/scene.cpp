@@ -1,12 +1,9 @@
 #include "scene/scene.hpp"
-#include "render/render_command.hpp"
-#include "render/renderer_3D.hpp"
 #include "scene/perspective_camera.hpp"
 #include "time/scoped_timer.hpp"
 #include "utils/file_manager.hpp"
 
 #include <fmt/format.h>
-#include <glad/glad.h>
 
 
 namespace shady::scene {
@@ -55,33 +52,33 @@ Scene::Render(uint32_t windowWidth, uint32_t windowHeight)
 
    // For now we only use single light
    // First pass -> render depth from camera POV to texture
-   render::RenderCommand::Clear();
-   render::Renderer3D::BeginScene({windowWidth, windowHeight}, *m_camera, *m_light, true);
+   // render::RenderCommand::Clear();
+   // render::Renderer3D::BeginScene({windowWidth, windowHeight}, *m_camera, *m_light, true);
 
    for (auto& model : m_models)
    {
       model->Draw();
    }
 
-   render::Renderer3D::EndScene();
+   // render::Renderer3D::EndScene();
 
    ////////////////////////////////////////////////////////
    ///////////////////// SECOND PASS //////////////////////
    ////////////////////////////////////////////////////////
 
    // Second pass -> use lightmap generated to render shadows
-   render::RenderCommand::Clear();
+   // render::RenderCommand::Clear();
 
   // m_skybox.Draw(*m_camera, windowWidth, windowHeight);
 
-   render::Renderer3D::BeginScene({windowWidth, windowHeight}, *m_camera, *m_light);
+   // render::Renderer3D::BeginScene({windowWidth, windowHeight}, *m_camera, *m_light);
 
    for (auto& model : m_models)
    {
       model->Draw();
    }
 
-   render::Renderer3D::EndScene();
+   // render::Renderer3D::EndScene();
 }
 
 void

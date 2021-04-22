@@ -1,13 +1,17 @@
 #include "gui.hpp"
-#include "render/texture.hpp"
 #include "utils/file_manager.hpp"
+#include "render/vulkan/vulkan_common.hpp"
 
 #include <backends/imgui_impl_glfw.h>
-#include <backends/imgui_impl_opengl3.h>
+#include <backends/imgui_impl_vulkan.h>
 #include <fmt/format.h>
 #include <imgui.h>
+#include <GLFW/glfw3.h>
 
 namespace shady::app::gui {
+
+static ImGui_ImplVulkanH_Window g_MainWindowData;
+static ImGui_ImplVulkanH_Window* wd = &g_MainWindowData;
 
 void
 Gui::Init(GLFWwindow* windowHandle)
@@ -21,14 +25,31 @@ Gui::Init(GLFWwindow* windowHandle)
    // Setup Dear ImGui style
    ImGui::StyleColorsDark();
 
-   ImGui_ImplGlfw_InitForOpenGL(windowHandle, true);
-   ImGui_ImplOpenGL3_Init("#version 410");
+   ImGui_ImplGlfw_InitForVulkan(windowHandle, false);
+
+   // Create Framebuffers
+   int w, h;
+   glfwGetFramebufferSize(windowHandle, &w, &h);
+   // SetupVulkanWindow(wd, render::vulkan::Data::m_surface, w, h);
+
+   //ImGui_ImplVulkan_InitInfo init_info = {};
+   //init_info.Instance = render::vulkan::Data::vk_instance;
+   //init_info.PhysicalDevice = render::vulkan::Data::vk_physicalDevice;
+   //init_info.Device = render::vulkan::Data::vk_device;
+   //init_info.QueueFamily = render::vulkan::Data::vk_graphicsQueue;
+   //init_info.Queue = render::vulkan::Data::vk_graphicsQueue;
+   //init_info.PipelineCache = g_PipelineCache;
+   //init_info.DescriptorPool = g_DescriptorPool;
+   //init_info.Allocator = g_Allocator;
+   //init_info.MinImageCount = g_MinImageCount;
+   //init_info.ImageCount = wd->ImageCount;
+   //// init_info.CheckVkResultFn = check_vk_result;
+   //ImGui_ImplVulkan_Init(&init_info, wd->RenderPass);
 }
 
 void
 Gui::Shutdown()
 {
-   ImGui_ImplOpenGL3_Shutdown();
    ImGui_ImplGlfw_Shutdown();
    ImGui::DestroyContext();
 }
@@ -36,7 +57,7 @@ Gui::Shutdown()
 void
 Gui::Render(const glm::ivec2& windowSize, uint32_t shadowMapID)
 {
-   ImGui_ImplOpenGL3_NewFrame();
+   ImGui_ImplVulkan_NewFrame();
    ImGui_ImplGlfw_NewFrame();
    ImGui::NewFrame();
 
@@ -83,7 +104,17 @@ Gui::Render(const glm::ivec2& windowSize, uint32_t shadowMapID)
    ImGuiIO& io = ImGui::GetIO();
    io.DisplaySize = ImVec2(static_cast< float >(windowSize.x), static_cast< float >(windowSize.y));
    ImGui::Render();
-   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+   ImDrawData* draw_data = ImGui::GetDrawData();
+   const bool is_minimized = (draw_data->DisplaySize.x <= 0.0f || draw_data->DisplaySize.y <= 0.0f);
+   //if (!is_minimized)
+   //{
+   //   wd->ClearValue.color.float32[0] = clear_color.x * clear_color.w;
+   //   wd->ClearValue.color.float32[1] = clear_color.y * clear_color.w;
+   //   wd->ClearValue.color.float32[2] = clear_color.z * clear_color.w;
+   //   wd->ClearValue.color.float32[3] = clear_color.w;
+   //   FrameRender(wd, draw_data);
+   //   FramePresent(wd);
+   //}
 }
 
 

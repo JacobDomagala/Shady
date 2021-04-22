@@ -31,7 +31,6 @@ function(FIND_AND_DOWNLOAD_ZIP_RESOURCE ResourceURL ResourceName Version)
 endfunction()
 
 add_subdirectory(assimp)
-add_subdirectory(glad)
 add_subdirectory(glm)
 add_subdirectory(glfw)
 add_subdirectory(stb_image)

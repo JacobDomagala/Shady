@@ -1,5 +1,5 @@
 #include "mesh.hpp"
-#include "render/renderer_3D.hpp"
+
 #include "vulkan/vulkan_renderer.hpp"
 
 namespace shady::scene {

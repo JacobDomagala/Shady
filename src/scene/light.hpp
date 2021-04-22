@@ -1,7 +1,5 @@
 #pragma once
 
-#include "render/framebuffer.hpp"
-
 #include <glm/gtc/type_ptr.hpp>
 
 namespace shady::scene {
@@ -24,11 +22,11 @@ class Light
    void
    EndRenderToLightmap();
 
-   render::TextureHandleType
+   /*render::TextureHandleType
    GetDepthMapHandle();
 
    render::TextureIDType
-   GetDepthMapID();
+   GetDepthMapID();*/
 
    const glm::mat4&
    GetLightSpaceMat() const;
@@ -48,7 +46,7 @@ class Light
  private:
    uint32_t m_shadowTextureWidth = 4096;
    uint32_t m_shadowTextureHeight = 4096;
-   std::shared_ptr< render::FrameBuffer > m_shadowBuffer;
+   // std::shared_ptr< render::FrameBuffer > m_shadowBuffer;
 
    glm::vec3 m_position = glm::vec3(0.0f);
 

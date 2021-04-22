@@ -635,7 +635,7 @@ VulkanRenderer::Initialize(GLFWwindow* windowHandle)
 {
    CreateInstance();
 
-   utils::Assert(glfwCreateWindowSurface(Data::vk_instance, windowHandle, nullptr, &m_surface)
+   utils::Assert(glfwCreateWindowSurface(Data::vk_instance, windowHandle, nullptr, &Data::m_surface)
                     == VK_SUCCESS,
                  "failed to create window surface!");
 
@@ -890,7 +890,7 @@ VulkanRenderer::CreateDevice()
 
    for (const auto& device : devices)
    {
-      if (isDeviceSuitable(device, m_surface))
+      if (isDeviceSuitable(device, Data::m_surface))
       {
          VkPhysicalDeviceProperties deviceProps{};
          vkGetPhysicalDeviceProperties(device, &deviceProps);
@@ -905,7 +905,7 @@ VulkanRenderer::CreateDevice()
    utils::Assert(Data::vk_physicalDevice != VK_NULL_HANDLE, "failed to find a suitable GPU!");
 
 
-   QueueFamilyIndices indices = findQueueFamilies(Data::vk_physicalDevice, m_surface);
+   QueueFamilyIndices indices = findQueueFamilies(Data::vk_physicalDevice, Data::m_surface);
 
    std::vector< VkDeviceQueueCreateInfo > queueCreateInfos;
    std::set< uint32_t > uniqueQueueFamilies = {indices.graphicsFamily.value(),
@@ -960,7 +960,7 @@ void
 VulkanRenderer::CreateSwapchain(GLFWwindow* windowHandle)
 {
    SwapChainSupportDetails swapChainSupport =
-      querySwapChainSupport(Data::vk_physicalDevice, m_surface);
+      querySwapChainSupport(Data::vk_physicalDevice, Data::m_surface);
 
    VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
    VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
@@ -976,7 +976,7 @@ VulkanRenderer::CreateSwapchain(GLFWwindow* windowHandle)
 
    VkSwapchainCreateInfoKHR swapChainCreateInfo{};
    swapChainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-   swapChainCreateInfo.surface = m_surface;
+   swapChainCreateInfo.surface = Data::m_surface;
 
    swapChainCreateInfo.minImageCount = imageCount;
    swapChainCreateInfo.imageFormat = surfaceFormat.format;
@@ -985,7 +985,7 @@ VulkanRenderer::CreateSwapchain(GLFWwindow* windowHandle)
    swapChainCreateInfo.imageArrayLayers = 1;
    swapChainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-   QueueFamilyIndices indicesSecond = findQueueFamilies(Data::vk_physicalDevice, m_surface);
+   QueueFamilyIndices indicesSecond = findQueueFamilies(Data::vk_physicalDevice, Data::m_surface);
    uint32_t queueFamilyIndices[2] = {indicesSecond.graphicsFamily.value(),
                                      indicesSecond.presentFamily.value()};
 
@@ -1204,7 +1204,8 @@ VulkanRenderer::CreateCommandPool()
     *  CREATE COMMAND POOL
     */
 
-   QueueFamilyIndices queueFamilyIndicesTwo = findQueueFamilies(Data::vk_physicalDevice, m_surface);
+   QueueFamilyIndices queueFamilyIndicesTwo =
+      findQueueFamilies(Data::vk_physicalDevice, Data::m_surface);
 
    VkCommandPoolCreateInfo poolInfo{};
    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;

@@ -51,6 +51,7 @@ struct Data
    inline static VkPhysicalDevice vk_physicalDevice = VK_NULL_HANDLE;
    inline static VkQueue vk_graphicsQueue = {};
    inline static VkCommandPool vk_commandPool = {};
+   inline static VkSurfaceKHR m_surface = {};
 
    inline static std::vector< VkDrawIndexedIndirectCommand > m_renderCommands = {};
    inline static VkBuffer m_indirectDrawsBuffer = {};

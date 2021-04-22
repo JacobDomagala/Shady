@@ -1,11 +1,8 @@
 #pragma once
 
-#include "shader.hpp"
-
 #include "defered_pipeline.hpp"
 #include "render/vulkan/vertex.hpp"
 #include "vulkan/types.hpp"
-
 
 #include <glm/glm.hpp>
 #include <vector>
@@ -116,7 +113,7 @@ class VulkanRenderer
  private:
    inline static VkDebugUtilsMessengerCreateInfoEXT m_debugCreateInfo = {};
    inline static VkDebugUtilsMessengerEXT m_debugMessenger = {};
-   inline static VkSurfaceKHR m_surface = {};
+   
 
    inline static VkSampleCountFlagBits m_msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 

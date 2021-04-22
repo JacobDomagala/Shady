@@ -1,5 +1,4 @@
 #include "scene/light.hpp"
-#include "render/render_command.hpp"
 #include "trace/logger.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -9,7 +8,7 @@ namespace shady::scene {
 Light::Light(const glm::vec3& position, const glm::vec3& /*color*/, LightType type)
    : m_position(position)
 {
-   auto buffer_type = render::FrameBufferType::SINGLE;
+   // auto buffer_type = render::FrameBufferType::SINGLE;
  /*  switch (type)
    {
       case LightType::DIRECTIONAL_LIGHT: {
@@ -43,8 +42,8 @@ Light::BeginRenderToLightmap()
    m_shadowMatrix = m_biasMatrix * m_lightSpaceMatrix;
 
 
-   m_shadowBuffer->Bind();
-   render::RenderCommand::Clear();
+   // m_shadowBuffer->Bind();
+   // render::RenderCommand::Clear();
    //m_shadowBuffer->MakeTextureNonResident();
 }
 
@@ -52,27 +51,27 @@ void
 Light::EndRenderToLightmap()
 {
    //m_shadowBuffer->MakeTextureResident();
-   m_shadowBuffer->Unbind();
+   // m_shadowBuffer->Unbind();
 }
 
-render::TextureHandleType
-Light::GetDepthMapHandle()
-{
-   return m_shadowBuffer->GetDepthMapHandle();
-   // m_shadowBuffer->Bind();
-   // m_shadowBuffer->MakeResident();
-}
-
-render::TextureIDType
-Light::GetDepthMapID()
-{
-   return m_shadowBuffer->GetDepthMapID();
-}
+//render::TextureHandleType
+//Light::GetDepthMapHandle()
+//{
+//   return m_shadowBuffer->GetDepthMapHandle();
+//   // m_shadowBuffer->Bind();
+//   // m_shadowBuffer->MakeResident();
+//}
+//
+//render::TextureIDType
+//Light::GetDepthMapID()
+//{
+//   return m_shadowBuffer->GetDepthMapID();
+//}
 
 void
 Light::BindLightMap(uint32_t slot)
 {
-   m_shadowBuffer->BindTexture(slot);
+   // m_shadowBuffer->BindTexture(slot);
 }
 
 const glm::mat4&

@@ -1,10 +1,22 @@
 #pragma once
 
-#include "render/texture.hpp"
-
 #include <filesystem>
 #include <string_view>
+#include <glm/glm.hpp>
+#include <memory>
+#include <functional>
 
+namespace shady::render {
+
+using ImageHandleType = std::unique_ptr< uint8_t[], std::function< void(uint8_t*) > >;
+
+struct ImageData
+{
+   ImageHandleType m_bytes;
+   glm::uvec2 m_size;
+   int32_t m_channels;
+};
+} // namespace shady::render
 
 namespace shady::utils {
 
@@ -25,16 +37,16 @@ class FileManager
    static std::string
    ReadTextFile(std::string_view fileName);
 
-   static std::vector<char>
+   static std::vector< char >
    ReadBinaryFile(const std::filesystem::path& path);
 
-   static std::vector<char>
+   static std::vector< char >
    ReadBinaryFile(std::string_view fileName);
 
    static void
    WriteToFile(std::string_view fileName, std::string_view content);
 
-   static render::Texture::ImageData
+   static render::ImageData
    ReadTexture(std::string_view fileName, bool flipVertical = false);
 };
 

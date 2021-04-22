@@ -38,21 +38,8 @@ add_executable(${PROJECT_NAME}
     src/time/timer.hpp src/time/timer.cpp src/time/scoped_timer.hpp src/time/scoped_timer.cpp src/time/utils.hpp src/time/utils.cpp
 
     # render
-    src/render/render_command.hpp src/render/render_command.cpp src/render/renderer_api.hpp src/render/renderer_api.cpp
-    src/render/vertex_array.hpp src/render/vertex_array.cpp src/render/buffer.hpp src/render/buffer.cpp
-    src/render/renderer.hpp src/render/renderer.cpp src/render/context.hpp src/render/context.cpp
-    src/render/texture.hpp src/render/texture.cpp src/render/shader.hpp src/render/shader.cpp
-    src/render/renderer_3D.hpp src/render/renderer_3D.cpp
-    src/render/vertex.hpp src/render/framebuffer.hpp src/render/framebuffer.cpp src/render/helpers.hpp
-    src/render/buffer_lock.hpp src/render/buffer_lock.cpp
-
-    # render/opengl
-    src/render/opengl/opengl_renderer_api.hpp src/render/opengl/opengl_renderer_api.cpp src/render/opengl/opengl_vertex_array.hpp
-    src/render/opengl/opengl_vertex_array.cpp src/render/opengl/opengl_context.hpp src/render/opengl/opengl_context.cpp
-    src/render/opengl/opengl_buffer.hpp src/render/opengl/opengl_buffer.cpp src/render/opengl/opengl_texture.hpp src/render/opengl/opengl_texture.cpp
-    src/render/opengl/opengl_shader.hpp src/render/opengl/opengl_shader.cpp src/render/opengl/opengl_framebuffer.hpp src/render/opengl/opengl_framebuffer.cpp
-    src/render/opengl/opengl_buffer_lock.hpp src/render/opengl/opengl_buffer_lock.cpp
-
+    src/render/helpers.hpp
+     
     # render/vulkan
     src/render/vulkan/vulkan_renderer.hpp src/render/vulkan/vulkan_renderer.cpp src/render/vulkan/vulkan_shader.hpp src/render/vulkan/vulkan_shader.cpp
     src/render/vulkan/vulkan_buffer.hpp src/render/vulkan/vulkan_buffer.cpp src/render/vulkan/vulkan_texture.hpp src/render/vulkan/vulkan_texture.cpp
@@ -70,13 +57,13 @@ add_executable(${PROJECT_NAME}
     src/utils/file_manager.hpp src/utils/file_manager.cpp src/utils/assert.hpp src/utils/assert.cpp
 )
 
-add_subdirectory(lib)
-
 find_package(Vulkan REQUIRED FATAL_ERROR)
+
+add_subdirectory(lib)
 
 target_include_directories(${PROJECT_NAME}
                     PRIVATE src src/app src/app/input src/trace src/render src/utils src/scene src/time)
-target_link_libraries_system (${PROJECT_NAME} PRIVATE glm glfw glad stb_image assimp fmt imgui Vulkan::Vulkan)
+target_link_libraries_system (${PROJECT_NAME} PRIVATE glm glfw stb_image assimp fmt imgui Vulkan::Vulkan)
 target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 

@@ -1,7 +1,6 @@
 #include "app/shady.hpp"
 #include "app/input/input_manager.hpp"
-#include "render/render_command.hpp"
-// #include "render/renderer.hpp"
+
 #include "trace/logger.hpp"
 #include "utils/file_manager.hpp"
 

@@ -8,6 +8,7 @@
 #include <fmt/format.h>
 #include <glm/glm.hpp>
 #include <vector>
+#include <unordered_map>
 #include <vulkan/vulkan.h>
 
 #define VK_CHECK(vkFunction, errorMessage)                                              \

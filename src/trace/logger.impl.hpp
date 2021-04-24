@@ -46,8 +46,7 @@ Logger::Log(std::string_view buffer, Args&&... args)
 {
    if (LogLevel >= s_currentLogType)
    {
-      if constexpr (_WIN32)
-      {
+#if defined(_WIN32)
          auto hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
          SetConsoleTextAttribute(hConsole, s_typeStyles.at(LogLevel));
 
@@ -56,13 +55,11 @@ Logger::Log(std::string_view buffer, Args&&... args)
 
          // Set the color to white
          SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
-      }
-      else
-      {
+#else
          fmt::print(fmt::fg(s_typeStyles.at(LogLevel)), "[{}]{} {}\n", time::GetTime(),
                     ToString(LogLevel),
                     fmt::format(buffer, std::forward< Args >(args)...));
-      }
+#endif
    }
 }
 

@@ -18,22 +18,24 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Create Build Environment
-      run: cmake -E make_directory ${{runner.workspace}}/build
-
     - name: Install dependencies
       run: |
         sudo apt-get update
 
         sudo apt-get install -y xorg-dev libc++-10-dev llvm-dev libubsan0 iwyu
+
+        wget https://sdk.lunarg.com/sdk/download/1.2.170.0/linux/vulkansdk-linux-x86_64-1.2.170.0.tar.gz
+        tar xf vulkansdk-linux-x86_64-1.2.170.0.tar.gz
+
         cmake -E make_directory ${{runner.workspace}}/build
 
     - name: Configure CMake
       shell: bash
       working-directory: ${{runner.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DWARNINGS_AS_ERRORS=ON\
-          -DENABLE_INCLUDE_WHAT_YOU_USE=ON -DENABLE_SANITIZER_ADDRESS=ON -DENABLE_SANITIZER_UNDEFINED_BEHAVIOR=ON\
-          -DENABLE_SANITIZER_LEAK=ON -DUNITY_BUILD=ON -DASSIMP_BUILD_TESTS=0
+      run: |
+        source ${{runner.workspace}}/Shady/1.2.170.0/setup-env.sh
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DWARNINGS_AS_ERRORS=ON \
+        -DENABLE_INCLUDE_WHAT_YOU_USE=ON -DUNITY_BUILD=ON -DASSIMP_BUILD_TESTS=0
 
     - name: Build
       working-directory: ${{runner.workspace}}/build

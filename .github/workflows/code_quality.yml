@@ -13,14 +13,12 @@ jobs:
       shell: bash
       run: |
         echo "#!/bin/bash
-        add-apt-repository ppa:oibaf/graphics-drivers
-        apt update
-        apt upgrade
-        apt install -y libvulkan1 mesa-vulkan-drivers vulkan-utils" > init_script.sh
+        wget https://sdk.lunarg.com/sdk/download/1.2.170.0/linux/vulkansdk-linux-x86_64-1.2.170.0.tar.gz
+        tar xf vulkansdk-linux-x86_64-1.2.170.0.tar.gz
+        source ./1.2.170.0/setup-env.sh" > init_script.sh
 
     - name: Run static analysis
-      uses: JacobDomagala/StaticAnalysis@1-add-cppcheck-args
+      uses: JacobDomagala/StaticAnalysis@master
       with:
         exclude_dir: lib
-        apt_pckgs: software-properties-common
         init_script: init_script.sh

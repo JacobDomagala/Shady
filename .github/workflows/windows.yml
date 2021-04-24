@@ -36,6 +36,7 @@ jobs:
       working-directory: ${{runner.workspace}}/build
       shell: bash
       run: |
+        source ${{runner.workspace}}/Shady/1.2.170.0/setup-env.sh
         cmake --build . --config $BUILD_TYPE > output.txt
         cat output.txt
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "app/window.hpp"
-#include "gui/gui.hpp"
 #include "input/input_listener.hpp"
 #include "scene/scene.hpp"
 
@@ -43,7 +42,7 @@ class Shady : public input::InputListener
    uint32_t m_windowWidth = 1920;
    uint32_t m_windowHeight = 1080;
    scene::Scene m_currentScene;
-   gui::Gui m_gui;
+ 
    bool m_active = true;
 };
 

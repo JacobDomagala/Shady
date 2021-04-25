@@ -38,6 +38,9 @@ class VulkanRenderer
    inline static glm::vec4 camera_pos = {};
    inline static glm::vec4 light_pos = {};
 
+   static void
+   CreateCommandBufferForDeferred();
+
  private:
    static void
    SetupData();
@@ -69,8 +72,6 @@ class VulkanRenderer
    static void
    CreateCommandBuffers();
 
-   static void
-   CreateCommandBufferForDeferred();
 
    static void
    CreateSyncObjects();
@@ -113,11 +114,10 @@ class VulkanRenderer
  private:
    inline static VkDebugUtilsMessengerCreateInfoEXT m_debugCreateInfo = {};
    inline static VkDebugUtilsMessengerEXT m_debugMessenger = {};
-   
+
 
    inline static VkSampleCountFlagBits m_msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 
-   
 
    inline static VkSwapchainKHR m_swapChain = {};
    inline static std::vector< VkImage > m_swapChainImages = {};

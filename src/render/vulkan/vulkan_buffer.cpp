@@ -32,10 +32,11 @@ Buffer::CopyData(const void* data)
 }
 
 void
-Buffer::SetupDescriptor(VkDeviceSize size, VkDeviceSize offset){
+Buffer::SetupDescriptor(VkDeviceSize size, VkDeviceSize offset)
+{
    m_descriptor.offset = offset;
-	m_descriptor.buffer = m_buffer;
-	m_descriptor.range = m_bufferSize;
+   m_descriptor.buffer = m_buffer;
+   m_descriptor.range = m_bufferSize;
 }
 
 static void
@@ -110,6 +111,30 @@ Buffer::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
    vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
    Command::EndSingleTimeCommands(commandBuffer);
+}
+
+void
+Buffer::Flush(VkDeviceSize size, VkDeviceSize offset)
+{
+   VkMappedMemoryRange mappedRange = {};
+   mappedRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+   mappedRange.memory = m_bufferMemory;
+   mappedRange.offset = offset;
+   mappedRange.size = m_bufferSize;
+   VK_CHECK(vkFlushMappedMemoryRanges(Data::vk_device, 1, &mappedRange), "");
+}
+
+void
+Buffer::Destroy()
+{
+   if (m_buffer)
+   {
+      vkDestroyBuffer(Data::vk_device, m_buffer, nullptr);
+   }
+   if (m_bufferMemory)
+   {
+      vkFreeMemory(Data::vk_device, m_bufferMemory, nullptr);
+   }
 }
 
 } // namespace shady::render::vulkan

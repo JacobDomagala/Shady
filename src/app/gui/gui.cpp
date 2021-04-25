@@ -4,34 +4,29 @@
 #include "vulkan/vulkan_buffer.hpp"
 #include "vulkan/vulkan_shader.hpp"
 #include "vulkan/vulkan_texture.hpp"
+#include "vulkan/vulkan_renderer.hpp"
 
 #include <GLFW/glfw3.h>
-#include <backends/imgui_impl_glfw.h>
-#include <backends/imgui_impl_vulkan.h>
 #include <fmt/format.h>
 #include <imgui.h>
 
 
 namespace shady::app::gui {
 
-static ImGui_ImplVulkanH_Window g_MainWindowData;
-static ImGui_ImplVulkanH_Window* wd = &g_MainWindowData;
-
 using namespace shady::render::vulkan;
 
 void
-Gui::Init(GLFWwindow* windowHandle)
+Gui::Init()
 {
    // Setup Dear ImGui context
    IMGUI_CHECKVERSION();
    ImGui::CreateContext();
-   ImGuiIO& io = ImGui::GetIO();
-   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+  // ImGuiIO& io = ImGui::GetIO();
+  // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
 
    // Setup Dear ImGui style
    ImGui::StyleColorsDark();
 
-   ImGui_ImplGlfw_InitForVulkan(windowHandle, false);
    PrepareResources();
    PreparePipeline(Data::m_pipelineCache, Data::m_renderPass);
 }
@@ -39,15 +34,91 @@ Gui::Init(GLFWwindow* windowHandle)
 void
 Gui::Shutdown()
 {
-   ImGui_ImplGlfw_Shutdown();
    ImGui::DestroyContext();
 }
 
-void
-Gui::Render(const glm::ivec2& windowSize, uint32_t shadowMapID)
+bool
+Gui::UpdateBuffers()
 {
-   ImGui_ImplVulkan_NewFrame();
-   ImGui_ImplGlfw_NewFrame();
+   ImDrawData* imDrawData = ImGui::GetDrawData();
+   bool updateCmdBuffers = false;
+
+   if (!imDrawData)
+   {
+      return false;
+   };
+
+   // Note: Alignment is done inside buffer creation
+   VkDeviceSize vertexBufferSize = imDrawData->TotalVtxCount * sizeof(ImDrawVert);
+   VkDeviceSize indexBufferSize = imDrawData->TotalIdxCount * sizeof(ImDrawIdx);
+
+   // Update buffers only if vertex or index count has been changed compared to current buffer size
+   if ((vertexBufferSize == 0) || (indexBufferSize == 0))
+   {
+      return false;
+   }
+
+   // Vertex buffer
+   if ((m_vertexBuffer.m_buffer == VK_NULL_HANDLE) || (m_vertexCount != imDrawData->TotalVtxCount))
+   {
+      if (m_vertexBuffer.m_buffer != VK_NULL_HANDLE)
+      {
+         m_vertexBuffer.Unmap();
+         m_vertexBuffer.Destroy();
+      }
+      
+      m_vertexBuffer = Buffer::CreateBuffer(vertexBufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+      m_vertexCount = imDrawData->TotalVtxCount;
+      m_vertexBuffer.Map();
+
+      updateCmdBuffers = true;
+   }
+
+   // Index buffer
+   VkDeviceSize indexSize = imDrawData->TotalIdxCount * sizeof(ImDrawIdx);
+   if ((m_indexBuffer.m_buffer == VK_NULL_HANDLE) || (m_indexCount < imDrawData->TotalIdxCount))
+   {
+      if (m_indexBuffer.m_buffer != VK_NULL_HANDLE)
+      {
+         m_indexBuffer.Unmap();
+         m_indexBuffer.Destroy();
+      }
+      
+      m_indexBuffer = Buffer::CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                                           VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+      m_indexCount = imDrawData->TotalIdxCount;
+      m_indexBuffer.Map();
+
+      updateCmdBuffers = true;
+   }
+
+   // Upload data
+   ImDrawVert* vtxDst = (ImDrawVert*)m_vertexBuffer.m_mappedMemory;
+   ImDrawIdx* idxDst = (ImDrawIdx*)m_indexBuffer.m_mappedMemory;
+
+   for (int n = 0; n < imDrawData->CmdListsCount; n++)
+   {
+      const ImDrawList* cmd_list = imDrawData->CmdLists[n];
+      memcpy(vtxDst, cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.Size * sizeof(ImDrawVert));
+      memcpy(idxDst, cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx));
+      vtxDst += cmd_list->VtxBuffer.Size;
+      idxDst += cmd_list->IdxBuffer.Size;
+   }
+
+   // Flush to make writes visible to GPU
+   m_vertexBuffer.Flush();
+   m_indexBuffer.Flush();
+
+   return updateCmdBuffers;
+}
+
+void
+Gui::UpdateUI(const glm::ivec2& windowSize)
+{
+   ImGuiIO& io = ImGui::GetIO();
+   io.DisplaySize = ImVec2((float)(windowSize.x), (float)(windowSize.y));
+   
    ImGui::NewFrame();
 
    const auto size = windowSize;
@@ -55,6 +126,8 @@ Gui::Render(const glm::ivec2& windowSize, uint32_t shadowMapID)
    auto windowWidth = static_cast< float >(size.x) / 3.0f;
    const auto toolsWindowHeight = 60.0f;
    const auto debugWindowHeight = static_cast< float >(size.y);
+
+   ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
 
    ImGui::SetNextWindowPos({0, 0});
    ImGui::SetNextWindowSize(ImVec2(windowWidth, toolsWindowHeight));
@@ -81,31 +154,62 @@ Gui::Render(const glm::ivec2& windowSize, uint32_t shadowMapID)
    ImGui::SetNextWindowSize(ImVec2(windowWidth, debugWindowHeight));
    ImGui::Begin("Debug Window");
 
-   ImGui::SetNextTreeNodeOpen(true);
-   if (ImGui::CollapsingHeader("Depth Map"))
-   {
-      ImGui::Image(reinterpret_cast< void* >(static_cast< size_t >(shadowMapID)),
-                   {windowWidth, windowWidth});
-   }
 
    ImGui::End();
-
-   ImGuiIO& io = ImGui::GetIO();
-   io.DisplaySize = ImVec2(static_cast< float >(windowSize.x), static_cast< float >(windowSize.y));
+   ImGui::PopStyleVar();
    ImGui::Render();
-   ImDrawData* draw_data = ImGui::GetDrawData();
-   const bool is_minimized = (draw_data->DisplaySize.x <= 0.0f || draw_data->DisplaySize.y <= 0.0f);
-   // if (!is_minimized)
-   //{
-   //   wd->ClearValue.color.float32[0] = clear_color.x * clear_color.w;
-   //   wd->ClearValue.color.float32[1] = clear_color.y * clear_color.w;
-   //   wd->ClearValue.color.float32[2] = clear_color.z * clear_color.w;
-   //   wd->ClearValue.color.float32[3] = clear_color.w;
-   //   FrameRender(wd, draw_data);
-   //   FramePresent(wd);
-   //}
+
+   if (UpdateBuffers())
+   {
+      VulkanRenderer::CreateCommandBufferForDeferred();
+   }
 }
 
+void
+Gui::Render(VkCommandBuffer commandBuffer)
+{
+   ImDrawData* imDrawData = ImGui::GetDrawData();
+   int32_t vertexOffset = 0;
+   int32_t indexOffset = 0;
+
+   if ((!imDrawData) || (imDrawData->CmdListsCount == 0))
+   {
+      return;
+   }
+
+   ImGuiIO& io = ImGui::GetIO();
+
+   vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
+   vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1,
+                           &m_descriptorSet, 0, NULL);
+
+   m_pushConstant.scale = glm::vec2(2.0f / io.DisplaySize.x, 2.0f / io.DisplaySize.y);
+   m_pushConstant.translate = glm::vec2(-1.0f);
+   vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
+                      sizeof(PushConstBlock), &m_pushConstant);
+
+   VkDeviceSize offsets[1] = {0};
+   vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.m_buffer, offsets);
+   vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.m_buffer, 0, VK_INDEX_TYPE_UINT16);
+
+   for (int32_t i = 0; i < imDrawData->CmdListsCount; i++)
+   {
+      const ImDrawList* cmd_list = imDrawData->CmdLists[i];
+      for (int32_t j = 0; j < cmd_list->CmdBuffer.Size; j++)
+      {
+         const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[j];
+         VkRect2D scissorRect;
+         scissorRect.offset.x = std::max((int32_t)(pcmd->ClipRect.x), 0);
+         scissorRect.offset.y = std::max((int32_t)(pcmd->ClipRect.y), 0);
+         scissorRect.extent.width = (uint32_t)(pcmd->ClipRect.z - pcmd->ClipRect.x);
+         scissorRect.extent.height = (uint32_t)(pcmd->ClipRect.w - pcmd->ClipRect.y);
+         vkCmdSetScissor(commandBuffer, 0, 1, &scissorRect);
+         vkCmdDrawIndexed(commandBuffer, pcmd->ElemCount, 1, indexOffset, vertexOffset, 0);
+         indexOffset += pcmd->ElemCount;
+      }
+      vertexOffset += cmd_list->VtxBuffer.Size;
+   }
+}
 
 void
 Gui::PrepareResources()

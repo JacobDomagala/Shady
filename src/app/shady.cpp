@@ -2,6 +2,7 @@
 #include "app/input/input_manager.hpp"
 #include "trace/logger.hpp"
 #include "utils/file_manager.hpp"
+#include "gui/gui.hpp"
 
 #include "render/vulkan/vulkan_renderer.hpp"
 #include <GLFW/glfw3.h>
@@ -29,11 +30,10 @@ Shady::Init()
    model.ScaleModel(glm::vec3(0.1f, 0.1f, 0.1f));
    model.Draw();
 
+
    render::vulkan::VulkanRenderer::CreateRenderPipeline();
 
    m_currentScene.LoadDefault();
-
-   m_gui.Init(m_window->GetWindowHandle());
 }
 
 void

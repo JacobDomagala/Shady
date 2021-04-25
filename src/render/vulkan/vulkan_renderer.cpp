@@ -8,6 +8,7 @@
 #include "vulkan_common.hpp"
 #include "vulkan_shader.hpp"
 #include "vulkan_texture.hpp"
+#include "app/gui/gui.hpp"
 
 
 #include <GLFW/glfw3.h>
@@ -677,6 +678,8 @@ VulkanRenderer::CreateRenderPipeline()
    {
       m_deferredPipeline.Initialize(Data::m_renderPass, m_swapChainImageViews,
                                     Data::m_pipelineCache);
+      app::gui::Gui::Init();
+      app::gui::Gui::UpdateUI({m_swapChainExtent.width, m_swapChainExtent.height});
       CreateCommandBufferForDeferred();
    }
 
@@ -1363,6 +1366,7 @@ VulkanRenderer::CreateCommandBufferForDeferred()
       // Note: Also used for debug display if debugDisplayTarget > 0
       vkCmdDraw(m_commandBuffers[i], 3, 1, 0, 0);
 
+      app::gui::Gui::Render(m_commandBuffers[i]);
       // drawUI(drawCmdBuffers[i]);
 
       vkCmdEndRenderPass(m_commandBuffers[i]);

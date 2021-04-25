@@ -35,7 +35,13 @@ class Buffer
    CopyData(const void* data);
 
    void
+   Flush(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+
+   void
    SetupDescriptor(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+
+   void
+   Destroy();
 
  public:
    void* m_mappedMemory = nullptr;

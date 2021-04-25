@@ -11,6 +11,12 @@ struct GLFWwindow;
 
 namespace shady::app::gui {
 
+struct PushConstBlock
+{
+   glm::vec2 scale;
+   glm::vec2 translate;
+};
+
 class Gui
 {
  public:
@@ -37,6 +43,11 @@ class Gui
    VkDescriptorPool m_descriptorPool = {};
    VkDescriptorSetLayout m_descriptorSetLayout = {};
    VkDescriptorSet m_descriptorSet = {};
+
+   VkPipeline m_pipeline = {};
+   VkPipelineLayout m_pipelineLayout = {};
+   VkSampleCountFlagBits m_rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+   uint32_t m_subpass = 0;
 };
 
 } // namespace shady::app::gui

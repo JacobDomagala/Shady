@@ -120,7 +120,7 @@ Buffer::Flush(VkDeviceSize size, VkDeviceSize offset)
    mappedRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
    mappedRange.memory = m_bufferMemory;
    mappedRange.offset = offset;
-   mappedRange.size = m_bufferSize;
+   mappedRange.size = size;
    VK_CHECK(vkFlushMappedMemoryRanges(Data::vk_device, 1, &mappedRange), "");
 }
 

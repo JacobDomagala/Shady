@@ -29,6 +29,7 @@ class FileManager
    static inline const std::filesystem::path TEXTURES_DIR = ASSETS_DIR / "textures";
    static inline const std::filesystem::path SHADERS_DIR = ASSETS_DIR / "shaders";
    static inline const std::filesystem::path MODELS_DIR = ASSETS_DIR / "models";
+   static inline const std::filesystem::path FONTS_DIR = ASSETS_DIR / "fonts";
 
  public:
    static std::string

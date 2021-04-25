@@ -651,7 +651,7 @@ VulkanRenderer::CreatePipelineCache()
    VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
    pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
    VK_CHECK(
-      vkCreatePipelineCache(Data::vk_device, &pipelineCacheCreateInfo, nullptr, &m_pipelineCache),
+      vkCreatePipelineCache(Data::vk_device, &pipelineCacheCreateInfo, nullptr, &Data::m_pipelineCache),
       "");
 }
 
@@ -675,7 +675,8 @@ VulkanRenderer::CreateRenderPipeline()
    }
    else
    {
-      m_deferredPipeline.Initialize(m_renderPass, m_swapChainImageViews, m_pipelineCache);
+      m_deferredPipeline.Initialize(Data::m_renderPass, m_swapChainImageViews,
+                                    Data::m_pipelineCache);
       CreateCommandBufferForDeferred();
    }
 
@@ -836,7 +837,7 @@ VulkanRenderer::Draw()
 
    presentInfo.pImageIndices = &imageIndex;
 
-   vkQueuePresentKHR(m_presentQueue, &presentInfo);
+   vkQueuePresentKHR(Data::m_presentQueue, &presentInfo);
 
    vkQueueWaitIdle(Data::vk_graphicsQueue);
 
@@ -953,7 +954,7 @@ VulkanRenderer::CreateDevice()
             "failed to create logical device!");
 
    vkGetDeviceQueue(Data::vk_device, indices.graphicsFamily.value(), 0, &Data::vk_graphicsQueue);
-   vkGetDeviceQueue(Data::vk_device, indices.presentFamily.value(), 0, &m_presentQueue);
+   vkGetDeviceQueue(Data::vk_device, indices.presentFamily.value(), 0, &Data::m_presentQueue);
 }
 
 void
@@ -1166,7 +1167,7 @@ VulkanRenderer::CreateRenderPass()
    renderPassInfo.dependencyCount = static_cast< uint32_t >(dependencies.size());
    renderPassInfo.pDependencies = dependencies.data();
 
-   VK_CHECK(vkCreateRenderPass(Data::vk_device, &renderPassInfo, nullptr, &m_renderPass),
+   VK_CHECK(vkCreateRenderPass(Data::vk_device, &renderPassInfo, nullptr, &Data::m_renderPass),
             "failed to create render pass!");
 }
 
@@ -1184,7 +1185,7 @@ VulkanRenderer::CreateFramebuffers()
 
       VkFramebufferCreateInfo framebufferInfo{};
       framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-      framebufferInfo.renderPass = m_renderPass;
+      framebufferInfo.renderPass = Data::m_renderPass;
       framebufferInfo.attachmentCount = static_cast< uint32_t >(attachments.size());
       framebufferInfo.pAttachments = attachments.data();
       framebufferInfo.width = m_swapChainExtent.width;
@@ -1251,7 +1252,7 @@ VulkanRenderer::CreateCommandBuffers()
 
    VkRenderPassBeginInfo renderPassInfo{};
    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-   renderPassInfo.renderPass = m_renderPass;
+   renderPassInfo.renderPass = Data::m_renderPass;
    renderPassInfo.renderArea.offset = {0, 0};
    renderPassInfo.renderArea.extent = m_swapChainExtent;
    renderPassInfo.clearValueCount = static_cast< uint32_t >(clearValues.size());
@@ -1266,7 +1267,8 @@ VulkanRenderer::CreateCommandBuffers()
 
       vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-      vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
+      vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
+                        Data::m_graphicsPipeline);
 
       VkBuffer vertexBuffers[] = {Data::m_vertexBuffer};
       VkDeviceSize offsets[] = {0};
@@ -1319,7 +1321,7 @@ VulkanRenderer::CreateCommandBufferForDeferred()
 
    VkRenderPassBeginInfo renderPassInfo{};
    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-   renderPassInfo.renderPass = m_renderPass;
+   renderPassInfo.renderPass = Data::m_renderPass;
    renderPassInfo.renderArea.offset = {0, 0};
    renderPassInfo.renderArea.extent = m_swapChainExtent;
    renderPassInfo.clearValueCount = static_cast< uint32_t >(clearValues.size());
@@ -1503,13 +1505,13 @@ VulkanRenderer::CreatePipeline()
    pipelineInfo.pDepthStencilState = &depthStencil;
    pipelineInfo.pColorBlendState = &colorBlending;
    pipelineInfo.layout = m_pipelineLayout;
-   pipelineInfo.renderPass = m_renderPass;
+   pipelineInfo.renderPass = Data::m_renderPass;
    pipelineInfo.subpass = 0;
    pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
 
    VK_CHECK(vkCreateGraphicsPipelines(Data::vk_device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr,
-                                      &m_graphicsPipeline),
+                                      &Data::m_graphicsPipeline),
             "failed to create graphics pipeline!");
 
    // Shader info can be destroyed after the pipeline is created

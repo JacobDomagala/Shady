@@ -7,6 +7,7 @@
 #include <vulkan/vulkan.h>
 
 namespace shady::render::vulkan {
+
 class Texture
 {
  public:
@@ -31,6 +32,13 @@ class Texture
    static VkImageView
    CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
 
+   static void 
+   TransitionImageLayout(VkImage image, VkImageLayout oldLayout,
+                         VkImageLayout newLayout, uint32_t mipLevels);
+
+   static void
+   CopyBufferToImage(VkImage image, uint32_t texWidth, uint32_t texHeight, VkBuffer buffer);
+
    std::pair<VkImageView, VkSampler>
    GetImageViewAndSampler() const;
 
@@ -40,9 +48,10 @@ class Texture
    TextureType
    GetType() const;
 
- private:
+private:
    void
    TransitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
+
    void
    CopyBufferToImage(VkBuffer buffer);
 

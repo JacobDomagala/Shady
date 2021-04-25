@@ -39,7 +39,7 @@ Texture::CreateTextureImage(TextureType type, std::string_view textureName)
    m_height = textureData.m_size.y;
 
    m_format = type == TextureType::DIFFUSE_MAP ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8A8_UNORM;
-   m_mips = static_cast<uint32_t>(std::floor(std::log2(std::max(m_width, m_height)))) + 1;
+   m_mips = static_cast< uint32_t >(std::floor(std::log2(std::max(m_width, m_height)))) + 1;
 
    VkDeviceSize imageSize = m_width * m_height * 4;
 
@@ -60,12 +60,13 @@ Texture::CreateTextureImage(TextureType type, std::string_view textureName)
          | VK_IMAGE_USAGE_SAMPLED_BIT,
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-   m_textureImageView = CreateImageView(m_textureImage, m_format, VK_IMAGE_ASPECT_COLOR_BIT, m_mips);
+   m_textureImageView =
+      CreateImageView(m_textureImage, m_format, VK_IMAGE_ASPECT_COLOR_BIT, m_mips);
    CreateTextureSampler();
 
    TransitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_mips);
    CopyBufferToImage(stagingBuffer);
-   //transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
+   // transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
 
    vkDestroyBuffer(Data::vk_device, stagingBuffer, nullptr);
    vkFreeMemory(Data::vk_device, stagingBufferMemory, nullptr);
@@ -106,7 +107,8 @@ Texture::CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels,
 }
 
 VkImageView
-Texture::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels)
+Texture::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags,
+                         uint32_t mipLevels)
 {
    VkImageViewCreateInfo viewInfo{};
    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -123,13 +125,13 @@ Texture::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspe
    VkImageView imageView;
    VK_CHECK(vkCreateImageView(Data::vk_device, &viewInfo, nullptr, &imageView),
             "Failed to create texture image view!");
-   
+
    return imageView;
 }
 
 void
 Texture::GenerateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight,
-                uint32_t mipLevels)
+                         uint32_t mipLevels)
 {
    // Check if image format supports linear blitting
    VkFormatProperties formatProperties;
@@ -249,11 +251,11 @@ Texture::CreateTextureSampler()
    samplerInfo.mipLodBias = 0.0f;
 
    VK_CHECK(vkCreateSampler(Data::vk_device, &samplerInfo, nullptr, &m_textureSampler),
-            "Failed to create texture sampler!");            
+            "Failed to create texture sampler!");
 }
 
 void
-Texture::CopyBufferToImage(VkBuffer buffer)
+Texture::CopyBufferToImage(VkImage image, uint32_t texWidth, uint32_t texHeight, VkBuffer buffer)
 {
    VkCommandBuffer commandBuffer = Command::BeginSingleTimeCommands();
 
@@ -266,16 +268,23 @@ Texture::CopyBufferToImage(VkBuffer buffer)
    region.imageSubresource.baseArrayLayer = 0;
    region.imageSubresource.layerCount = 1;
    region.imageOffset = {0, 0, 0};
-   region.imageExtent = {m_width, m_height, 1};
+   region.imageExtent = {texWidth, texHeight, 1};
 
-   vkCmdCopyBufferToImage(commandBuffer, buffer, m_textureImage,
-                          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+   vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1,
+                          &region);
 
    Command::EndSingleTimeCommands(commandBuffer);
 }
 
 void
-Texture::TransitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels)
+Texture::CopyBufferToImage(VkBuffer buffer)
+{
+   CopyBufferToImage(m_textureImage, m_width, m_height, buffer);
+}
+
+void
+Texture::TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout,
+                               uint32_t mipLevels)
 {
    VkCommandBuffer commandBuffer = Command::BeginSingleTimeCommands();
 
@@ -285,7 +294,7 @@ Texture::TransitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout,
    barrier.newLayout = newLayout;
    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-   barrier.image = m_textureImage;
+   barrier.image = image;
    barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
    barrier.subresourceRange.baseMipLevel = 0;
    barrier.subresourceRange.levelCount = mipLevels;
@@ -321,6 +330,12 @@ Texture::TransitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout,
                         &barrier);
 
    Command::EndSingleTimeCommands(commandBuffer);
+}
+
+void
+Texture::TransitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels)
+{
+   TransitionImageLayout(m_textureImage, oldLayout, newLayout, mipLevels);
 }
 
 

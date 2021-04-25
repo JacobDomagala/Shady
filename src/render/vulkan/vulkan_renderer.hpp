@@ -117,7 +117,7 @@ class VulkanRenderer
 
    inline static VkSampleCountFlagBits m_msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 
-   inline static VkQueue m_presentQueue = {};
+   
 
    inline static VkSwapchainKHR m_swapChain = {};
    inline static std::vector< VkImage > m_swapChainImages = {};
@@ -126,15 +126,11 @@ class VulkanRenderer
    inline static VkFormat m_swapChainImageFormat = {};
    inline static VkExtent2D m_swapChainExtent = {};
 
-   inline static VkRenderPass m_renderPass = {};
-
    inline static VkDescriptorSetLayout m_descriptorSetLayout = {};
    inline static VkDescriptorPool m_descriptorPool = {};
    inline static std::vector< VkDescriptorSet > m_descriptorSets = {};
 
    inline static VkPipelineLayout m_pipelineLayout = {};
-   inline static VkPipeline m_graphicsPipeline = {};
-
 
    inline static std::vector< VkCommandBuffer > m_commandBuffers = {};
 
@@ -142,7 +138,6 @@ class VulkanRenderer
    inline static std::vector< VkSemaphore > m_renderFinishedSemaphores = {};
    inline static std::vector< VkFence > m_inFlightFences = {};
    inline static std::vector< VkFence > m_imagesInFlight = {};
-
 
    inline static VkImage m_depthImage = {};
    inline static VkDeviceMemory m_depthImageMemory = {};
@@ -152,9 +147,6 @@ class VulkanRenderer
    inline static VkDeviceMemory m_colorImageMemory = {};
    inline static VkImageView m_colorImageView = {};
 
- 
-
-   inline static VkPipelineCache m_pipelineCache = {};
    inline static DeferedPipeline m_deferredPipeline = {};
 };
 

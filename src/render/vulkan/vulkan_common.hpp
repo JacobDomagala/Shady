@@ -51,6 +51,7 @@ struct Data
    inline static VkDevice vk_device = {};
    inline static VkPhysicalDevice vk_physicalDevice = VK_NULL_HANDLE;
    inline static VkQueue vk_graphicsQueue = {};
+   inline static VkQueue m_presentQueue = {};
    inline static VkCommandPool vk_commandPool = {};
    inline static VkSurfaceKHR m_surface = {};
 
@@ -78,6 +79,10 @@ struct Data
    inline static int32_t currTexIdx = 0;
    inline static std::unordered_map< std::string, std::pair< int32_t, VkImageView > > textures = {};
    inline static std::vector< VkImageView > texturesVec = {};
+
+   inline static VkPipelineCache m_pipelineCache = {};
+   inline static VkPipeline m_graphicsPipeline = {};
+   inline static VkRenderPass m_renderPass = {};
 };
 
 uint32_t

@@ -1,9 +1,7 @@
 #include "app/shady.hpp"
 #include "app/input/input_manager.hpp"
-
 #include "trace/logger.hpp"
 #include "utils/file_manager.hpp"
-
 
 #include "render/vulkan/vulkan_renderer.hpp"
 #include <GLFW/glfw3.h>
@@ -11,6 +9,7 @@
 namespace shady::app {
 
 scene::Model model;
+
 void
 Shady::Init()
 {
@@ -26,24 +25,15 @@ Shady::Init()
 
    model = scene::Model((utils::FileManager::MODELS_DIR / "sponza" / "glTF" / "sponza.gltf").string(),
                         scene::LoadFlags::FlipUV);
-   // model.RotateModel(glm::vec3(0.0f, 0.0f, 1.0f), glm::radians(180.0f));
+
    model.ScaleModel(glm::vec3(0.1f, 0.1f, 0.1f));
    model.Draw();
 
-   // model = scene::Model((utils::FileManager::MODELS_DIR / "suzanne.obj").string());
-   // model = scene::Model((utils::FileManager::MODELS_DIR / "viking_room.obj").string());
-   // model = scene::Model((utils::FileManager::MODELS_DIR / "viking_room.obj").string());
-   // model = scene::Model((utils::FileManager::MODELS_DIR / "viking_room.obj").string());
-
    render::vulkan::VulkanRenderer::CreateRenderPipeline();
-   // render::Renderer::Init();
-   //
 
    m_currentScene.LoadDefault();
-   // m_currentScene.GetCamera().RotateCamera(glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-   // render::RenderCommand::SetClearColor({0.4f, 0.1f, 0.3f, 1.0f});
 
-   // m_gui.Init(m_window->GetWindowHandle());
+   m_gui.Init(m_window->GetWindowHandle());
 }
 
 void
@@ -56,10 +46,6 @@ Shady::MainLoop()
       OnUpdate();
 
       // m_currentScene.Render(m_windowWidth, m_windowHeight);
-      // m_gui.Render({m_windowWidth, m_windowHeight}, m_currentScene.GetLight().GetDepthMapID());
-
-      // Vulkan has inverted Y axis ( no idea why ) so we either have to rotate
-      // meshes by 180 or use 'projection_mat[1][1] *= -1'
 
       render::vulkan::VulkanRenderer::view_mat = m_currentScene.GetCamera().GetView();
       render::vulkan::VulkanRenderer::proj_mat = m_currentScene.GetCamera().GetProjection();
@@ -69,9 +55,11 @@ Shady::MainLoop()
       render::vulkan::VulkanRenderer::light_pos =
          glm::vec4(m_currentScene.GetLight().GetPosition(), 0.0f);
 
-
       // render::vulkan::VulkanRenderer::Draw();
       render::vulkan::VulkanRenderer::DrawDeferred();
+
+      // m_gui.Render({m_windowWidth, m_windowHeight});
+
       m_window->SwapBuffers();
    }
 }

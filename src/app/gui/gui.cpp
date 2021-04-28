@@ -1,10 +1,11 @@
 #include "gui.hpp"
+#include "app//input/input_manager.hpp"
 #include "render/vulkan/vulkan_common.hpp"
 #include "utils/file_manager.hpp"
 #include "vulkan/vulkan_buffer.hpp"
+#include "vulkan/vulkan_renderer.hpp"
 #include "vulkan/vulkan_shader.hpp"
 #include "vulkan/vulkan_texture.hpp"
-#include "vulkan/vulkan_renderer.hpp"
 
 #include <GLFW/glfw3.h>
 #include <fmt/format.h>
@@ -21,8 +22,8 @@ Gui::Init()
    // Setup Dear ImGui context
    IMGUI_CHECKVERSION();
    ImGui::CreateContext();
-  // ImGuiIO& io = ImGui::GetIO();
-  // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+   // ImGuiIO& io = ImGui::GetIO();
+   // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
 
    // Setup Dear ImGui style
    ImGui::StyleColorsDark();
@@ -118,6 +119,12 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
 {
    ImGuiIO& io = ImGui::GetIO();
    io.DisplaySize = ImVec2((float)(windowSize.x), (float)(windowSize.y));
+
+   const auto mousePos = input::InputManager::GetMousePos();
+
+   io.MousePos = ImVec2(mousePos.x, mousePos.y);
+   io.MouseDown[0] = input::InputManager::CheckButtonPressed(GLFW_MOUSE_BUTTON_1);
+   io.MouseDown[1] = input::InputManager::CheckButtonPressed(GLFW_MOUSE_BUTTON_2);
 
    ImGui::NewFrame();
 
@@ -225,7 +232,8 @@ Gui::PrepareResources()
    io.Fonts->AddFontFromFileTTF(fontFilename.c_str(), 16.0f);
 
    io.Fonts->GetTexDataAsRGBA32(&fontData, &texWidth, &texHeight);
-   VkDeviceSize uploadSize = texWidth * texHeight * 4 * sizeof(char);
+   VkDeviceSize uploadSize = static_cast< VkDeviceSize >(texWidth)
+                             * static_cast< VkDeviceSize >(texHeight) * 4 * sizeof(char);
 
    std::tie(m_fontImage, m_fontMemory) = Texture::CreateImage(
       texWidth, texHeight, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM,

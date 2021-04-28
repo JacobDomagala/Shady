@@ -416,8 +416,17 @@ DeferedPipeline::PreparePipelines()
       VulkanShader::CreateShader(Data::vk_device, "default/mrt.vert.spv", "default/mrt.frag.spv");
 
    multisampling.rasterizationSamples = Data::m_msaaSamples;
+
+   specializationData = static_cast<uint32_t>(Data::textures.size());
+
+   specializationInfo.mapEntryCount = 1;
+   specializationInfo.pMapEntries = &specializationEntry;
+   specializationInfo.dataSize = sizeof(specializationData);
+   specializationInfo.pData = &specializationData;
+
    shaderStages[0] = vertexInfo.shaderInfo;
    shaderStages[1] = fragmentInfo.shaderInfo;
+   shaderStages[1].pSpecializationInfo = &specializationInfo;
 
    newInfo.stageCount = static_cast< uint32_t >(shaderStages.size());
    newInfo.pStages = shaderStages.data();
@@ -706,8 +715,7 @@ DeferedPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& sw
    vkCmdDrawIndexedIndirectCount(m_offscreenCommandBuffer, Data::m_indirectDrawsBuffer, 0,
                                  Data::m_indirectDrawsBuffer,
                                  sizeof(VkDrawIndexedIndirectCommand) * Data::m_numMeshes,
-                                 Data::m_numMeshes,
-                                 sizeof(VkDrawIndexedIndirectCommand));
+                                 Data::m_numMeshes, sizeof(VkDrawIndexedIndirectCommand));
 
    vkCmdEndRenderPass(m_offscreenCommandBuffer);
 

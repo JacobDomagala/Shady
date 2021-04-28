@@ -902,7 +902,8 @@ VulkanRenderer::CreateDevice()
          trace::Logger::Info("Device found! Using {}", deviceProps.deviceName);
 
          Data::vk_physicalDevice = device;
-         Data::m_msaaSamples = getMaxUsableSampleCount(Data::vk_physicalDevice);
+         Data::m_msaaSamples = VK_SAMPLE_COUNT_1_BIT;
+         //getMaxUsableSampleCount(Data::vk_physicalDevice);
          break;
       }
    }

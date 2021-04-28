@@ -339,8 +339,22 @@ DeferedPipeline::PreparePipelines()
    auto [vertexInfo, fragmentInfo] = VulkanShader::CreateShader(
       Data::vk_device, "default/deferred.vert.spv", "default/deferred.frag.spv");
 
+   VkSpecializationMapEntry specializationEntry{};
+   specializationEntry.constantID = 0;
+   specializationEntry.offset = 0;
+   specializationEntry.size = sizeof(uint32_t);
+
+   uint32_t specializationData = Data::m_msaaSamples;
+
+   VkSpecializationInfo specializationInfo;
+   specializationInfo.mapEntryCount = 1;
+   specializationInfo.pMapEntries = &specializationEntry;
+   specializationInfo.dataSize = sizeof(specializationData);
+   specializationInfo.pData = &specializationData;
+
    shaderStages[0] = vertexInfo.shaderInfo;
    shaderStages[1] = fragmentInfo.shaderInfo;
+   shaderStages[1].pSpecializationInfo = &specializationInfo;
 
    VkGraphicsPipelineCreateInfo pipelineInfo{};
    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -353,7 +367,7 @@ DeferedPipeline::PreparePipelines()
    pipelineInfo.pDepthStencilState = &depthStencil;
    pipelineInfo.pColorBlendState = &colorBlending;
    pipelineInfo.layout = m_pipelineLayout;
-   pipelineInfo.renderPass = m_mainRenderPass;
+   pipelineInfo.renderPass = Data::m_renderPass;
    pipelineInfo.pDynamicState = &pipelineDynamicStateCreateInfo;
 
    pipelineInfo.subpass = 0;
@@ -401,10 +415,11 @@ DeferedPipeline::PreparePipelines()
    std::tie(vertexInfo, fragmentInfo) =
       VulkanShader::CreateShader(Data::vk_device, "default/mrt.vert.spv", "default/mrt.frag.spv");
 
+   multisampling.rasterizationSamples = Data::m_msaaSamples;
    shaderStages[0] = vertexInfo.shaderInfo;
    shaderStages[1] = fragmentInfo.shaderInfo;
 
-      newInfo.stageCount = static_cast< uint32_t >(shaderStages.size());
+   newInfo.stageCount = static_cast< uint32_t >(shaderStages.size());
    newInfo.pStages = shaderStages.data();
 
    // Separate render pass
@@ -458,8 +473,8 @@ DeferedPipeline::SetupDescriptorPool()
    poolSizes[3].descriptorCount = 3; // 1 * numfrabuffers in swapchain?
    poolSizes[4].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
    poolSizes[4].descriptorCount = 3; // 1 * numfrabuffers in swapchain?
-   
-   
+
+
    VkDescriptorPoolCreateInfo poolInfo{};
    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
    poolInfo.poolSizeCount = static_cast< uint32_t >(poolSizes.size());
@@ -678,7 +693,7 @@ DeferedPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& sw
    vkCmdBindPipeline(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                      m_offscreenPipeline);
 
-   
+
    VkDeviceSize offsets[] = {0};
    vkCmdBindVertexBuffers(m_offscreenCommandBuffer, 0, 1, &Data::m_vertexBuffer, offsets);
 
@@ -687,7 +702,7 @@ DeferedPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& sw
    vkCmdBindDescriptorSets(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                            m_pipelineLayout, 0, 1, &m_descriptorSet, 0, nullptr);
 
-  
+
    vkCmdDrawIndexedIndirectCount(m_offscreenCommandBuffer, Data::m_indirectDrawsBuffer, 0,
                                  Data::m_indirectDrawsBuffer,
                                  sizeof(VkDrawIndexedIndirectCommand) * Data::m_numMeshes,

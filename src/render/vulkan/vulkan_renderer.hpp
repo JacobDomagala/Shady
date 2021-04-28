@@ -115,10 +115,6 @@ class VulkanRenderer
    inline static VkDebugUtilsMessengerCreateInfoEXT m_debugCreateInfo = {};
    inline static VkDebugUtilsMessengerEXT m_debugMessenger = {};
 
-
-   inline static VkSampleCountFlagBits m_msaaSamples = VK_SAMPLE_COUNT_1_BIT;
-
-
    inline static VkSwapchainKHR m_swapChain = {};
    inline static std::vector< VkImage > m_swapChainImages = {};
    inline static std::vector< VkImageView > m_swapChainImageViews = {};

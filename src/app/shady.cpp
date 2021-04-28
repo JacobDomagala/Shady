@@ -30,7 +30,6 @@ Shady::Init()
    model.ScaleModel(glm::vec3(0.1f, 0.1f, 0.1f));
    model.Draw();
 
-
    render::vulkan::VulkanRenderer::CreateRenderPipeline();
 
    m_currentScene.LoadDefault();
@@ -56,6 +55,7 @@ Shady::MainLoop()
          glm::vec4(m_currentScene.GetLight().GetPosition(), 0.0f);
 
       // render::vulkan::VulkanRenderer::Draw();
+      app::gui::Gui::UpdateUI({m_windowWidth, m_windowHeight});
       render::vulkan::VulkanRenderer::DrawDeferred();
 
       // m_gui.Render({m_windowWidth, m_windowHeight});

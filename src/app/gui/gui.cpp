@@ -66,7 +66,7 @@ Gui::UpdateBuffers()
          m_vertexBuffer.Unmap();
          m_vertexBuffer.Destroy();
       }
-      
+
       m_vertexBuffer = Buffer::CreateBuffer(vertexBufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
       m_vertexCount = imDrawData->TotalVtxCount;
@@ -84,7 +84,7 @@ Gui::UpdateBuffers()
          m_indexBuffer.Unmap();
          m_indexBuffer.Destroy();
       }
-      
+
       m_indexBuffer = Buffer::CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
                                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
       m_indexCount = imDrawData->TotalIdxCount;
@@ -118,7 +118,7 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
 {
    ImGuiIO& io = ImGui::GetIO();
    io.DisplaySize = ImVec2((float)(windowSize.x), (float)(windowSize.y));
-   
+
    ImGui::NewFrame();
 
    const auto size = windowSize;
@@ -407,7 +407,8 @@ Gui::PreparePipeline(const VkPipelineCache pipelineCache, const VkRenderPass ren
    VkPipelineMultisampleStateCreateInfo pipelineMultisampleStateCreateInfo{};
    pipelineMultisampleStateCreateInfo.sType =
       VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-   pipelineMultisampleStateCreateInfo.rasterizationSamples = m_rasterizationSamples;
+   pipelineMultisampleStateCreateInfo.rasterizationSamples =
+      VK_SAMPLE_COUNT_1_BIT; /*Data::m_msaaSamples*/
    pipelineMultisampleStateCreateInfo.flags = 0;
 
 

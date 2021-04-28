@@ -111,7 +111,7 @@ Framebuffer::CreateAttachment(VkFormat format, VkImageUsageFlagBits usage,
    image.extent.depth = 1;
    image.mipLevels = 1;
    image.arrayLayers = 1;
-   image.samples = VK_SAMPLE_COUNT_1_BIT;
+   image.samples = Data::m_msaaSamples;
    image.tiling = VK_IMAGE_TILING_OPTIMAL;
    image.usage = usage | VK_IMAGE_USAGE_SAMPLED_BIT;
 
@@ -151,7 +151,7 @@ Framebuffer::SetupRenderPass()
    // Init attachment properties
    for (uint32_t i = 0; i < 4; ++i)
    {
-      attachmentDescs[i].samples = VK_SAMPLE_COUNT_1_BIT;
+      attachmentDescs[i].samples = Data::m_msaaSamples;
       attachmentDescs[i].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
       attachmentDescs[i].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
       attachmentDescs[i].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;

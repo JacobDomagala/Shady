@@ -53,7 +53,6 @@ class Gui
 
    inline static VkPipeline m_pipeline = {};
    inline static VkPipelineLayout m_pipelineLayout = {};
-   inline static VkSampleCountFlagBits m_rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
    inline static uint32_t m_subpass = 0;
 
    inline static PushConstBlock m_pushConstant = {};

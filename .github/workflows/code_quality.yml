@@ -18,10 +18,10 @@ jobs:
         source ./1.2.170.0/setup-env.sh" > init_script.sh
 
     - name: Run static analysis
-      uses: JacobDomagala/StaticAnalysis@7-add-option-to-run-only-on-pr-changes
+      uses: JacobDomagala/StaticAnalysis@master
       with:
         exclude_dir: lib
         init_script: init_script.sh
-        apt_pckgs: wget
-        report_pr_changes_only: true
+        apt_pckgs: xorg-dev
+        report_pr_changes_only: false
 

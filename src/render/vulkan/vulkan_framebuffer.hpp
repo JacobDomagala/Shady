@@ -87,7 +87,7 @@ class Framebuffer
    GetFramebuffer();
 
    void
-   CreateAttachments();
+   CreateRenderPass();
 
    void
    SetupRenderPass();
@@ -133,14 +133,11 @@ class Framebuffer
 
  private:
    int32_t m_width, m_height;
-   VkFramebuffer m_frameBuffer;
-   FramebufferAttachment m_position, m_normal, m_albedo;
-   FramebufferAttachment m_depth;
-   FramebufferAttachment m_shadow;
+   VkFramebuffer m_framebuffer;
    std::vector< FramebufferAttachment > m_attachments;
    VkRenderPass m_renderPass;
-   // One sampler for the frame buffer color attachments
-   VkSampler m_colorSampler = {};
+
+   VkSampler m_sampler = {};
 };
 
 } // namespace shady::render::vulkan

@@ -143,7 +143,7 @@ DeferedPipeline::Initialize(VkRenderPass mainRenderPass,
    m_pipelineCache = pipelineCache;
    m_mainRenderPass = mainRenderPass;
    m_camera = std::make_unique< scene::PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 500.0f);
-   //ShadowSetup();
+   // ShadowSetup();
    PrepareOffscreenFramebuffer();
    PrepareUniformBuffers();
    SetupDescriptorSetLayout();

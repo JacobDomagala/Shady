@@ -88,6 +88,7 @@ class DeferedPipeline
 
    inline static Buffer m_offscreenBuffer = {};
    inline static Buffer m_compositionBuffer = {};
+   inline static Buffer m_shadowGeomBuffer = {};
    inline static int32_t m_debugDisplayTarget = 0;
    inline static std::unique_ptr< scene::Camera > m_camera = {};
 

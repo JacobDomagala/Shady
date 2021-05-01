@@ -54,7 +54,7 @@ struct Data
    inline static VkQueue m_presentQueue = {};
    inline static VkCommandPool vk_commandPool = {};
    inline static VkSurfaceKHR m_surface = {};
-   
+
    inline static VkSampleCountFlagBits m_msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 
    inline static std::vector< VkDrawIndexedIndirectCommand > m_renderCommands = {};

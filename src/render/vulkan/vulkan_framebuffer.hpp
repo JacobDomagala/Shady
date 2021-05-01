@@ -1,8 +1,8 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include <vulkan/vulkan.h>
 #include <vector>
+#include <vulkan/vulkan.h>
 
 namespace shady::render::vulkan {
 
@@ -86,12 +86,6 @@ class Framebuffer
    VkFramebuffer
    GetFramebuffer();
 
-   void
-   CreateRenderPass();
-
-   void
-   SetupRenderPass();
-
    VkImageView
    GetPositionsImageView();
 
@@ -105,6 +99,12 @@ class Framebuffer
    GetSampler();
 
  private:
+   /**
+    * Creates a default render pass setup with one sub pass
+    */
+   void
+   CreateRenderPass();
+
    /**
     * Add a new attachment described by createinfo to the framebuffer's attachment list
     *

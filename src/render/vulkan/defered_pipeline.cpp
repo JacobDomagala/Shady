@@ -40,6 +40,15 @@ struct
    int debugDisplayTarget = 0;
 } uboComposition;
 
+// This UBO stores the shadow matrices for all of the light sources
+// The matrices are indexed using geometry shader instancing
+// The instancePos is used to place the models using instanced draws
+struct
+{
+   glm::mat4 mvp[LIGHT_COUNT];
+   glm::vec4 instancePos[3];
+} uboShadowGeometryShader;
+
 VkDescriptorSet&
 DeferedPipeline::GetDescriptorSet()
 {
@@ -143,7 +152,7 @@ DeferedPipeline::Initialize(VkRenderPass mainRenderPass,
    m_pipelineCache = pipelineCache;
    m_mainRenderPass = mainRenderPass;
    m_camera = std::make_unique< scene::PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 500.0f);
-   // ShadowSetup();
+   ShadowSetup();
    PrepareOffscreenFramebuffer();
    PrepareUniformBuffers();
    SetupDescriptorSetLayout();
@@ -185,10 +194,15 @@ DeferedPipeline::PrepareUniformBuffers()
       sizeof(uboComposition), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
+   m_shadowGeomBuffer = Buffer::CreateBuffer(
+      sizeof(uboShadowGeometryShader), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
 
    // Map persistent
    m_compositionBuffer.Map();
    m_offscreenBuffer.Map();
+   m_shadowGeomBuffer.Map();
    // uniformBuffers.offscreen.map());
    // VK_CHECK(uniformBuffers.composition.map());
 
@@ -211,7 +225,7 @@ DeferedPipeline::SetupDescriptorSetLayout()
    vertexShaderUniform.descriptorCount = 1;
    vertexShaderUniform.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
    vertexShaderUniform.pImmutableSamplers = nullptr;
-   vertexShaderUniform.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+   vertexShaderUniform.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT;
 
    // Binding 1 : Per object buffer (mrt.vert)
    VkDescriptorSetLayoutBinding perInstanceBinding{};
@@ -245,7 +259,7 @@ DeferedPipeline::SetupDescriptorSetLayout()
    albedoTexture.pImmutableSamplers = nullptr;
    albedoTexture.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-   // Binding 4 : Sampler Position (deferred.frag)
+   // Binding 5 : Sampler Position (deferred.frag)
    VkDescriptorSetLayoutBinding positionsTexture{};
    positionsTexture.binding = 5;
    positionsTexture.descriptorCount = 1;
@@ -253,7 +267,7 @@ DeferedPipeline::SetupDescriptorSetLayout()
    positionsTexture.pImmutableSamplers = nullptr;
    positionsTexture.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-   // Binding 5 : Sampler Normal (deferred.frag)
+   // Binding 6 : Sampler Normal (deferred.frag)
    VkDescriptorSetLayoutBinding normalsTexture{};
    normalsTexture.binding = 6;
    normalsTexture.descriptorCount = 1;
@@ -261,7 +275,7 @@ DeferedPipeline::SetupDescriptorSetLayout()
    normalsTexture.pImmutableSamplers = nullptr;
    normalsTexture.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-   // Binding 6 : Uniform (deferred.frag)
+   // Binding 7 : Uniform (deferred.frag)
    VkDescriptorSetLayoutBinding fragmentShaderUniform{};
    fragmentShaderUniform.binding = 7;
    fragmentShaderUniform.descriptorCount = 1;
@@ -269,9 +283,18 @@ DeferedPipeline::SetupDescriptorSetLayout()
    fragmentShaderUniform.pImmutableSamplers = nullptr;
    fragmentShaderUniform.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-   std::array< VkDescriptorSetLayoutBinding, 8 > bindings = {
+   // Binding 8 : Shadow map (deferred.frag)
+   VkDescriptorSetLayoutBinding shadowmapTexture{};
+   shadowmapTexture.binding = 8;
+   shadowmapTexture.descriptorCount = 1;
+   shadowmapTexture.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+   shadowmapTexture.pImmutableSamplers = nullptr;
+   shadowmapTexture.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+   std::array< VkDescriptorSetLayoutBinding, 9 > bindings = {
       vertexShaderUniform, perInstanceBinding, sampler,        textures,
-      albedoTexture,       positionsTexture,   normalsTexture, fragmentShaderUniform};
+      albedoTexture,       positionsTexture,   normalsTexture, fragmentShaderUniform,
+      shadowmapTexture};
 
    VkDescriptorSetLayoutCreateInfo layoutInfo{};
    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -401,16 +424,13 @@ DeferedPipeline::PreparePipelines()
             "");
 
    // Vertex input state from glTF model for pipeline rendering models
-   VkGraphicsPipelineCreateInfo newInfo{};
-   newInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-
-   newInfo.pInputAssemblyState = &inputAssembly;
-   newInfo.pViewportState = &viewportState;
-   newInfo.pRasterizationState = &rasterizer;
-   newInfo.pMultisampleState = &multisampling;
-   newInfo.pDepthStencilState = &depthStencil;
-   newInfo.pDynamicState = &pipelineDynamicStateCreateInfo;
-   newInfo.layout = m_pipelineLayout;
+   pipelineInfo.pInputAssemblyState = &inputAssembly;
+   pipelineInfo.pViewportState = &viewportState;
+   pipelineInfo.pRasterizationState = &rasterizer;
+   pipelineInfo.pMultisampleState = &multisampling;
+   pipelineInfo.pDepthStencilState = &depthStencil;
+   pipelineInfo.pDynamicState = &pipelineDynamicStateCreateInfo;
+   pipelineInfo.layout = m_pipelineLayout;
 
    VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
    vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -422,7 +442,7 @@ DeferedPipeline::PreparePipelines()
    vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
    vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
-   newInfo.pVertexInputState = &vertexInputInfo;
+   pipelineInfo.pVertexInputState = &vertexInputInfo;
    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
 
    // Offscreen pipeline
@@ -431,7 +451,7 @@ DeferedPipeline::PreparePipelines()
 
    multisampling.rasterizationSamples = Data::m_msaaSamples;
 
-   specializationData = static_cast<uint32_t>(Data::textures.size());
+   specializationData = static_cast< uint32_t >(Data::textures.size());
 
    specializationInfo.mapEntryCount = 1;
    specializationInfo.pMapEntries = &specializationEntry;
@@ -442,11 +462,11 @@ DeferedPipeline::PreparePipelines()
    shaderStages[1] = fragmentInfo.shaderInfo;
    shaderStages[1].pSpecializationInfo = &specializationInfo;
 
-   newInfo.stageCount = static_cast< uint32_t >(shaderStages.size());
-   newInfo.pStages = shaderStages.data();
+   pipelineInfo.stageCount = static_cast< uint32_t >(shaderStages.size());
+   pipelineInfo.pStages = shaderStages.data();
 
    // Separate render pass
-   newInfo.renderPass = m_offscreenFrameBuffer.GetRenderPass();
+   pipelineInfo.renderPass = m_offscreenFrameBuffer.GetRenderPass();
 
    // Blend attachment states required for all color attachments
    // This is important, as color write mask will otherwise be 0x0 and you
@@ -470,15 +490,48 @@ DeferedPipeline::PreparePipelines()
    std::array< VkPipelineColorBlendAttachmentState, 3 > blendAttachmentStates = {
       firstColorBlendAttachment, secondColorBlendAttachment, thirdColorBlendAttachment};
 
-   VkPipelineColorBlendStateCreateInfo colorBlendingNew{};
-   colorBlendingNew.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-   colorBlendingNew.attachmentCount = static_cast< uint32_t >(blendAttachmentStates.size());
-   colorBlendingNew.pAttachments = blendAttachmentStates.data();
+   colorBlending.attachmentCount = static_cast< uint32_t >(blendAttachmentStates.size());
+   colorBlending.pAttachments = blendAttachmentStates.data();
 
-   newInfo.pColorBlendState = &colorBlendingNew;
+   pipelineInfo.pColorBlendState = &colorBlending;
 
-   VK_CHECK(vkCreateGraphicsPipelines(Data::vk_device, m_pipelineCache, 1, &newInfo, nullptr,
+   VK_CHECK(vkCreateGraphicsPipelines(Data::vk_device, m_pipelineCache, 1, &pipelineInfo, nullptr,
                                       &m_offscreenPipeline),
+            "");
+
+   // Shadow mapping pipeline
+   // The shadow mapping pipeline uses geometry shader instancing (invocations layout modifier) to
+   // output shadow maps for multiple lights sources into the different shadow map layers in one
+   // single render pass
+   std::array< VkPipelineShaderStageCreateInfo, 2 > shadowStages;
+
+   shadowStages[0] =
+      VulkanShader::LoadShader("default/shadow.vert.spv", VK_SHADER_STAGE_VERTEX_BIT).shaderInfo;
+   shadowStages[1] =
+      VulkanShader::LoadShader("default/shadow.geom.spv", VK_SHADER_STAGE_GEOMETRY_BIT).shaderInfo;
+
+   pipelineInfo.pStages = shadowStages.data();
+   pipelineInfo.stageCount = static_cast< uint32_t >(shadowStages.size());
+
+   // Shadow pass doesn't use any color attachments
+   colorBlending.attachmentCount = 0;
+   colorBlending.pAttachments = nullptr;
+   // Cull front faces
+   rasterizer.cullMode = VK_CULL_MODE_FRONT_BIT;
+   depthStencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+   // Enable depth bias
+   rasterizer.depthBiasEnable = VK_TRUE;
+   // Add depth bias to dynamic state, so we can change it at runtime
+   dynamicStateEnables.push_back(VK_DYNAMIC_STATE_DEPTH_BIAS);
+   pipelineDynamicStateCreateInfo.pDynamicStates = dynamicStateEnables.data();
+   pipelineDynamicStateCreateInfo.dynamicStateCount =
+      static_cast< uint32_t >(dynamicStateEnables.size());
+   pipelineDynamicStateCreateInfo.flags = 0;
+
+   // Reset blend attachment state
+   pipelineInfo.renderPass = m_shadowMap.GetRenderPass();
+   VK_CHECK(vkCreateGraphicsPipelines(Data::vk_device, m_pipelineCache, 1, &pipelineInfo, nullptr,
+                                      &m_shadowMapPipeline),
             "");
 }
 

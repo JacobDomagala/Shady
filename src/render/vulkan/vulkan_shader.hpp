@@ -22,11 +22,15 @@ struct ShaderInfoWrapper
 };
 
 using VertexShaderInfo = ShaderInfoWrapper;
+using GeometryShaderInfo = ShaderInfoWrapper;
 using FragmentShaderInfo = ShaderInfoWrapper;
 
 class VulkanShader
 {
  public:
+   static ShaderInfoWrapper
+   LoadShader(std::string_view shader, VkShaderStageFlagBits stage);
+
    static std::pair< VertexShaderInfo, FragmentShaderInfo >
    CreateShader(VkDevice device, std::string_view vertex, std::string_view fragment);
 };

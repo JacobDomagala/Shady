@@ -1,8 +1,8 @@
 #include "vulkan_shader.hpp"
-#include "vulkan_common.hpp"
 #include "trace/logger.hpp"
 #include "utils/assert.hpp"
 #include "utils/file_manager.hpp"
+#include "vulkan_common.hpp"
 
 namespace shady::render::vulkan {
 
@@ -17,8 +17,25 @@ CreateShaderModule(VkDevice device, std::vector< char >&& shaderByteCode)
    VkShaderModule shaderModule;
    VK_CHECK(vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule),
             "Failed to create shader module!");
-  
+
    return shaderModule;
+}
+
+
+ShaderInfoWrapper
+VulkanShader::LoadShader(std::string_view shader, VkShaderStageFlagBits stage)
+{
+   VkShaderModule shaderModule = CreateShaderModule(
+      Data::vk_device,
+      utils::FileManager::ReadBinaryFile(utils::FileManager::SHADERS_DIR / shader));
+
+   VkPipelineShaderStageCreateInfo shaderStageInfo{};
+   shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+   shaderStageInfo.stage = stage;
+   shaderStageInfo.module = shaderModule;
+   shaderStageInfo.pName = "main";
+
+   return {Data::vk_device, shaderStageInfo};
 }
 
 std::pair< VertexShaderInfo, FragmentShaderInfo >

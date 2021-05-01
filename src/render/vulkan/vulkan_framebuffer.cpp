@@ -15,6 +15,40 @@ Framebuffer::Create(int32_t width, int32_t height)
    SetupRenderPass();
 }
 
+void
+Framebuffer::CreateShadowMap(int32_t width, int32_t height, int32_t numLights)
+{
+   m_width = width;
+   m_height = height;
+
+   // 16 bits of depth is enough for such a small scene
+   constexpr auto SHADOWMAP_FORMAT = VK_FORMAT_D32_SFLOAT_S8_UINT;
+
+   // Create a layered depth attachment for rendering the depth maps from the lights' point of view
+   // Each layer corresponds to one of the lights
+   // The actual output to the separate layers is done in the geometry shader using shader
+   // instancing We will pass the matrices of the lights to the GS that selects the layer by the
+   // current invocation
+   AttachmentCreateInfo attachmentInfo = {};
+   attachmentInfo.format = SHADOWMAP_FORMAT;
+   attachmentInfo.width = width;
+   attachmentInfo.height = height;
+   attachmentInfo.layerCount = numLights;
+   attachmentInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+
+   AddAttachment(attachmentInfo);
+
+   // frameBuffers.shadow->addAttachment(attachmentInfo);
+
+   // Create sampler to sample from to depth attachment
+   // Used to sample in the fragment shader for shadowed rendering
+   m_colorSampler =
+      CreateSampler(VK_FILTER_LINEAR, VK_FILTER_LINEAR, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
+
+   // Create default renderpass for the framebuffer
+   SetupRenderPass();
+}
+
 glm::ivec2
 Framebuffer::GetSize()
 {
@@ -80,9 +114,138 @@ Framebuffer::CreateAttachments()
    CreateAttachment(attDepthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, &m_depth);
 }
 
+VkSampler
+Framebuffer::CreateSampler(VkFilter magFilter, VkFilter minFilter, VkSamplerAddressMode adressMode)
+{
+   VkSampler sampler;
+
+   VkSamplerCreateInfo samplerInfo{};
+   samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+   samplerInfo.magFilter = magFilter;
+   samplerInfo.minFilter = minFilter;
+   samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+   samplerInfo.addressModeU = adressMode;
+   samplerInfo.addressModeV = adressMode;
+   samplerInfo.addressModeW = adressMode;
+   samplerInfo.mipLodBias = 0.0f;
+   samplerInfo.maxAnisotropy = 1.0f;
+   samplerInfo.minLod = 0.0f;
+   samplerInfo.maxLod = 1.0f;
+   samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+
+   VK_CHECK(vkCreateSampler(Data::vk_device, &samplerInfo, nullptr, &sampler), "");
+
+   return sampler;
+}
+
+uint32_t
+Framebuffer::AddAttachment(AttachmentCreateInfo createinfo)
+{
+   FramebufferAttachment attachment;
+
+   attachment.format = createinfo.format;
+
+   VkImageAspectFlags aspectMask = 0;
+
+   // Select aspect mask and layout depending on usage
+
+   // Color attachment
+   if (createinfo.usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+   {
+      aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+   }
+
+   // Depth (and/or stencil) attachment
+   if (createinfo.usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
+   {
+      if (attachment.hasDepth())
+      {
+         aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+      }
+      if (attachment.hasStencil())
+      {
+         aspectMask = aspectMask | VK_IMAGE_ASPECT_STENCIL_BIT;
+      }
+   }
+
+   assert(aspectMask > 0);
+
+   VkImageCreateInfo image = {};
+   image.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+   image.imageType = VK_IMAGE_TYPE_2D;
+   image.format = createinfo.format;
+   image.extent.width = createinfo.width;
+   image.extent.height = createinfo.height;
+   image.extent.depth = 1;
+   image.mipLevels = 1;
+   image.arrayLayers = createinfo.layerCount;
+   image.samples = createinfo.imageSampleCount;
+   image.tiling = VK_IMAGE_TILING_OPTIMAL;
+   image.usage = createinfo.usage;
+
+   VkMemoryAllocateInfo memAlloc = {};
+   memAlloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+   VkMemoryRequirements memReqs;
+
+   // Create image for this attachment
+   VK_CHECK(vkCreateImage(Data::vk_device, &image, nullptr, &attachment.image), "");
+   vkGetImageMemoryRequirements(Data::vk_device, attachment.image, &memReqs);
+   memAlloc.allocationSize = memReqs.size;
+   memAlloc.memoryTypeIndex =
+      FindMemoryType(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+   VK_CHECK(
+      vkAllocateMemory(Data::vk_device, &memAlloc, nullptr, &attachment.memory), "");
+   VK_CHECK(
+      vkBindImageMemory(Data::vk_device, attachment.image, attachment.memory, 0), "");
+
+   attachment.subresourceRange = {};
+   attachment.subresourceRange.aspectMask = aspectMask;
+   attachment.subresourceRange.levelCount = 1;
+   attachment.subresourceRange.layerCount = createinfo.layerCount;
+
+   VkImageViewCreateInfo imageView = {};
+   imageView.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+   imageView.viewType =
+      (createinfo.layerCount == 1) ? VK_IMAGE_VIEW_TYPE_2D : VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+   imageView.format = createinfo.format;
+   imageView.subresourceRange = attachment.subresourceRange;
+   // todo: workaround for depth+stencil attachments
+   imageView.subresourceRange.aspectMask =
+      (attachment.hasDepth()) ? VK_IMAGE_ASPECT_DEPTH_BIT : aspectMask;
+   imageView.image = attachment.image;
+   VK_CHECK(
+      vkCreateImageView(Data::vk_device, &imageView, nullptr, &attachment.view), "");
+
+   // Fill attachment description
+   attachment.description = {};
+   attachment.description.samples = createinfo.imageSampleCount;
+   attachment.description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+   attachment.description.storeOp = (createinfo.usage & VK_IMAGE_USAGE_SAMPLED_BIT)
+                                       ? VK_ATTACHMENT_STORE_OP_STORE
+                                       : VK_ATTACHMENT_STORE_OP_DONT_CARE;
+   attachment.description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+   attachment.description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+   attachment.description.format = createinfo.format;
+   attachment.description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+   // Final layout
+   // If not, final layout depends on attachment type
+   if (attachment.hasDepth() || attachment.hasStencil())
+   {
+      attachment.description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+   }
+   else
+   {
+      attachment.description.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+   }
+
+   m_attachments.push_back(attachment);
+
+   return static_cast< uint32_t >(m_attachments.size() - 1);
+}
+
 void
 Framebuffer::CreateAttachment(VkFormat format, VkImageUsageFlagBits usage,
-                              FrameBufferAttachment* attachment)
+                              FramebufferAttachment* attachment)
 {
    VkImageAspectFlags aspectMask = 0;
    VkImageLayout imageLayout;
@@ -125,8 +288,8 @@ Framebuffer::CreateAttachment(VkFormat format, VkImageUsageFlagBits usage,
    memAlloc.allocationSize = memReqs.size;
    memAlloc.memoryTypeIndex =
       FindMemoryType(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-   VK_CHECK(vkAllocateMemory(Data::vk_device, &memAlloc, nullptr, &attachment->mem), "");
-   VK_CHECK(vkBindImageMemory(Data::vk_device, attachment->image, attachment->mem, 0), "");
+   VK_CHECK(vkAllocateMemory(Data::vk_device, &memAlloc, nullptr, &attachment->memory), "");
+   VK_CHECK(vkBindImageMemory(Data::vk_device, attachment->image, attachment->memory, 0), "");
 
    VkImageViewCreateInfo imageView = {};
    imageView.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;

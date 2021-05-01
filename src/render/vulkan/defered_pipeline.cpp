@@ -14,11 +14,15 @@ namespace shady::render::vulkan {
 
 float timer = 0.0f;
 
+
+constexpr auto LIGHT_COUNT = 3;
+
 struct Light
 {
    glm::vec4 position;
    glm::vec3 color;
    float radius;
+   // glm::mat4 viewMatrix;
 };
 
 struct
@@ -139,6 +143,7 @@ DeferedPipeline::Initialize(VkRenderPass mainRenderPass,
    m_pipelineCache = pipelineCache;
    m_mainRenderPass = mainRenderPass;
    m_camera = std::make_unique< scene::PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 500.0f);
+   //ShadowSetup();
    PrepareOffscreenFramebuffer();
    PrepareUniformBuffers();
    SetupDescriptorSetLayout();
@@ -148,6 +153,15 @@ DeferedPipeline::Initialize(VkRenderPass mainRenderPass,
    SetupDescriptorSet();
 
    BuildDeferredCommandBuffer(swapChainImageViews);
+}
+
+// Prepare a layered shadow map with each layer containing depth from a light's point of view
+// The shadow mapping pass uses geometry shader instancing to output the scene from the different
+// light sources' point of view to the layers of the depth attachment in one single pass
+void
+DeferedPipeline::ShadowSetup()
+{
+   m_shadowMap.CreateShadowMap(2048, 2048, LIGHT_COUNT);
 }
 
 void

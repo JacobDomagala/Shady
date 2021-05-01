@@ -38,6 +38,9 @@ class DeferedPipeline
    DrawDeferred();
 
  private:
+   void
+   ShadowSetup();
+
    // Prepare a new framebuffer and attachments for offscreen rendering (G-Buffer)
    void
    PrepareOffscreenFramebuffer();
@@ -68,10 +71,12 @@ class DeferedPipeline
    inline static VkRenderPass m_mainRenderPass = {};
    inline static VkPipeline m_graphicsPipeline = {};
 
+   inline static Framebuffer m_shadowMap = {};
    inline static Framebuffer m_offscreenFrameBuffer = {};
    inline static Framebuffer m_compositionFrameBuffer = {};
 
    inline static VkPipelineCache m_pipelineCache = {};
+   inline static VkPipeline m_shadowMapPipeline = {};
    inline static VkPipeline m_offscreenPipeline = {};
    inline static VkPipeline m_compositionPipeline = {};
 

@@ -124,6 +124,13 @@ Framebuffer::GetAlbedoImageView()
    return m_attachments[2].view;
 }
 
+VkImageView
+Framebuffer::GetShadowMapView()
+{
+   utils::Assert(m_attachments.size() > 0, "");
+   return m_attachments[0].view;
+}
+
 VkSampler
 Framebuffer::CreateSampler(VkFilter magFilter, VkFilter minFilter, VkSamplerAddressMode adressMode)
 {

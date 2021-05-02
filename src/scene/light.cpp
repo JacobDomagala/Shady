@@ -96,7 +96,7 @@ void
 Light::MoveBy(const glm::vec3& moveBy)
 {
    m_position += moveBy;
-   trace::Logger::Info("Light position {}", m_position);
+   // trace::Logger::Info("Light position {}", m_position);
 }
 
 } // namespace shady::scene

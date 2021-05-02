@@ -9,20 +9,23 @@
 
 #include <fmt/format.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace shady::render::vulkan {
 
 float timer = 0.0f;
-
+// Depth bias (and slope) are used to avoid shadowing artifacts
+constexpr float depthBiasConstant = 1.25f;
+constexpr float depthBiasSlope = 1.75f;
 
 constexpr auto LIGHT_COUNT = 3;
 
 struct Light
 {
    glm::vec4 position;
-   glm::vec3 color;
-   float radius;
-   // glm::mat4 viewMatrix;
+   glm::vec4 target;
+   glm::vec4 color;
+   glm::mat4 viewMatrix;
 };
 
 struct
@@ -94,54 +97,46 @@ DeferedPipeline::GetOffscreenCmdBuffer()
 void
 DeferedPipeline::UpdateUniformBufferComposition()
 {
-   // White
-   uboComposition.lights[0].position = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f);
-   uboComposition.lights[0].color = glm::vec3(1.5f);
-   uboComposition.lights[0].radius = 15.0f * 0.25f;
-   // Red
-   uboComposition.lights[1].position = glm::vec4(-2.0f, 0.0f, 0.0f, 0.0f);
-   uboComposition.lights[1].color = glm::vec3(1.0f, 0.0f, 0.0f);
-   uboComposition.lights[1].radius = 15.0f;
-   // Blue
-   uboComposition.lights[2].position = glm::vec4(2.0f, -1.0f, 0.0f, 0.0f);
-   uboComposition.lights[2].color = glm::vec3(0.0f, 0.0f, 2.5f);
-   uboComposition.lights[2].radius = 5.0f;
-   // Yellow
-   uboComposition.lights[3].position = glm::vec4(0.0f, -0.9f, 0.5f, 0.0f);
-   uboComposition.lights[3].color = glm::vec3(1.0f, 1.0f, 0.0f);
-   uboComposition.lights[3].radius = 2.0f;
-   // Green
-   uboComposition.lights[4].position = glm::vec4(0.0f, -0.5f, 0.0f, 0.0f);
-   uboComposition.lights[4].color = glm::vec3(0.0f, 1.0f, 0.2f);
-   uboComposition.lights[4].radius = 5.0f;
-   // Yellow
-   uboComposition.lights[5].position = glm::vec4(0.0f, -1.0f, 0.0f, 0.0f);
-   uboComposition.lights[5].color = glm::vec3(1.0f, 0.7f, 0.3f);
-   uboComposition.lights[5].radius = 25.0f;
+   // Keep depth range as small as possible
+   // for better shadow map precision
+   float zNear = 0.1f;
+   float zFar = 64.0f;
+   float lightFOV = 100.0f;
 
-   uboComposition.lights[0].position.x = sin(glm::radians(360.0f * timer)) * 5.0f;
-   uboComposition.lights[0].position.z = cos(glm::radians(360.0f * timer)) * 5.0f;
+   // Animate
+   uboComposition.lights[0].position.x =
+      -14.0f + std::abs(sin(glm::radians(timer * 360.0f)) * 20.0f);
+   uboComposition.lights[0].position.z = 15.0f + cos(glm::radians(timer * 360.0f)) * 1.0f;
 
-   uboComposition.lights[1].position.x = -4.0f + sin(glm::radians(360.0f * timer) + 45.0f) * 2.0f;
-   uboComposition.lights[1].position.z = 0.0f + cos(glm::radians(360.0f * timer) + 45.0f) * 2.0f;
+   uboComposition.lights[1].position.x = 14.0f - std::abs(sin(glm::radians(timer * 360.0f)) * 2.5f);
+   uboComposition.lights[1].position.z = 13.0f + cos(glm::radians(timer * 360.0f)) * 4.0f;
 
-   uboComposition.lights[2].position.x = 4.0f + sin(glm::radians(360.0f * timer)) * 2.0f;
-   uboComposition.lights[2].position.z = 0.0f + cos(glm::radians(360.0f * timer)) * 2.0f;
+   uboComposition.lights[2].position.x = 0.0f + sin(glm::radians(timer * 360.0f)) * 4.0f;
+   uboComposition.lights[2].position.z = 4.0f + cos(glm::radians(timer * 360.0f)) * 2.0f;
 
-   uboComposition.lights[4].position.x = 0.0f + sin(glm::radians(360.0f * timer + 90.0f)) * 5.0f;
-   uboComposition.lights[4].position.z = 0.0f - cos(glm::radians(360.0f * timer + 45.0f)) * 5.0f;
+   for (uint32_t i = 0; i < LIGHT_COUNT; i++)
+   {
+      // mvp from light's pov (for shadows)
+      glm::mat4 shadowProj = glm::perspective(glm::radians(lightFOV), 1.0f, zNear, zFar);
+      glm::mat4 shadowView =
+         glm::lookAt(glm::vec3(uboComposition.lights[i].position),
+                     glm::vec3(uboComposition.lights[i].target), glm::vec3(0.0f, 1.0f, 0.0f));
+      glm::mat4 shadowModel = glm::mat4(1.0f);
 
-   uboComposition.lights[5].position.x = 0.0f + sin(glm::radians(-360.0f * timer + 135.0f)) * 10.0f;
-   uboComposition.lights[5].position.z = 0.0f - cos(glm::radians(-360.0f * timer - 45.0f)) * 10.0f;
+      uboShadowGeometryShader.mvp[i] = shadowProj * shadowView * shadowModel;
+      uboComposition.lights[i].viewMatrix = uboShadowGeometryShader.mvp[i];
+   }
 
-   // Current view position
-   uboComposition.viewPos =
-      glm::vec4(m_camera->GetPosition(), 0.0f) * glm::vec4(-1.0f, 1.0f, -1.0f, 1.0f);
+   memcpy(uboShadowGeometryShader.instancePos, uboOffscreenVS.instancePos,
+          sizeof(uboOffscreenVS.instancePos));
+   memcpy(m_shadowGeomBuffer.m_mappedMemory, &uboShadowGeometryShader,
+          sizeof(uboShadowGeometryShader));
+
+   uboComposition.viewPos = glm::vec4(m_camera->GetPosition(), 0.0f) * glm::vec4(-1.0f, 1.0f, -1.0f, 1.0f);
 
    uboComposition.debugDisplayTarget = m_debugDisplayTarget;
 
-   m_compositionBuffer.CopyData(&uboComposition);
-   // memcpy(uniformBuffers.composition.mapped, &uboComposition, sizeof(uboComposition));
+   memcpy(m_compositionBuffer.m_mappedMemory, &uboComposition, sizeof(uboComposition));
 }
 
 void
@@ -563,7 +558,7 @@ DeferedPipeline::SetupDescriptorPool()
 void
 DeferedPipeline::SetupDescriptorSet()
 {
-   std::array< VkWriteDescriptorSet, 4 > descriptorWrites{};
+   std::array< VkWriteDescriptorSet, 5 > descriptorWrites{};
 
    VkDescriptorSetAllocateInfo allocInfo{};
    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -586,6 +581,11 @@ DeferedPipeline::SetupDescriptorSet()
    albedoImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
    albedoImageInfo.imageView = m_offscreenFrameBuffer.GetAlbedoImageView();
    albedoImageInfo.sampler = m_offscreenFrameBuffer.GetSampler();
+
+   VkDescriptorImageInfo shadowMapInfo{};
+   shadowMapInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+   shadowMapInfo.imageView = m_shadowMap.GetShadowMapView();
+   shadowMapInfo.sampler = m_shadowMap.GetSampler();
 
    // Deferred composition
    VK_CHECK(vkAllocateDescriptorSets(Data::vk_device, &allocInfo, &m_descriptorSet), "");
@@ -625,6 +625,14 @@ DeferedPipeline::SetupDescriptorSet()
    descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
    descriptorWrites[3].descriptorCount = 1;
    descriptorWrites[3].pBufferInfo = &m_compositionBuffer.m_descriptor;
+
+   descriptorWrites[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+   descriptorWrites[4].dstSet = m_descriptorSet;
+   descriptorWrites[4].dstBinding = 8;
+   descriptorWrites[4].dstArrayElement = 0;
+   descriptorWrites[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+   descriptorWrites[4].descriptorCount = 1;
+   descriptorWrites[4].pImageInfo = &shadowMapInfo;
 
    vkUpdateDescriptorSets(Data::vk_device, static_cast< uint32_t >(descriptorWrites.size()),
                           descriptorWrites.data(), 0, nullptr);
@@ -732,13 +740,72 @@ DeferedPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& sw
 
    // Clear values for all attachments written in the fragment shader
    std::array< VkClearValue, 4 > clearValues;
+
+   VkRenderPassBeginInfo renderPassBeginInfo = {};
+   renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+   // First pass: Shadow map generation
+   // -------------------------------------------------------------------------------------------------------
+
+   clearValues[0].depthStencil = {1.0f, 0};
+
+   renderPassBeginInfo.renderPass = m_shadowMap.GetRenderPass();
+   renderPassBeginInfo.framebuffer = m_shadowMap.GetFramebuffer();
+   renderPassBeginInfo.renderArea.extent.width = m_shadowMap.GetSize().x;
+   renderPassBeginInfo.renderArea.extent.height = m_shadowMap.GetSize().y;
+   renderPassBeginInfo.clearValueCount = 1;
+   renderPassBeginInfo.pClearValues = clearValues.data();
+
+   VK_CHECK(vkBeginCommandBuffer(m_offscreenCommandBuffer, &cmdBufInfo), "");
+
+   VkViewport viewport{};
+   viewport.width = m_shadowMap.GetSize().x;
+   viewport.height = m_shadowMap.GetSize().y;
+   viewport.minDepth = 0.0f;
+   viewport.maxDepth = 1.0f;
+
+   vkCmdSetViewport(m_offscreenCommandBuffer, 0, 1, &viewport);
+
+   VkRect2D scissor{};
+   scissor.extent.width = m_shadowMap.GetSize().x;
+   scissor.extent.height = m_shadowMap.GetSize().y;
+   scissor.offset.x = 0;
+   scissor.offset.y = 0;
+
+   vkCmdSetScissor(m_offscreenCommandBuffer, 0, 1, &scissor);
+
+   // Set depth bias (aka "Polygon offset")
+   vkCmdSetDepthBias(m_offscreenCommandBuffer, depthBiasConstant, 0.0f, depthBiasSlope);
+
+   vkCmdBeginRenderPass(m_offscreenCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+   vkCmdBindPipeline(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowMapPipeline);
+
+   {
+      VkDeviceSize offsets[] = {0};
+      vkCmdBindVertexBuffers(m_offscreenCommandBuffer, 0, 1, &Data::m_vertexBuffer, offsets);
+
+      vkCmdBindIndexBuffer(m_offscreenCommandBuffer, Data::m_indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+      vkCmdBindDescriptorSets(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                              m_pipelineLayout, 0, 1, &m_descriptorSet, 0, nullptr);
+
+
+      vkCmdDrawIndexedIndirectCount(m_offscreenCommandBuffer, Data::m_indirectDrawsBuffer, 0,
+                                    Data::m_indirectDrawsBuffer,
+                                    sizeof(VkDrawIndexedIndirectCommand) * Data::m_numMeshes,
+                                    Data::m_numMeshes, sizeof(VkDrawIndexedIndirectCommand));
+   }
+
+   vkCmdEndRenderPass(m_offscreenCommandBuffer);
+
+   // Second pass: Deferred calculations
+   // -------------------------------------------------------------------------------------------------------
+
    clearValues[0].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
    clearValues[1].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
    clearValues[2].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
    clearValues[3].depthStencil = {1.0f, 0};
 
-   VkRenderPassBeginInfo renderPassBeginInfo = {};
-   renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+
    renderPassBeginInfo.renderPass = m_offscreenFrameBuffer.GetRenderPass();
    renderPassBeginInfo.framebuffer = m_offscreenFrameBuffer.GetFramebuffer();
    renderPassBeginInfo.renderArea.extent.width = m_offscreenFrameBuffer.GetSize().x;
@@ -746,11 +813,8 @@ DeferedPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& sw
    renderPassBeginInfo.clearValueCount = static_cast< uint32_t >(clearValues.size());
    renderPassBeginInfo.pClearValues = clearValues.data();
 
-   VK_CHECK(vkBeginCommandBuffer(m_offscreenCommandBuffer, &cmdBufInfo), "");
-
    vkCmdBeginRenderPass(m_offscreenCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-   VkViewport viewport{};
    viewport.width = m_offscreenFrameBuffer.GetSize().x;
    viewport.height = m_offscreenFrameBuffer.GetSize().y;
    viewport.minDepth = 0.0f;
@@ -758,7 +822,6 @@ DeferedPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& sw
 
    vkCmdSetViewport(m_offscreenCommandBuffer, 0, 1, &viewport);
 
-   VkRect2D scissor{};
    scissor.extent.width = m_offscreenFrameBuffer.GetSize().x;
    scissor.extent.height = m_offscreenFrameBuffer.GetSize().y;
    scissor.offset.x = 0;

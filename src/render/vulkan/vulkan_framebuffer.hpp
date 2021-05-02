@@ -95,6 +95,9 @@ class Framebuffer
    VkImageView
    GetAlbedoImageView();
 
+   VkImageView
+   GetShadowMapView();
+
    VkSampler
    GetSampler();
 

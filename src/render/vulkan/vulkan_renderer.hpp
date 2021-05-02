@@ -1,6 +1,6 @@
 #pragma once
 
-#include "defered_pipeline.hpp"
+#include "deferred_pipeline.hpp"
 #include "render/vulkan/vertex.hpp"
 #include "vulkan/types.hpp"
 
@@ -143,7 +143,7 @@ class VulkanRenderer
    inline static VkDeviceMemory m_colorImageMemory = {};
    inline static VkImageView m_colorImageView = {};
 
-   inline static DeferedPipeline m_deferredPipeline = {};
+   inline static DeferredPipeline m_deferredPipeline = {};
 };
 
 } // namespace shady::render::vulkan

@@ -1,4 +1,4 @@
-#include "defered_pipeline.hpp"
+#include "deferred_pipeline.hpp"
 #include "scene/perspective_camera.hpp"
 #include "vertex.hpp"
 #include "vulkan_buffer.hpp"
@@ -53,32 +53,32 @@ struct
 } uboShadowGeometryShader;
 
 VkDescriptorSet&
-DeferedPipeline::GetDescriptorSet()
+DeferredPipeline::GetDescriptorSet()
 {
    return m_descriptorSet;
 }
 
 VkPipeline
-DeferedPipeline::GetCompositionPipeline()
+DeferredPipeline::GetCompositionPipeline()
 {
    return m_compositionPipeline;
 }
 
 VkPipelineLayout
-DeferedPipeline::GetPipelineLayout()
+DeferredPipeline::GetPipelineLayout()
 {
    return m_pipelineLayout;
 }
 
 VkSemaphore&
-DeferedPipeline::GetOffscreenSemaphore()
+DeferredPipeline::GetOffscreenSemaphore()
 {
    return m_offscreenSemaphore;
 }
 
 // Update matrices used for the offscreen rendering of the scene
 void
-DeferedPipeline::UpdateUniformBufferOffscreen()
+DeferredPipeline::UpdateUniformBufferOffscreen()
 {
    uboOffscreenVS.projection = m_camera->GetProjection();
    uboOffscreenVS.view = m_camera->GetView();
@@ -88,14 +88,14 @@ DeferedPipeline::UpdateUniformBufferOffscreen()
 }
 
 VkCommandBuffer&
-DeferedPipeline::GetOffscreenCmdBuffer()
+DeferredPipeline::GetOffscreenCmdBuffer()
 {
    return m_offscreenCommandBuffer;
 }
 
 // Update lights and parameters passed to the composition shaders
 void
-DeferedPipeline::UpdateUniformBufferComposition()
+DeferredPipeline::UpdateUniformBufferComposition()
 {
    // Keep depth range as small as possible
    // for better shadow map precision
@@ -140,7 +140,7 @@ DeferedPipeline::UpdateUniformBufferComposition()
 }
 
 void
-DeferedPipeline::Initialize(VkRenderPass mainRenderPass,
+DeferredPipeline::Initialize(VkRenderPass mainRenderPass,
                             const std::vector< VkImageView >& swapChainImageViews,
                             VkPipelineCache pipelineCache)
 {
@@ -163,19 +163,19 @@ DeferedPipeline::Initialize(VkRenderPass mainRenderPass,
 // The shadow mapping pass uses geometry shader instancing to output the scene from the different
 // light sources' point of view to the layers of the depth attachment in one single pass
 void
-DeferedPipeline::ShadowSetup()
+DeferredPipeline::ShadowSetup()
 {
    m_shadowMap.CreateShadowMap(2048, 2048, LIGHT_COUNT);
 }
 
 void
-DeferedPipeline::PrepareOffscreenFramebuffer()
+DeferredPipeline::PrepareOffscreenFramebuffer()
 {
    m_offscreenFrameBuffer.Create(2048, 2048);
 }
 
 void
-DeferedPipeline::PrepareUniformBuffers()
+DeferredPipeline::PrepareUniformBuffers()
 {
    // Offscreen vertex shader
    m_offscreenBuffer = Buffer::CreateBuffer(
@@ -212,7 +212,7 @@ DeferedPipeline::PrepareUniformBuffers()
 }
 
 void
-DeferedPipeline::SetupDescriptorSetLayout()
+DeferredPipeline::SetupDescriptorSetLayout()
 {
    // Binding 0 : Vertex shader uniform buffer (mrt.vert)
    VkDescriptorSetLayoutBinding vertexShaderUniform{};
@@ -312,7 +312,7 @@ DeferedPipeline::SetupDescriptorSetLayout()
 }
 
 void
-DeferedPipeline::PreparePipelines()
+DeferredPipeline::PreparePipelines()
 {
    VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
    inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -531,7 +531,7 @@ DeferedPipeline::PreparePipelines()
 }
 
 void
-DeferedPipeline::SetupDescriptorPool()
+DeferredPipeline::SetupDescriptorPool()
 {
    std::array< VkDescriptorPoolSize, 5 > poolSizes{};
    poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -556,7 +556,7 @@ DeferedPipeline::SetupDescriptorPool()
 }
 
 void
-DeferedPipeline::SetupDescriptorSet()
+DeferredPipeline::SetupDescriptorSet()
 {
    std::array< VkWriteDescriptorSet, 5 > descriptorWrites{};
 
@@ -590,7 +590,7 @@ DeferedPipeline::SetupDescriptorSet()
    // Deferred composition
    VK_CHECK(vkAllocateDescriptorSets(Data::vk_device, &allocInfo, &m_descriptorSet), "");
 
-   // Binding 1 : Position texture target
+   // Binding 5 : Position texture target
    descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
    descriptorWrites[0].dstSet = m_descriptorSet;
    descriptorWrites[0].dstBinding = 5;
@@ -599,7 +599,7 @@ DeferedPipeline::SetupDescriptorSet()
    descriptorWrites[0].descriptorCount = 1;
    descriptorWrites[0].pImageInfo = &positionsImageInfo;
 
-   // Binding 2 : Normals texture target
+   // Binding 6 : Normals texture target
    descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
    descriptorWrites[1].dstSet = m_descriptorSet;
    descriptorWrites[1].dstBinding = 6;
@@ -608,7 +608,7 @@ DeferedPipeline::SetupDescriptorSet()
    descriptorWrites[1].descriptorCount = 1;
    descriptorWrites[1].pImageInfo = &normalsImageInfo;
 
-   // Binding 3 : Albedo texture target
+   // Binding 4 : Albedo texture target
    descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
    descriptorWrites[2].dstSet = m_descriptorSet;
    descriptorWrites[2].dstBinding = 4;
@@ -617,7 +617,7 @@ DeferedPipeline::SetupDescriptorSet()
    descriptorWrites[2].descriptorCount = 1;
    descriptorWrites[2].pImageInfo = &albedoImageInfo;
 
-   // Binding 4 : Fragment shader uniform buffer
+   // Binding 7 : Fragment shader uniform buffer
    descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
    descriptorWrites[3].dstSet = m_descriptorSet;
    descriptorWrites[3].dstBinding = 7;
@@ -626,6 +626,7 @@ DeferedPipeline::SetupDescriptorSet()
    descriptorWrites[3].descriptorCount = 1;
    descriptorWrites[3].pBufferInfo = &m_compositionBuffer.m_descriptor;
 
+   // Binding 8 : Shadowmap texture
    descriptorWrites[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
    descriptorWrites[4].dstSet = m_descriptorSet;
    descriptorWrites[4].dstBinding = 8;
@@ -709,10 +710,33 @@ DeferedPipeline::SetupDescriptorSet()
 
    vkUpdateDescriptorSets(Data::vk_device, static_cast< uint32_t >(descriptorWrites.size()),
                           descriptorWrites.data(), 0, nullptr);
+
+
+   std::array< VkWriteDescriptorSet, 1 > shadowMapDescriptorWrites{};
+
+   // Shadow mapping
+   VK_CHECK(vkAllocateDescriptorSets(Data::vk_device, &allocInfo, &m_shadowMapDescriptor), "");
+
+   bufferInfo.buffer = m_shadowGeomBuffer.m_buffer;
+   bufferInfo.offset = 0;
+   bufferInfo.range = sizeof(uboShadowGeometryShader);
+
+   // Binding 0: Vertex shader uniform buffer
+   descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+   descriptorWrites[0].dstSet = m_shadowMapDescriptor;
+   descriptorWrites[0].dstBinding = 0;
+   descriptorWrites[0].dstArrayElement = 0;
+   descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+   descriptorWrites[0].descriptorCount = 1;
+   descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+
+   vkUpdateDescriptorSets(Data::vk_device, static_cast< uint32_t >(descriptorWrites.size()),
+                          descriptorWrites.data(), 0, nullptr);
 }
 
 void
-DeferedPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& swapChainImageViews)
+DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& swapChainImageViews)
 {
    if (m_offscreenCommandBuffer == VK_NULL_HANDLE)
    {
@@ -853,7 +877,7 @@ DeferedPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& sw
 }
 
 void
-DeferedPipeline::DrawDeferred()
+DeferredPipeline::DrawDeferred()
 {
    // swapChain.acquireNextImage
    // VulkanExampleBase::prepareFrame();

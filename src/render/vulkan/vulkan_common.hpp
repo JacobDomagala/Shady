@@ -3,6 +3,8 @@
 #include "types.hpp"
 #include "utils/assert.hpp"
 #include "vertex.hpp"
+#include "scene/light.hpp"
+#include "scene/camera.hpp"
 
 #include <array>
 #include <fmt/format.h>
@@ -28,6 +30,7 @@ struct UniformBufferObject
 {
    alignas(16) glm::mat4 proj;
    alignas(16) glm::mat4 view;
+   alignas(16) glm::mat4 lightView;
 };
 
 struct PerInstanceBuffer
@@ -85,6 +88,10 @@ struct Data
    inline static VkPipelineCache m_pipelineCache = {};
    inline static VkPipeline m_graphicsPipeline = {};
    inline static VkRenderPass m_renderPass = {};
+
+   inline static std::unique_ptr< scene::Light > m_light = {};
+   inline static std::unique_ptr< scene::Camera > m_camera = {};
+   inline static int32_t m_renderTarget = 0;
 };
 
 uint32_t

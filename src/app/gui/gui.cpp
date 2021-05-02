@@ -142,17 +142,24 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
    ImGui::PushStyleColor(ImGuiCol_Button, {0.45f, 0.0f, 0.2f, 0.9f});
 
    ImGui::PopStyleColor(1);
-   ImGui::SameLine();
-   if (ImGui::Button("Save"))
+
+   const char* items[] = {"Full scene", "Position", "Normal", "Albedo", "Specular"};
+
+   const char* combo_label = items[Data::m_renderTarget]; // Label to preview before opening the combo
+                                                      // (technically it could be anything)
+   if (ImGui::BeginCombo("Render target", combo_label, ImGuiComboFlags_HeightSmall))
    {
-   }
-   ImGui::SameLine();
-   if (ImGui::Button("Load"))
-   {
-   }
-   ImGui::SameLine();
-   if (ImGui::Button("Create"))
-   {
+      for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+      {
+         const bool is_selected = (Data::m_renderTarget == n);
+         if (ImGui::Selectable(items[n], is_selected))
+            Data::m_renderTarget = n;
+
+         // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+         if (is_selected)
+            ImGui::SetItemDefaultFocus();
+      }
+      ImGui::EndCombo();
    }
    ImGui::End();
 
@@ -160,7 +167,15 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
    ImGui::SetNextWindowPos({static_cast< float >(size.x) - windowWidth, 0.0f});
    ImGui::SetNextWindowSize(ImVec2(windowWidth, debugWindowHeight));
    ImGui::Begin("Debug Window");
-
+   const auto cameraPos = Data::m_camera->GetPosition();
+   const auto cameraLookAt = Data::m_camera->GetLookAtVec();
+   const auto lightPos = Data::m_light->GetPosition();
+   ImGui::Text("Camera Position %f, %f, %f", static_cast< double >(cameraPos.x),
+               static_cast< double >(cameraPos.y), static_cast< double >(cameraPos.z));
+   ImGui::Text("Camera LookAt %f, %f, %f", static_cast< double >(cameraLookAt.x),
+               static_cast< double >(cameraLookAt.y), static_cast< double >(cameraLookAt.z));
+   ImGui::Text("Light Position %f, %f, %f", static_cast< double >(lightPos.x),
+               static_cast< double >(lightPos.y), static_cast< double >(lightPos.z));
 
    ImGui::End();
    ImGui::PopStyleVar();

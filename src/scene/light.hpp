@@ -34,7 +34,13 @@ class Light
    glm::vec3
    GetPosition() const;
 
-   glm::tvec2<uint32_t>
+   glm::vec3
+   GetLookAt() const;
+
+   glm::vec3
+   GetColor() const;
+
+   glm::tvec2< uint32_t >
    GetLightmapSize() const;
 
    void
@@ -49,6 +55,8 @@ class Light
    // std::shared_ptr< render::FrameBuffer > m_shadowBuffer;
 
    glm::vec3 m_position = glm::vec3(0.0f);
+   glm::vec3 m_lookAt = glm::vec3(0.0f);
+   glm::vec3 m_color = glm::vec3(1.0f);
 
    glm::mat4 m_projectionMatrix = glm::mat4();
    glm::mat4 m_viewMatrix = glm::mat4();

@@ -694,6 +694,8 @@ VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage)
 
    ubo.view = view_mat;
    ubo.proj = proj_mat;
+   ubo.lightView = Data::m_light->GetLightSpaceMat();
+
    /*ubo.cameraPos = camera_pos;
    ubo.lightPos = light_pos;*/
 
@@ -707,6 +709,8 @@ VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage)
                Data::perInstance.size() * sizeof(PerInstanceBuffer), 0, &data2);
    memcpy(data2, Data::perInstance.data(), Data::perInstance.size() * sizeof(PerInstanceBuffer));
    vkUnmapMemory(Data::vk_device, Data::m_ssboMemory[currentImage]);
+
+   m_deferredPipeline.UpdateDeferred();
 }
 
 void

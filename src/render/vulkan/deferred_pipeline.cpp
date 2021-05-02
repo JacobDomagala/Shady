@@ -18,8 +18,6 @@ float timer = 0.0f;
 constexpr float depthBiasConstant = 1.25f;
 constexpr float depthBiasSlope = 1.75f;
 
-constexpr auto LIGHT_COUNT = 3;
-
 struct Light
 {
    glm::vec4 position;
@@ -33,12 +31,11 @@ struct
    glm::mat4 projection;
    glm::mat4 model;
    glm::mat4 view;
-   glm::vec4 instancePos[3];
 } uboOffscreenVS;
 
 struct
 {
-   Light lights[6];
+   Light light;
    glm::vec4 viewPos;
    int debugDisplayTarget = 0;
 } uboComposition;
@@ -48,8 +45,7 @@ struct
 // The instancePos is used to place the models using instanced draws
 struct
 {
-   glm::mat4 mvp[LIGHT_COUNT];
-   glm::vec4 instancePos[3];
+   glm::mat4 mvp;
 } uboShadowGeometryShader;
 
 VkDescriptorSet&
@@ -80,8 +76,8 @@ DeferredPipeline::GetOffscreenSemaphore()
 void
 DeferredPipeline::UpdateUniformBufferOffscreen()
 {
-   uboOffscreenVS.projection = m_camera->GetProjection();
-   uboOffscreenVS.view = m_camera->GetView();
+   uboOffscreenVS.projection = Data::m_camera->GetProjection();
+   uboOffscreenVS.view = Data::m_camera->GetView();
    uboOffscreenVS.model = glm::mat4(1.0f);
    m_offscreenBuffer.CopyData(&uboOffscreenVS);
    // memcpy(m_offscreenBuffer.mapped, , sizeof(uboOffscreenVS));
@@ -97,52 +93,24 @@ DeferredPipeline::GetOffscreenCmdBuffer()
 void
 DeferredPipeline::UpdateUniformBufferComposition()
 {
-   // Keep depth range as small as possible
-   // for better shadow map precision
-   float zNear = 0.1f;
-   float zFar = 64.0f;
-   float lightFOV = 100.0f;
-
    // Animate
-   uboComposition.lights[0].position.x =
-      -14.0f + std::abs(sin(glm::radians(timer * 360.0f)) * 20.0f);
-   uboComposition.lights[0].position.z = 15.0f + cos(glm::radians(timer * 360.0f)) * 1.0f;
+   uboComposition.light.position =
+      glm::vec4(Data::m_light->GetPosition(), 1.0f); // glm::vec4{0.0f, 2.0f, 0.0f, 1.0f};
+   uboComposition.light.target = glm::vec4(Data::m_light->GetLookAt(), 1.0);
+   uboComposition.light.color = glm::vec4{Data::m_light->GetColor(), 1.0f};
+   uboComposition.light.viewMatrix = Data::m_light->GetLightSpaceMat();
+   uboComposition.viewPos =
+      glm::vec4(Data::m_camera->GetPosition(), 0.0f); /** glm::vec4(-1.0f, 1.0f, -1.0f, 1.0f);*/
 
-   uboComposition.lights[1].position.x = 14.0f - std::abs(sin(glm::radians(timer * 360.0f)) * 2.5f);
-   uboComposition.lights[1].position.z = 13.0f + cos(glm::radians(timer * 360.0f)) * 4.0f;
-
-   uboComposition.lights[2].position.x = 0.0f + sin(glm::radians(timer * 360.0f)) * 4.0f;
-   uboComposition.lights[2].position.z = 4.0f + cos(glm::radians(timer * 360.0f)) * 2.0f;
-
-   for (uint32_t i = 0; i < LIGHT_COUNT; i++)
-   {
-      // mvp from light's pov (for shadows)
-      glm::mat4 shadowProj = glm::perspective(glm::radians(lightFOV), 1.0f, zNear, zFar);
-      glm::mat4 shadowView =
-         glm::lookAt(glm::vec3(uboComposition.lights[i].position),
-                     glm::vec3(uboComposition.lights[i].target), glm::vec3(0.0f, 1.0f, 0.0f));
-      glm::mat4 shadowModel = glm::mat4(1.0f);
-
-      uboShadowGeometryShader.mvp[i] = shadowProj * shadowView * shadowModel;
-      uboComposition.lights[i].viewMatrix = uboShadowGeometryShader.mvp[i];
-   }
-
-   memcpy(uboShadowGeometryShader.instancePos, uboOffscreenVS.instancePos,
-          sizeof(uboOffscreenVS.instancePos));
-   memcpy(m_shadowGeomBuffer.m_mappedMemory, &uboShadowGeometryShader,
-          sizeof(uboShadowGeometryShader));
-
-   uboComposition.viewPos = glm::vec4(m_camera->GetPosition(), 0.0f) * glm::vec4(-1.0f, 1.0f, -1.0f, 1.0f);
-
-   uboComposition.debugDisplayTarget = m_debugDisplayTarget;
+   uboComposition.debugDisplayTarget = Data::m_renderTarget;
 
    memcpy(m_compositionBuffer.m_mappedMemory, &uboComposition, sizeof(uboComposition));
 }
 
 void
 DeferredPipeline::Initialize(VkRenderPass mainRenderPass,
-                            const std::vector< VkImageView >& swapChainImageViews,
-                            VkPipelineCache pipelineCache)
+                             const std::vector< VkImageView >& swapChainImageViews,
+                             VkPipelineCache pipelineCache)
 {
    m_pipelineCache = pipelineCache;
    m_mainRenderPass = mainRenderPass;
@@ -165,7 +133,7 @@ DeferredPipeline::Initialize(VkRenderPass mainRenderPass,
 void
 DeferredPipeline::ShadowSetup()
 {
-   m_shadowMap.CreateShadowMap(2048, 2048, LIGHT_COUNT);
+   m_shadowMap.CreateShadowMap(2048, 2048, 1);
 }
 
 void
@@ -189,22 +157,11 @@ DeferredPipeline::PrepareUniformBuffers()
       sizeof(uboComposition), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-   m_shadowGeomBuffer = Buffer::CreateBuffer(
-      sizeof(uboShadowGeometryShader), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-
    // Map persistent
    m_compositionBuffer.Map();
    m_offscreenBuffer.Map();
-   m_shadowGeomBuffer.Map();
    // uniformBuffers.offscreen.map());
    // VK_CHECK(uniformBuffers.composition.map());
-
-   // Setup instanced model positions
-   uboOffscreenVS.instancePos[0] = glm::vec4(0.0f);
-   uboOffscreenVS.instancePos[1] = glm::vec4(-4.0f, 0.0, -4.0f, 0.0f);
-   uboOffscreenVS.instancePos[2] = glm::vec4(4.0f, 0.0, -4.0f, 0.0f);
 
    // Update
    UpdateUniformBufferOffscreen();
@@ -220,7 +177,7 @@ DeferredPipeline::SetupDescriptorSetLayout()
    vertexShaderUniform.descriptorCount = 1;
    vertexShaderUniform.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
    vertexShaderUniform.pImmutableSamplers = nullptr;
-   vertexShaderUniform.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_GEOMETRY_BIT;
+   vertexShaderUniform.stageFlags = VK_SHADER_STAGE_VERTEX_BIT /*| VK_SHADER_STAGE_GEOMETRY_BIT*/;
 
    // Binding 1 : Per object buffer (mrt.vert)
    VkDescriptorSetLayoutBinding perInstanceBinding{};
@@ -498,12 +455,13 @@ DeferredPipeline::PreparePipelines()
    // The shadow mapping pipeline uses geometry shader instancing (invocations layout modifier) to
    // output shadow maps for multiple lights sources into the different shadow map layers in one
    // single render pass
-   std::array< VkPipelineShaderStageCreateInfo, 2 > shadowStages;
+   std::array< VkPipelineShaderStageCreateInfo, 1 > shadowStages;
 
    shadowStages[0] =
       VulkanShader::LoadShader("default/shadow.vert.spv", VK_SHADER_STAGE_VERTEX_BIT).shaderInfo;
-   shadowStages[1] =
-      VulkanShader::LoadShader("default/shadow.geom.spv", VK_SHADER_STAGE_GEOMETRY_BIT).shaderInfo;
+   /*shadowStages[1] =
+      VulkanShader::LoadShader("default/shadow.geom.spv",
+      VK_SHADER_STAGE_GEOMETRY_BIT).shaderInfo;*/
 
    pipelineInfo.pStages = shadowStages.data();
    pipelineInfo.stageCount = static_cast< uint32_t >(shadowStages.size());
@@ -550,7 +508,7 @@ DeferredPipeline::SetupDescriptorPool()
    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
    poolInfo.poolSizeCount = static_cast< uint32_t >(poolSizes.size());
    poolInfo.pPoolSizes = poolSizes.data();
-   poolInfo.maxSets = 3; // Should be 1?
+   poolInfo.maxSets = 4; // Should be 1?
 
    VK_CHECK(vkCreateDescriptorPool(Data::vk_device, &poolInfo, nullptr, &m_descriptorPool), "");
 }
@@ -714,25 +672,26 @@ DeferredPipeline::SetupDescriptorSet()
 
    std::array< VkWriteDescriptorSet, 1 > shadowMapDescriptorWrites{};
 
-   // Shadow mapping
-   VK_CHECK(vkAllocateDescriptorSets(Data::vk_device, &allocInfo, &m_shadowMapDescriptor), "");
+   //// Shadow mapping
+   // VK_CHECK(vkAllocateDescriptorSets(Data::vk_device, &allocInfo, &m_shadowMapDescriptor), "");
 
-   bufferInfo.buffer = m_shadowGeomBuffer.m_buffer;
-   bufferInfo.offset = 0;
-   bufferInfo.range = sizeof(uboShadowGeometryShader);
+   // bufferInfo.buffer = m_shadowGeomBuffer.m_buffer;
+   // bufferInfo.offset = 0;
+   // bufferInfo.range = sizeof(uboShadowGeometryShader);
 
-   // Binding 0: Vertex shader uniform buffer
-   descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-   descriptorWrites[0].dstSet = m_shadowMapDescriptor;
-   descriptorWrites[0].dstBinding = 0;
-   descriptorWrites[0].dstArrayElement = 0;
-   descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-   descriptorWrites[0].descriptorCount = 1;
-   descriptorWrites[0].pBufferInfo = &bufferInfo;
+   //// Binding 0: Vertex shader uniform buffer
+   // shadowMapDescriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+   // shadowMapDescriptorWrites[0].dstSet = m_shadowMapDescriptor;
+   // shadowMapDescriptorWrites[0].dstBinding = 0;
+   // shadowMapDescriptorWrites[0].dstArrayElement = 0;
+   // shadowMapDescriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+   // shadowMapDescriptorWrites[0].descriptorCount = 1;
+   // shadowMapDescriptorWrites[0].pBufferInfo = &bufferInfo;
 
 
-   vkUpdateDescriptorSets(Data::vk_device, static_cast< uint32_t >(descriptorWrites.size()),
-                          descriptorWrites.data(), 0, nullptr);
+   // vkUpdateDescriptorSets(Data::vk_device,
+   //                       static_cast< uint32_t >(shadowMapDescriptorWrites.size()),
+   //                       shadowMapDescriptorWrites.data(), 0, nullptr);
 }
 
 void
@@ -770,7 +729,7 @@ DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& s
    // First pass: Shadow map generation
    // -------------------------------------------------------------------------------------------------------
 
-   clearValues[0].depthStencil = {1.0f, 0};
+   clearValues[0].depthStencil = {0.5f, 0};
 
    renderPassBeginInfo.renderPass = m_shadowMap.GetRenderPass();
    renderPassBeginInfo.framebuffer = m_shadowMap.GetFramebuffer();
@@ -801,7 +760,8 @@ DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& s
    vkCmdSetDepthBias(m_offscreenCommandBuffer, depthBiasConstant, 0.0f, depthBiasSlope);
 
    vkCmdBeginRenderPass(m_offscreenCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-   vkCmdBindPipeline(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowMapPipeline);
+   vkCmdBindPipeline(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                     m_shadowMapPipeline);
 
    {
       VkDeviceSize offsets[] = {0};
@@ -877,47 +837,10 @@ DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& s
 }
 
 void
-DeferredPipeline::DrawDeferred()
+DeferredPipeline::UpdateDeferred()
 {
-   // swapChain.acquireNextImage
-   // VulkanExampleBase::prepareFrame();
-
-   // The scene render command buffer has to wait for the offscreen
-   // rendering to be finished before we can use the framebuffer
-   // color image for sampling during final rendering
-   // To ensure this we use a dedicated offscreen synchronization
-   // semaphore that will be signaled when offscreen renderin
-   // has been finished
-   // This is necessary as an implementation may start both
-   // command buffers at the same time, there is no guarantee
-   // that command buffers will be executed in the order they
-   // have been submitted by the application
-
-   // Offscreen rendering
-
-   // Wait for swap chain presentation to finish
-   // submitInfo.pWaitSemaphores = &semaphores.presentComplete;
-   //// Signal ready with offscreen semaphore
-   // submitInfo.pSignalSemaphores = &offscreenSemaphore;
-
-   //// Submit work
-   // submitInfo.commandBufferCount = 1;
-   // submitInfo.pCommandBuffers = &offScreenCmdBuffer;
-   // VK_CHECK(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE), "");
-
-   //// Scene rendering
-
-   //// Wait for offscreen semaphore
-   // submitInfo.pWaitSemaphores = &offscreenSemaphore;
-   //// Signal ready with render complete semaphore
-   // submitInfo.pSignalSemaphores = &semaphores.renderComplete;
-
-   //// Submit work
-   // submitInfo.pCommandBuffers = &drawCmdBuffers[currentBuffer];
-   // VK_CHECK_RESULT(vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE));
-
-   // swapChain.acquireNextImage
-   // VulkanExampleBase::submitFrame();
+   UpdateUniformBufferOffscreen();
+   UpdateUniformBufferComposition();
 }
 
 

@@ -12,7 +12,7 @@ namespace shady::utils {
 
 auto static CreatePath(std::filesystem::path rootPath, std::string_view assetPath)
 {
-   auto new_path = rootPath;
+   auto new_path = rootPath / "";
    new_path += std::filesystem::path(assetPath);
    return new_path.string();
 }

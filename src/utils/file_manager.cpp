@@ -4,10 +4,17 @@
 #define STB_IMAGE_STATIC
 #define STB_IMAGE_IMPLEMENTATION
 #include <fstream>
-#include <string>
 #include <stb_image.h>
+#include <string>
 
 namespace shady::utils {
+
+auto static CreatePath(std::filesystem::path rootPath, std::string_view assetPath)
+{
+   auto new_path = rootPath;
+   new_path += std::filesystem::path(assetPath);
+   return new_path.string();
+}
 
 std::string
 FileManager::ReadTextFile(const std::filesystem::path& path)
@@ -37,13 +44,13 @@ FileManager::ReadTextFile(std::string_view fileName)
    return returnVal;
 }
 
-std::vector<char>
+std::vector< char >
 FileManager::ReadBinaryFile(const std::filesystem::path& path)
 {
    return ReadBinaryFile(std::string_view{path.string()});
 }
 
-std::vector<char>
+std::vector< char >
 FileManager::ReadBinaryFile(std::string_view fileName)
 {
    std::ifstream fileHandle(fileName, std::ios::binary);
@@ -65,7 +72,7 @@ FileManager::ReadBinaryFile(std::string_view fileName)
 
    std::vector< char > buffer(size);
 
-   fileHandle.read(buffer.data(), static_cast<size_t>(size));
+   fileHandle.read(buffer.data(), static_cast< size_t >(size));
 
    return buffer;
 }
@@ -81,14 +88,14 @@ FileManager::WriteToFile(std::string_view fileName, std::string_view content)
 render::ImageData
 FileManager::ReadTexture(std::string_view fileName, bool flipVertical)
 {
-   const auto pathToImage = std::filesystem::path(TEXTURES_DIR / fileName).string();
+   const auto pathToImage = CreatePath(TEXTURES_DIR, fileName);
    int force_channels = STBI_rgb_alpha;
    int w, h, n;
 
    stbi_set_flip_vertically_on_load(flipVertical);
 
-   render::ImageHandleType textureData(
-      stbi_load(pathToImage.c_str(), &w, &h, &n, force_channels), stbi_image_free);
+   render::ImageHandleType textureData(stbi_load(pathToImage.c_str(), &w, &h, &n, force_channels),
+                                       stbi_image_free);
 
    if (!textureData)
    {

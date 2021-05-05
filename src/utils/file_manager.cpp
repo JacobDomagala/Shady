@@ -1,5 +1,6 @@
 #include "file_manager.hpp"
 #include "trace/logger.hpp"
+#include "utils/assert.hpp"
 
 #define STB_IMAGE_STATIC
 #define STB_IMAGE_IMPLEMENTATION
@@ -27,19 +28,15 @@ FileManager::ReadTextFile(std::string_view fileName)
 {
    std::ifstream fileHandle(fileName);
 
-   if (!fileHandle.is_open())
-   {
-      trace::Logger::Fatal("FileManager::ReadTextFile -> {} can't be opened!", fileName);
-   }
+   utils::Assert(fileHandle.is_open(),
+                 fmt::format("FileManager::ReadTextFile -> {} can't be opened!", fileName));
 
    std::string returnVal((std::istreambuf_iterator< char >(fileHandle)),
                          std::istreambuf_iterator< char >());
    fileHandle.close();
 
-   if (returnVal.empty())
-   {
-      trace::Logger::Fatal("FileManager::ReadTextFile -> {} is empty!", fileName);
-   }
+   utils::Assert(!returnVal.empty(),
+                 fmt::format("FileManager::ReadTextFile -> {} is empty!", fileName));
 
    return returnVal;
 }
@@ -55,20 +52,12 @@ FileManager::ReadBinaryFile(std::string_view fileName)
 {
    std::ifstream fileHandle(fileName, std::ios::binary);
 
-   if (!fileHandle.is_open())
-   {
-      trace::Logger::Fatal("FileManager::ReadBinaryFile -> {} can't be opened!", fileName);
-      return {};
-   }
+   utils::Assert(fileHandle.is_open(),
+                 fmt::format("FileManager::ReadBinaryFile -> {} can't be opened!", fileName));
 
    const auto size = std::filesystem::file_size(fileName);
 
-   if (!size)
-   {
-      trace::Logger::Fatal("FileManager::ReadBinaryFile -> {} is empty!", fileName);
-      return {};
-   }
-
+   utils::Assert(size, fmt::format("FileManager::ReadBinaryFile -> {} is empty!", fileName));
 
    std::vector< char > buffer(size);
 
@@ -97,10 +86,9 @@ FileManager::ReadTexture(std::string_view fileName, bool flipVertical)
    render::ImageHandleType textureData(stbi_load(pathToImage.c_str(), &w, &h, &n, force_channels),
                                        stbi_image_free);
 
-   if (!textureData)
-   {
-      trace::Logger::Fatal("FileManager::LoadImage -> {} can't be opened!", pathToImage);
-   }
+   utils::Assert(textureData != nullptr,
+                 fmt::format("FileManager::LoadImage -> {} can't be opened!", pathToImage));
+
 
    return {std::move(textureData), {w, h}, n};
 }

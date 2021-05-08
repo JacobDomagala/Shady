@@ -29,9 +29,9 @@ PerspectiveCamera::MouseMovement(const glm::vec2& mouseMovement)
       m_pitch = glm::clamp(m_pitch, -89.0f, 89.0f);
    }
 
-   m_lookAtDirection.x = glm::cos(glm::radians(m_yaw)) * glm::cos(glm::radians(m_pitch));
+   m_lookAtDirection.x = -glm::cos(glm::radians(m_yaw)) * glm::cos(glm::radians(m_pitch));
    m_lookAtDirection.y = glm::sin(glm::radians(m_pitch));
-   m_lookAtDirection.z = glm::sin(glm::radians(m_yaw)) * glm::cos(glm::radians(m_pitch));
+   m_lookAtDirection.z = -glm::sin(glm::radians(m_yaw)) * glm::cos(glm::radians(m_pitch));
    m_lookAtDirection = glm::normalize(m_lookAtDirection);
 
    m_rightVector = glm::normalize(glm::cross(m_lookAtDirection, m_worldUp));

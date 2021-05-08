@@ -79,8 +79,8 @@ Shady::MainLoop()
 void
 Shady::OnUpdate()
 {
-   constexpr auto cameraMoveBy = 0.02f;
-   constexpr auto lightMoveBy = 0.015f;
+   constexpr auto cameraMoveBy = 0.05f;
+   constexpr auto lightMoveBy = 0.02f;
 
    input::InputManager::PollEvents();
 

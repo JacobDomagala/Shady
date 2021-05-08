@@ -143,7 +143,7 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
 
    ImGui::PopStyleColor(1);
 
-   const char* items[] = {"Full scene", "Position", "Normal", "Albedo", "Specular"};
+   const char* items[] = {"Full scene", "Position", "Normal", "Albedo", "Specular", "ShadowMap"};
 
    const char* combo_label = items[Data::m_renderTarget]; // Label to preview before opening the combo
                                                       // (technically it could be anything)

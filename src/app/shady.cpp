@@ -27,7 +27,7 @@ Shady::Init()
    input::InputManager::RegisterForMouseScrollInput(this);
 
    Data::m_light =
-      std::make_unique< scene::Light >(glm::vec3(0.0f, 20.0f, 0.0f), glm::vec3(1.0f, 0.8f, 0.7f),
+      std::make_unique< scene::Light >(glm::vec3(0.0f, 200.0f, 0.0f), glm::vec3(1.0f, 0.8f, 0.7f),
                                        scene::LightType::DIRECTIONAL_LIGHT);
    Data::m_camera = std::make_unique< scene::PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 500.0f);
 
@@ -124,6 +124,15 @@ Shady::OnUpdate()
    {
       m_currentScene.GetLight().MoveBy({-lightMoveBy, 0.0f, 0.0f});
       Data::m_light->MoveBy({-lightMoveBy, 0.0f, 0.0f});
+   }
+
+   if (input::InputManager::CheckKeyPressed(GLFW_KEY_R))
+   {
+      Data::m_camera->SetView(Data::m_light->GetViewMat());
+   }
+   if (input::InputManager::CheckKeyPressed(GLFW_KEY_T))
+   {
+      Data::m_camera->SetViewProjection(Data::m_light->GetLightSpaceMat());
    }
 }
 

@@ -12,7 +12,7 @@ Light::Light(const glm::vec3& position, const glm::vec3& color, LightType type)
    switch (type)
    {
       case LightType::DIRECTIONAL_LIGHT: {
-         m_projectionMatrix = glm::ortho(-200.0f, 200.0f, -200.0f, 200.0f, 1.0f, 500.0f);
+         m_projectionMatrix = glm::ortho(-100.0f, 100.0f, 100.0f, -100.0f, 1.0f, 500.0f);
       }
       break;
 
@@ -32,7 +32,7 @@ Light::Light(const glm::vec3& position, const glm::vec3& color, LightType type)
    // buffer_type);
    m_biasMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f))
                   * glm::scale(glm::mat4(1.0f), glm::vec3(0.5f));
-
+   m_lookAt = glm::vec3(0.0f, -1.0f, 0.0f);
    // m_shadowBuffer->MakeTextureResident();
 }
 
@@ -80,6 +80,12 @@ const glm::mat4&
 Light::GetLightSpaceMat() const
 {
    return m_lightSpaceMatrix;
+}
+
+const glm::mat4&
+Light::GetViewMat() const
+{
+   return m_viewMatrix;
 }
 
 glm::vec3

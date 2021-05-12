@@ -31,6 +31,9 @@ class Light
    const glm::mat4&
    GetLightSpaceMat() const;
 
+   const glm::mat4&
+   GetViewMat() const;
+
    glm::vec3
    GetPosition() const;
 

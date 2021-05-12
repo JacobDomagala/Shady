@@ -27,7 +27,7 @@ Shady::Init()
    input::InputManager::RegisterForMouseScrollInput(this);
 
    Data::m_light =
-      std::make_unique< scene::Light >(glm::vec3(0.0f, 200.0f, 0.0f), glm::vec3(1.0f, 0.8f, 0.7f),
+      std::make_unique< scene::Light >(glm::vec3(0.0f, 450.0f, 0.0f), glm::vec3(1.0f, 0.8f, 0.7f),
                                        scene::LightType::DIRECTIONAL_LIGHT);
    Data::m_camera = std::make_unique< scene::PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 500.0f);
 
@@ -54,8 +54,10 @@ Shady::MainLoop()
       OnUpdate();
 
       // m_currentScene.Render(m_windowWidth, m_windowHeight);
-      render::vulkan::VulkanRenderer::view_mat = Data::m_camera->GetView();
-      render::vulkan::VulkanRenderer::proj_mat = Data::m_camera->GetProjection();
+      // render::vulkan::VulkanRenderer::view_mat = Data::m_camera->GetView();
+      // render::vulkan::VulkanRenderer::proj_mat = Data::m_camera->GetProjection();
+      render::vulkan::VulkanRenderer::proj_mat = Data::m_camera->GetViewProjection();
+
       render::vulkan::VulkanRenderer::camera_pos = glm::vec4(Data::m_camera->GetPosition(), 0.0f);
       render::vulkan::VulkanRenderer::light_pos = glm::vec4(Data::m_light->GetPosition(), 0.0f);
      /* render::vulkan::VulkanRenderer::view_mat = m_currentScene.GetCamera().GetView();

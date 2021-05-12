@@ -12,7 +12,8 @@ Light::Light(const glm::vec3& position, const glm::vec3& color, LightType type)
    switch (type)
    {
       case LightType::DIRECTIONAL_LIGHT: {
-         m_projectionMatrix = glm::ortho(-100.0f, 100.0f, 100.0f, -100.0f, 1.0f, 500.0f);
+         m_projectionMatrix = glm::ortho(-200.0f, 200.0f, -200.0f, 200.0f, 1.0f, 500.0f);
+         // m_projectionMatrix = glm::perspective(70.0f, 16.0f / 9.0f, 0.1f, 500.0f);
       }
       break;
 
@@ -33,7 +34,10 @@ Light::Light(const glm::vec3& position, const glm::vec3& color, LightType type)
    m_biasMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f))
                   * glm::scale(glm::mat4(1.0f), glm::vec3(0.5f));
    m_lookAt = glm::vec3(0.0f, -1.0f, 0.0f);
+   m_upVec = glm::vec3(0.0f, 0.0f, 0.5f);
    // m_shadowBuffer->MakeTextureResident();
+
+   UpdateViewProjection();
 }
 
 void
@@ -117,9 +121,16 @@ Light::MoveBy(const glm::vec3& moveBy)
 {
    m_position += moveBy;
 
-   m_viewMatrix = glm::lookAt(m_position, glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 0.5f));
-   m_lightSpaceMatrix = m_projectionMatrix * m_viewMatrix;
+   UpdateViewProjection();
    // trace::Logger::Info("Light position {}", m_position);
+}
+
+void
+Light::UpdateViewProjection()
+{
+   m_viewMatrix = glm::lookAt(m_position, m_lookAt, m_upVec);
+   m_lightSpaceMatrix = m_projectionMatrix * m_viewMatrix;
+   m_shadowMatrix = m_biasMatrix * m_lightSpaceMatrix;
 }
 
 } // namespace shady::scene

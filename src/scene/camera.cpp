@@ -26,6 +26,7 @@ void
 Camera::SetView(const glm::mat4& view)
 {
    m_viewMat = view;
+   UpdateViewMatrix();
 }
 
 const glm::mat4&
@@ -37,7 +38,7 @@ Camera::GetView() const
 void
 Camera::SetViewProjection(const glm::mat4& viewProjection)
 {
-   m_viewMat = viewProjection;
+   m_viewProjectionMat = viewProjection;
 }
 
 const glm::mat4&

@@ -729,7 +729,7 @@ DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& s
    // First pass: Shadow map generation
    // -------------------------------------------------------------------------------------------------------
 
-   clearValues[0].depthStencil = {0.5f, 0};
+   clearValues[0].depthStencil = {1.0f, 0};
 
    renderPassBeginInfo.renderPass = m_shadowMap.GetRenderPass();
    renderPassBeginInfo.framebuffer = m_shadowMap.GetFramebuffer();

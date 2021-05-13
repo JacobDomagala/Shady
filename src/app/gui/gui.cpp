@@ -35,6 +35,18 @@ Gui::Init()
    // Setup Dear ImGui style
    ImGui::StyleColorsDark();
 
+   // // Color scheme
+   //ImGuiStyle& style = ImGui::GetStyle();
+   //style.Colors[ImGuiCol_TitleBg] = ImVec4(1.0f, 0.0f, 0.0f, 0.6f);
+   //style.Colors[ImGuiCol_TitleBgActive] = ImVec4(1.0f, 0.0f, 0.0f, 0.8f);
+   //style.Colors[ImGuiCol_MenuBarBg] = ImVec4(1.0f, 0.0f, 0.0f, 0.4f);
+   //style.Colors[ImGuiCol_Header] = ImVec4(1.0f, 0.0f, 0.0f, 0.4f);
+   //style.Colors[ImGuiCol_CheckMark] = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+   //// Dimensions
+   //ImGuiIO& io = ImGui::GetIO();
+   //io.DisplaySize = ImVec2(width, height);
+   //io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+
    PrepareResources();
    PreparePipeline(Data::m_pipelineCache, Data::m_renderPass);
 }
@@ -197,13 +209,11 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
                static_cast< double >(mousePos.y));
 
    ImGui::End();
+
    ImGui::PopStyleVar();
    ImGui::Render();
 
-   if (UpdateBuffers())
-   {
-      VulkanRenderer::CreateCommandBufferForDeferred();
-   }
+   UpdateBuffers();
 
    return mouse_on_gui;
 }

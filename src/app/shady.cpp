@@ -75,6 +75,8 @@ Shady::MainLoop()
 
       // render::vulkan::VulkanRenderer::Draw();
 
+      // Always recreate the command buffers for composition, mostly due to imgui
+      VulkanRenderer::CreateCommandBufferForDeferred();
       render::vulkan::VulkanRenderer::DrawDeferred();
 
       // m_gui.Render({m_windowWidth, m_windowHeight});

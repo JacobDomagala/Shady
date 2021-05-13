@@ -179,6 +179,7 @@ Shady::CursorPositionCallback(const input::CursorPositionEvent& event)
 void
 Shady::MouseScrollCallback(const input::MouseScrollEvent& /*event*/)
 {
+
 }
 
 } // namespace shady::app

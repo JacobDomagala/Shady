@@ -21,7 +21,7 @@ class Gui
 {
  public:
    static void
-   Init();
+   Init(const glm::ivec2& windowSize);
 
    static void
    Shutdown();

@@ -679,7 +679,7 @@ VulkanRenderer::CreateRenderPipeline()
    {
       m_deferredPipeline.Initialize(Data::m_renderPass, m_swapChainImageViews,
                                     Data::m_pipelineCache);
-      app::gui::Gui::Init();
+      app::gui::Gui::Init({m_swapChainExtent.width, m_swapChainExtent.height});
       app::gui::Gui::UpdateUI({m_swapChainExtent.width, m_swapChainExtent.height});
       CreateCommandBufferForDeferred();
    }

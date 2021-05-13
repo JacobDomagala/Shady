@@ -245,15 +245,15 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
       const char* items[] = {"Full scene", "Position", "Normal", "Albedo", "Specular", "ShadowMap"};
 
       const char* combo_label =
-         items[Data::m_renderTarget]; // Label to preview before opening the combo
+         items[Data::m_debugData.displayDebugTarget]; // Label to preview before opening the combo
                                       // (technically it could be anything)
       if (ImGui::BeginCombo("Render target", combo_label, ImGuiComboFlags_HeightSmall))
       {
          for (int n = 0; n < IM_ARRAYSIZE(items); n++)
          {
-            const bool is_selected = (Data::m_renderTarget == n);
+            const bool is_selected = (Data::m_debugData.displayDebugTarget == n);
             if (ImGui::Selectable(items[n], is_selected))
-               Data::m_renderTarget = n;
+               Data::m_debugData.displayDebugTarget = n;
 
             // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
             if (is_selected)
@@ -263,9 +263,7 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
       }
 
 
-      static float ambient = 0.0f;
-
-      if (ImGui::SliderFloat("Ambient light", &ambient, 0.0f, 1.0f))
+      if (ImGui::SliderFloat("Ambient light", &Data::m_debugData.ambientLight, 0.0f, 1.0f))
       {
       }
 
@@ -280,12 +278,9 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
 
    if (ImGui::CollapsingHeader("Shadows"))
    {
-      static bool renderPcf = false;
-      ImGui::Checkbox("Render PCF", &renderPcf);
+      ImGui::Checkbox("Render PCF", reinterpret_cast<bool*>(&Data::m_debugData.pcfShadow));
 
-      static float shadow_factor = 0.0f;
-
-      if (ImGui::SliderFloat("Shadow Factor", &shadow_factor, 0.0f, 1.0f))
+      if (ImGui::SliderFloat("Shadow Factor", &Data::m_debugData.shadowFactor, 0.0f, 1.0f))
       {
       }
    }
@@ -297,9 +292,10 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
       auto lightPos = Data::m_light->GetPosition();
       ImGui::InputFloat3("Position", &lightPos[0], "%.3f", ImGuiInputTextFlags_ReadOnly);
 
-      const auto light_color = Data::m_light->GetColor();
-      ImVec4 color = ImVec4{light_color.r, light_color.g, light_color.b, 1.0f};
-      ImGui::ColorEdit3("Color##1", (float*)&color, 0);
+      auto light_color = Data::m_light->GetColor();
+
+      ImGui::ColorEdit3("Color##1", (float*)&light_color[0], 0);
+      Data::m_light->SetColor(light_color);
    }
 
    if (ImGui::CollapsingHeader("Debug"))

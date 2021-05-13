@@ -43,6 +43,9 @@ class Light
    glm::vec3
    GetColor() const;
 
+   void
+   SetColor(const glm::vec3& new_color);
+
    glm::tvec2< uint32_t >
    GetLightmapSize() const;
 

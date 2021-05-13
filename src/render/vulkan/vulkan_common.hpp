@@ -33,6 +33,14 @@ struct UniformBufferObject
    glm::mat4 lightView;
 };
 
+struct DebugData
+{
+   int displayDebugTarget;
+   int pcfShadow;
+   float ambientLight;
+   float shadowFactor;
+};
+
 struct PerInstanceBuffer
 {
    glm::mat4 model;
@@ -91,7 +99,7 @@ struct Data
 
    inline static std::unique_ptr< scene::Light > m_light = {};
    inline static std::unique_ptr< scene::Camera > m_camera = {};
-   inline static int32_t m_renderTarget = 0;
+   inline static DebugData m_debugData = {};
 };
 
 uint32_t

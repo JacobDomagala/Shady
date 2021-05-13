@@ -110,6 +110,12 @@ Light::GetColor() const
    return m_color;
 }
 
+void
+Light::SetColor(const glm::vec3& new_color)
+{
+   m_color = new_color;
+}
+
 glm::tvec2< uint32_t >
 Light::GetLightmapSize() const
 {

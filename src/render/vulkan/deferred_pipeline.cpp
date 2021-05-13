@@ -37,7 +37,7 @@ struct
 {
    Light light;
    glm::vec4 viewPos;
-   int debugDisplayTarget = 0;
+   DebugData debugData;
 } uboComposition;
 
 // This UBO stores the shadow matrices for all of the light sources
@@ -102,7 +102,7 @@ DeferredPipeline::UpdateUniformBufferComposition()
    uboComposition.viewPos =
       glm::vec4(Data::m_camera->GetPosition(), 0.0f); /** glm::vec4(-1.0f, 1.0f, -1.0f, 1.0f);*/
 
-   uboComposition.debugDisplayTarget = Data::m_renderTarget;
+   uboComposition.debugData= Data::m_debugData;
 
    memcpy(m_compositionBuffer.m_mappedMemory, &uboComposition, sizeof(uboComposition));
 }

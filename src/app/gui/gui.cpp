@@ -69,11 +69,8 @@ Gui::UpdateBuffers()
    // Vertex buffer
    if ((m_vertexBuffer.m_buffer == VK_NULL_HANDLE) || (m_vertexCount != imDrawData->TotalVtxCount))
    {
-      if (m_vertexBuffer.m_buffer != VK_NULL_HANDLE)
-      {
-         m_vertexBuffer.Unmap();
-         m_vertexBuffer.Destroy();
-      }
+      m_vertexBuffer.Unmap();
+      m_vertexBuffer.Destroy();
 
       m_vertexBuffer = Buffer::CreateBuffer(vertexBufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
                                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
@@ -87,11 +84,8 @@ Gui::UpdateBuffers()
    VkDeviceSize indexSize = imDrawData->TotalIdxCount * sizeof(ImDrawIdx);
    if ((m_indexBuffer.m_buffer == VK_NULL_HANDLE) || (m_indexCount < imDrawData->TotalIdxCount))
    {
-      if (m_indexBuffer.m_buffer != VK_NULL_HANDLE)
-      {
-         m_indexBuffer.Unmap();
-         m_indexBuffer.Destroy();
-      }
+      m_indexBuffer.Unmap();
+      m_indexBuffer.Destroy();
 
       m_indexBuffer = Buffer::CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
                                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
@@ -122,6 +116,12 @@ Gui::UpdateBuffers()
 }
 
 bool
+Gui::CheckUpdateUI()
+{
+   return true;
+}
+
+bool
 Gui::UpdateUI(const glm::ivec2& windowSize)
 {
    ImGuiIO& io = ImGui::GetIO();
@@ -146,8 +146,8 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
    if (io.MouseDown[0] or io.MouseDown[1])
    {
       mouse_on_gui = CheckRectArea(0, windowWidth, 0, toolsWindowHeight, mousePos)
-                     or CheckRectArea(static_cast< float >(size.x) - windowWidth, windowWidth, 0,
-                                      debugWindowHeight, mousePos);
+                     /*or CheckRectArea(static_cast< float >(size.x) - windowWidth, windowWidth, 0,
+                                      debugWindowHeight, mousePos)*/;
    }
 
    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
@@ -155,15 +155,16 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
 
    ImGui::SetNextWindowPos({0, 0});
    ImGui::SetNextWindowSize(ImVec2(windowWidth, toolsWindowHeight));
-   ImGui::Begin("Tools");
+   ImGui::Begin("Debug Window");
    ImGui::PushStyleColor(ImGuiCol_Button, {0.45f, 0.0f, 0.2f, 0.9f});
 
    ImGui::PopStyleColor(1);
 
    const char* items[] = {"Full scene", "Position", "Normal", "Albedo", "Specular", "ShadowMap"};
 
-   const char* combo_label = items[Data::m_renderTarget]; // Label to preview before opening the combo
-                                                      // (technically it could be anything)
+   const char* combo_label =
+      items[Data::m_renderTarget]; // Label to preview before opening the combo
+                                   // (technically it could be anything)
    if (ImGui::BeginCombo("Render target", combo_label, ImGuiComboFlags_HeightSmall))
    {
       for (int n = 0; n < IM_ARRAYSIZE(items); n++)
@@ -182,12 +183,6 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
    static bool renderPcf = false;
    ImGui::Checkbox("Render PCF", &renderPcf);
 
-   ImGui::End();
-
-
-   ImGui::SetNextWindowPos({static_cast< float >(size.x) - windowWidth, 0.0f});
-   ImGui::SetNextWindowSize(ImVec2(windowWidth, debugWindowHeight));
-   ImGui::Begin("Debug Window");
    const auto cameraPos = Data::m_camera->GetPosition();
    const auto cameraLookAt = Data::m_camera->GetLookAtVec();
    const auto lightPos = Data::m_light->GetPosition();

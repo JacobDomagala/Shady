@@ -30,6 +30,9 @@ class Gui
    UpdateUI(const glm::ivec2& windowSize);
 
    static bool
+   CheckUpdateUI();
+
+   static bool
    UpdateBuffers();
 
    static void

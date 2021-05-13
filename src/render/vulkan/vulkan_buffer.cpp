@@ -17,11 +17,12 @@ Buffer::Map(VkDeviceSize size)
 void
 Buffer::Unmap()
 {
-   utils::Assert(m_mapped, "Buffer is not mapped!");
-
-   vkUnmapMemory(Data::vk_device, m_bufferMemory);
-   m_mapped = false;
-   m_mappedMemory = nullptr;
+   if (m_mapped)
+   {
+      vkUnmapMemory(Data::vk_device, m_bufferMemory);
+      m_mapped = false;
+      m_mappedMemory = nullptr;
+   }
 }
 
 void

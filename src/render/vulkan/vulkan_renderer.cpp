@@ -1210,15 +1210,12 @@ VulkanRenderer::CreateFramebuffers()
 void
 VulkanRenderer::CreateCommandPool()
 {
-   /*
-    *  CREATE COMMAND POOL
-    */
-
    QueueFamilyIndices queueFamilyIndicesTwo =
       findQueueFamilies(Data::vk_physicalDevice, Data::m_surface);
 
    VkCommandPoolCreateInfo poolInfo{};
    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+   poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
    poolInfo.queueFamilyIndex = queueFamilyIndicesTwo.graphicsFamily.value();
 
    VK_CHECK(vkCreateCommandPool(Data::vk_device, &poolInfo, nullptr, &Data::vk_commandPool),
@@ -1304,16 +1301,19 @@ VulkanRenderer::CreateCommandBuffers()
 void
 VulkanRenderer::CreateCommandBufferForDeferred()
 {
-   m_commandBuffers.resize(m_swapChainFramebuffers.size());
+   if (m_commandBuffers.empty())
+   {
+      m_commandBuffers.resize(m_swapChainFramebuffers.size());
 
-   VkCommandBufferAllocateInfo allocInfo{};
-   allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-   allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-   allocInfo.commandPool = Data::vk_commandPool;
-   allocInfo.commandBufferCount = static_cast< uint32_t >(m_commandBuffers.size());
+      VkCommandBufferAllocateInfo allocInfo{};
+      allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+      allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+      allocInfo.commandPool = Data::vk_commandPool;
+      allocInfo.commandBufferCount = static_cast< uint32_t >(m_commandBuffers.size());
 
-   VK_CHECK(vkAllocateCommandBuffers(Data::vk_device, &allocInfo, m_commandBuffers.data()),
-            "failed to allocate command buffers!");
+      VK_CHECK(vkAllocateCommandBuffers(Data::vk_device, &allocInfo, m_commandBuffers.data()),
+               "failed to allocate command buffers!");
+   }
 
    VkCommandBufferBeginInfo beginInfo{};
    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;

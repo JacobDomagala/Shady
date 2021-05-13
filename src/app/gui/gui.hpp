@@ -26,7 +26,7 @@ class Gui
    static void
    Shutdown();
 
-   static void
+   static bool
    UpdateUI(const glm::ivec2& windowSize);
 
    static bool

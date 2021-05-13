@@ -51,7 +51,12 @@ Shady::MainLoop()
    {
       m_window->Clear();
 
-      OnUpdate();
+      input::InputManager::PollEvents();
+
+      if (!app::gui::Gui::UpdateUI({m_windowWidth, m_windowHeight}))
+      {
+         OnUpdate();
+      }
 
       // m_currentScene.Render(m_windowWidth, m_windowHeight);
       // render::vulkan::VulkanRenderer::view_mat = Data::m_camera->GetView();
@@ -69,7 +74,7 @@ Shady::MainLoop()
          glm::vec4(m_currentScene.GetLight().GetPosition(), 0.0f);*/
 
       // render::vulkan::VulkanRenderer::Draw();
-      app::gui::Gui::UpdateUI({m_windowWidth, m_windowHeight});
+
       render::vulkan::VulkanRenderer::DrawDeferred();
 
       // m_gui.Render({m_windowWidth, m_windowHeight});
@@ -83,8 +88,6 @@ Shady::OnUpdate()
 {
    constexpr auto cameraMoveBy = 0.05f;
    constexpr auto lightMoveBy = 0.02f;
-
-   input::InputManager::PollEvents();
 
    if (input::InputManager::CheckKeyPressed(GLFW_KEY_W))
    {
@@ -158,7 +161,8 @@ Shady::MouseButtonCallback(const input::MouseButtonEvent& /*event*/)
 void
 Shady::CursorPositionCallback(const input::CursorPositionEvent& event)
 {
-   if (input::InputManager::CheckButtonPressed(GLFW_MOUSE_BUTTON_LEFT))
+   if (input::InputManager::CheckButtonPressed(GLFW_MOUSE_BUTTON_LEFT)
+       and !app::gui::Gui::UpdateUI({m_windowWidth, m_windowHeight}))
    {
       m_currentScene.GetCamera().MouseMovement({event.m_xDelta, event.m_yDelta});
       Data::m_camera->MouseMovement({event.m_xDelta, event.m_yDelta});

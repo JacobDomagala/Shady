@@ -16,6 +16,13 @@ namespace shady::app::gui {
 
 using namespace shady::render::vulkan;
 
+static bool
+CheckRectArea(int32_t pos_x, int32_t width, int32_t pos_y, int32_t height, glm::vec2 mouse_pos)
+{
+   return mouse_pos.x >= pos_x and mouse_pos.x <= pos_x + width and mouse_pos.y >= pos_y
+          and mouse_pos.y <= pos_y + height;
+}
+
 void
 Gui::Init()
 {
@@ -114,7 +121,7 @@ Gui::UpdateBuffers()
    return updateCmdBuffers;
 }
 
-void
+bool
 Gui::UpdateUI(const glm::ivec2& windowSize)
 {
    ImGuiIO& io = ImGui::GetIO();
@@ -126,15 +133,25 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
    io.MouseDown[0] = input::InputManager::CheckButtonPressed(GLFW_MOUSE_BUTTON_1);
    io.MouseDown[1] = input::InputManager::CheckButtonPressed(GLFW_MOUSE_BUTTON_2);
 
+   bool mouse_on_gui = false;
+
    ImGui::NewFrame();
 
    const auto size = windowSize;
 
-   auto windowWidth = static_cast< float >(size.x) / 3.0f;
-   const auto toolsWindowHeight = 60.0f;
+   auto windowWidth = static_cast< float >(size.x) / 4.0f;
+   const auto toolsWindowHeight = size.y;
    const auto debugWindowHeight = static_cast< float >(size.y);
 
+   if (io.MouseDown[0] or io.MouseDown[1])
+   {
+      mouse_on_gui = CheckRectArea(0, windowWidth, 0, toolsWindowHeight, mousePos)
+                     or CheckRectArea(static_cast< float >(size.x) - windowWidth, windowWidth, 0,
+                                      debugWindowHeight, mousePos);
+   }
+
    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+
 
    ImGui::SetNextWindowPos({0, 0});
    ImGui::SetNextWindowSize(ImVec2(windowWidth, toolsWindowHeight));
@@ -161,6 +178,10 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
       }
       ImGui::EndCombo();
    }
+
+   static bool renderPcf = false;
+   ImGui::Checkbox("Render PCF", &renderPcf);
+
    ImGui::End();
 
 
@@ -177,6 +198,9 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
    ImGui::Text("Light Position %f, %f, %f", static_cast< double >(lightPos.x),
                static_cast< double >(lightPos.y), static_cast< double >(lightPos.z));
 
+   ImGui::Text("Mouse Position %f, %f", static_cast< double >(mousePos.x),
+               static_cast< double >(mousePos.y));
+
    ImGui::End();
    ImGui::PopStyleVar();
    ImGui::Render();
@@ -185,6 +209,8 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
    {
       VulkanRenderer::CreateCommandBufferForDeferred();
    }
+
+   return mouse_on_gui;
 }
 
 void

@@ -133,7 +133,7 @@ DeferredPipeline::Initialize(VkRenderPass mainRenderPass,
 void
 DeferredPipeline::ShadowSetup()
 {
-   m_shadowMap.CreateShadowMap(2048, 2048, 1);
+   m_shadowMap.CreateShadowMap(4096, 4096, 1);
 }
 
 void

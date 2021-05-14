@@ -1,10 +1,10 @@
 #pragma once
 
-#include <glm/gtc/type_ptr.hpp>
-#include <vector>
-#include <string>
-
+#include "render/vulkan/vulkan_buffer.hpp"
 #include "scene/camera.hpp"
+
+#include <string>
+#include <vulkan/vulkan.h>
 
 namespace shady::scene {
 
@@ -18,9 +18,14 @@ class Skybox
    Draw(const Camera& camera, uint32_t windowWidth, uint32_t windowHeight);
 
  private:
-   //render::TexturePtr m_cubeTexture;
-   //std::shared_ptr<render::Shader> m_shader;
-   //std::shared_ptr<render::VertexArray> m_vertexArray;
+   void
+   CreatePipeline();
+
+ private:
+   VkPipeline m_pipeline = {};
+   VkPipelineLayout m_pipelineLayout = {};
+   VkDescriptorSetLayout m_descriptorSetLayout = {};
+   render::vulkan::Buffer m_vertexBuffer = {};
 };
 
 } // namespace shady::scene

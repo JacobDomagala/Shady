@@ -77,7 +77,7 @@ Texture::CreateTextureImage(TextureType type, std::string_view textureName)
 std::pair< VkImage, VkDeviceMemory >
 Texture::CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels,
                      VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling,
-                     VkImageUsageFlags usage, VkMemoryPropertyFlags properties)
+                     VkImageUsageFlags usage, VkMemoryPropertyFlags properties, bool cubemap)
 {
    VkImage image;
    VkDeviceMemory imageMemory;
@@ -96,6 +96,13 @@ Texture::CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels,
    imageInfo.usage = usage;
    imageInfo.samples = numSamples;
    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+   if (cubemap)
+   {
+      // Cube faces count as array layers in Vulkan
+      imageInfo.arrayLayers = 6;
+      // This flag is required for cube map images
+      imageInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+   }
 
    VK_CHECK(vkCreateImage(Data::vk_device, &imageInfo, nullptr, &image), "failed to create image!");
 

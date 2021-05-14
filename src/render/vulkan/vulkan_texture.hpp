@@ -23,7 +23,7 @@ class Texture
 
    static std::pair< VkImage, VkDeviceMemory >
    CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format,
-               VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties);
+               VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, bool cubemap = false);
 
    static void
    GenerateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight,
@@ -32,7 +32,7 @@ class Texture
    static VkImageView
    CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
 
-   static void 
+   static void
    TransitionImageLayout(VkImage image, VkImageLayout oldLayout,
                          VkImageLayout newLayout, uint32_t mipLevels);
 
@@ -78,7 +78,7 @@ class TextureLibrary
    static const Texture&
    GetTexture(const std::string& textureName);
 
-   static void 
+   static void
    CreateTexture(TextureType type, const std::string& textureName);
 
    static void

@@ -1,5 +1,6 @@
 
 #include "vulkan_renderer.hpp"
+#include "app/gui/gui.hpp"
 #include "trace/logger.hpp"
 #include "utils/assert.hpp"
 #include "utils/file_manager.hpp"
@@ -8,7 +9,6 @@
 #include "vulkan_common.hpp"
 #include "vulkan_shader.hpp"
 #include "vulkan_texture.hpp"
-#include "app/gui/gui.hpp"
 
 
 #include <GLFW/glfw3.h>
@@ -61,8 +61,7 @@ VulkanRenderer::MeshLoaded(const std::vector< vulkan::Vertex >& vertices_in,
       if (it == Data::textures.end())
       {
          Data::textures[texture] = {
-            Data::currTexIdx++,
-                              TextureLibrary::GetTexture(texture).GetImageViewAndSampler().first};
+            Data::currTexIdx++, TextureLibrary::GetTexture(texture).GetImageViewAndSampler().first};
 
          Data::texturesVec.push_back(
             TextureLibrary::GetTexture(texture).GetImageViewAndSampler().first);
@@ -73,17 +72,17 @@ VulkanRenderer::MeshLoaded(const std::vector< vulkan::Vertex >& vertices_in,
       switch (tex.GetType())
       {
          case TextureType::DIFFUSE_MAP: {
-            newInstance.textures.x = static_cast<float>(idx);
+            newInstance.textures.x = static_cast< float >(idx);
          }
          break;
 
          case TextureType::NORMAL_MAP: {
-            newInstance.textures.y = static_cast<float>(idx);
+            newInstance.textures.y = static_cast< float >(idx);
          }
          break;
 
          case TextureType::SPECULAR_MAP: {
-            newInstance.textures.z = static_cast<float>(idx);
+            newInstance.textures.z = static_cast< float >(idx);
          }
          break;
       }
@@ -102,8 +101,8 @@ VulkanRenderer::SetupData()
    CreateUniformBuffers();
 
    const auto commandsSize = Data::m_renderCommands.size() * sizeof(VkDrawIndexedIndirectCommand);
-   //VkBuffer stagingBuffer;
-   //VkDeviceMemory stagingBufferMemory;
+   // VkBuffer stagingBuffer;
+   // VkDeviceMemory stagingBufferMemory;
 
    ////  Commands + draw count
    VkDeviceSize bufferSize = commandsSize + sizeof(uint32_t);
@@ -118,16 +117,16 @@ VulkanRenderer::SetupData()
    memcpy(static_cast< uint8_t* >(data) + commandsSize, &Data::m_numMeshes, sizeof(uint32_t));
 
 
-   //vkUnmapMemory(Data::vk_device, stagingBufferMemory);
+   // vkUnmapMemory(Data::vk_device, stagingBufferMemory);
 
- /*  Buffer::CreateBuffer(
-      bufferSize, VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_indirectDrawsBuffer, m_indirectDrawsBufferMemory);
+   /*  Buffer::CreateBuffer(
+        bufferSize, VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_indirectDrawsBuffer, m_indirectDrawsBufferMemory);
 
-   Buffer::CopyBuffer(stagingBuffer, m_indirectDrawsBuffer, bufferSize);
+     Buffer::CopyBuffer(stagingBuffer, m_indirectDrawsBuffer, bufferSize);
 
-   vkDestroyBuffer(Data::vk_device, stagingBuffer, nullptr);
-   vkFreeMemory(Data::vk_device, stagingBufferMemory, nullptr);*/
+     vkDestroyBuffer(Data::vk_device, stagingBuffer, nullptr);
+     vkFreeMemory(Data::vk_device, stagingBufferMemory, nullptr);*/
 }
 
 struct QueueFamilyIndices
@@ -454,8 +453,8 @@ VulkanRenderer::CreateVertexBuffer()
    memcpy(data, Data::vertices.data(), (size_t)bufferSize);
    vkUnmapMemory(Data::vk_device, stagingBufferMemory);
 
-   Buffer::CreateBuffer(bufferSize,
-                        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+   Buffer::CreateBuffer(
+      bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, Data::m_vertexBuffer, Data::m_vertexBufferMemory);
 
    Buffer::CopyBuffer(stagingBuffer, Data::m_vertexBuffer, bufferSize);
@@ -480,8 +479,8 @@ VulkanRenderer::CreateIndexBuffer()
    memcpy(data, Data::indices.data(), (size_t)bufferSize);
    vkUnmapMemory(Data::vk_device, stagingBufferMemory);
 
-   Buffer::CreateBuffer(bufferSize,
-                        VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+   Buffer::CreateBuffer(
+      bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, Data::m_indexBuffer, Data::m_indexBufferMemory);
 
    Buffer::CopyBuffer(stagingBuffer, Data::m_indexBuffer, bufferSize);
@@ -652,9 +651,9 @@ VulkanRenderer::CreatePipelineCache()
 {
    VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
    pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-   VK_CHECK(
-      vkCreatePipelineCache(Data::vk_device, &pipelineCacheCreateInfo, nullptr, &Data::m_pipelineCache),
-      "");
+   VK_CHECK(vkCreatePipelineCache(Data::vk_device, &pipelineCacheCreateInfo, nullptr,
+                                  &Data::m_pipelineCache),
+            "");
 }
 
 void
@@ -679,8 +678,8 @@ VulkanRenderer::CreateRenderPipeline()
    {
       m_deferredPipeline.Initialize(Data::m_renderPass, m_swapChainImageViews,
                                     Data::m_pipelineCache);
-      app::gui::Gui::Init({m_swapChainExtent.width, m_swapChainExtent.height});
-      app::gui::Gui::UpdateUI({m_swapChainExtent.width, m_swapChainExtent.height});
+      app::gui::Gui::Init({Data::m_swapChainExtent.width, Data::m_swapChainExtent.height});
+      app::gui::Gui::UpdateUI({Data::m_swapChainExtent.width, Data::m_swapChainExtent.height});
       CreateCommandBufferForDeferred();
    }
 
@@ -700,7 +699,8 @@ VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage)
    ubo.lightPos = light_pos;*/
 
    void* data;
-   vkMapMemory(Data::vk_device, Data::m_uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
+   vkMapMemory(Data::vk_device, Data::m_uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0,
+               &data);
    memcpy(data, &ubo, sizeof(ubo));
    vkUnmapMemory(Data::vk_device, Data::m_uniformBuffersMemory[currentImage]);
 
@@ -719,9 +719,8 @@ VulkanRenderer::CreateColorResources()
    VkFormat colorFormat = m_swapChainImageFormat;
 
    std::tie(m_colorImage, m_colorImageMemory) = Texture::CreateImage(
-      m_swapChainExtent.width, m_swapChainExtent.height, 1, VK_SAMPLE_COUNT_1_BIT /*Data::m_msaaSamples*/,
-      colorFormat,
-      VK_IMAGE_TILING_OPTIMAL,
+      Data::m_swapChainExtent.width, Data::m_swapChainExtent.height, 1,
+      VK_SAMPLE_COUNT_1_BIT /*Data::m_msaaSamples*/, colorFormat, VK_IMAGE_TILING_OPTIMAL,
       VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
    m_colorImageView =
@@ -734,11 +733,9 @@ VulkanRenderer::CreateDepthResources()
    VkFormat depthFormat = FindDepthFormat();
 
    const auto [depthImage, depthImageMemory] = Texture::CreateImage(
-      m_swapChainExtent.width, m_swapChainExtent.height, 1,
-      VK_SAMPLE_COUNT_1_BIT /*Data::m_msaaSamples*/,
-      depthFormat,
-      VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+      Data::m_swapChainExtent.width, Data::m_swapChainExtent.height, 1,
+      VK_SAMPLE_COUNT_1_BIT /*Data::m_msaaSamples*/, depthFormat, VK_IMAGE_TILING_OPTIMAL,
+      VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
    m_depthImage = depthImage;
    m_depthImageMemory = depthImageMemory;
@@ -784,11 +781,11 @@ VulkanRenderer::Draw()
                          m_imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
    UpdateUniformBuffer(imageIndex);
-   //if (m_imagesInFlight[imageIndex] != VK_NULL_HANDLE)
+   // if (m_imagesInFlight[imageIndex] != VK_NULL_HANDLE)
    //{
    //   vkWaitForFences(Data::vk_device, 1, &m_imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
    //}
-   //m_imagesInFlight[imageIndex] = m_inFlightFences[currentFrame];
+   // m_imagesInFlight[imageIndex] = m_inFlightFences[currentFrame];
 
 
    //
@@ -829,10 +826,11 @@ VulkanRenderer::Draw()
 
    // vkResetFences(Data::vk_device, 1, &m_inFlightFences[currentFrame]);
 
-   //VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &submitInfo, m_inFlightFences[currentFrame]),
+   // VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &submitInfo,
+   // m_inFlightFences[currentFrame]),
    //         "failed to submit draw command buffer!");
 
-    VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE),
+   VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE),
             "failed to submit draw command buffer!");
 
    VkPresentInfoKHR presentInfo{};
@@ -908,7 +906,7 @@ VulkanRenderer::CreateDevice()
 
          Data::vk_physicalDevice = device;
          Data::m_msaaSamples = VK_SAMPLE_COUNT_1_BIT;
-         //getMaxUsableSampleCount(Data::vk_physicalDevice);
+         // getMaxUsableSampleCount(Data::vk_physicalDevice);
          break;
       }
    }
@@ -1025,7 +1023,7 @@ VulkanRenderer::CreateSwapchain(GLFWwindow* windowHandle)
    vkGetSwapchainImagesKHR(Data::vk_device, m_swapChain, &imageCount, m_swapChainImages.data());
 
    m_swapChainImageFormat = surfaceFormat.format;
-   m_swapChainExtent = extent;
+   Data::m_swapChainExtent = extent;
 }
 
 void
@@ -1197,8 +1195,8 @@ VulkanRenderer::CreateFramebuffers()
       framebufferInfo.renderPass = Data::m_renderPass;
       framebufferInfo.attachmentCount = static_cast< uint32_t >(attachments.size());
       framebufferInfo.pAttachments = attachments.data();
-      framebufferInfo.width = m_swapChainExtent.width;
-      framebufferInfo.height = m_swapChainExtent.height;
+      framebufferInfo.width = Data::m_swapChainExtent.width;
+      framebufferInfo.height = Data::m_swapChainExtent.height;
       framebufferInfo.layers = 1;
 
       VK_CHECK(vkCreateFramebuffer(Data::vk_device, &framebufferInfo, nullptr,
@@ -1254,7 +1252,7 @@ VulkanRenderer::CreateCommandBuffers()
    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
    renderPassInfo.renderPass = Data::m_renderPass;
    renderPassInfo.renderArea.offset = {0, 0};
-   renderPassInfo.renderArea.extent = m_swapChainExtent;
+   renderPassInfo.renderArea.extent = Data::m_swapChainExtent;
    renderPassInfo.clearValueCount = static_cast< uint32_t >(clearValues.size());
    renderPassInfo.pClearValues = clearValues.data();
 
@@ -1289,8 +1287,7 @@ VulkanRenderer::CreateCommandBuffers()
       vkCmdDrawIndexedIndirectCount(m_commandBuffers[i], Data::m_indirectDrawsBuffer, 0,
                                     Data::m_indirectDrawsBuffer,
                                     sizeof(VkDrawIndexedIndirectCommand) * Data::m_numMeshes,
-                                    Data::m_numMeshes,
-                                    sizeof(VkDrawIndexedIndirectCommand));
+                                    Data::m_numMeshes, sizeof(VkDrawIndexedIndirectCommand));
 
       vkCmdEndRenderPass(m_commandBuffers[i]);
 
@@ -1326,7 +1323,7 @@ VulkanRenderer::CreateCommandBufferForDeferred()
    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
    renderPassInfo.renderPass = Data::m_renderPass;
    renderPassInfo.renderArea.offset = {0, 0};
-   renderPassInfo.renderArea.extent = m_swapChainExtent;
+   renderPassInfo.renderArea.extent = Data::m_swapChainExtent;
    renderPassInfo.clearValueCount = static_cast< uint32_t >(clearValues.size());
    renderPassInfo.pClearValues = clearValues.data();
 
@@ -1339,35 +1336,44 @@ VulkanRenderer::CreateCommandBufferForDeferred()
       vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
       VkViewport viewport{};
-      viewport.width = m_swapChainExtent.width;
-      viewport.height = m_swapChainExtent.height;
+      viewport.width = Data::m_swapChainExtent.width;
+      viewport.height = Data::m_swapChainExtent.height;
       viewport.minDepth = 0.0f;
       viewport.maxDepth = 1.0f;
 
       vkCmdSetViewport(m_commandBuffers[i], 0, 1, &viewport);
 
       VkRect2D scissor{};
-      scissor.extent.width = m_swapChainExtent.width;
-      scissor.extent.height = m_swapChainExtent.height;
+      scissor.extent.width = Data::m_swapChainExtent.width;
+      scissor.extent.height = Data::m_swapChainExtent.height;
       scissor.offset.x = 0;
       scissor.offset.y = 0;
 
       vkCmdSetScissor(m_commandBuffers[i], 0, 1, &scissor);
 
+      /*
+       * STAGE 1 - SKYBOX
+       */
 
+
+
+      /*
+       * STAGE 2 - COMPOSITION
+       */
       vkCmdBindDescriptorSets(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
                               m_deferredPipeline.GetPipelineLayout(), 0, 1,
-                              &m_deferredPipeline.GetDescriptorSet(), 0,
-                              nullptr);
+                              &m_deferredPipeline.GetDescriptorSet(), 0, nullptr);
 
       vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
                         m_deferredPipeline.GetCompositionPipeline());
+
       // Final composition as full screen quad
-      // Note: Also used for debug display if debugDisplayTarget > 0
       vkCmdDraw(m_commandBuffers[i], 3, 1, 0, 0);
 
+      /*
+       * STAGE 3 - DRAW UI
+       */
       app::gui::Gui::Render(m_commandBuffers[i]);
-      // drawUI(drawCmdBuffers[i]);
 
       vkCmdEndRenderPass(m_commandBuffers[i]);
 
@@ -1426,18 +1432,17 @@ VulkanRenderer::CreatePipeline()
    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
    inputAssembly.primitiveRestartEnable = VK_FALSE;
 
-
    VkViewport viewport{};
    viewport.x = 0.0f;
    viewport.y = 0.0f;
-   viewport.width = static_cast< float >(m_swapChainExtent.width);
-   viewport.height = static_cast< float >(m_swapChainExtent.height);
+   viewport.width = static_cast< float >(Data::m_swapChainExtent.width);
+   viewport.height = static_cast< float >(Data::m_swapChainExtent.height);
    viewport.minDepth = 0.0f;
    viewport.maxDepth = 1.0f;
 
    VkRect2D scissor{};
    scissor.offset = {0, 0};
-   scissor.extent = m_swapChainExtent;
+   scissor.extent = Data::m_swapChainExtent;
 
    VkPipelineViewportStateCreateInfo viewportState{};
    viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -1460,7 +1465,6 @@ VulkanRenderer::CreatePipeline()
    multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
    multisampling.sampleShadingEnable = VK_FALSE;
    multisampling.rasterizationSamples = Data::m_msaaSamples;
-
 
    VkPipelineDepthStencilStateCreateInfo depthStencil{};
    depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;

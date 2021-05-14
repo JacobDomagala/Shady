@@ -42,6 +42,9 @@ class Camera
    const glm::vec3&
    GetUpVec() const;
 
+   const glm::vec3&
+   GetRightVec() const;
+
    virtual void
    MouseMovement(const glm::vec2& mouseMovement) = 0;
 

@@ -120,7 +120,6 @@ class VulkanRenderer
    inline static std::vector< VkImageView > m_swapChainImageViews = {};
    inline static std::vector< VkFramebuffer > m_swapChainFramebuffers = {};
    inline static VkFormat m_swapChainImageFormat = {};
-   inline static VkExtent2D m_swapChainExtent = {};
 
    inline static VkDescriptorSetLayout m_descriptorSetLayout = {};
    inline static VkDescriptorPool m_descriptorPool = {};

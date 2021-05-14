@@ -80,6 +80,12 @@ Camera::GetUpVec() const
    return m_upVector;
 }
 
+const glm::vec3&
+Camera::GetRightVec() const
+{
+   return m_rightVector;
+}
+
 void
 Camera::UpdateViewMatrix()
 {

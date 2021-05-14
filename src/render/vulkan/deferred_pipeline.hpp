@@ -1,6 +1,5 @@
 #pragma once
 
-#include "scene/camera.hpp"
 #include "vulkan_buffer.hpp"
 #include "vulkan_framebuffer.hpp"
 
@@ -90,7 +89,6 @@ class DeferredPipeline
    inline static Buffer m_compositionBuffer = {};
    inline static VkDescriptorSet m_shadowMapDescriptor = {};
    inline static int32_t m_debugDisplayTarget = 0;
-   inline static std::unique_ptr< scene::Camera > m_camera = {};
 
    inline static VkSampler m_colorSampler = {};
 

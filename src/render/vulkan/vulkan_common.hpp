@@ -35,10 +35,10 @@ struct UniformBufferObject
 
 struct DebugData
 {
-   int displayDebugTarget;
-   int pcfShadow;
-   float ambientLight;
-   float shadowFactor;
+   int displayDebugTarget = 0;
+   int pcfShadow = 0;
+   float ambientLight = 0.1f;
+   float shadowFactor = 0.1f;
 };
 
 struct PerInstanceBuffer

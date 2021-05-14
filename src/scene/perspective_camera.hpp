@@ -25,8 +25,6 @@ class PerspectiveCamera : public Camera
    float m_yaw = -90.0f;
    float m_pitch = 0.0f;
    bool m_constrainPitch = true;
-
-   const glm::vec3 m_worldUp = {0.0f, -1.0f, 0.0f};
 };
 
 } // namespace shady::scene

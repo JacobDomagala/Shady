@@ -269,11 +269,13 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
 
       auto cameraPos = Data::m_camera->GetPosition();
       auto cameraLookAt = Data::m_camera->GetLookAtVec();
+      auto cameraUp = Data::m_camera->GetUpVec();
 
       ImGui::Text("");
       ImGui::Text("Camera");
       ImGui::InputFloat3("Position", &cameraPos[0], "%.3f", ImGuiInputTextFlags_ReadOnly);
       ImGui::InputFloat3("Direction", &cameraLookAt[0], "%.3f", ImGuiInputTextFlags_ReadOnly);
+      ImGui::InputFloat3("Up", &cameraUp[0], "%.3f", ImGuiInputTextFlags_ReadOnly);
    }
 
    if (ImGui::CollapsingHeader("Shadows"))

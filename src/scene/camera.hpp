@@ -55,14 +55,18 @@ class Camera
    void
    UpdateViewMatrix();
 
+   void
+   UpdateViewProjection();
+
  protected:
    glm::mat4 m_projectionMat = glm::mat4(1.0f);
    glm::mat4 m_viewMat = glm::mat4(1.0f);
    glm::mat4 m_viewProjectionMat = glm::mat4(1.0f);
 
    glm::vec3 m_position = glm::vec3(0.0f);
-   glm::vec3 m_upVector = glm::vec3(0.0f, -1.0f, 0.0f);
+   const glm::vec3 m_worldUp = glm::vec3(0.0f, -1.0f, 0.0f);
+   glm::vec3 m_upVector = m_worldUp;
    glm::vec3 m_rightVector = glm::vec3(1.0f, 0.0f, 0.0f);
-   glm::vec3 m_lookAtDirection = glm::vec3(0.0f, 0.0f, 1.0f);
+   glm::vec3 m_lookAtDirection = glm::vec3(1.0f, 0.0f, 0.0f);
 };
 } // namespace shady::render

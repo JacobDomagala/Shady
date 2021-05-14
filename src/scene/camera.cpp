@@ -25,8 +25,16 @@ Camera::GetProjection() const
 void
 Camera::SetView(const glm::mat4& view)
 {
+   const auto inversed = glm::inverse(view);
+
+   m_rightVector = glm::normalize(inversed[0]);
+   m_position = inversed[3];
+   m_lookAtDirection = glm::vec3(inversed[1]) - m_position;
+   m_upVector = glm::normalize(glm::cross(m_rightVector, glm::normalize(m_lookAtDirection)));
+
    m_viewMat = view;
-   UpdateViewMatrix();
+
+   UpdateViewProjection();
 }
 
 const glm::mat4&
@@ -51,6 +59,7 @@ void
 Camera::SetPosition(const glm::vec3& position)
 {
    m_position = position;
+   UpdateViewMatrix();
 }
 
 const glm::vec3&
@@ -75,10 +84,13 @@ void
 Camera::UpdateViewMatrix()
 {
    m_viewMat = glm::lookAt(m_position, m_position + m_lookAtDirection, m_upVector);
-   m_viewProjectionMat = m_projectionMat * m_viewMat;
+   UpdateViewProjection();
+}
 
-   //trace::Logger::Info("Camera position = {}, upVec = {}, rightVec = {}, lookAt = {}", m_position,
-   //                    m_upVector, m_rightVector, m_lookAtDirection);
+void
+Camera::UpdateViewProjection()
+{
+   m_viewProjectionMat = m_projectionMat * m_viewMat;
 }
 
 } // namespace shady::scene

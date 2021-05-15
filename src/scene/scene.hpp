@@ -3,6 +3,7 @@
 #include "scene/light.hpp"
 #include "scene/model.hpp"
 #include "scene/skybox.hpp"
+#include "scene/camera.hpp"
 
 #include <memory>
 #include <vector>

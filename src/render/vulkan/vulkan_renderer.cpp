@@ -615,7 +615,6 @@ VulkanRenderer::CreateDescriptorSets()
       descriptorWrites[2].descriptorCount = 1;
       descriptorWrites[2].pImageInfo = &samplerInfo;
 
-      descriptorWrites[3].pImageInfo = descriptorImageInfos;
       descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
       descriptorWrites[3].dstSet = m_descriptorSets[i];
       descriptorWrites[3].dstBinding = 3;
@@ -676,6 +675,7 @@ VulkanRenderer::CreateRenderPipeline()
    }
    else
    {
+      m_skybox.LoadCubeMap("default");
       m_deferredPipeline.Initialize(Data::m_renderPass, m_swapChainImageViews,
                                     Data::m_pipelineCache);
       app::gui::Gui::Init({Data::m_swapChainExtent.width, Data::m_swapChainExtent.height});
@@ -1355,7 +1355,7 @@ VulkanRenderer::CreateCommandBufferForDeferred()
        * STAGE 1 - SKYBOX
        */
 
-
+      m_skybox.Draw(m_commandBuffers[i]);
 
       /*
        * STAGE 2 - COMPOSITION

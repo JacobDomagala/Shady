@@ -30,14 +30,16 @@ class Texture
                 uint32_t mipLevels);
 
    static VkImageView
-   CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
+   CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags,
+                   uint32_t mipLevels, bool cubemap = false);
 
    static void
-   TransitionImageLayout(VkImage image, VkImageLayout oldLayout,
-                         VkImageLayout newLayout, uint32_t mipLevels);
+   TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout,
+                         uint32_t mipLevels, bool cubemap = false);
 
    static void
-   CopyBufferToImage(VkImage image, uint32_t texWidth, uint32_t texHeight, VkBuffer buffer);
+   CopyBufferToImage(VkImage image, uint32_t texWidth, uint32_t texHeight, VkBuffer buffer,
+                     bool cubemap = false);
 
    std::pair<VkImageView, VkSampler>
    GetImageViewAndSampler() const;

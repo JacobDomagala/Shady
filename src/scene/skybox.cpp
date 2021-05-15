@@ -36,6 +36,44 @@ Skybox::LoadCubeMap(std::string_view directory)
       2, 6, 4, 1, 2, 4  // face 6
    };
 
+   const auto vertex_buffer_size = skyboxVertices.size() * sizeof(float);
+   VkBuffer vertex_stagingBuffer;
+   VkDeviceMemory vertex_stagingBufferMemory;
+   Buffer::CreateBuffer(vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                        vertex_stagingBuffer, vertex_stagingBufferMemory);
+
+   void* vertex_data;
+   vkMapMemory(Data::vk_device, vertex_stagingBufferMemory, 0, vertex_buffer_size, 0, &vertex_data);
+   memcpy(vertex_data, skyboxVertices.data(), static_cast< size_t >(vertex_buffer_size));
+   vkUnmapMemory(Data::vk_device, vertex_stagingBufferMemory);
+
+   m_vertexBuffer = Buffer::CreateBuffer(
+      vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+
+   Buffer::CopyBuffer(vertex_stagingBuffer, m_vertexBuffer.m_buffer, vertex_buffer_size);
+
+   const auto index_buffer_size = indicies.size() * sizeof(uint32_t);
+   VkBuffer index_stagingBuffer;
+   VkDeviceMemory index_stagingBufferMemory;
+   Buffer::CreateBuffer(index_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                        index_stagingBuffer, index_stagingBufferMemory);
+
+   void* index_data;
+   vkMapMemory(Data::vk_device, index_stagingBufferMemory, 0, index_buffer_size, 0, &index_data);
+   memcpy(index_data, indicies.data(), static_cast< size_t >(index_buffer_size));
+   vkUnmapMemory(Data::vk_device, index_stagingBufferMemory);
+
+   m_indexBuffer = Buffer::CreateBuffer(
+      index_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+
+   Buffer::CopyBuffer(index_stagingBuffer, m_indexBuffer.m_buffer, index_buffer_size);
+
    CreateBuffers();
    CreateImageAndSampler(directory);
    CreateDescriptorSet();
@@ -172,8 +210,8 @@ void
 Skybox::CreateBuffers()
 {
    m_uniformBuffer = Buffer::CreateBuffer(sizeof(SkyboxUBO), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-                                   | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+                                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
+                                             | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
    m_uniformBuffer.Map();
 
@@ -392,12 +430,15 @@ Skybox::CreatePipeline()
 void
 Skybox::Draw(VkCommandBuffer commandBuffer)
 {
+   vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1,
                            &m_descriptorSet, 0, nullptr);
 
-   vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
+   VkDeviceSize offsets[1] = {0};
+   vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.m_buffer, offsets);
+   vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.m_buffer, 0, VK_INDEX_TYPE_UINT16);
 
-   // vkCmdDrawIndexed(commandBuffer, 36, 1, 0, 0, 0);
+   vkCmdDrawIndexed(commandBuffer, 36, 1, 0, 0, 0);
 }
 
 } // namespace shady::scene

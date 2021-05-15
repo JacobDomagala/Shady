@@ -50,6 +50,7 @@ class Skybox
    VkImageView m_imageView = {};
    VkSampler m_sampler = {};
    render::vulkan::Buffer m_vertexBuffer = {};
+   render::vulkan::Buffer m_indexBuffer = {};
    render::vulkan::Buffer m_uniformBuffer = {};
 };
 

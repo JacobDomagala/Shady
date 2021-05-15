@@ -102,7 +102,7 @@ Skybox::CreateImageAndSampler(std::string_view directory)
 
    const auto width = faces[0].m_size.x;
    const auto height = faces[0].m_size.y;
-   const auto single_face_size = faces[0].m_channels * width * height;
+   const auto single_face_size = 4 * width * height;
    const auto total_buffer_size = num_faces * single_face_size;
    VkBuffer stagingBuffer;
    VkDeviceMemory stagingBufferMemory;
@@ -158,8 +158,7 @@ Skybox::CreateImageAndSampler(std::string_view directory)
       bufferCopyRegion.imageExtent.width = textureData.m_size.x;
       bufferCopyRegion.imageExtent.height = textureData.m_size.y;
       bufferCopyRegion.imageExtent.depth = 1;
-      bufferCopyRegion.bufferOffset =
-         textureData.m_size.x * textureData.m_size.y * textureData.m_channels;
+      bufferCopyRegion.bufferOffset = face * single_face_size;
 
       bufferCopyRegions.push_back(bufferCopyRegion);
    }
@@ -436,7 +435,7 @@ Skybox::Draw(VkCommandBuffer commandBuffer)
 
    VkDeviceSize offsets[1] = {0};
    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.m_buffer, offsets);
-   vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.m_buffer, 0, VK_INDEX_TYPE_UINT16);
+   vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.m_buffer, 0, VK_INDEX_TYPE_UINT32);
 
    vkCmdDrawIndexed(commandBuffer, 36, 1, 0, 0, 0);
 }

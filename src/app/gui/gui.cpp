@@ -1,11 +1,11 @@
 #include "gui.hpp"
 #include "app/input/input_manager.hpp"
-#include "render/common.hpp"
-#include "utils/file_manager.hpp"
 #include "buffer.hpp"
+#include "render/common.hpp"
 #include "renderer.hpp"
 #include "shader.hpp"
 #include "texture.hpp"
+#include "utils/file_manager.hpp"
 
 #include <GLFW/glfw3.h>
 #include <fmt/format.h>
@@ -246,7 +246,7 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
 
       const char* combo_label =
          items[Data::m_debugData.displayDebugTarget]; // Label to preview before opening the combo
-                                      // (technically it could be anything)
+                                                      // (technically it could be anything)
       if (ImGui::BeginCombo("Render target", combo_label, ImGuiComboFlags_HeightSmall))
       {
          for (int n = 0; n < IM_ARRAYSIZE(items); n++)
@@ -282,7 +282,7 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
 
    if (ImGui::CollapsingHeader("Shadows"))
    {
-      ImGui::Checkbox("Render PCF", reinterpret_cast<bool*>(&Data::m_debugData.pcfShadow));
+      ImGui::Checkbox("Render PCF", reinterpret_cast< bool* >(&Data::m_debugData.pcfShadow));
 
       if (ImGui::SliderFloat("Shadow Factor", &Data::m_debugData.shadowFactor, 0.0f, 1.0f))
       {
@@ -371,7 +371,7 @@ Gui::PrepareResources()
    int texWidth, texHeight;
 
    const auto fontFilename = (utils::FileManager::FONTS_DIR / "Roboto-Medium.ttf").string();
-   // const std::string filename = getAssetPath() + "Roboto-Medium.ttf";
+
    io.Fonts->AddFontFromFileTTF(fontFilename.c_str(), 16.0f);
 
    io.Fonts->GetTexDataAsRGBA32(&fontData, &texWidth, &texHeight);
@@ -388,37 +388,16 @@ Gui::PrepareResources()
       Texture::CreateImageView(m_fontImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 
 
-   // Staging buffers for font data upload
-
-   auto stagingBuffer = Buffer::CreateBuffer(uploadSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-                                                | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-   stagingBuffer.Map();
-   memcpy(stagingBuffer.m_mappedMemory, fontData, uploadSize);
-   stagingBuffer.Unmap();
-
-
    Texture::TransitionImageLayout(m_fontImage, VK_IMAGE_LAYOUT_UNDEFINED,
                                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1);
 
-   Texture::CopyBufferToImage(m_fontImage, texWidth, texHeight, stagingBuffer.m_buffer);
-
+   Texture::CopyBufferToImage(m_fontImage, texWidth, texHeight, fontData);
 
    Texture::TransitionImageLayout(m_fontImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                                   VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 1);
 
    // Font texture Sampler
-   VkSamplerCreateInfo samplerInfo = {};
-   samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-   samplerInfo.magFilter = VK_FILTER_LINEAR;
-   samplerInfo.minFilter = VK_FILTER_LINEAR;
-   samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-   samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-   samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-   samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-   samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-   VK_CHECK(vkCreateSampler(Data::vk_device, &samplerInfo, nullptr, &m_sampler), "");
+   m_sampler = Texture::CreateSampler();
 
    // Descriptor pool
    VkDescriptorPoolSize descriptorPoolSize{};

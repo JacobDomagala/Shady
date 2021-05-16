@@ -41,19 +41,6 @@ Texture::CreateTextureImage(TextureType type, std::string_view textureName)
    m_format = type == TextureType::DIFFUSE_MAP ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8A8_UNORM;
    m_mips = static_cast< uint32_t >(std::floor(std::log2(std::max(m_width, m_height)))) + 1;
 
-   VkDeviceSize imageSize = m_width * m_height * 4;
-
-   VkBuffer stagingBuffer;
-   VkDeviceMemory stagingBufferMemory;
-   Buffer::CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                        stagingBuffer, stagingBufferMemory);
-
-   void* data;
-   vkMapMemory(Data::vk_device, stagingBufferMemory, 0, imageSize, 0, &data);
-   memcpy(data, textureData.m_bytes.get(), static_cast< size_t >(imageSize));
-   vkUnmapMemory(Data::vk_device, stagingBufferMemory);
-
    std::tie(m_textureImage, m_textureImageMemory) = CreateImage(
       m_width, m_height, m_mips, VK_SAMPLE_COUNT_1_BIT, m_format, VK_IMAGE_TILING_OPTIMAL,
       VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
@@ -62,15 +49,14 @@ Texture::CreateTextureImage(TextureType type, std::string_view textureName)
 
    m_textureImageView = CreateImageView(m_textureImage, m_format, VK_IMAGE_ASPECT_COLOR_BIT, m_mips,
                                         type == TextureType::CUBE_MAP);
+
    CreateTextureSampler();
 
    TransitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_mips);
-   CopyBufferToImage(stagingBuffer);
+
+   CopyBufferToImage(textureData.m_bytes.get());
+
    // transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
-
-   vkDestroyBuffer(Data::vk_device, stagingBuffer, nullptr);
-   vkFreeMemory(Data::vk_device, stagingBufferMemory, nullptr);
-
    GenerateMipmaps(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB, m_width, m_height, m_mips);
 }
 
@@ -159,7 +145,7 @@ Texture::CreateSampler(uint32_t mipLevels)
    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
    samplerInfo.minLod = 0.0f;
-   samplerInfo.maxLod = static_cast<float>(mipLevels);
+   samplerInfo.maxLod = static_cast< float >(mipLevels);
    samplerInfo.mipLodBias = 0.0f;
 
    VK_CHECK(vkCreateSampler(Data::vk_device, &samplerInfo, nullptr, &sampler),
@@ -272,10 +258,8 @@ Texture::CreateTextureSampler()
 }
 
 void
-Texture::CopyBufferToImage(VkImage image, uint32_t texWidth, uint32_t texHeight, VkBuffer buffer)
+Texture::CopyBufferToImage(VkImage image, uint32_t texWidth, uint32_t texHeight, uint8_t* data)
 {
-   VkCommandBuffer commandBuffer = Command::BeginSingleTimeCommands();
-
    VkBufferImageCopy region{};
    region.bufferOffset = 0;
    region.bufferRowLength = 0;
@@ -287,16 +271,16 @@ Texture::CopyBufferToImage(VkImage image, uint32_t texWidth, uint32_t texHeight,
    region.imageOffset = {0, 0, 0};
    region.imageExtent = {texWidth, texHeight, 1};
 
-   vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1,
-                          &region);
-
-   Command::EndSingleTimeCommands(commandBuffer);
+   Buffer::CopyDataToImageWithStaging(image, data, 4 * texWidth * texHeight, {region});
 }
+
 void
-Texture::CopyBufferToCubemapImage(VkImage image, uint32_t texWidth, uint32_t texHeight, uint8_t* data)
+Texture::CopyBufferToCubemapImage(VkImage image, uint32_t texWidth, uint32_t texHeight,
+                                  uint8_t* data)
 {
    constexpr auto num_faces = 6;
-   const auto single_face_size = 4 * texWidth * texHeight;
+   const auto single_face_size =
+      static_cast< size_t >(4) * static_cast< size_t >(texWidth) * static_cast< size_t >(texHeight);
    const auto total_buffer_size = num_faces * single_face_size;
 
    // Setup buffer copy regions for each face
@@ -317,21 +301,19 @@ Texture::CopyBufferToCubemapImage(VkImage image, uint32_t texWidth, uint32_t tex
       bufferCopyRegions.push_back(bufferCopyRegion);
    }
 
-
    Texture::TransitionImageLayout(image, VK_IMAGE_LAYOUT_UNDEFINED,
                                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, true);
 
    Buffer::CopyDataToImageWithStaging(image, data, total_buffer_size, bufferCopyRegions);
-
 
    Texture::TransitionImageLayout(image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                                   VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 1, true);
 }
 
 void
-Texture::CopyBufferToImage(VkBuffer buffer)
+Texture::CopyBufferToImage(uint8_t* data)
 {
-   CopyBufferToImage(m_textureImage, m_width, m_height, buffer);
+   CopyBufferToImage(m_textureImage, m_width, m_height, data);
 }
 
 void

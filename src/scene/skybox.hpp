@@ -10,18 +10,33 @@ namespace shady::scene {
 
 struct SkyboxUBO
 {
-   glm::mat4 view_projection;
+   // camera's viewProjection (minus the translation)
+   glm::mat4 viewProjection;
 };
 
 class Skybox
 {
  public:
+   /*
+    * Load Cubemap from 6 face files. Each face file should be suffixed with face orientation.
+    *
+    * Example:
+    * sky_front.jpg, sky_back.jpg, sky_left.jpg, sky_right.jpg, sky_top.jpg, sky_bottom.jpg
+    *
+    * param[in]: skyboxName prefix for each face file
+    */
    void
-   LoadCubeMap(std::string_view directory);
+   LoadCubeMap(std::string_view skyboxName);
 
+   /*
+    *  Draw commands for 'commandBuffer'
+    */
    void
    Draw(VkCommandBuffer commandBuffer);
 
+   /*
+    *  Update uniform buffer (SkyboxUBO)
+    */
    void
    UpdateBuffers();
 
@@ -36,7 +51,7 @@ class Skybox
    CreateBuffers();
 
    void
-   CreateImageAndSampler(std::string_view directory);
+   CreateImageAndSampler(std::string_view skyboxName);
 
  private:
    VkPipeline m_pipeline = {};

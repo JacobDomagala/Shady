@@ -61,13 +61,13 @@ Skybox::LoadCubeMap(std::string_view directory)
 }
 
 void
-Skybox::CreateImageAndSampler(std::string_view directory)
+Skybox::CreateImageAndSampler(std::string_view skyboxName)
 {
    // Load faces to memory
    // -----------------------
    constexpr auto num_faces = 6;
 
-   auto name = std::string{directory};
+   auto name = std::string{skyboxName};
 
    const std::unordered_map< uint32_t, std::string > textureFaces = {
       {0, name + "_right.jpg"},  {1, name + "_left.jpg"},  {2, name + "_top.jpg"},
@@ -80,7 +80,7 @@ Skybox::CreateImageAndSampler(std::string_view directory)
    // Combined bytes for all faces
    std::vector< uint8_t > combined_faces_bytes;
 
-   for (auto [face, name] : textureFaces)
+   for (const auto& [face, name] : textureFaces)
    {
       faces[face] = utils::FileManager::ReadTexture(fmt::format("skybox/{}", name));
       const auto width = faces[face].m_size.x;
@@ -103,7 +103,7 @@ Skybox::CreateImageAndSampler(std::string_view directory)
 
    Texture::CopyBufferToCubemapImage(m_image, width, height, combined_faces_bytes.data());
 
-   m_sampler = Texture::CreateSampler(1);
+   m_sampler = Texture::CreateSampler();
    m_imageView = Texture::CreateImageView(m_image, VK_FORMAT_R8G8B8A8_UNORM,
                                           VK_IMAGE_ASPECT_COLOR_BIT, 1, true);
 }
@@ -124,7 +124,7 @@ void
 Skybox::UpdateBuffers()
 {
    SkyboxUBO buffer;
-   buffer.view_projection =
+   buffer.viewProjection =
       Data::m_camera->GetProjection() * glm::mat4(glm::mat3(Data::m_camera->GetView()));
 
    m_uniformBuffer.CopyData(&buffer);

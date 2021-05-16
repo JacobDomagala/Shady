@@ -35,14 +35,14 @@ class Texture
                    uint32_t mipLevels, bool cubemap = false);
 
    static VkSampler
-   CreateSampler(uint32_t mipLevels);
+   CreateSampler(uint32_t mipLevels = 1);
 
    static void
    TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout,
                          uint32_t mipLevels, bool cubemap = false);
 
    static void
-   CopyBufferToImage(VkImage image, uint32_t texWidth, uint32_t texHeight, VkBuffer buffer);
+   CopyBufferToImage(VkImage image, uint32_t texWidth, uint32_t texHeight, uint8_t* data);
 
    static void
    CopyBufferToCubemapImage(VkImage image, uint32_t texWidth, uint32_t texHeight, uint8_t* data);
@@ -61,7 +61,7 @@ class Texture
    TransitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
 
    void
-   CopyBufferToImage(VkBuffer buffer);
+   CopyBufferToImage(uint8_t* data);
 
  private:
    TextureType m_type = {};

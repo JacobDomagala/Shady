@@ -70,6 +70,9 @@ Buffer::CopyDataToImageWithStaging(VkImage image, void* data, size_t dataSize,
                           copyRegions.size(), copyRegions.data());
 
    Command::EndSingleTimeCommands(commandBuffer);
+
+   vkDestroyBuffer(Data::vk_device, stagingBuffer, nullptr);
+   vkFreeMemory(Data::vk_device, stagingBufferMemory, nullptr);
 }
 
 void

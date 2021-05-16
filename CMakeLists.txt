@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.18)
 
 set(PROJECT_NAME Shady)
 project(${PROJECT_NAME} VERSION 0.0.1)
@@ -65,7 +65,7 @@ target_include_directories(${PROJECT_NAME}
                     PRIVATE src src/app src/app/input src/trace src/render src/utils src/scene src/time)
 target_link_libraries_system (${PROJECT_NAME} PRIVATE glm glfw stb_image assimp fmt imgui Vulkan::Vulkan)
 target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings)
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
 # include(cmake/compile_shaders.cmake)
 # compile_shader(SOURCE_FILE "${SHADERS_PATH}/default/default.vert"  OUTPUT_FILE_NAME "${SHADERS_PATH}/default/vert.spv")

@@ -16,6 +16,7 @@ struct ImageData
    glm::uvec2 m_size;
    int32_t m_channels;
 };
+
 } // namespace shady::render
 
 namespace shady::utils {

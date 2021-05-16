@@ -16,7 +16,7 @@ void
 Skybox::LoadCubeMap(std::string_view directory)
 {
    // Positions
-   std::array< float, 24 > skyboxVertices = {
+   std::array< float, 24 > vertices = {
       -1.0f, 1.0f,  1.0f,  // vertex 0
       -1.0f, -1.0f, 1.0f,  // vertex 1
       1.0f,  -1.0f, 1.0f,  // vertex 2
@@ -36,43 +36,23 @@ Skybox::LoadCubeMap(std::string_view directory)
       2, 6, 4, 1, 2, 4  // face 6
    };
 
-   const auto vertex_buffer_size = skyboxVertices.size() * sizeof(float);
-   VkBuffer vertex_stagingBuffer;
-   VkDeviceMemory vertex_stagingBufferMemory;
-   Buffer::CreateBuffer(vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                        vertex_stagingBuffer, vertex_stagingBufferMemory);
-
-   void* vertex_data;
-   vkMapMemory(Data::vk_device, vertex_stagingBufferMemory, 0, vertex_buffer_size, 0, &vertex_data);
-   memcpy(vertex_data, skyboxVertices.data(), static_cast< size_t >(vertex_buffer_size));
-   vkUnmapMemory(Data::vk_device, vertex_stagingBufferMemory);
+   // Create vertex buffer with device local memory
+   // ----------------------
+   const auto vertex_buffer_size = vertices.size() * sizeof(float);
 
    m_vertexBuffer = Buffer::CreateBuffer(
       vertex_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+   m_vertexBuffer.CopyDataWithStaging(vertices.data(), vertex_buffer_size);
 
-
-   Buffer::CopyBuffer(vertex_stagingBuffer, m_vertexBuffer.m_buffer, vertex_buffer_size);
-
-   const auto index_buffer_size = indicies.size() * sizeof(uint32_t);
-   VkBuffer index_stagingBuffer;
-   VkDeviceMemory index_stagingBufferMemory;
-   Buffer::CreateBuffer(index_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                        index_stagingBuffer, index_stagingBufferMemory);
-
-   void* index_data;
-   vkMapMemory(Data::vk_device, index_stagingBufferMemory, 0, index_buffer_size, 0, &index_data);
-   memcpy(index_data, indicies.data(), static_cast< size_t >(index_buffer_size));
-   vkUnmapMemory(Data::vk_device, index_stagingBufferMemory);
+   // Create index buffer with device local memory
+   // ----------------------
+   constexpr auto index_buffer_size = indicies.size() * sizeof(uint32_t);
 
    m_indexBuffer = Buffer::CreateBuffer(
       index_buffer_size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-
-   Buffer::CopyBuffer(index_stagingBuffer, m_indexBuffer.m_buffer, index_buffer_size);
+   m_indexBuffer.CopyDataWithStaging(indicies.data(), index_buffer_size);
 
    CreateBuffers();
    CreateImageAndSampler(directory);
@@ -83,6 +63,8 @@ Skybox::LoadCubeMap(std::string_view directory)
 void
 Skybox::CreateImageAndSampler(std::string_view directory)
 {
+   // Load faces to memory
+   // -----------------------
    constexpr auto num_faces = 6;
 
    auto name = std::string{directory};
@@ -92,115 +74,36 @@ Skybox::CreateImageAndSampler(std::string_view directory)
       {3, name + "_bottom.jpg"}, {4, name + "_front.jpg"}, {5, name + "_back.jpg"}};
 
 
-   // Preload faces to know data format
+   // Per face data
    std::array< render::ImageData, num_faces > faces;
+
+   // Combined bytes for all faces
+   std::vector< uint8_t > combined_faces_bytes;
 
    for (auto [face, name] : textureFaces)
    {
       faces[face] = utils::FileManager::ReadTexture(fmt::format("skybox/{}", name));
+      const auto width = faces[face].m_size.x;
+      const auto height = faces[face].m_size.y;
+      const auto single_face_size = 4 * width * height;
+
+      std::copy(&faces[face].m_bytes[0], &faces[face].m_bytes[single_face_size],
+                std::back_inserter(combined_faces_bytes));
    }
 
+   // Create Image and Sampler
+   // -----------------------
    const auto width = faces[0].m_size.x;
    const auto height = faces[0].m_size.y;
-   const auto single_face_size = 4 * width * height;
-   const auto total_buffer_size = num_faces * single_face_size;
-   VkBuffer stagingBuffer;
-   VkDeviceMemory stagingBufferMemory;
-   Buffer::CreateBuffer(total_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                        stagingBuffer, stagingBufferMemory);
 
+   std::tie(m_image, m_imageMemory) = Texture::CreateImage(
+      width, height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL,
+      VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, true);
 
-   for (auto [face, name] : textureFaces)
-   {
-      void* data;
-      vkMapMemory(Data::vk_device, stagingBufferMemory, face * single_face_size, single_face_size,
-                  0, &data);
-      memcpy(data, faces[face].m_bytes.get(), static_cast< size_t >(single_face_size));
-      vkUnmapMemory(Data::vk_device, stagingBufferMemory);
-   }
+   Texture::CopyBufferToCubemapImage(m_image, width, height, combined_faces_bytes.data());
 
-   // Create optimal tiled target image
-   VkImageCreateInfo imageCreateInfo = {};
-   imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-   imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
-   imageCreateInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
-   imageCreateInfo.mipLevels = 1;
-   imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-   imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-   imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-   imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-   imageCreateInfo.extent = {width, height, 1};
-   imageCreateInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-   // Cube faces count as array layers in Vulkan
-   imageCreateInfo.arrayLayers = 6;
-   // This flag is required for cube map images
-   imageCreateInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
-
-   VK_CHECK(vkCreateImage(Data::vk_device, &imageCreateInfo, nullptr, &m_image),
-            "Skybox's image creation failed!");
-
-   Buffer::AllocateImageMemory(m_image, m_imageMemory, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-   vkBindImageMemory(Data::vk_device, m_image, m_imageMemory, 0);
-
-   // Setup buffer copy regions for each face
-   std::vector< VkBufferImageCopy > bufferCopyRegions;
-
-   for (auto [face, name] : textureFaces)
-   {
-      const auto& textureData = faces[face];
-
-      VkBufferImageCopy bufferCopyRegion = {};
-      bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-      bufferCopyRegion.imageSubresource.mipLevel = 0;
-      bufferCopyRegion.imageSubresource.baseArrayLayer = face;
-      bufferCopyRegion.imageSubresource.layerCount = 1;
-      bufferCopyRegion.imageExtent.width = textureData.m_size.x;
-      bufferCopyRegion.imageExtent.height = textureData.m_size.y;
-      bufferCopyRegion.imageExtent.depth = 1;
-      bufferCopyRegion.bufferOffset = face * single_face_size;
-
-      bufferCopyRegions.push_back(bufferCopyRegion);
-   }
-
-   Texture::TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_UNDEFINED,
-                                  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, true);
-
-   VkCommandBuffer commandBuffer = Command::BeginSingleTimeCommands();
-
-   vkCmdCopyBufferToImage(commandBuffer, stagingBuffer, m_image,
-                          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, bufferCopyRegions.size(),
-                          bufferCopyRegions.data());
-
-   Command::EndSingleTimeCommands(commandBuffer);
-
-   Texture::TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                                  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 1, true);
-
-   VkPhysicalDeviceProperties properties{};
-   vkGetPhysicalDeviceProperties(Data::vk_physicalDevice, &properties);
-
-   VkSamplerCreateInfo samplerInfo{};
-   samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-   samplerInfo.magFilter = VK_FILTER_LINEAR;
-   samplerInfo.minFilter = VK_FILTER_LINEAR;
-   samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-   samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-   samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-   samplerInfo.anisotropyEnable = VK_TRUE;
-   samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
-   samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-   samplerInfo.unnormalizedCoordinates = VK_FALSE;
-   samplerInfo.compareEnable = VK_FALSE;
-   samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-   samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-   samplerInfo.minLod = 0.0f;
-   samplerInfo.maxLod = 0.0f;
-   samplerInfo.mipLodBias = 0.0f;
-
-   VK_CHECK(vkCreateSampler(Data::vk_device, &samplerInfo, nullptr, &m_sampler),
-            "Failed to create skybox's texture sampler!");
-
+   m_sampler = Texture::CreateSampler(1);
    m_imageView = Texture::CreateImageView(m_image, VK_FORMAT_R8G8B8A8_UNORM,
                                           VK_IMAGE_ASPECT_COLOR_BIT, 1, true);
 }
@@ -327,8 +230,8 @@ Skybox::CreatePipeline()
 
    //----------------------------------------------------------------------------------------//
 
-   auto [vertexInfo, fragmentInfo] = Shader::CreateShader(
-      Data::vk_device, "default/skybox.vert.spv", "default/skybox.frag.spv");
+   auto [vertexInfo, fragmentInfo] =
+      Shader::CreateShader(Data::vk_device, "default/skybox.vert.spv", "default/skybox.frag.spv");
    VkPipelineShaderStageCreateInfo shaderStages[] = {vertexInfo.shaderInfo,
                                                      fragmentInfo.shaderInfo};
 
@@ -390,10 +293,10 @@ Skybox::CreatePipeline()
    depthStencil.depthBoundsTestEnable = VK_FALSE;
    depthStencil.stencilTestEnable = VK_FALSE;
 
-   std::array<VkPipelineColorBlendAttachmentState,3> colorBlendAttachment{};
+   std::array< VkPipelineColorBlendAttachmentState, 3 > colorBlendAttachment{};
 
    colorBlendAttachment[0].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT
-                                         | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+                                            | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
    colorBlendAttachment[0].blendEnable = VK_FALSE;
 
    colorBlendAttachment[1].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT

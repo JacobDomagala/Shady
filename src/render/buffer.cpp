@@ -33,6 +33,46 @@ Buffer::CopyData(const void* data)
 }
 
 void
+Buffer::CopyDataWithStaging(void* data, size_t dataSize)
+{
+   VkBuffer stagingBuffer;
+   VkDeviceMemory stagingBufferMemory;
+   Buffer::CreateBuffer(dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                        stagingBuffer, stagingBufferMemory);
+
+   void* mapped_data;
+   vkMapMemory(Data::vk_device, stagingBufferMemory, 0, dataSize, 0, &mapped_data);
+   memcpy(mapped_data, data, dataSize);
+   vkUnmapMemory(Data::vk_device, stagingBufferMemory);
+
+   Buffer::CopyBuffer(stagingBuffer, m_buffer, dataSize);
+}
+
+void
+Buffer::CopyDataToImageWithStaging(VkImage image, void* data, size_t dataSize,
+                                   const std::vector< VkBufferImageCopy >& copyRegions)
+{
+   VkBuffer stagingBuffer;
+   VkDeviceMemory stagingBufferMemory;
+   Buffer::CreateBuffer(dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                        stagingBuffer, stagingBufferMemory);
+
+   void* mapped_data;
+   vkMapMemory(Data::vk_device, stagingBufferMemory, 0, dataSize, 0, &mapped_data);
+   memcpy(mapped_data, data, dataSize);
+   vkUnmapMemory(Data::vk_device, stagingBufferMemory);
+
+   VkCommandBuffer commandBuffer = Command::BeginSingleTimeCommands();
+
+   vkCmdCopyBufferToImage(commandBuffer, stagingBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                          copyRegions.size(), copyRegions.data());
+
+   Command::EndSingleTimeCommands(commandBuffer);
+}
+
+void
 Buffer::SetupDescriptor(VkDeviceSize size, VkDeviceSize offset)
 {
    m_descriptor.offset = offset;
@@ -40,7 +80,7 @@ Buffer::SetupDescriptor(VkDeviceSize size, VkDeviceSize offset)
    m_descriptor.range = m_bufferSize;
 }
 
-static void
+void
 AllocateMemory(VkMemoryRequirements memReq, VkDeviceMemory& bufferMemory,
                VkMemoryPropertyFlags properties)
 {
@@ -122,7 +162,8 @@ Buffer::Flush(VkDeviceSize size, VkDeviceSize offset)
    mappedRange.memory = m_bufferMemory;
    mappedRange.offset = offset;
    mappedRange.size = size;
-   VK_CHECK(vkFlushMappedMemoryRanges(Data::vk_device, 1, &mappedRange), "");
+
+   VK_CHECK(vkFlushMappedMemoryRanges(Data::vk_device, 1, &mappedRange), "Buffer::Flush error!");
 }
 
 void

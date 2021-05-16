@@ -6,7 +6,6 @@
 #include "texture.hpp"
 #include "vertex.hpp"
 
-
 #include <fmt/format.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -81,7 +80,6 @@ DeferredPipeline::UpdateUniformBufferOffscreen()
    uboOffscreenVS.model = glm::mat4(1.0f);
    m_offscreenBuffer.CopyData(&uboOffscreenVS);
    m_skybox.UpdateBuffers();
-   // memcpy(m_offscreenBuffer.mapped, , sizeof(uboOffscreenVS));
 }
 
 VkCommandBuffer&
@@ -94,14 +92,13 @@ DeferredPipeline::GetOffscreenCmdBuffer()
 void
 DeferredPipeline::UpdateUniformBufferComposition()
 {
-   // Animate
    uboComposition.light.position =
-      glm::vec4(Data::m_light->GetPosition(), 1.0f); // glm::vec4{0.0f, 2.0f, 0.0f, 1.0f};
+      glm::vec4(Data::m_light->GetPosition(), 1.0f);
    uboComposition.light.target = glm::vec4(Data::m_light->GetLookAt(), 1.0);
    uboComposition.light.color = glm::vec4{Data::m_light->GetColor(), 1.0f};
    uboComposition.light.viewMatrix = Data::m_light->GetLightSpaceMat();
    uboComposition.viewPos =
-      glm::vec4(Data::m_camera->GetPosition(), 0.0f); /** glm::vec4(-1.0f, 1.0f, -1.0f, 1.0f);*/
+      glm::vec4(Data::m_camera->GetPosition(), 0.0f);
 
    uboComposition.debugData = Data::m_debugData;
 

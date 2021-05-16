@@ -136,6 +136,38 @@ Texture::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspe
    return imageView;
 }
 
+VkSampler
+Texture::CreateSampler(uint32_t mipLevels)
+{
+   VkSampler sampler;
+
+   VkPhysicalDeviceProperties properties{};
+   vkGetPhysicalDeviceProperties(Data::vk_physicalDevice, &properties);
+
+   VkSamplerCreateInfo samplerInfo{};
+   samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+   samplerInfo.magFilter = VK_FILTER_LINEAR;
+   samplerInfo.minFilter = VK_FILTER_LINEAR;
+   samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+   samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+   samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+   samplerInfo.anisotropyEnable = VK_TRUE;
+   samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+   samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+   samplerInfo.unnormalizedCoordinates = VK_FALSE;
+   samplerInfo.compareEnable = VK_FALSE;
+   samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+   samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+   samplerInfo.minLod = 0.0f;
+   samplerInfo.maxLod = static_cast<float>(mipLevels);
+   samplerInfo.mipLodBias = 0.0f;
+
+   VK_CHECK(vkCreateSampler(Data::vk_device, &samplerInfo, nullptr, &sampler),
+            "Failed to create texture sampler!");
+
+   return sampler;
+}
+
 void
 Texture::GenerateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight,
                          uint32_t mipLevels)
@@ -236,34 +268,11 @@ Texture::GetType() const
 void
 Texture::CreateTextureSampler()
 {
-   VkPhysicalDeviceProperties properties{};
-   vkGetPhysicalDeviceProperties(Data::vk_physicalDevice, &properties);
-
-   VkSamplerCreateInfo samplerInfo{};
-   samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-   samplerInfo.magFilter = VK_FILTER_LINEAR;
-   samplerInfo.minFilter = VK_FILTER_LINEAR;
-   samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-   samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-   samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-   samplerInfo.anisotropyEnable = VK_TRUE;
-   samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
-   samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-   samplerInfo.unnormalizedCoordinates = VK_FALSE;
-   samplerInfo.compareEnable = VK_FALSE;
-   samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-   samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-   samplerInfo.minLod = 0.0f;
-   samplerInfo.maxLod = static_cast< float >(m_mips);
-   samplerInfo.mipLodBias = 0.0f;
-
-   VK_CHECK(vkCreateSampler(Data::vk_device, &samplerInfo, nullptr, &m_textureSampler),
-            "Failed to create texture sampler!");
+   m_textureSampler = CreateSampler(m_mips);
 }
 
 void
-Texture::CopyBufferToImage(VkImage image, uint32_t texWidth, uint32_t texHeight, VkBuffer buffer,
-                           bool cubemap)
+Texture::CopyBufferToImage(VkImage image, uint32_t texWidth, uint32_t texHeight, VkBuffer buffer)
 {
    VkCommandBuffer commandBuffer = Command::BeginSingleTimeCommands();
 
@@ -274,7 +283,7 @@ Texture::CopyBufferToImage(VkImage image, uint32_t texWidth, uint32_t texHeight,
    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
    region.imageSubresource.mipLevel = 0;
    region.imageSubresource.baseArrayLayer = 0;
-   region.imageSubresource.layerCount = not cubemap ? 1 : 6;
+   region.imageSubresource.layerCount = 1;
    region.imageOffset = {0, 0, 0};
    region.imageExtent = {texWidth, texHeight, 1};
 
@@ -282,6 +291,41 @@ Texture::CopyBufferToImage(VkImage image, uint32_t texWidth, uint32_t texHeight,
                           &region);
 
    Command::EndSingleTimeCommands(commandBuffer);
+}
+void
+Texture::CopyBufferToCubemapImage(VkImage image, uint32_t texWidth, uint32_t texHeight, uint8_t* data)
+{
+   constexpr auto num_faces = 6;
+   const auto single_face_size = 4 * texWidth * texHeight;
+   const auto total_buffer_size = num_faces * single_face_size;
+
+   // Setup buffer copy regions for each face
+   std::vector< VkBufferImageCopy > bufferCopyRegions;
+
+   for (auto face = 0; face < 6; ++face)
+   {
+      VkBufferImageCopy bufferCopyRegion = {};
+      bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      bufferCopyRegion.imageSubresource.mipLevel = 0;
+      bufferCopyRegion.imageSubresource.baseArrayLayer = face;
+      bufferCopyRegion.imageSubresource.layerCount = 1;
+      bufferCopyRegion.imageExtent.width = texWidth;
+      bufferCopyRegion.imageExtent.height = texHeight;
+      bufferCopyRegion.imageExtent.depth = 1;
+      bufferCopyRegion.bufferOffset = face * single_face_size;
+
+      bufferCopyRegions.push_back(bufferCopyRegion);
+   }
+
+
+   Texture::TransitionImageLayout(image, VK_IMAGE_LAYOUT_UNDEFINED,
+                                  VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, true);
+
+   Buffer::CopyDataToImageWithStaging(image, data, total_buffer_size, bufferCopyRegions);
+
+
+   Texture::TransitionImageLayout(image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 1, true);
 }
 
 void

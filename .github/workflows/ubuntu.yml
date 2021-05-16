@@ -22,7 +22,7 @@ jobs:
       run: |
         sudo apt-get update
 
-        sudo apt-get install -y xorg-dev libc++-10-dev llvm-dev libubsan0 iwyu
+        sudo apt-get install -y xorg-dev clang++-11 llvm-dev libubsan0 iwyu
 
         wget https://sdk.lunarg.com/sdk/download/1.2.170.0/linux/vulkansdk-linux-x86_64-1.2.170.0.tar.gz
         tar xf vulkansdk-linux-x86_64-1.2.170.0.tar.gz

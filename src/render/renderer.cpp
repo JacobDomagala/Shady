@@ -29,8 +29,8 @@ static bool is_deferred = true;
 
 void
 Renderer::MeshLoaded(const std::vector< Vertex >& vertices_in,
-                           const std::vector< uint32_t >& indicies_in,
-                           const TextureMaps& textures_in, const glm::mat4& modelMat)
+                     const std::vector< uint32_t >& indicies_in, const TextureMaps& textures_in,
+                     const glm::mat4& modelMat)
 {
    std::copy(vertices_in.begin(), vertices_in.end(), std::back_inserter(Data::vertices));
    std::copy(indicies_in.begin(), indicies_in.end(), std::back_inserter(Data::indices));
@@ -40,7 +40,7 @@ Renderer::MeshLoaded(const std::vector< Vertex >& vertices_in,
    newModel.indexCount = static_cast< uint32_t >(indicies_in.size());
    newModel.firstInstance = 0;
    newModel.instanceCount = 1;
-   newModel.vertexOffset = Data::m_currentVertex;
+   newModel.vertexOffset = static_cast< int32_t >(Data::m_currentVertex);
    Data::m_renderCommands.push_back(newModel);
 
    Data::m_currentVertex += static_cast< uint32_t >(vertices_in.size());
@@ -85,6 +85,10 @@ Renderer::MeshLoaded(const std::vector< Vertex >& vertices_in,
             newInstance.textures.z = static_cast< float >(idx);
          }
          break;
+
+         case TextureType::CUBE_MAP:
+         default:
+            break;
       }
    }
 
@@ -194,7 +198,7 @@ populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
    auto callback = [](VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
                       VkDebugUtilsMessageTypeFlagsEXT /*messageType*/,
                       const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-                      void* /*pUserData*/) -> VKAPI_ATTR VkBool32 VKAPI_CALL {
+                      void* /*pUserData*/) -> VKAPI_ATTR VkBool32 {
       switch (messageSeverity)
       {
          case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT: {
@@ -247,7 +251,7 @@ findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface)
    std::vector< VkQueueFamilyProperties > queueFamilies(queueFamilyCount);
    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
-   int i = 0;
+   uint32_t i = 0;
    for (const auto& queueFamily : queueFamilies)
    {
       if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
@@ -450,7 +454,7 @@ Renderer::CreateVertexBuffer()
 
    void* data;
    vkMapMemory(Data::vk_device, stagingBufferMemory, 0, bufferSize, 0, &data);
-   memcpy(data, Data::vertices.data(), (size_t)bufferSize);
+   memcpy(data, Data::vertices.data(), static_cast< size_t >(bufferSize));
    vkUnmapMemory(Data::vk_device, stagingBufferMemory);
 
    Buffer::CreateBuffer(
@@ -476,7 +480,7 @@ Renderer::CreateIndexBuffer()
 
    void* data;
    vkMapMemory(Data::vk_device, stagingBufferMemory, 0, bufferSize, 0, &data);
-   memcpy(data, Data::indices.data(), (size_t)bufferSize);
+   memcpy(data, Data::indices.data(), static_cast< size_t >(bufferSize));
    vkUnmapMemory(Data::vk_device, stagingBufferMemory);
 
    Buffer::CreateBuffer(
@@ -620,7 +624,7 @@ Renderer::CreateDescriptorSets()
       descriptorWrites[3].dstBinding = 3;
       descriptorWrites[3].dstArrayElement = 0;
       descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-      descriptorWrites[3].descriptorCount = Data::textures.size();
+      descriptorWrites[3].descriptorCount = static_cast< uint32_t >(Data::textures.size());
       descriptorWrites[3].pImageInfo = descriptorImageInfos;
 
       vkUpdateDescriptorSets(Data::vk_device, static_cast< uint32_t >(descriptorWrites.size()),
@@ -1063,7 +1067,7 @@ Renderer::CreateDescriptorSetLayout()
 
    VkDescriptorSetLayoutBinding texturesLayoutBinding{};
    texturesLayoutBinding.binding = 3;
-   texturesLayoutBinding.descriptorCount = Data::textures.size();
+   texturesLayoutBinding.descriptorCount = static_cast< uint32_t >(Data::textures.size());
    texturesLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
    texturesLayoutBinding.pImmutableSamplers = nullptr;
    texturesLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -1244,7 +1248,7 @@ Renderer::CreateCommandBuffers()
    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
    std::array< VkClearValue, 2 > clearValues{};
-   clearValues[0].color = {0.3f, 0.5f, 0.1f, 1.0f};
+   clearValues[0].color = {{0.3f, 0.5f, 0.1f, 1.0f}};
    clearValues[1].depthStencil = {1.0f, 0};
 
    VkRenderPassBeginInfo renderPassInfo{};
@@ -1255,7 +1259,7 @@ Renderer::CreateCommandBuffers()
    renderPassInfo.clearValueCount = static_cast< uint32_t >(clearValues.size());
    renderPassInfo.pClearValues = clearValues.data();
 
-   for (size_t i = 0; i < m_commandBuffers.size(); i++)
+   for (uint32_t i = 0; i < m_commandBuffers.size(); i++)
    {
       VK_CHECK(vkBeginCommandBuffer(m_commandBuffers[i], &beginInfo),
                "failed to begin recording command buffer!");
@@ -1315,7 +1319,7 @@ Renderer::CreateCommandBufferForDeferred()
    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
    std::array< VkClearValue, 2 > clearValues{};
-   clearValues[0].color = {0.3f, 0.5f, 0.1f, 1.0f};
+   clearValues[0].color = {{0.3f, 0.5f, 0.1f, 1.0f}};
    clearValues[1].depthStencil = {1.0f, 0};
 
    VkRenderPassBeginInfo renderPassInfo{};
@@ -1326,7 +1330,7 @@ Renderer::CreateCommandBufferForDeferred()
    renderPassInfo.clearValueCount = static_cast< uint32_t >(clearValues.size());
    renderPassInfo.pClearValues = clearValues.data();
 
-   for (int32_t i = 0; i < m_commandBuffers.size(); ++i)
+   for (uint32_t i = 0; i < m_commandBuffers.size(); ++i)
    {
       renderPassInfo.framebuffer = m_swapChainFramebuffers[i];
 
@@ -1335,8 +1339,8 @@ Renderer::CreateCommandBufferForDeferred()
       vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
       VkViewport viewport{};
-      viewport.width = Data::m_swapChainExtent.width;
-      viewport.height = Data::m_swapChainExtent.height;
+      viewport.width = static_cast<float>(Data::m_swapChainExtent.width);
+      viewport.height = static_cast<float>(Data::m_swapChainExtent.height);
       viewport.minDepth = 0.0f;
       viewport.maxDepth = 1.0f;
 

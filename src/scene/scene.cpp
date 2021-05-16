@@ -41,7 +41,7 @@ Scene::GetLight()
 }
 
 void
-Scene::Render(uint32_t windowWidth, uint32_t windowHeight)
+Scene::Render(uint32_t /*windowWidth*/, uint32_t /*windowHeight*/)
 {
 
 }

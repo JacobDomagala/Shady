@@ -213,7 +213,7 @@ Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type, render::Texture
 
       const auto texType = GetShadyTexFromAssimpTex(type);
       render::TextureLibrary::CreateTexture(texType, str.C_Str());
-      textures[static_cast< int32_t >(texType)] = str.C_Str();
+      textures[static_cast< uint32_t >(texType)] = str.C_Str();
    }
 }
 

@@ -57,7 +57,8 @@ Texture::CreateTextureImage(TextureType type, std::string_view textureName)
    CopyBufferToImage(textureData.m_bytes.get());
 
    // transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
-   GenerateMipmaps(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB, m_width, m_height, m_mips);
+   GenerateMipmaps(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB, static_cast< int32_t >(m_width),
+                   static_cast< int32_t >(m_height), m_mips);
 }
 
 std::pair< VkImage, VkDeviceMemory >
@@ -286,7 +287,7 @@ Texture::CopyBufferToCubemapImage(VkImage image, uint32_t texWidth, uint32_t tex
    // Setup buffer copy regions for each face
    std::vector< VkBufferImageCopy > bufferCopyRegions;
 
-   for (auto face = 0; face < 6; ++face)
+   for (uint32_t face = 0; face < 6; ++face)
    {
       VkBufferImageCopy bufferCopyRegion = {};
       bufferCopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -296,7 +297,7 @@ Texture::CopyBufferToCubemapImage(VkImage image, uint32_t texWidth, uint32_t tex
       bufferCopyRegion.imageExtent.width = texWidth;
       bufferCopyRegion.imageExtent.height = texHeight;
       bufferCopyRegion.imageExtent.depth = 1;
-      bufferCopyRegion.bufferOffset = face * single_face_size;
+      bufferCopyRegion.bufferOffset = static_cast<VkDeviceSize>(face * single_face_size);
 
       bufferCopyRegions.push_back(bufferCopyRegion);
    }
@@ -335,8 +336,8 @@ Texture::TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLa
    barrier.subresourceRange.baseArrayLayer = 0;
    barrier.subresourceRange.layerCount = not cubemap ? 1 : 6;
 
-   VkPipelineStageFlags sourceStage;
-   VkPipelineStageFlags destinationStage;
+   VkPipelineStageFlags sourceStage = {};
+   VkPipelineStageFlags destinationStage = {};
 
    if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
    {

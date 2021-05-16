@@ -26,7 +26,7 @@ FileManager::ReadTextFile(const std::filesystem::path& path)
 std::string
 FileManager::ReadTextFile(std::string_view fileName)
 {
-   std::ifstream fileHandle(fileName);
+   std::ifstream fileHandle(fileName.data());
 
    utils::Assert(fileHandle.is_open(),
                  fmt::format("FileManager::ReadTextFile -> {} can't be opened!", fileName));
@@ -50,7 +50,7 @@ FileManager::ReadBinaryFile(const std::filesystem::path& path)
 std::vector< char >
 FileManager::ReadBinaryFile(std::string_view fileName)
 {
-   std::ifstream fileHandle(fileName, std::ios::binary);
+   std::ifstream fileHandle(fileName.data(), std::ios::binary);
 
    utils::Assert(fileHandle.is_open(),
                  fmt::format("FileManager::ReadBinaryFile -> {} can't be opened!", fileName));
@@ -61,7 +61,7 @@ FileManager::ReadBinaryFile(std::string_view fileName)
 
    std::vector< char > buffer(size);
 
-   fileHandle.read(buffer.data(), static_cast< size_t >(size));
+   fileHandle.read(buffer.data(), static_cast< std::streamsize >(size));
 
    return buffer;
 }
@@ -70,7 +70,7 @@ void
 FileManager::WriteToFile(std::string_view fileName, std::string_view content)
 {
    std::ofstream fileHandle;
-   fileHandle.open(fileName);
+   fileHandle.open(fileName.data());
    fileHandle << content;
 }
 

@@ -80,9 +80,9 @@ Skybox::CreateImageAndSampler(std::string_view skyboxName)
    // Combined bytes for all faces
    std::vector< uint8_t > combined_faces_bytes;
 
-   for (const auto& [face, name] : textureFaces)
+   for (const auto& [face, textureName] : textureFaces)
    {
-      faces[face] = utils::FileManager::ReadTexture(fmt::format("skybox/{}", name));
+      faces[face] = utils::FileManager::ReadTexture(fmt::format("skybox/{}", textureName));
       const auto width = faces[face].m_size.x;
       const auto height = faces[face].m_size.y;
       const auto single_face_size = 4 * width * height;

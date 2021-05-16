@@ -22,7 +22,7 @@ Mesh::Mesh(const std::string& name, std::vector< render::Vertex >&& vertices,
 //}
 
 void
-Mesh::Draw(const std::string& /*modelName*/, const glm::mat4& modelMat, const glm::vec4& tintColor)
+Mesh::Draw(const std::string& /*modelName*/, const glm::mat4& /*modelMat*/, const glm::vec4& /*tintColor*/)
 {
    // render::Renderer3D::DrawMesh(m_name, modelMat, m_textures, tintColor);
    render::Renderer::MeshLoaded(m_vertices, m_indices, m_textures, m_modelMat);

@@ -19,6 +19,7 @@ FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
    }
 
    utils::Assert(false, "failed to find suitable memory type!");
+   return {};
 }
 
 VkFormat

@@ -42,10 +42,10 @@ struct
 // This UBO stores the shadow matrices for all of the light sources
 // The matrices are indexed using geometry shader instancing
 // The instancePos is used to place the models using instanced draws
-struct
-{
-   glm::mat4 mvp;
-} uboShadowGeometryShader;
+//struct
+//{
+//   glm::mat4 mvp;
+//} uboShadowGeometryShader;
 
 VkDescriptorSet&
 DeferredPipeline::GetDescriptorSet()
@@ -92,13 +92,11 @@ DeferredPipeline::GetOffscreenCmdBuffer()
 void
 DeferredPipeline::UpdateUniformBufferComposition()
 {
-   uboComposition.light.position =
-      glm::vec4(Data::m_light->GetPosition(), 1.0f);
+   uboComposition.light.position = glm::vec4(Data::m_light->GetPosition(), 1.0f);
    uboComposition.light.target = glm::vec4(Data::m_light->GetLookAt(), 1.0);
    uboComposition.light.color = glm::vec4{Data::m_light->GetColor(), 1.0f};
    uboComposition.light.viewMatrix = Data::m_light->GetLightSpaceMat();
-   uboComposition.viewPos =
-      glm::vec4(Data::m_camera->GetPosition(), 0.0f);
+   uboComposition.viewPos = glm::vec4(Data::m_camera->GetPosition(), 0.0f);
 
    uboComposition.debugData = Data::m_debugData;
 
@@ -194,7 +192,7 @@ DeferredPipeline::SetupDescriptorSetLayout()
    // Binding 3 : Texture sampler (mrt.frag)
    VkDescriptorSetLayoutBinding textures{};
    textures.binding = 3;
-   textures.descriptorCount = Data::textures.size();
+   textures.descriptorCount = static_cast< uint32_t >(Data::textures.size());
    textures.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
    textures.pImmutableSamplers = nullptr;
    textures.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -659,14 +657,14 @@ DeferredPipeline::SetupDescriptorSet()
    descriptorWrites[3].dstBinding = 3;
    descriptorWrites[3].dstArrayElement = 0;
    descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-   descriptorWrites[3].descriptorCount = Data::textures.size();
+   descriptorWrites[3].descriptorCount = static_cast< uint32_t >(Data::textures.size());
    descriptorWrites[3].pImageInfo = descriptorImageInfos;
 
    vkUpdateDescriptorSets(Data::vk_device, static_cast< uint32_t >(descriptorWrites.size()),
                           descriptorWrites.data(), 0, nullptr);
 
 
-   std::array< VkWriteDescriptorSet, 1 > shadowMapDescriptorWrites{};
+   // std::array< VkWriteDescriptorSet, 1 > shadowMapDescriptorWrites{};
 
    //// Shadow mapping
    // VK_CHECK(vkAllocateDescriptorSets(Data::vk_device, &allocInfo, &m_shadowMapDescriptor), "");
@@ -729,24 +727,24 @@ DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& s
 
    renderPassBeginInfo.renderPass = m_shadowMap.GetRenderPass();
    renderPassBeginInfo.framebuffer = m_shadowMap.GetFramebuffer();
-   renderPassBeginInfo.renderArea.extent.width = m_shadowMap.GetSize().x;
-   renderPassBeginInfo.renderArea.extent.height = m_shadowMap.GetSize().y;
+   renderPassBeginInfo.renderArea.extent.width = static_cast< uint32_t >(m_shadowMap.GetSize().x);
+   renderPassBeginInfo.renderArea.extent.height = static_cast< uint32_t >(m_shadowMap.GetSize().y);
    renderPassBeginInfo.clearValueCount = 1;
    renderPassBeginInfo.pClearValues = clearValues.data();
 
    VK_CHECK(vkBeginCommandBuffer(m_offscreenCommandBuffer, &cmdBufInfo), "");
 
    VkViewport viewport{};
-   viewport.width = m_shadowMap.GetSize().x;
-   viewport.height = m_shadowMap.GetSize().y;
+   viewport.width = static_cast< float >(m_shadowMap.GetSize().x);
+   viewport.height = static_cast< float >(m_shadowMap.GetSize().y);
    viewport.minDepth = 0.0f;
    viewport.maxDepth = 1.0f;
 
    vkCmdSetViewport(m_offscreenCommandBuffer, 0, 1, &viewport);
 
    VkRect2D scissor{};
-   scissor.extent.width = m_shadowMap.GetSize().x;
-   scissor.extent.height = m_shadowMap.GetSize().y;
+   scissor.extent.width = static_cast< uint32_t >(m_shadowMap.GetSize().x);
+   scissor.extent.height = static_cast< uint32_t >(m_shadowMap.GetSize().y);
    scissor.offset.x = 0;
    scissor.offset.y = 0;
 
@@ -788,22 +786,24 @@ DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& s
 
    renderPassBeginInfo.renderPass = m_offscreenFrameBuffer.GetRenderPass();
    renderPassBeginInfo.framebuffer = m_offscreenFrameBuffer.GetFramebuffer();
-   renderPassBeginInfo.renderArea.extent.width = m_offscreenFrameBuffer.GetSize().x;
-   renderPassBeginInfo.renderArea.extent.height = m_offscreenFrameBuffer.GetSize().y;
+   renderPassBeginInfo.renderArea.extent.width =
+      static_cast< uint32_t >(m_offscreenFrameBuffer.GetSize().x);
+   renderPassBeginInfo.renderArea.extent.height =
+      static_cast< uint32_t >(m_offscreenFrameBuffer.GetSize().y);
    renderPassBeginInfo.clearValueCount = static_cast< uint32_t >(clearValues.size());
    renderPassBeginInfo.pClearValues = clearValues.data();
 
    vkCmdBeginRenderPass(m_offscreenCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-   viewport.width = m_offscreenFrameBuffer.GetSize().x;
-   viewport.height = m_offscreenFrameBuffer.GetSize().y;
+   viewport.width = static_cast< float >(m_offscreenFrameBuffer.GetSize().x);
+   viewport.height = static_cast< float >(m_offscreenFrameBuffer.GetSize().y);
    viewport.minDepth = 0.0f;
    viewport.maxDepth = 1.0f;
 
    vkCmdSetViewport(m_offscreenCommandBuffer, 0, 1, &viewport);
 
-   scissor.extent.width = m_offscreenFrameBuffer.GetSize().x;
-   scissor.extent.height = m_offscreenFrameBuffer.GetSize().y;
+   scissor.extent.width = static_cast< uint32_t >(m_offscreenFrameBuffer.GetSize().x);
+   scissor.extent.height = static_cast< uint32_t >(m_offscreenFrameBuffer.GetSize().y);
    scissor.offset.x = 0;
    scissor.offset.y = 0;
 

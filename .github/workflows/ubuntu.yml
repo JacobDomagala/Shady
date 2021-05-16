@@ -9,7 +9,7 @@ on:
 
 env:
   BUILD_TYPE: Release
-  CXX: clang++
+  CXX: clang++-11
 
 jobs:
   build:

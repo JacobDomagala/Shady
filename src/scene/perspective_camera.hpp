@@ -23,7 +23,7 @@ class PerspectiveCamera : public Camera
    RotateCamera(float angle, const glm::vec3& axis) override;
 
  private:
-   float m_yaw = -90.0f;
+   float m_yaw = 0.0f;
    float m_pitch = 0.0f;
    bool m_constrainPitch = true;
 };

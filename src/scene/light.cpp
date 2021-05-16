@@ -75,7 +75,7 @@ Light::EndRenderToLightmap()
 //}
 
 void
-Light::BindLightMap(uint32_t slot)
+Light::BindLightMap(uint32_t /*slot*/)
 {
    // m_shadowBuffer->BindTexture(slot);
 }

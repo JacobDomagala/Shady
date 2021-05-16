@@ -16,13 +16,6 @@ namespace shady::app::gui {
 
 using namespace shady::render;
 
-static bool
-CheckRectArea(int32_t pos_x, int32_t width, int32_t pos_y, int32_t height, glm::vec2 mouse_pos)
-{
-   return mouse_pos.x >= pos_x and mouse_pos.x <= pos_x + width and mouse_pos.y >= pos_y
-          and mouse_pos.y <= pos_y + height;
-}
-
 static inline void
 SetStyle()
 {
@@ -88,7 +81,7 @@ SetStyle()
    style.WindowBorderSize = 1;
    style.ChildBorderSize = 1;
    style.PopupBorderSize = 1;
-   style.FrameBorderSize = is3D;
+   style.FrameBorderSize = static_cast< float >(is3D);
 
    style.WindowRounding = 3;
    style.ChildRounding = 3;
@@ -125,7 +118,7 @@ Gui::Init(const glm::ivec2& windowSize)
 
    // Dimensions
    ImGuiIO& io = ImGui::GetIO();
-   io.DisplaySize = ImVec2(windowSize.x, windowSize.y);
+   io.DisplaySize = ImVec2(static_cast< float >(windowSize.x), static_cast< float >(windowSize.y));
    io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
 
    SetStyle();
@@ -152,8 +145,10 @@ Gui::UpdateBuffers()
    };
 
    // Note: Alignment is done inside buffer creation
-   VkDeviceSize vertexBufferSize = imDrawData->TotalVtxCount * sizeof(ImDrawVert);
-   VkDeviceSize indexBufferSize = imDrawData->TotalIdxCount * sizeof(ImDrawIdx);
+   VkDeviceSize vertexBufferSize =
+      static_cast< uint32_t >(imDrawData->TotalVtxCount) * sizeof(ImDrawVert);
+   VkDeviceSize indexBufferSize =
+      static_cast< uint32_t >(imDrawData->TotalIdxCount) * sizeof(ImDrawIdx);
 
    // Update buffers only if vertex or index count has been changed compared to current buffer size
    if ((vertexBufferSize == 0) || (indexBufferSize == 0))
@@ -176,7 +171,6 @@ Gui::UpdateBuffers()
    }
 
    // Index buffer
-   VkDeviceSize indexSize = imDrawData->TotalIdxCount * sizeof(ImDrawIdx);
    if ((m_indexBuffer.m_buffer == VK_NULL_HANDLE) || (m_indexCount < imDrawData->TotalIdxCount))
    {
       m_indexBuffer.Unmap();
@@ -191,14 +185,16 @@ Gui::UpdateBuffers()
    }
 
    // Upload data
-   ImDrawVert* vtxDst = (ImDrawVert*)m_vertexBuffer.m_mappedMemory;
-   ImDrawIdx* idxDst = (ImDrawIdx*)m_indexBuffer.m_mappedMemory;
+   ImDrawVert* vtxDst = reinterpret_cast< ImDrawVert* >(m_vertexBuffer.m_mappedMemory);
+   ImDrawIdx* idxDst = reinterpret_cast< ImDrawIdx* >(m_indexBuffer.m_mappedMemory);
 
    for (int n = 0; n < imDrawData->CmdListsCount; n++)
    {
       const ImDrawList* cmd_list = imDrawData->CmdLists[n];
-      memcpy(vtxDst, cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.Size * sizeof(ImDrawVert));
-      memcpy(idxDst, cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx));
+      memcpy(vtxDst, cmd_list->VtxBuffer.Data,
+             static_cast< size_t >(cmd_list->VtxBuffer.Size) * sizeof(ImDrawVert));
+      memcpy(idxDst, cmd_list->IdxBuffer.Data,
+             static_cast< size_t >(cmd_list->IdxBuffer.Size) * sizeof(ImDrawIdx));
       vtxDst += cmd_list->VtxBuffer.Size;
       idxDst += cmd_list->IdxBuffer.Size;
    }
@@ -233,8 +229,7 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
    const auto size = windowSize;
 
    auto windowWidth = static_cast< float >(size.x) / 4.0f;
-   const auto toolsWindowHeight = size.y;
-   const auto debugWindowHeight = static_cast< float >(size.y);
+   const auto toolsWindowHeight = static_cast< float >(size.y);
 
    ImGui::SetNextWindowPos({0, 0});
    ImGui::SetNextWindowSize(ImVec2(windowWidth, toolsWindowHeight));
@@ -298,7 +293,7 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
 
       auto light_color = Data::m_light->GetColor();
 
-      ImGui::ColorEdit3("Color##1", (float*)&light_color[0], 0);
+      ImGui::ColorEdit3("Color##1", &light_color[0], 0);
       Data::m_light->SetColor(light_color);
    }
 
@@ -320,7 +315,7 @@ Gui::Render(VkCommandBuffer commandBuffer)
 {
    ImDrawData* imDrawData = ImGui::GetDrawData();
    int32_t vertexOffset = 0;
-   int32_t indexOffset = 0;
+   uint32_t indexOffset = 0;
 
    if ((!imDrawData) || (imDrawData->CmdListsCount == 0))
    {
@@ -349,10 +344,10 @@ Gui::Render(VkCommandBuffer commandBuffer)
       {
          const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[j];
          VkRect2D scissorRect;
-         scissorRect.offset.x = std::max((int32_t)(pcmd->ClipRect.x), 0);
-         scissorRect.offset.y = std::max((int32_t)(pcmd->ClipRect.y), 0);
-         scissorRect.extent.width = (uint32_t)(pcmd->ClipRect.z - pcmd->ClipRect.x);
-         scissorRect.extent.height = (uint32_t)(pcmd->ClipRect.w - pcmd->ClipRect.y);
+         scissorRect.offset.x = static_cast<int32_t>(glm::max(pcmd->ClipRect.x, 0.0f));
+         scissorRect.offset.y = static_cast<int32_t>(glm::max(pcmd->ClipRect.y, 0.0f));
+         scissorRect.extent.width = static_cast< uint32_t >(pcmd->ClipRect.z - pcmd->ClipRect.x);
+         scissorRect.extent.height = static_cast< uint32_t >(pcmd->ClipRect.w - pcmd->ClipRect.y);
          vkCmdSetScissor(commandBuffer, 0, 1, &scissorRect);
          vkCmdDrawIndexed(commandBuffer, pcmd->ElemCount, 1, indexOffset, vertexOffset, 0);
          indexOffset += pcmd->ElemCount;
@@ -368,20 +363,20 @@ Gui::PrepareResources()
 
    // Create font texture
    unsigned char* fontData;
-   int texWidth, texHeight;
+   int32_t texWidth, texHeight;
 
    const auto fontFilename = (utils::FileManager::FONTS_DIR / "Roboto-Medium.ttf").string();
 
    io.Fonts->AddFontFromFileTTF(fontFilename.c_str(), 16.0f);
 
    io.Fonts->GetTexDataAsRGBA32(&fontData, &texWidth, &texHeight);
-   VkDeviceSize uploadSize = static_cast< VkDeviceSize >(texWidth)
-                             * static_cast< VkDeviceSize >(texHeight) * 4 * sizeof(char);
 
-   std::tie(m_fontImage, m_fontMemory) = Texture::CreateImage(
-      texWidth, texHeight, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM,
-      VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
-      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+   std::tie(m_fontImage, m_fontMemory) =
+      Texture::CreateImage(static_cast< uint32_t >(texWidth), static_cast< uint32_t >(texHeight), 1,
+                           VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL,
+                           VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+                           VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 
    m_fontView =
@@ -391,7 +386,8 @@ Gui::PrepareResources()
    Texture::TransitionImageLayout(m_fontImage, VK_IMAGE_LAYOUT_UNDEFINED,
                                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1);
 
-   Texture::CopyBufferToImage(m_fontImage, texWidth, texHeight, fontData);
+   Texture::CopyBufferToImage(m_fontImage, static_cast< uint32_t >(texWidth),
+                              static_cast< uint32_t >(texHeight), fontData);
 
    Texture::TransitionImageLayout(m_fontImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                                   VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 1);

@@ -52,7 +52,7 @@ PerspectiveCamera::MoveCamera(const glm::vec2& leftRightVec)
 }
 
 void
-PerspectiveCamera::RotateCamera(float angle, const glm::vec3& axis)
+PerspectiveCamera::RotateCamera(float /*angle*/, const glm::vec3& /*axis*/)
 {
    m_lookAtDirection = glm::normalize(m_lookAtDirection);
 

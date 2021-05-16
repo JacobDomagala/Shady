@@ -67,7 +67,7 @@ Buffer::CopyDataToImageWithStaging(VkImage image, void* data, size_t dataSize,
    VkCommandBuffer commandBuffer = Command::BeginSingleTimeCommands();
 
    vkCmdCopyBufferToImage(commandBuffer, stagingBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                          copyRegions.size(), copyRegions.data());
+                          static_cast<uint32_t>(copyRegions.size()), copyRegions.data());
 
    Command::EndSingleTimeCommands(commandBuffer);
 
@@ -76,7 +76,7 @@ Buffer::CopyDataToImageWithStaging(VkImage image, void* data, size_t dataSize,
 }
 
 void
-Buffer::SetupDescriptor(VkDeviceSize size, VkDeviceSize offset)
+Buffer::SetupDescriptor(VkDeviceSize /*size*/, VkDeviceSize offset)
 {
    m_descriptor.offset = offset;
    m_descriptor.buffer = m_buffer;

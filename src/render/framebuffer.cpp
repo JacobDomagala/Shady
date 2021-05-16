@@ -13,8 +13,8 @@ Framebuffer::Create(int32_t width, int32_t height)
 
    // Four attachments (3 color, 1 depth)
    AttachmentCreateInfo attachmentInfo = {};
-   attachmentInfo.width = width;
-   attachmentInfo.height = height;
+   attachmentInfo.width = static_cast<uint32_t>(width);
+   attachmentInfo.height = static_cast<uint32_t>(height);
    attachmentInfo.layerCount = 1;
    attachmentInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
@@ -63,9 +63,9 @@ Framebuffer::CreateShadowMap(int32_t width, int32_t height, int32_t numLights)
    // current invocation
    AttachmentCreateInfo attachmentInfo = {};
    attachmentInfo.format = SHADOWMAP_FORMAT;
-   attachmentInfo.width = width;
-   attachmentInfo.height = height;
-   attachmentInfo.layerCount = numLights;
+   attachmentInfo.width = static_cast<uint32_t>(width);
+   attachmentInfo.height = static_cast<uint32_t>(height);
+   attachmentInfo.layerCount = static_cast<uint32_t>(numLights);
    attachmentInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
    AddAttachment(attachmentInfo);
@@ -358,8 +358,8 @@ Framebuffer::CreateRenderPass()
    framebufferInfo.renderPass = m_renderPass;
    framebufferInfo.pAttachments = attachmentViews.data();
    framebufferInfo.attachmentCount = static_cast< uint32_t >(attachmentViews.size());
-   framebufferInfo.width = m_width;
-   framebufferInfo.height = m_height;
+   framebufferInfo.width = static_cast<uint32_t>(m_width);
+   framebufferInfo.height = static_cast<uint32_t>(m_height);
    framebufferInfo.layers = maxLayers;
    VK_CHECK(vkCreateFramebuffer(Data::vk_device, &framebufferInfo, nullptr, &m_framebuffer), "");
 }

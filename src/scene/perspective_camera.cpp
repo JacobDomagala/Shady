@@ -5,17 +5,15 @@
 
 namespace shady::scene {
 
-PerspectiveCamera::PerspectiveCamera(const glm::mat4& projection) : Camera(projection)
+PerspectiveCamera::PerspectiveCamera(const glm::mat4& projection, const glm::vec3& position)
+   : Camera(projection, position)
 {
 }
 
-PerspectiveCamera::PerspectiveCamera(float fieldOfView, float aspectRatio, float nearClip, float farClip)
+PerspectiveCamera::PerspectiveCamera(float fieldOfView, float aspectRatio, float nearClip,
+                                     float farClip, const glm::vec3& position)
+   : Camera(glm::perspective(fieldOfView, aspectRatio, nearClip, farClip), position)
 {
-   m_projectionMat = glm::perspective(fieldOfView, aspectRatio, nearClip, farClip);
-   //trace::Logger::Info("Camera position = {}, upVec = {}, rightVec = {}, lookAt = {}", m_position,
-   //                    m_upVector, m_rightVector, m_lookAtDirection);
-
-   UpdateViewMatrix();
 }
 
 void
@@ -47,8 +45,8 @@ PerspectiveCamera::MoveCamera(const glm::vec2& leftRightVec)
 
    trace::Logger::Trace("Camera Pos:{} LookAtDir:{} RightVec:{}", m_position, m_lookAtDirection,
                         m_rightVector);
-   m_position += cameraSpeed *(leftRightVec.y * m_lookAtDirection);
-   m_position += cameraSpeed *(leftRightVec.x * m_rightVector);
+   m_position += cameraSpeed * (leftRightVec.y * m_lookAtDirection);
+   m_position += cameraSpeed * (leftRightVec.x * m_rightVector);
 
    UpdateViewMatrix();
 }

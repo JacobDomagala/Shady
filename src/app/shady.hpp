@@ -4,7 +4,6 @@
 #include "input/input_listener.hpp"
 #include "scene/scene.hpp"
 
-
 #include <memory>
 
 namespace shady::app {
@@ -42,7 +41,7 @@ class Shady : public input::InputListener
    uint32_t m_windowWidth = 1920;
    uint32_t m_windowHeight = 1080;
    scene::Scene m_currentScene;
- 
+
    bool m_active = true;
 };
 

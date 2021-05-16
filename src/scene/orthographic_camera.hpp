@@ -7,10 +7,10 @@ namespace shady::scene {
 class OrthographicCamera : public Camera
 {
  public:
-   explicit OrthographicCamera(const glm::mat4& projection);
-   OrthographicCamera(float left, float right, float top, float bottom);
+   OrthographicCamera(const glm::mat4& projection, const glm::vec3& position);
+   OrthographicCamera(float left, float right, float top, float bottom, const glm::vec3& position);
 
    ~OrthographicCamera() override = default;
 };
 
-} // namespace shady::render
+} // namespace shady::scene

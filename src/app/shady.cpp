@@ -29,8 +29,8 @@ Shady::Init()
    Data::m_light =
       std::make_unique< scene::Light >(glm::vec3(0.0f, 450.0f, 0.0f), glm::vec3(1.0f, 0.8f, 0.7f),
                                        scene::LightType::DIRECTIONAL_LIGHT);
-   Data::m_camera = std::make_unique< scene::PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 500.0f);
-   Data::m_camera->SetPosition({0.0f, 20.0f, 0.0f});
+   Data::m_camera =
+      std::make_unique< scene::PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 500.0f, glm::vec3(0.0f, 20.0f, 0.0f));
 
    render::vulkan::VulkanRenderer::Initialize(m_window->GetWindowHandle());
 

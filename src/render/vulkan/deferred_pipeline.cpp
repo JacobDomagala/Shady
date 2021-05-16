@@ -113,7 +113,6 @@ DeferredPipeline::Initialize(VkRenderPass mainRenderPass,
                              const std::vector< VkImageView >& swapChainImageViews,
                              VkPipelineCache pipelineCache)
 {
-
    m_pipelineCache = pipelineCache;
    m_mainRenderPass = mainRenderPass;
    ShadowSetup();
@@ -133,9 +132,6 @@ DeferredPipeline::Initialize(VkRenderPass mainRenderPass,
    BuildDeferredCommandBuffer(swapChainImageViews);
 }
 
-// Prepare a layered shadow map with each layer containing depth from a light's point of view
-// The shadow mapping pass uses geometry shader instancing to output the scene from the different
-// light sources' point of view to the layers of the depth attachment in one single pass
 void
 DeferredPipeline::ShadowSetup()
 {
@@ -157,10 +153,8 @@ DeferredPipeline::PrepareUniformBuffers()
    m_offscreenBuffer = Buffer::CreateBuffer(
       sizeof(uboOffscreenVS), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-   // &uniformBuffers.offscreen
 
    // Deferred fragment shader
-   // &uniformBuffers.composition,
    m_compositionBuffer = Buffer::CreateBuffer(
       sizeof(uboComposition), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
       VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -168,8 +162,6 @@ DeferredPipeline::PrepareUniformBuffers()
    // Map persistent
    m_compositionBuffer.Map();
    m_offscreenBuffer.Map();
-   // uniformBuffers.offscreen.map());
-   // VK_CHECK(uniformBuffers.composition.map());
 
    // Update
    UpdateUniformBufferOffscreen();

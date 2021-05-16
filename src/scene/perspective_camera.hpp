@@ -7,8 +7,9 @@ namespace shady::scene {
 class PerspectiveCamera : public Camera
 {
  public:
-   explicit PerspectiveCamera(const glm::mat4& projection);
-   PerspectiveCamera(float fieldOfView, float aspectRatio, float nearClip, float farClip);
+   PerspectiveCamera(const glm::mat4& projection, const glm::vec3& position);
+   PerspectiveCamera(float fieldOfView, float aspectRatio, float nearClip, float farClip,
+                     const glm::vec3& position);
 
    ~PerspectiveCamera() override = default;
 

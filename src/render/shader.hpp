@@ -4,7 +4,7 @@
 #include <utility>
 #include <vulkan/vulkan.h>
 
-namespace shady::render::vulkan {
+namespace shady::render {
 
 struct ShaderInfoWrapper
 {
@@ -25,7 +25,7 @@ using VertexShaderInfo = ShaderInfoWrapper;
 using GeometryShaderInfo = ShaderInfoWrapper;
 using FragmentShaderInfo = ShaderInfoWrapper;
 
-class VulkanShader
+class Shader
 {
  public:
    static ShaderInfoWrapper

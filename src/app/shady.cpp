@@ -3,16 +3,16 @@
 #include "trace/logger.hpp"
 #include "utils/file_manager.hpp"
 #include "gui/gui.hpp"
-#include "vulkan/vulkan_common.hpp"
+#include "common.hpp"
 #include "scene/light.hpp"
 #include "scene/perspective_camera.hpp"
 
-#include "render/vulkan/vulkan_renderer.hpp"
+#include "render/renderer.hpp"
 #include <GLFW/glfw3.h>
 
 namespace shady::app {
 
-using namespace shady::render::vulkan;
+using namespace shady::render;
 scene::Model model;
 
 void
@@ -32,7 +32,7 @@ Shady::Init()
    Data::m_camera =
       std::make_unique< scene::PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 500.0f, glm::vec3(0.0f, 20.0f, 0.0f));
 
-   render::vulkan::VulkanRenderer::Initialize(m_window->GetWindowHandle());
+   render::Renderer::Initialize(m_window->GetWindowHandle());
 
    model = scene::Model((utils::FileManager::MODELS_DIR / "sponza" / "glTF" / "sponza.gltf").string(),
                         scene::LoadFlags::FlipUV);
@@ -40,7 +40,7 @@ Shady::Init()
    model.ScaleModel(glm::vec3(0.1f, 0.1f, 0.1f));
    model.Draw();
 
-   render::vulkan::VulkanRenderer::CreateRenderPipeline();
+   render::Renderer::CreateRenderPipeline();
 
    m_currentScene.LoadDefault();
 }
@@ -60,25 +60,25 @@ Shady::MainLoop()
       }
 
       // m_currentScene.Render(m_windowWidth, m_windowHeight);
-      // render::vulkan::VulkanRenderer::view_mat = Data::m_camera->GetView();
-      // render::vulkan::VulkanRenderer::proj_mat = Data::m_camera->GetProjection();
-      render::vulkan::VulkanRenderer::proj_mat = Data::m_camera->GetViewProjection();
+      // render::Renderer::view_mat = Data::m_camera->GetView();
+      // render::Renderer::proj_mat = Data::m_camera->GetProjection();
+      render::Renderer::proj_mat = Data::m_camera->GetViewProjection();
 
-      render::vulkan::VulkanRenderer::camera_pos = glm::vec4(Data::m_camera->GetPosition(), 0.0f);
-      render::vulkan::VulkanRenderer::light_pos = glm::vec4(Data::m_light->GetPosition(), 0.0f);
-     /* render::vulkan::VulkanRenderer::view_mat = m_currentScene.GetCamera().GetView();
-      render::vulkan::VulkanRenderer::proj_mat = m_currentScene.GetCamera().GetProjection();
-      render::vulkan::VulkanRenderer::camera_pos =
+      render::Renderer::camera_pos = glm::vec4(Data::m_camera->GetPosition(), 0.0f);
+      render::Renderer::light_pos = glm::vec4(Data::m_light->GetPosition(), 0.0f);
+     /* render::Renderer::view_mat = m_currentScene.GetCamera().GetView();
+      render::Renderer::proj_mat = m_currentScene.GetCamera().GetProjection();
+      render::Renderer::camera_pos =
          glm::vec4(m_currentScene.GetCamera().GetPosition(), 0.0f);
 
-      render::vulkan::VulkanRenderer::light_pos =
+      render::Renderer::light_pos =
          glm::vec4(m_currentScene.GetLight().GetPosition(), 0.0f);*/
 
-      // render::vulkan::VulkanRenderer::Draw();
+      // render::Renderer::Draw();
 
       // Always recreate the command buffers for composition, mostly due to imgui
-      VulkanRenderer::CreateCommandBufferForDeferred();
-      render::vulkan::VulkanRenderer::DrawDeferred();
+      Renderer::CreateCommandBufferForDeferred();
+      render::Renderer::DrawDeferred();
 
       // m_gui.Render({m_windowWidth, m_windowHeight});
 

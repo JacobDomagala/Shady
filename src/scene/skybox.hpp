@@ -1,6 +1,6 @@
 #pragma once
 
-#include "render/vulkan/vulkan_buffer.hpp"
+#include "render/buffer.hpp"
 
 #include <glm/glm.hpp>
 #include <string_view>
@@ -48,9 +48,9 @@ class Skybox
    VkDeviceMemory m_imageMemory = {};
    VkImageView m_imageView = {};
    VkSampler m_sampler = {};
-   render::vulkan::Buffer m_vertexBuffer = {};
-   render::vulkan::Buffer m_indexBuffer = {};
-   render::vulkan::Buffer m_uniformBuffer = {};
+   render::Buffer m_vertexBuffer = {};
+   render::Buffer m_indexBuffer = {};
+   render::Buffer m_uniformBuffer = {};
 };
 
 } // namespace shady::scene

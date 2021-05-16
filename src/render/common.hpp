@@ -1,16 +1,16 @@
 #pragma once
 
+#include "scene/camera.hpp"
+#include "scene/light.hpp"
 #include "types.hpp"
 #include "utils/assert.hpp"
 #include "vertex.hpp"
-#include "scene/light.hpp"
-#include "scene/camera.hpp"
 
 #include <array>
 #include <fmt/format.h>
 #include <glm/glm.hpp>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 #include <vulkan/vulkan.h>
 
 #define VK_CHECK(vkFunction, errorMessage)                                              \
@@ -24,7 +24,7 @@
    } while (0);
 
 
-namespace shady::render::vulkan {
+namespace shady::render {
 
 struct UniformBufferObject
 {
@@ -53,7 +53,7 @@ static constexpr std::array< const char*, 1 > DEVICE_EXTENSIONS = {VK_KHR_SWAPCH
 
 /*
  * This is storage for common Vulkan objects that are needed for numerous
- * function calls. All these fields are assigned by VulkanRenderer on Init
+ * function calls. All these fields are assigned by Renderer on Init
  * and should only be read from other modules.
  */
 struct Data
@@ -89,7 +89,7 @@ struct Data
    inline static VkDeviceMemory m_indexBufferMemory = {};
 
    inline static std::vector< PerInstanceBuffer > perInstance;
-   inline static std::vector< vulkan::Vertex > vertices;
+   inline static std::vector< Vertex > vertices;
    inline static std::vector< uint32_t > indices;
    inline static int32_t currTexIdx = 0;
    inline static std::unordered_map< std::string, std::pair< int32_t, VkImageView > > textures = {};
@@ -115,4 +115,4 @@ FindSupportedFormat(const std::vector< VkFormat >& candidates, VkImageTiling til
 VkFormat
 FindDepthFormat();
 
-} // namespace shady::render::vulkan
+} // namespace shady::render

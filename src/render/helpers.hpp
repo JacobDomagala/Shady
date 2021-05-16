@@ -4,8 +4,8 @@
 #include "trace/logger.hpp"
 #include "utils/assert.hpp"
 
-#include <memory>
 #include <fmt/format.h>
+#include <memory>
 
 namespace shady::render {
 

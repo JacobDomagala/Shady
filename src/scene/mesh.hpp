@@ -1,7 +1,7 @@
 #pragma once
 
-#include "vulkan/types.hpp"
-#include "vulkan/vertex.hpp"
+#include "types.hpp"
+#include "vertex.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
@@ -11,8 +11,8 @@ namespace shady::scene {
 class Mesh
 {
  public:
-   Mesh(const std::string& name, std::vector< render::vulkan::Vertex >&& vertices,
-        std::vector< uint32_t >&& indices, render::vulkan::TextureMaps&& textures);
+   Mesh(const std::string& name, std::vector< render::Vertex >&& vertices,
+        std::vector< uint32_t >&& indices, render::TextureMaps&& textures);
 
    /*void
    AddTexture(const render::TexturePtr& texture);*/
@@ -40,10 +40,10 @@ class Mesh
    glm::mat4 m_rotateMat = glm::mat4(1.0f);
    glm::mat4 m_scaleMat = glm::mat4(1.0f);
 
-   std::vector< render::vulkan::Vertex > m_vertices = {};
+   std::vector< render::Vertex > m_vertices = {};
    std::vector< uint32_t > m_indices = {};
    // render::TexturePtrVec m_textures = {};
-   render::vulkan::TextureMaps m_textures;
+   render::TextureMaps m_textures;
    std::string m_name = "dummyMeshName";
 };
 

@@ -1,16 +1,16 @@
 #pragma once
 
-#include "vulkan_buffer.hpp"
-#include "vulkan_framebuffer.hpp"
+#include "buffer.hpp"
+#include "framebuffer.hpp"
 #include "scene/skybox.hpp"
 
-#include <unordered_map>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 #include <vulkan/vulkan.h>
 
 
-namespace shady::render::vulkan {
+namespace shady::render {
 
 class DeferredPipeline
 {
@@ -101,4 +101,4 @@ class DeferredPipeline
    inline static scene::Skybox m_skybox = {};
 };
 
-} // namespace shady::render::vulkan
+} // namespace shady::render

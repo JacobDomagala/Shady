@@ -1,7 +1,7 @@
-#include "vulkan_common.hpp"
+#include "common.hpp"
 #include "utils/assert.hpp"
 
-namespace shady::render::vulkan {
+namespace shady::render {
 
 uint32_t
 FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
@@ -49,9 +49,9 @@ VkFormat
 FindDepthFormat()
 {
    return FindSupportedFormat(
-         {VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D24_UNORM_S8_UINT,
-          VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D16_UNORM},
+      {VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D24_UNORM_S8_UINT,
+       VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D16_UNORM},
       VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 }
 
-} // namespace shady::render::vulkan
+} // namespace shady::render

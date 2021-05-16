@@ -41,11 +41,11 @@ add_executable(${PROJECT_NAME}
     src/render/helpers.hpp
 
     # render/vulkan
-    src/render/vulkan/vulkan_renderer.hpp src/render/vulkan/vulkan_renderer.cpp src/render/vulkan/vulkan_shader.hpp src/render/vulkan/vulkan_shader.cpp
-    src/render/vulkan/vulkan_buffer.hpp src/render/vulkan/vulkan_buffer.cpp src/render/vulkan/vulkan_texture.hpp src/render/vulkan/vulkan_texture.cpp
-    src/render/vulkan/vulkan_command.hpp src/render/vulkan/vulkan_command.cpp src/render/vulkan/vulkan_common.hpp src/render/vulkan/vulkan_common.cpp
-    src/render/vulkan/vertex.hpp src/render/vulkan/types.hpp src/render/vulkan/vulkan_framebuffer.hpp src/render/vulkan/vulkan_framebuffer.cpp
-    src/render/vulkan/deferred_pipeline.hpp src/render/vulkan/deferred_pipeline.cpp
+    "src/render/renderer.hpp" "src/render/renderer.cpp" "src/render/shader.hpp" "src/render/shader.cpp"
+    "src/render/buffer.hpp" "src/render/buffer.cpp" "src/render/texture.hpp" "src/render/texture.cpp"
+    "src/render/command.hpp" "src/render/command.cpp" "src/render/common.hpp" "src/render/common.cpp"
+    "src/render/vertex.hpp" "src/render/types.hpp" "src/render/framebuffer.hpp" "src/render/framebuffer.cpp"
+    "src/render/deferred_pipeline.hpp" "src/render/deferred_pipeline.cpp"
 
     # scene
     src/scene/mesh.hpp src/scene/mesh.cpp src/scene/model.hpp src/scene/model.cpp src/scene/light.hpp src/scene/light.cpp

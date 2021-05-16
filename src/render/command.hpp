@@ -2,7 +2,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace shady::render::vulkan {
+namespace shady::render {
 
 class Command
 {
@@ -14,4 +14,4 @@ class Command
    EndSingleTimeCommands(VkCommandBuffer commandBuffer);
 };
 
-} // namespace shady::render::vulkan
+} // namespace shady::render

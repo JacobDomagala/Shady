@@ -1,11 +1,11 @@
-#include "vulkan_buffer.hpp"
+#include "buffer.hpp"
+#include "command.hpp"
+#include "common.hpp"
 #include "utils/assert.hpp"
-#include "vulkan_command.hpp"
-#include "vulkan_common.hpp"
 
 #include <fmt/format.h>
 
-namespace shady::render::vulkan {
+namespace shady::render {
 
 void
 Buffer::Map(VkDeviceSize size)
@@ -138,4 +138,4 @@ Buffer::Destroy()
    }
 }
 
-} // namespace shady::render::vulkan
+} // namespace shady::render

@@ -2,7 +2,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace shady::render::vulkan {
+namespace shady::render {
 
 class Buffer
 {

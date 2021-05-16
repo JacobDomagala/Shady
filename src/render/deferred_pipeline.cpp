@@ -1,17 +1,17 @@
 #include "deferred_pipeline.hpp"
+#include "buffer.hpp"
+#include "common.hpp"
 #include "scene/perspective_camera.hpp"
+#include "shader.hpp"
+#include "texture.hpp"
 #include "vertex.hpp"
-#include "vulkan_buffer.hpp"
-#include "vulkan_common.hpp"
-#include "vulkan_shader.hpp"
-#include "vulkan_texture.hpp"
 
 
 #include <fmt/format.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-namespace shady::render::vulkan {
+namespace shady::render {
 
 float timer = 0.0f;
 // Depth bias (and slope) are used to avoid shadowing artifacts
@@ -103,7 +103,7 @@ DeferredPipeline::UpdateUniformBufferComposition()
    uboComposition.viewPos =
       glm::vec4(Data::m_camera->GetPosition(), 0.0f); /** glm::vec4(-1.0f, 1.0f, -1.0f, 1.0f);*/
 
-   uboComposition.debugData= Data::m_debugData;
+   uboComposition.debugData = Data::m_debugData;
 
    memcpy(m_compositionBuffer.m_mappedMemory, &uboComposition, sizeof(uboComposition));
 }
@@ -126,7 +126,6 @@ DeferredPipeline::Initialize(VkRenderPass mainRenderPass,
    PreparePipelines();
    SetupDescriptorPool();
    SetupDescriptorSet();
-
 
 
    BuildDeferredCommandBuffer(swapChainImageViews);
@@ -325,7 +324,7 @@ DeferredPipeline::PreparePipelines()
    pipelineDynamicStateCreateInfo.flags = 0;
 
    std::array< VkPipelineShaderStageCreateInfo, 2 > shaderStages;
-   auto [vertexInfo, fragmentInfo] = VulkanShader::CreateShader(
+   auto [vertexInfo, fragmentInfo] = Shader::CreateShader(
       Data::vk_device, "default/deferred.vert.spv", "default/deferred.frag.spv");
 
    VkSpecializationMapEntry specializationEntry{};
@@ -399,7 +398,7 @@ DeferredPipeline::PreparePipelines()
 
    // Offscreen pipeline
    std::tie(vertexInfo, fragmentInfo) =
-      VulkanShader::CreateShader(Data::vk_device, "default/mrt.vert.spv", "default/mrt.frag.spv");
+      Shader::CreateShader(Data::vk_device, "default/mrt.vert.spv", "default/mrt.frag.spv");
 
    multisampling.rasterizationSamples = Data::m_msaaSamples;
 
@@ -458,9 +457,9 @@ DeferredPipeline::PreparePipelines()
    std::array< VkPipelineShaderStageCreateInfo, 1 > shadowStages;
 
    shadowStages[0] =
-      VulkanShader::LoadShader("default/shadow.vert.spv", VK_SHADER_STAGE_VERTEX_BIT).shaderInfo;
+      Shader::LoadShader("default/shadow.vert.spv", VK_SHADER_STAGE_VERTEX_BIT).shaderInfo;
    /*shadowStages[1] =
-      VulkanShader::LoadShader("default/shadow.geom.spv",
+      Shader::LoadShader("default/shadow.geom.spv",
       VK_SHADER_STAGE_GEOMETRY_BIT).shaderInfo;*/
 
    pipelineInfo.pStages = shadowStages.data();
@@ -846,4 +845,4 @@ DeferredPipeline::UpdateDeferred()
 }
 
 
-} // namespace shady::render::vulkan
+} // namespace shady::render

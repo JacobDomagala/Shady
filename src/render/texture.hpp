@@ -1,12 +1,12 @@
 #pragma once
 
-#include "vulkan_texture.hpp"
+#include "texture.hpp"
 #include "types.hpp"
 
 #include <unordered_map>
 #include <vulkan/vulkan.h>
 
-namespace shady::render::vulkan {
+namespace shady::render {
 
 class Texture
 {
@@ -22,12 +22,13 @@ class Texture
    CreateTextureImage(TextureType type, std::string_view textureName);
 
    static std::pair< VkImage, VkDeviceMemory >
-   CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format,
-               VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, bool cubemap = false);
+   CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels,
+               VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling,
+               VkImageUsageFlags usage, VkMemoryPropertyFlags properties, bool cubemap = false);
 
    static void
    GenerateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight,
-                uint32_t mipLevels);
+                   uint32_t mipLevels);
 
    static VkImageView
    CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags,
@@ -41,7 +42,7 @@ class Texture
    CopyBufferToImage(VkImage image, uint32_t texWidth, uint32_t texHeight, VkBuffer buffer,
                      bool cubemap = false);
 
-   std::pair<VkImageView, VkSampler>
+   std::pair< VkImageView, VkSampler >
    GetImageViewAndSampler() const;
 
    void
@@ -50,7 +51,7 @@ class Texture
    TextureType
    GetType() const;
 
-private:
+ private:
    void
    TransitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
 
@@ -94,4 +95,4 @@ class TextureLibrary
    static inline std::unordered_map< std::string, Texture > s_loadedTextures = {};
 };
 
-} // namespace shady::render::vulkan
+} // namespace shady::render

@@ -1,11 +1,11 @@
 #include "gui.hpp"
-#include "app//input/input_manager.hpp"
-#include "render/vulkan/vulkan_common.hpp"
+#include "app/input/input_manager.hpp"
+#include "render/common.hpp"
 #include "utils/file_manager.hpp"
-#include "vulkan/vulkan_buffer.hpp"
-#include "vulkan/vulkan_renderer.hpp"
-#include "vulkan/vulkan_shader.hpp"
-#include "vulkan/vulkan_texture.hpp"
+#include "buffer.hpp"
+#include "renderer.hpp"
+#include "shader.hpp"
+#include "texture.hpp"
 
 #include <GLFW/glfw3.h>
 #include <fmt/format.h>
@@ -14,7 +14,7 @@
 
 namespace shady::app::gui {
 
-using namespace shady::render::vulkan;
+using namespace shady::render;
 
 static bool
 CheckRectArea(int32_t pos_x, int32_t width, int32_t pos_y, int32_t height, glm::vec2 mouse_pos)
@@ -574,7 +574,7 @@ Gui::PreparePipeline(const VkPipelineCache pipelineCache, const VkRenderPass ren
    pipelineDynamicStateCreateInfo.flags = 0;
 
    auto [vertexInfo, fragmentInfo] =
-      VulkanShader::CreateShader(Data::vk_device, "default/ui.vert.spv", "default/ui.frag.spv");
+      Shader::CreateShader(Data::vk_device, "default/ui.vert.spv", "default/ui.frag.spv");
    VkPipelineShaderStageCreateInfo shaderStages[] = {vertexInfo.shaderInfo,
                                                      fragmentInfo.shaderInfo};
 

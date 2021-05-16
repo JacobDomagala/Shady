@@ -1,9 +1,9 @@
-#include "vulkan_framebuffer.hpp"
-#include "vulkan_common.hpp"
+#include "framebuffer.hpp"
+#include "common.hpp"
 
 #include <fmt/format.h>
 
-namespace shady::render::vulkan {
+namespace shady::render {
 
 void
 Framebuffer::Create(int32_t width, int32_t height)
@@ -364,4 +364,4 @@ Framebuffer::CreateRenderPass()
    VK_CHECK(vkCreateFramebuffer(Data::vk_device, &framebufferInfo, nullptr, &m_framebuffer), "");
 }
 
-} // namespace shady::render::vulkan
+} // namespace shady::render

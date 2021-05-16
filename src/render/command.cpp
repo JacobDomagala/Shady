@@ -1,7 +1,7 @@
-#include "vulkan_command.hpp"
-#include "vulkan_common.hpp"
+#include "command.hpp"
+#include "common.hpp"
 
-namespace shady::render::vulkan {
+namespace shady::render {
 
 VkCommandBuffer
 Command::BeginSingleTimeCommands()
@@ -40,4 +40,4 @@ Command::EndSingleTimeCommands(VkCommandBuffer commandBuffer)
    vkFreeCommandBuffers(Data::vk_device, Data::vk_commandPool, 1, &commandBuffer);
 }
 
-} // namespace shady::render::vulkan
+} // namespace shady::render

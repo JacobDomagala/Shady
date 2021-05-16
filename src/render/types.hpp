@@ -3,7 +3,7 @@
 #include <array>
 #include <string>
 
-namespace shady::render::vulkan {
+namespace shady::render {
 
 enum class TextureType
 {
@@ -16,4 +16,4 @@ enum class TextureType
 // DIFFUSE_MAP SPECULAR_MAP NORMAL_MAP
 using TextureMaps = std::array< std::string, 3 >;
 
-} // namespace shady::render::vulkan
+} // namespace shady::render

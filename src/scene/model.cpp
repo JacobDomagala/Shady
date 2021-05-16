@@ -1,27 +1,27 @@
 #include "model.hpp"
 #include "trace/logger.hpp"
 #include "utils/file_manager.hpp"
-#include "render/vulkan/vertex.hpp"
-#include "render/vulkan/vulkan_texture.hpp"
+#include "render/vertex.hpp"
+#include "render/texture.hpp"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 
 namespace shady::scene {
 
-static render::vulkan::TextureType
+static render::TextureType
 GetShadyTexFromAssimpTex(aiTextureType assimpTex)
 {
    switch (assimpTex)
    {
       case aiTextureType_SPECULAR:
       case aiTextureType_UNKNOWN:
-         return render::vulkan::TextureType::SPECULAR_MAP;
+         return render::TextureType::SPECULAR_MAP;
       case aiTextureType_NORMALS:
-         return render::vulkan::TextureType::NORMAL_MAP;
+         return render::TextureType::NORMAL_MAP;
       case aiTextureType_DIFFUSE:
       default: {
-         return render::vulkan::TextureType::DIFFUSE_MAP;
+         return render::TextureType::DIFFUSE_MAP;
       }
    }
 }
@@ -121,12 +121,12 @@ Mesh
 Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 {
    // Data to fill
-   std::vector< render::vulkan::Vertex > vertices;
+   std::vector< render::Vertex > vertices;
 
    // Walk through each of the mesh's vertices
    for (uint32_t i = 0; i < mesh->mNumVertices; i++)
    {
-      render::vulkan::Vertex vertex;
+      render::Vertex vertex;
       glm::vec3 vector;
       // Positions
       vector.x = mesh->mVertices[i].x;
@@ -185,7 +185,7 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
    }
 
    // render::TexturePtrVec textures;
-   render::vulkan::TextureMaps textures = {};
+   render::TextureMaps textures = {};
 
    // Process materials
    aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
@@ -204,7 +204,7 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 }
 
 void
-Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type, render::vulkan::TextureMaps& textures)
+Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type, render::TextureMaps& textures)
 {
    for (uint32_t i = 0; i < mat->GetTextureCount(type); i++)
    {
@@ -212,7 +212,7 @@ Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type, render::vulkan:
       mat->GetTexture(type, i, &str);
 
       const auto texType = GetShadyTexFromAssimpTex(type);
-      render::vulkan::TextureLibrary::CreateTexture(texType, str.C_Str());
+      render::TextureLibrary::CreateTexture(texType, str.C_Str());
       textures[static_cast< int32_t >(texType)] = str.C_Str();
    }
 }

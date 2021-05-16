@@ -1,16 +1,16 @@
-#include "vulkan_texture.hpp"
+#include "texture.hpp"
+#include "buffer.hpp"
+#include "command.hpp"
+#include "common.hpp"
 #include "trace/logger.hpp"
 #include "utils/assert.hpp"
 #include "utils/file_manager.hpp"
-#include "vulkan_buffer.hpp"
-#include "vulkan_command.hpp"
-#include "vulkan_common.hpp"
 
 #undef max
 
 #include <string_view>
 
-namespace shady::render::vulkan {
+namespace shady::render {
 
 /**************************************************************************************************
  ****************************************** TEXTURE ***********************************************
@@ -60,8 +60,8 @@ Texture::CreateTextureImage(TextureType type, std::string_view textureName)
          | VK_IMAGE_USAGE_SAMPLED_BIT,
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, type == TextureType::CUBE_MAP);
 
-   m_textureImageView =
-      CreateImageView(m_textureImage, m_format, VK_IMAGE_ASPECT_COLOR_BIT, m_mips, type == TextureType::CUBE_MAP);
+   m_textureImageView = CreateImageView(m_textureImage, m_format, VK_IMAGE_ASPECT_COLOR_BIT, m_mips,
+                                        type == TextureType::CUBE_MAP);
    CreateTextureSampler();
 
    TransitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_mips);
@@ -394,4 +394,4 @@ TextureLibrary::LoadTexture(TextureType type, std::string_view textureName)
    s_loadedTextures[std::string{textureName}] = {type, textureName};
 }
 
-} // namespace shady::render::vulkan
+} // namespace shady::render

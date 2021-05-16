@@ -1,16 +1,16 @@
 #include "skybox.hpp"
 
-#include "render/vulkan/vulkan_command.hpp"
-#include "render/vulkan/vulkan_common.hpp"
-#include "render/vulkan/vulkan_shader.hpp"
-#include "render/vulkan/vulkan_texture.hpp"
+#include "render/command.hpp"
+#include "render/common.hpp"
+#include "render/shader.hpp"
+#include "render/texture.hpp"
 #include "utils/file_manager.hpp"
 
 #include <array>
 
 namespace shady::scene {
 
-using namespace render::vulkan;
+using namespace render;
 
 void
 Skybox::LoadCubeMap(std::string_view directory)
@@ -327,7 +327,7 @@ Skybox::CreatePipeline()
 
    //----------------------------------------------------------------------------------------//
 
-   auto [vertexInfo, fragmentInfo] = VulkanShader::CreateShader(
+   auto [vertexInfo, fragmentInfo] = Shader::CreateShader(
       Data::vk_device, "default/skybox.vert.spv", "default/skybox.frag.spv");
    VkPipelineShaderStageCreateInfo shaderStages[] = {vertexInfo.shaderInfo,
                                                      fragmentInfo.shaderInfo};

@@ -4,7 +4,7 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-namespace shady::render::vulkan {
+namespace shady::render {
 
 /**
  * @brief Encapsulates a single frame buffer attachment

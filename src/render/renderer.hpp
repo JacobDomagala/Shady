@@ -1,8 +1,8 @@
 #pragma once
 
 #include "deferred_pipeline.hpp"
-#include "render/vulkan/vertex.hpp"
-#include "vulkan/types.hpp"
+#include "vertex.hpp"
+#include "types.hpp"
 
 #include <glm/glm.hpp>
 #include <vector>
@@ -11,9 +11,9 @@
 
 struct GLFWwindow;
 
-namespace shady::render::vulkan {
+namespace shady::render {
 
-class VulkanRenderer
+class Renderer
 {
  public:
    static void
@@ -29,7 +29,7 @@ class VulkanRenderer
    DrawDeferred();
 
    static void
-   MeshLoaded(const std::vector< vulkan::Vertex >& vertices,
+   MeshLoaded(const std::vector< Vertex >& vertices,
               const std::vector< uint32_t >& indicies, const TextureMaps& textures,
               const glm::mat4& modelMat);
 

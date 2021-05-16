@@ -1,7 +1,7 @@
 #pragma once
 
 #include "mesh.hpp"
-#include "render/vulkan/types.hpp"
+#include "render/types.hpp"
 
 #include <memory>
 #include <string>
@@ -59,7 +59,7 @@ class Model
    ProcessMesh(aiMesh* mesh, const aiScene* scene);
 
    void
-   LoadMaterialTextures(aiMaterial* mat, aiTextureType type, render::vulkan::TextureMaps& textures);
+   LoadMaterialTextures(aiMaterial* mat, aiTextureType type, render::TextureMaps& textures);
 
  private:
    std::vector< Mesh > m_meshes = {};

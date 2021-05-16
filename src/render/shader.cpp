@@ -1,10 +1,10 @@
-#include "vulkan_shader.hpp"
+#include "shader.hpp"
+#include "common.hpp"
 #include "trace/logger.hpp"
 #include "utils/assert.hpp"
 #include "utils/file_manager.hpp"
-#include "vulkan_common.hpp"
 
-namespace shady::render::vulkan {
+namespace shady::render {
 
 static VkShaderModule
 CreateShaderModule(VkDevice device, std::vector< char >&& shaderByteCode)
@@ -23,7 +23,7 @@ CreateShaderModule(VkDevice device, std::vector< char >&& shaderByteCode)
 
 
 ShaderInfoWrapper
-VulkanShader::LoadShader(std::string_view shader, VkShaderStageFlagBits stage)
+Shader::LoadShader(std::string_view shader, VkShaderStageFlagBits stage)
 {
    VkShaderModule shaderModule = CreateShaderModule(
       Data::vk_device,
@@ -39,7 +39,7 @@ VulkanShader::LoadShader(std::string_view shader, VkShaderStageFlagBits stage)
 }
 
 std::pair< VertexShaderInfo, FragmentShaderInfo >
-VulkanShader::CreateShader(VkDevice device, std::string_view vertex, std::string_view fragment)
+Shader::CreateShader(VkDevice device, std::string_view vertex, std::string_view fragment)
 {
    VkShaderModule vertShaderModule = CreateShaderModule(
       device, utils::FileManager::ReadBinaryFile(utils::FileManager::SHADERS_DIR / vertex));
@@ -61,4 +61,4 @@ VulkanShader::CreateShader(VkDevice device, std::string_view vertex, std::string
    return {{device, vertShaderStageInfo}, {device, fragShaderStageInfo}};
 }
 
-} // namespace shady::render::vulkan
+} // namespace shady::render

@@ -675,7 +675,6 @@ VulkanRenderer::CreateRenderPipeline()
    }
    else
    {
-      m_skybox.LoadCubeMap("default");
       m_deferredPipeline.Initialize(Data::m_renderPass, m_swapChainImageViews,
                                     Data::m_pipelineCache);
       app::gui::Gui::Init({Data::m_swapChainExtent.width, Data::m_swapChainExtent.height});
@@ -711,7 +710,6 @@ VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage)
    vkUnmapMemory(Data::vk_device, Data::m_ssboMemory[currentImage]);
 
    m_deferredPipeline.UpdateDeferred();
-   m_skybox.UpdateBuffers();
 }
 
 void
@@ -1351,12 +1349,6 @@ VulkanRenderer::CreateCommandBufferForDeferred()
       scissor.offset.y = 0;
 
       vkCmdSetScissor(m_commandBuffers[i], 0, 1, &scissor);
-
-      /*
-       * STAGE 1 - SKYBOX
-       */
-
-      m_skybox.Draw(m_commandBuffers[i]);
 
       /*
        * STAGE 2 - COMPOSITION

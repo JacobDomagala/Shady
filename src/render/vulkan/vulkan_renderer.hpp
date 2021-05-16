@@ -3,7 +3,6 @@
 #include "deferred_pipeline.hpp"
 #include "render/vulkan/vertex.hpp"
 #include "vulkan/types.hpp"
-#include "scene/skybox.hpp"
 
 #include <glm/glm.hpp>
 #include <vector>
@@ -144,8 +143,6 @@ class VulkanRenderer
    inline static VkImageView m_colorImageView = {};
 
    inline static DeferredPipeline m_deferredPipeline = {};
-
-   inline static scene::Skybox m_skybox = {};
 };
 
 } // namespace shady::render::vulkan

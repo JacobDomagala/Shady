@@ -64,6 +64,7 @@ struct Data
    inline static VkQueue vk_graphicsQueue = {};
    inline static VkQueue m_presentQueue = {};
    inline static VkExtent2D m_swapChainExtent = {};
+   inline static VkExtent2D m_deferredExtent = {};
    inline static VkCommandPool vk_commandPool = {};
    inline static VkSurfaceKHR m_surface = {};
 
@@ -97,6 +98,7 @@ struct Data
    inline static VkPipelineCache m_pipelineCache = {};
    inline static VkPipeline m_graphicsPipeline = {};
    inline static VkRenderPass m_renderPass = {};
+   inline static VkRenderPass m_deferredRenderPass = {};
 
    inline static std::unique_ptr< scene::Light > m_light = {};
    inline static std::unique_ptr< scene::Camera > m_camera = {};

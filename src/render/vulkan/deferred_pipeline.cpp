@@ -80,6 +80,7 @@ DeferredPipeline::UpdateUniformBufferOffscreen()
    uboOffscreenVS.view = Data::m_camera->GetView();
    uboOffscreenVS.model = glm::mat4(1.0f);
    m_offscreenBuffer.CopyData(&uboOffscreenVS);
+   m_skybox.UpdateBuffers();
    // memcpy(m_offscreenBuffer.mapped, , sizeof(uboOffscreenVS));
 }
 
@@ -112,16 +113,22 @@ DeferredPipeline::Initialize(VkRenderPass mainRenderPass,
                              const std::vector< VkImageView >& swapChainImageViews,
                              VkPipelineCache pipelineCache)
 {
+
    m_pipelineCache = pipelineCache;
    m_mainRenderPass = mainRenderPass;
    ShadowSetup();
    PrepareOffscreenFramebuffer();
+
+   m_skybox.LoadCubeMap("default");
+
    PrepareUniformBuffers();
    SetupDescriptorSetLayout();
 
    PreparePipelines();
    SetupDescriptorPool();
    SetupDescriptorSet();
+
+
 
    BuildDeferredCommandBuffer(swapChainImageViews);
 }
@@ -139,6 +146,8 @@ void
 DeferredPipeline::PrepareOffscreenFramebuffer()
 {
    m_offscreenFrameBuffer.Create(2048, 2048);
+   Data::m_deferredRenderPass = m_offscreenFrameBuffer.GetRenderPass();
+   Data::m_deferredExtent = {2048, 2048};
 }
 
 void
@@ -811,6 +820,8 @@ DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& s
    scissor.offset.y = 0;
 
    vkCmdSetScissor(m_offscreenCommandBuffer, 0, 1, &scissor);
+
+   m_skybox.Draw(m_offscreenCommandBuffer);
 
    vkCmdBindPipeline(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                      m_offscreenPipeline);

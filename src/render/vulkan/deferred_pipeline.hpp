@@ -2,6 +2,7 @@
 
 #include "vulkan_buffer.hpp"
 #include "vulkan_framebuffer.hpp"
+#include "scene/skybox.hpp"
 
 #include <unordered_map>
 #include <memory>
@@ -97,6 +98,7 @@ class DeferredPipeline
    inline static VkSemaphore m_offscreenSemaphore = {};
 
    inline static VkViewport m_viewport = {};
+   inline static scene::Skybox m_skybox = {};
 };
 
 } // namespace shady::render::vulkan

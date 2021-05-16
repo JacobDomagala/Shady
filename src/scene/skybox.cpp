@@ -221,10 +221,10 @@ void
 Skybox::UpdateBuffers()
 {
    SkyboxUBO buffer;
-   buffer.projection = Data::m_camera->GetProjection();
-   buffer.view_mat = Data::m_camera->GetView();
-   // Cancel out translation
-   buffer.view_mat[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+   buffer.view_projection =
+      Data::m_camera->GetProjection() * glm::mat4(glm::mat3(Data::m_camera->GetView()));
+
+   m_uniformBuffer.CopyData(&buffer);
 }
 
 void
@@ -383,9 +383,10 @@ Skybox::CreatePipeline()
 
    VkPipelineDepthStencilStateCreateInfo depthStencil{};
    depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-   depthStencil.depthTestEnable = VK_TRUE;
-   depthStencil.depthWriteEnable = VK_TRUE;
+   depthStencil.depthTestEnable = VK_FALSE;
+   depthStencil.depthWriteEnable = VK_FALSE;
    depthStencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+   depthStencil.back.compareOp = VK_COMPARE_OP_ALWAYS;
    depthStencil.depthBoundsTestEnable = VK_FALSE;
    depthStencil.stencilTestEnable = VK_FALSE;
 
@@ -429,9 +430,9 @@ Skybox::CreatePipeline()
 void
 Skybox::Draw(VkCommandBuffer commandBuffer)
 {
-   vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1,
                            &m_descriptorSet, 0, nullptr);
+   vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 
    VkDeviceSize offsets[1] = {0};
    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.m_buffer, offsets);

@@ -711,6 +711,7 @@ VulkanRenderer::UpdateUniformBuffer(uint32_t currentImage)
    vkUnmapMemory(Data::vk_device, Data::m_ssboMemory[currentImage]);
 
    m_deferredPipeline.UpdateDeferred();
+   m_skybox.UpdateBuffers();
 }
 
 void

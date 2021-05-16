@@ -10,8 +10,7 @@ namespace shady::scene {
 
 struct SkyboxUBO
 {
-   glm::mat4 view_mat;
-   glm::mat4 projection;
+   glm::mat4 view_projection;
 };
 
 class Skybox

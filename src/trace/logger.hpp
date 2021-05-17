@@ -4,7 +4,7 @@
 #include "trace/formatter_types.hpp"
 
 #include <fmt/color.h>
-#include <string>
+#include <string_view>
 #include <unordered_map>
 
 #if defined(_WIN32)
@@ -36,27 +36,27 @@ class Logger
  public:
    template < typename... Args >
    static constexpr void
-   Trace(std::string&& buffer, const Args&... args);
+   Trace(std::string_view buffer, Args&&... args);
 
    template < typename... Args >
    static constexpr void
-   Debug(std::string&& buffer, const Args&... args);
+   Debug(std::string_view buffer, Args&&... args);
 
    template < typename... Args >
    static constexpr void
-   Info(std::string&& buffer, const Args&... args);
+   Info(std::string_view buffer, Args&&... args);
 
    template < typename... Args >
    static constexpr void
-   Warn(std::string&& buffer, const Args&... args);
+   Warn(std::string_view buffer, Args&&... args);
 
    template < typename... Args >
    static constexpr void
-   Fatal(std::string&& buffer, const Args&... args);
+   Fatal(std::string_view buffer, Args&&... args);
 
    template < TYPE LogLevel, typename... Args >
    static constexpr void
-   Log(std::string&& buffer, const Args&... args);
+   Log(std::string_view buffer, Args&&... args);
 
    static void
    SetType(TYPE newType);

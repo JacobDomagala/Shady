@@ -1,10 +1,23 @@
 #pragma once
 
-#include "render/texture.hpp"
-
 #include <filesystem>
-#include <string>
+#include <string_view>
+#include <glm/glm.hpp>
+#include <memory>
+#include <functional>
 
+namespace shady::render {
+
+using ImageHandleType = std::unique_ptr< uint8_t[], std::function< void(uint8_t*) > >;
+
+struct ImageData
+{
+   ImageHandleType m_bytes;
+   glm::uvec2 m_size;
+   int32_t m_channels;
+};
+
+} // namespace shady::render
 
 namespace shady::utils {
 
@@ -17,26 +30,26 @@ class FileManager
    static inline const std::filesystem::path TEXTURES_DIR = ASSETS_DIR / "textures";
    static inline const std::filesystem::path SHADERS_DIR = ASSETS_DIR / "shaders";
    static inline const std::filesystem::path MODELS_DIR = ASSETS_DIR / "models";
-
-   enum class FileType
-   {
-      BINARY = 0,
-      TEXT
-   };
+   static inline const std::filesystem::path FONTS_DIR = ASSETS_DIR / "fonts";
 
  public:
    static std::string
-   ReadFile(const std::filesystem::path& path, FileType type = FileType::TEXT);
+   ReadTextFile(const std::filesystem::path& path);
 
    static std::string
-   ReadFile(const std::string& fileName, FileType type = FileType::TEXT);
+   ReadTextFile(std::string_view fileName);
+
+   static std::vector< char >
+   ReadBinaryFile(const std::filesystem::path& path);
+
+   static std::vector< char >
+   ReadBinaryFile(std::string_view fileName);
 
    static void
-   WriteToFile(const std::string& fileName, const std::string& content,
-               FileType type = FileType::TEXT);
+   WriteToFile(std::string_view fileName, std::string_view content);
 
-   static render::Texture::ImageData
-   ReadTexture(const std::string& fileName, bool flipVertical = false);
+   static render::ImageData
+   ReadTexture(std::string_view fileName, bool flipVertical = false);
 };
 
 } // namespace shady::utils

@@ -1,45 +1,64 @@
 #include "shader.hpp"
-#include "opengl/opengl_shader.hpp"
-#include "renderer.hpp"
+#include "common.hpp"
 #include "trace/logger.hpp"
-#include "helpers.hpp"
+#include "utils/assert.hpp"
+#include "utils/file_manager.hpp"
 
 namespace shady::render {
 
-/**************************************************************************************************
- ******************************************* SHADER ***********************************************
- *************************************************************************************************/
-std::shared_ptr< Shader >
-Shader::Create(const std::string& name)
+static VkShaderModule
+CreateShaderModule(VkDevice device, std::vector< char >&& shaderByteCode)
 {
-   return CreateSharedWrapper<opengl::OpenGLShader, Shader>(name);
+   VkShaderModuleCreateInfo createInfo{};
+   createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+   createInfo.codeSize = shaderByteCode.size();
+   createInfo.pCode = reinterpret_cast< const uint32_t* >(shaderByteCode.data());
+
+   VkShaderModule shaderModule;
+   VK_CHECK(vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule),
+            "Failed to create shader module!");
+
+   return shaderModule;
 }
 
-/**************************************************************************************************
- *************************************** SHADER LIBRARY *******************************************
- *************************************************************************************************/
-std::shared_ptr< Shader >
-ShaderLibrary::GetShader(const std::string& name)
-{
-   if (s_shaderLibrary.end() == s_shaderLibrary.find(name))
-   {
-      trace::Logger::Debug("Shader: {} not found in library. Loading it.", name);
-      LoadShader(name);
-   }
 
-   return s_shaderLibrary[name];
+ShaderInfoWrapper
+Shader::LoadShader(std::string_view shader, VkShaderStageFlagBits stage)
+{
+   VkShaderModule shaderModule = CreateShaderModule(
+      Data::vk_device,
+      utils::FileManager::ReadBinaryFile(utils::FileManager::SHADERS_DIR / shader));
+
+   VkPipelineShaderStageCreateInfo shaderStageInfo{};
+   shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+   shaderStageInfo.stage = stage;
+   shaderStageInfo.module = shaderModule;
+   shaderStageInfo.pName = "main";
+
+   return {Data::vk_device, shaderStageInfo};
 }
 
-void
-ShaderLibrary::Clear()
+std::pair< VertexShaderInfo, FragmentShaderInfo >
+Shader::CreateShader(VkDevice device, std::string_view vertex, std::string_view fragment)
 {
-   s_shaderLibrary.clear();
-}
+   VkShaderModule vertShaderModule = CreateShaderModule(
+      device, utils::FileManager::ReadBinaryFile(utils::FileManager::SHADERS_DIR / vertex));
+   VkShaderModule fragShaderModule = CreateShaderModule(
+      device, utils::FileManager::ReadBinaryFile(utils::FileManager::SHADERS_DIR / fragment));
 
-void
-ShaderLibrary::LoadShader(const std::string& name)
-{
-   s_shaderLibrary[name] = Shader::Create(name);
+   VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+   vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+   vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+   vertShaderStageInfo.module = vertShaderModule;
+   vertShaderStageInfo.pName = "main";
+
+   VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+   fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+   fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+   fragShaderStageInfo.module = fragShaderModule;
+   fragShaderStageInfo.pName = "main";
+
+   return {{device, vertShaderStageInfo}, {device, fragShaderStageInfo}};
 }
 
 } // namespace shady::render

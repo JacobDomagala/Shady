@@ -1,63 +1,38 @@
 #pragma once
 
-#include <glm/glm.hpp>
-#include <memory>
-#include <string>
-#include <unordered_map>
-
+#include <string_view>
+#include <utility>
+#include <vulkan/vulkan.h>
 
 namespace shady::render {
+
+struct ShaderInfoWrapper
+{
+   /*
+    * This should be called after the pipeline is created
+    */
+   void
+   Destroy()
+   {
+      vkDestroyShaderModule(device, shaderInfo.module, nullptr);
+   }
+
+   VkDevice device;
+   VkPipelineShaderStageCreateInfo shaderInfo;
+};
+
+using VertexShaderInfo = ShaderInfoWrapper;
+using GeometryShaderInfo = ShaderInfoWrapper;
+using FragmentShaderInfo = ShaderInfoWrapper;
 
 class Shader
 {
  public:
-   virtual ~Shader() = default;
+   static ShaderInfoWrapper
+   LoadShader(std::string_view shader, VkShaderStageFlagBits stage);
 
-   virtual void
-   Bind() const = 0;
-   virtual void
-   Unbind() const = 0;
-   virtual void
-   SetInt(const std::string& name, int32_t value) = 0;
-   virtual void
-   SetUint(const std::string& name, uint32_t value) = 0;
-   virtual void
-   SetIntArray(const std::string& name, int* values, int32_t count) = 0;
-   virtual void
-   SetFloat(const std::string& name, float value) = 0;
-   virtual void
-   SetFloat3(const std::string& name, const glm::vec3& value) = 0;
-   virtual void
-   SetFloat4(const std::string& name, const glm::vec4& value) = 0;
-   virtual void
-   SetMat4(const std::string& name, const glm::mat4& value) = 0;
-   virtual void
-   SetMat4Array(const std::string& name, const glm::mat4* matrices, int32_t count) = 0;
-
-   virtual const std::string&
-   GetName() const = 0;
-
-private:
-   static std::shared_ptr< Shader >
-   Create(const std::string& name);
-
-   friend class ShaderLibrary;
+   static std::pair< VertexShaderInfo, FragmentShaderInfo >
+   CreateShader(VkDevice device, std::string_view vertex, std::string_view fragment);
 };
 
-class ShaderLibrary
-{
- public:
-   static std::shared_ptr< Shader >
-   GetShader(const std::string& name);
-
-   static void
-   Clear();
-
- private:
-   static void
-   LoadShader(const std::string& name);
-
- private:
-   static inline std::unordered_map< std::string, std::shared_ptr< Shader > > s_shaderLibrary = {};
-};
-} // namespace shady::render
+} // namespace shady::render::vulkan

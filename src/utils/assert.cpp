@@ -4,11 +4,11 @@
 namespace shady::utils {
 
 void
-Assert(bool assertion, std::string&& logMsg)
+Assert(bool assertion, std::string_view logMsg)
 {
    if (!assertion)
    {
-      trace::Logger::Fatal(std::move(logMsg));
+      trace::Logger::Fatal(logMsg);
       std::terminate();
    }
 }

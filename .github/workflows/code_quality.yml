@@ -9,7 +9,19 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: setup init_script
+      shell: bash
+      run: |
+        echo "#!/bin/bash
+        wget https://sdk.lunarg.com/sdk/download/1.2.170.0/linux/vulkansdk-linux-x86_64-1.2.170.0.tar.gz
+        tar xf vulkansdk-linux-x86_64-1.2.170.0.tar.gz
+        source ./1.2.170.0/setup-env.sh" > init_script.sh
+
     - name: Run static analysis
       uses: JacobDomagala/StaticAnalysis@master
       with:
         exclude_dir: lib
+        init_script: init_script.sh
+        apt_pckgs: xorg-dev
+        report_pr_changes_only: false
+

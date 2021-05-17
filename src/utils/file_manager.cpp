@@ -1,66 +1,94 @@
 #include "file_manager.hpp"
 #include "trace/logger.hpp"
+#include "utils/assert.hpp"
 
 #define STB_IMAGE_STATIC
 #define STB_IMAGE_IMPLEMENTATION
 #include <fstream>
 #include <stb_image.h>
+#include <string>
 
 namespace shady::utils {
 
-std::string
-FileManager::ReadFile(const std::filesystem::path& path, FileType type)
+auto static CreatePath(std::filesystem::path rootPath, std::string_view assetPath)
 {
-   return ReadFile(path.u8string(), type);
+   auto new_path = rootPath / "";
+   new_path += std::filesystem::path(assetPath);
+   return new_path.string();
 }
 
 std::string
-FileManager::ReadFile(const std::string& fileName, FileType /*type*/)
+FileManager::ReadTextFile(const std::filesystem::path& path)
 {
-   std::ifstream fileHandle;
-   fileHandle.open(fileName, std::ifstream::in);
+   return ReadTextFile(std::string_view{path.string()});
+}
 
-   if (!fileHandle.is_open())
-   {
-      trace::Logger::Fatal("FileManager::ReadFile -> {} can't be opened!", fileName);
-   }
+std::string
+FileManager::ReadTextFile(std::string_view fileName)
+{
+   std::ifstream fileHandle(fileName.data());
+
+   utils::Assert(fileHandle.is_open(),
+                 fmt::format("FileManager::ReadTextFile -> {} can't be opened!", fileName));
 
    std::string returnVal((std::istreambuf_iterator< char >(fileHandle)),
                          std::istreambuf_iterator< char >());
    fileHandle.close();
 
-   if (returnVal.empty())
-   {
-      trace::Logger::Fatal("FileManager::ReadFile -> {} is empty!", fileName);
-   }
+   utils::Assert(!returnVal.empty(),
+                 fmt::format("FileManager::ReadTextFile -> {} is empty!", fileName));
 
    return returnVal;
 }
 
+std::vector< char >
+FileManager::ReadBinaryFile(const std::filesystem::path& path)
+{
+   return ReadBinaryFile(std::string_view{path.string()});
+}
+
+std::vector< char >
+FileManager::ReadBinaryFile(std::string_view fileName)
+{
+   std::ifstream fileHandle(fileName.data(), std::ios::binary);
+
+   utils::Assert(fileHandle.is_open(),
+                 fmt::format("FileManager::ReadBinaryFile -> {} can't be opened!", fileName));
+
+   const auto size = std::filesystem::file_size(fileName);
+
+   utils::Assert(size, fmt::format("FileManager::ReadBinaryFile -> {} is empty!", fileName));
+
+   std::vector< char > buffer(size);
+
+   fileHandle.read(buffer.data(), static_cast< std::streamsize >(size));
+
+   return buffer;
+}
+
 void
-FileManager::WriteToFile(const std::string& fileName, const std::string& content, FileType /*type*/)
+FileManager::WriteToFile(std::string_view fileName, std::string_view content)
 {
    std::ofstream fileHandle;
-   fileHandle.open(fileName);
+   fileHandle.open(fileName.data());
    fileHandle << content;
 }
 
-render::Texture::ImageData
-FileManager::ReadTexture(const std::string& fileName, bool flipVertical)
+render::ImageData
+FileManager::ReadTexture(std::string_view fileName, bool flipVertical)
 {
-   const auto pathToImage = std::filesystem::path(TEXTURES_DIR / fileName).u8string();
-   int force_channels = 0;
+   const auto pathToImage = CreatePath(TEXTURES_DIR, fileName);
+   int force_channels = STBI_rgb_alpha;
    int w, h, n;
 
    stbi_set_flip_vertically_on_load(flipVertical);
 
-   render::Texture::ImageHandleType textureData(
-      stbi_load(pathToImage.c_str(), &w, &h, &n, force_channels), stbi_image_free);
+   render::ImageHandleType textureData(stbi_load(pathToImage.c_str(), &w, &h, &n, force_channels),
+                                       stbi_image_free);
 
-   if (!textureData)
-   {
-      trace::Logger::Fatal("FileManager::LoadImage -> {} can't be opened!", pathToImage);
-   }
+   utils::Assert(textureData != nullptr,
+                 fmt::format("FileManager::LoadImage -> {} can't be opened!", pathToImage));
+
 
    return {std::move(textureData), {w, h}, n};
 }

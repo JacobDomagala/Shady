@@ -1,7 +1,5 @@
 #pragma once
 
-#include "render/framebuffer.hpp"
-
 #include <glm/gtc/type_ptr.hpp>
 
 namespace shady::scene {
@@ -24,19 +22,31 @@ class Light
    void
    EndRenderToLightmap();
 
-   render::TextureHandleType
+   /*render::TextureHandleType
    GetDepthMapHandle();
 
    render::TextureIDType
-   GetDepthMapID();
+   GetDepthMapID();*/
 
    const glm::mat4&
    GetLightSpaceMat() const;
 
-   const glm::vec3&
+   const glm::mat4&
+   GetViewMat() const;
+
+   glm::vec3
    GetPosition() const;
 
-   glm::tvec2<uint32_t>
+   glm::vec3
+   GetLookAt() const;
+
+   glm::vec3
+   GetColor() const;
+
+   void
+   SetColor(const glm::vec3& new_color);
+
+   glm::tvec2< uint32_t >
    GetLightmapSize() const;
 
    void
@@ -46,11 +56,18 @@ class Light
    BindLightMap(uint32_t slot);
 
  private:
+   void
+   UpdateViewProjection();
+
+ private:
    uint32_t m_shadowTextureWidth = 4096;
    uint32_t m_shadowTextureHeight = 4096;
-   std::shared_ptr< render::FrameBuffer > m_shadowBuffer;
+   // std::shared_ptr< render::FrameBuffer > m_shadowBuffer;
 
    glm::vec3 m_position = glm::vec3(0.0f);
+   glm::vec3 m_lookAt = glm::vec3(0.0f);
+   glm::vec3 m_upVec = glm::vec3(0.0f);
+   glm::vec3 m_color = glm::vec3(1.0f);
 
    glm::mat4 m_projectionMatrix = glm::mat4();
    glm::mat4 m_viewMatrix = glm::mat4();

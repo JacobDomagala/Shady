@@ -1,9 +1,9 @@
 #pragma once
 
-#include "render/context.hpp"
-
 #include <glm/glm.hpp>
 #include <string>
+
+#include <vulkan/vulkan.h>
 
 struct GLFWwindow;
 
@@ -61,8 +61,6 @@ class Window
    std::string m_title = "title";
 
    GLFWwindow* m_pWindow = nullptr;
-   std::unique_ptr< render::Context > m_context;
-
 };
 
 } // namespace shady::app

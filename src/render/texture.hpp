@@ -1,103 +1,103 @@
 #pragma once
 
-#include <functional>
-#include <glm/glm.hpp>
-#include <memory>
-#include <string>
+#include "texture.hpp"
+#include "types.hpp"
+
 #include <unordered_map>
+#include <vulkan/vulkan.h>
 
 namespace shady::render {
-
-enum class TextureType
-{
-   DIFFUSE_MAP,
-   SPECULAR_MAP,
-   NORMAL_MAP,
-   CUBE_MAP
-};
-
-class Texture;
-
-using TextureIDType = uint32_t;
-using TextureHandleType = uint64_t;
-using TexturePtr = std::shared_ptr< Texture >;
-using TexturePtrVec = std::vector< TexturePtr >;
 
 class Texture
 {
  public:
-   using ImageHandleType = std::unique_ptr< uint8_t[], std::function< void(uint8_t*) > >;
+   Texture(TextureType type, std::string_view textureName);
 
-   struct ImageData
-   {
-      ImageHandleType m_bytes;
-      glm::uvec2 m_size;
-      int32_t m_channels;
-   };
+   Texture() = default;
 
- public:
-   Texture(TextureType type = TextureType::DIFFUSE_MAP, const std::string& name = "defaultName");
-   virtual ~Texture() = default;
+   void
+   Destroy();
 
-   virtual void
-   Bind(uint32_t slot = 0) const = 0;
+   void
+   CreateTextureImage(TextureType type, std::string_view textureName);
 
-   virtual void
-   MakeResident() = 0;
+   static std::pair< VkImage, VkDeviceMemory >
+   CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels,
+               VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling,
+               VkImageUsageFlags usage, VkMemoryPropertyFlags properties, bool cubemap = false);
 
-   virtual void
-   MakeNonResident() = 0;
+   static void
+   GenerateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight,
+                   uint32_t mipLevels);
 
-   virtual bool
-   operator==(const Texture& other) const = 0;
+   static VkImageView
+   CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags,
+                   uint32_t mipLevels, bool cubemap = false);
 
-   uint32_t
-   GetWidth() const;
+   static VkSampler
+   CreateSampler(uint32_t mipLevels = 1);
 
-   uint32_t
-   GetHeight() const;
+   static void
+   TransitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout,
+                         uint32_t mipLevels, bool cubemap = false);
 
-   TextureIDType
-   GetTextureID() const;
+   static void
+   CopyBufferToImage(VkImage image, uint32_t texWidth, uint32_t texHeight, uint8_t* data);
 
-   TextureHandleType
-   GetTextureHandle() const;
+   static void
+   CopyBufferToCubemapImage(VkImage image, uint32_t texWidth, uint32_t texHeight, uint8_t* data);
+
+   std::pair< VkImageView, VkSampler >
+   GetImageViewAndSampler() const;
+
+   void
+   CreateTextureSampler();
 
    TextureType
    GetType() const;
 
-   std::string
-   GetName() const;
+ private:
+   void
+   TransitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
 
-   static TexturePtr
-   Create(TextureType type, const std::string& textureName);
+   void
+   CopyBufferToImage(uint8_t* data);
 
-   static TexturePtr
-   Create(TextureType type, const glm::ivec2& size);
-
- protected:
-   TextureType m_type;
-   ImageData m_imageData = {};
-   TextureIDType m_textureID= {};
-   TextureHandleType m_textureHandle= {};
-   std::string m_name;
+ private:
+   TextureType m_type = {};
+   VkImage m_textureImage = {};
+   VkDeviceMemory m_textureImageMemory = {};
+   VkImageView m_textureImageView = {};
+   VkSampler m_textureSampler = {};
+   VkFormat m_format = {};
+   // int32_t m_channels = {};
+   uint32_t m_mips = {};
+   uint32_t m_width = {};
+   uint32_t m_height = {};
+   std::string m_name = "default_texture_name";
 };
 
 class TextureLibrary
 {
  public:
-   static TexturePtr
+   static const Texture&
    GetTexture(TextureType type, const std::string& textureName);
+
+   static const Texture&
+   GetTexture(const std::string& textureName);
+
+   static void
+   CreateTexture(TextureType type, const std::string& textureName);
 
    static void
    Clear();
 
  private:
    static void
-   LoadTexture(TextureType type, const std::string& textureName);
+   LoadTexture(TextureType type, std::string_view textureName);
 
  private:
-   static inline std::unordered_map< std::string, TexturePtr > s_loadedTextures = {};
+   static inline std::unordered_map< std::string, Texture > s_loadedTextures = {};
 };
 
 } // namespace shady::render

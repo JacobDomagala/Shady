@@ -13,7 +13,7 @@ class Camera
 {
  public:
    Camera() = default;
-   Camera(const glm::mat4& projection);
+   Camera(const glm::mat4& projection, const glm::vec3& position);
    virtual ~Camera() = default;
 
    void
@@ -42,15 +42,24 @@ class Camera
    const glm::vec3&
    GetUpVec() const;
 
+   const glm::vec3&
+   GetRightVec() const;
+
    virtual void
    MouseMovement(const glm::vec2& mouseMovement) = 0;
 
    virtual void
    MoveCamera(const glm::vec2& leftRightVec) = 0;
 
+   virtual void
+   RotateCamera(float angle, const glm::vec3& axis) = 0;
+
  protected:
    void
    UpdateViewMatrix();
+
+   void
+   UpdateViewProjection();
 
  protected:
    glm::mat4 m_projectionMat = glm::mat4(1.0f);
@@ -58,8 +67,9 @@ class Camera
    glm::mat4 m_viewProjectionMat = glm::mat4(1.0f);
 
    glm::vec3 m_position = glm::vec3(0.0f);
-   glm::vec3 m_upVector = glm::vec3(0.0f, 1.0f, 0.0f);
-   glm::vec3 m_rightVector = glm::vec3(1.0f, 0.0f, 0.0f);
-   glm::vec3 m_lookAtDirection = glm::vec3(0.0f, 0.0f, 1.0f);
+   const glm::vec3 m_worldUp = glm::vec3(0.0f, -1.0f, 0.0f);
+   glm::vec3 m_upVector = m_worldUp;
+   glm::vec3 m_rightVector = glm::vec3(0.0f, 0.0f, -1.0f);
+   glm::vec3 m_lookAtDirection = glm::vec3(1.0f, 0.0f, 0.0f);
 };
 } // namespace shady::render

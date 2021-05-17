@@ -1,192 +1,185 @@
 #include "buffer.hpp"
-#include "helpers.hpp"
-#include "opengl/opengl_buffer.hpp"
-#include "renderer.hpp"
-#include "trace/logger.hpp"
+#include "command.hpp"
+#include "common.hpp"
+#include "utils/assert.hpp"
 
+#include <fmt/format.h>
 
 namespace shady::render {
 
-static uint32_t
-ShaderDataTypeSize(ShaderDataType type)
+void
+Buffer::Map(VkDeviceSize size)
 {
-   const auto floatSize = sizeof(float);
-   const auto intSize = sizeof(int32_t);
-
-   switch (type)
-   {
-      case ShaderDataType::Float:
-         return floatSize;
-      case ShaderDataType::Float2:
-         return floatSize * 2;
-      case ShaderDataType::Float3:
-         return floatSize * 3;
-      case ShaderDataType::Float4:
-         return floatSize * 4;
-      case ShaderDataType::Mat3:
-         return floatSize * 3 * 3;
-      case ShaderDataType::Mat4:
-         return floatSize * 4 * 4;
-      case ShaderDataType::Int:
-         return intSize;
-      case ShaderDataType::Int2:
-         return intSize * 2;
-      case ShaderDataType::Int3:
-         return intSize * 3;
-      case ShaderDataType::Int4:
-         return intSize * 4;
-      case ShaderDataType::Bool:
-         return 1;
-   }
-
-   trace::Logger::Fatal("ShaderDataTypeSize -> Unknown ShaderDataType!");
-   return 0;
-}
-
-/**************************************************************************************************
- *************************************** BUFFER ELEMENT *******************************************
- *************************************************************************************************/
-BufferElement::BufferElement(ShaderDataType type, const std::string& name, uint32_t divisor, bool normalized)
-   : m_name(name),
-     m_type(type),
-     m_size(ShaderDataTypeSize(type)),
-     m_offset(0),
-     m_normalized(normalized),
-     m_divisor(divisor)
-{
-}
-
-uint32_t
-BufferElement::GetComponentCount() const
-{
-   switch (m_type)
-   {
-      case ShaderDataType::Float:
-         return 1;
-      case ShaderDataType::Float2:
-         return 2;
-      case ShaderDataType::Float3:
-         return 3;
-      case ShaderDataType::Float4:
-         return 4;
-      case ShaderDataType::Mat3:
-         return 3; // 3* float3
-      case ShaderDataType::Mat4:
-         return 4; // 4* float4
-      case ShaderDataType::Int:
-         return 1;
-      case ShaderDataType::Int2:
-         return 2;
-      case ShaderDataType::Int3:
-         return 3;
-      case ShaderDataType::Int4:
-         return 4;
-      case ShaderDataType::Bool:
-         return 1;
-   }
-
-   trace::Logger::Fatal("BufferElement::GetComponentCount -> Unknown ShaderDataType!");
-   return 0;
-}
-
-/**************************************************************************************************
- *************************************** BUFFER LAYOUT ********************************************
- *************************************************************************************************/
-BufferLayout::BufferLayout(const std::initializer_list< BufferElement >& elements)
-   : m_elements(elements)
-{
-   CalculateOffsetsAndStride();
-}
-
-uint32_t
-BufferLayout::GetStride() const
-{
-   return m_stride;
-}
-const std::vector< BufferElement >&
-BufferLayout::GetElements() const
-{
-   return m_elements;
-}
-
-std::vector< BufferElement >::iterator
-BufferLayout::begin()
-{
-   return m_elements.begin();
-}
-std::vector< BufferElement >::iterator
-BufferLayout::end()
-{
-   return m_elements.end();
-}
-std::vector< BufferElement >::const_iterator
-BufferLayout::begin() const
-{
-   return m_elements.begin();
-}
-std::vector< BufferElement >::const_iterator
-BufferLayout::end() const
-{
-   return m_elements.end();
+   vkMapMemory(Data::vk_device, m_bufferMemory, 0, size, 0, &m_mappedMemory);
+   m_mapped = true;
 }
 
 void
-BufferLayout::CalculateOffsetsAndStride()
+Buffer::Unmap()
 {
-   size_t offset = 0;
-   m_stride = 0;
-
-   for (auto& element : m_elements)
+   if (m_mapped)
    {
-      element.m_offset = offset;
-      offset += element.m_size;
-      m_stride += element.m_size;
+      vkUnmapMemory(Data::vk_device, m_bufferMemory);
+      m_mapped = false;
+      m_mappedMemory = nullptr;
    }
 }
 
-/**************************************************************************************************
- *************************************** VERTEX BUFFER ********************************************
- *************************************************************************************************/
-std::shared_ptr< VertexBuffer >
-VertexBuffer::CreatePersistanceMap(size_t sizeInBytes)
+void
+Buffer::CopyData(const void* data)
 {
-   return CreateSharedWrapper< opengl::OpenGLMappedVertexBuffer, VertexBuffer >(sizeInBytes);
+   utils::Assert(m_mapped, "Buffer is not mapped!");
+   memcpy(m_mappedMemory, data, m_bufferSize);
 }
 
-std::shared_ptr< VertexBuffer >
-VertexBuffer::Create(size_t sizeInBytes)
+void
+Buffer::CopyDataWithStaging(void* data, size_t dataSize)
 {
-   return CreateSharedWrapper< opengl::OpenGLVertexBuffer, VertexBuffer >(sizeInBytes);
+   VkBuffer stagingBuffer;
+   VkDeviceMemory stagingBufferMemory;
+   Buffer::CreateBuffer(dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                        stagingBuffer, stagingBufferMemory);
+
+   void* mapped_data;
+   vkMapMemory(Data::vk_device, stagingBufferMemory, 0, dataSize, 0, &mapped_data);
+   memcpy(mapped_data, data, dataSize);
+   vkUnmapMemory(Data::vk_device, stagingBufferMemory);
+
+   Buffer::CopyBuffer(stagingBuffer, m_buffer, dataSize);
 }
 
-std::shared_ptr< VertexBuffer >
-VertexBuffer::Create(float* vertices, size_t sizeInBytes)
+void
+Buffer::CopyDataToImageWithStaging(VkImage image, void* data, size_t dataSize,
+                                   const std::vector< VkBufferImageCopy >& copyRegions)
 {
-   return CreateSharedWrapper< opengl::OpenGLVertexBuffer, VertexBuffer >(vertices, sizeInBytes);
+   VkBuffer stagingBuffer;
+   VkDeviceMemory stagingBufferMemory;
+   Buffer::CreateBuffer(dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                        stagingBuffer, stagingBufferMemory);
+
+   void* mapped_data;
+   vkMapMemory(Data::vk_device, stagingBufferMemory, 0, dataSize, 0, &mapped_data);
+   memcpy(mapped_data, data, dataSize);
+   vkUnmapMemory(Data::vk_device, stagingBufferMemory);
+
+   VkCommandBuffer commandBuffer = Command::BeginSingleTimeCommands();
+
+   vkCmdCopyBufferToImage(commandBuffer, stagingBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                          static_cast<uint32_t>(copyRegions.size()), copyRegions.data());
+
+   Command::EndSingleTimeCommands(commandBuffer);
+
+   vkDestroyBuffer(Data::vk_device, stagingBuffer, nullptr);
+   vkFreeMemory(Data::vk_device, stagingBufferMemory, nullptr);
 }
 
-/**************************************************************************************************
- *************************************** INDEX BUFFER *********************************************
- *************************************************************************************************/
-std::shared_ptr< IndexBuffer >
-IndexBuffer::Create(uint32_t count)
+void
+Buffer::SetupDescriptor(VkDeviceSize /*size*/, VkDeviceSize offset)
 {
-   return CreateSharedWrapper< opengl::OpenGLIndexBuffer, IndexBuffer >(count);
+   m_descriptor.offset = offset;
+   m_descriptor.buffer = m_buffer;
+   m_descriptor.range = m_bufferSize;
 }
 
-std::shared_ptr< IndexBuffer >
-IndexBuffer::Create(uint32_t* indices, uint32_t count)
+void
+AllocateMemory(VkMemoryRequirements memReq, VkDeviceMemory& bufferMemory,
+               VkMemoryPropertyFlags properties)
 {
-   return CreateSharedWrapper< opengl::OpenGLIndexBuffer, IndexBuffer >(indices, count);
+   VkMemoryAllocateInfo allocInfo{};
+   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+   allocInfo.allocationSize = memReq.size;
+   allocInfo.memoryTypeIndex = FindMemoryType(memReq.memoryTypeBits, properties);
+
+   VK_CHECK(vkAllocateMemory(Data::vk_device, &allocInfo, nullptr, &bufferMemory),
+            "failed to allocate buffer memory!");
 }
 
-/**************************************************************************************************
- *************************************** STORAGE BUFFER *******************************************
- *************************************************************************************************/
-std::shared_ptr< StorageBuffer >
-StorageBuffer::Create(BufferType type, size_t size)
+void
+Buffer::AllocateImageMemory(VkImage image, VkDeviceMemory& bufferMemory,
+                            VkMemoryPropertyFlags properties)
 {
-   return CreateSharedWrapper< opengl::OpenGLStorageBuffer, StorageBuffer >(type, size);
+   VkMemoryRequirements memRequirements;
+   vkGetImageMemoryRequirements(Data::vk_device, image, &memRequirements);
+
+   AllocateMemory(memRequirements, bufferMemory, properties);
+}
+
+void
+Buffer::AllocateBufferMemory(VkBuffer buffer, VkDeviceMemory& bufferMemory,
+                             VkMemoryPropertyFlags properties)
+{
+   VkMemoryRequirements memRequirements;
+   vkGetBufferMemoryRequirements(Data::vk_device, buffer, &memRequirements);
+
+   AllocateMemory(memRequirements, bufferMemory, properties);
+}
+
+Buffer
+Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
+{
+   Buffer newBuffer;
+   newBuffer.m_bufferSize = size;
+   CreateBuffer(size, usage, properties, newBuffer.m_buffer, newBuffer.m_bufferMemory);
+   newBuffer.SetupDescriptor();
+
+   return newBuffer;
+}
+
+void
+Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
+                     VkBuffer& buffer, VkDeviceMemory& bufferMemory)
+{
+   VkBufferCreateInfo bufferInfo{};
+   bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+   bufferInfo.size = size;
+   bufferInfo.usage = usage;
+   bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+   VK_CHECK(vkCreateBuffer(Data::vk_device, &bufferInfo, nullptr, &buffer),
+            "failed to create buffer!");
+
+   AllocateBufferMemory(buffer, bufferMemory, properties);
+
+   vkBindBufferMemory(Data::vk_device, buffer, bufferMemory, 0);
+}
+
+void
+Buffer::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+{
+   VkCommandBuffer commandBuffer = Command::BeginSingleTimeCommands();
+
+   VkBufferCopy copyRegion{};
+   copyRegion.size = size;
+   vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+   Command::EndSingleTimeCommands(commandBuffer);
+}
+
+void
+Buffer::Flush(VkDeviceSize size, VkDeviceSize offset)
+{
+   VkMappedMemoryRange mappedRange = {};
+   mappedRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+   mappedRange.memory = m_bufferMemory;
+   mappedRange.offset = offset;
+   mappedRange.size = size;
+
+   VK_CHECK(vkFlushMappedMemoryRanges(Data::vk_device, 1, &mappedRange), "Buffer::Flush error!");
+}
+
+void
+Buffer::Destroy()
+{
+   if (m_buffer)
+   {
+      vkDestroyBuffer(Data::vk_device, m_buffer, nullptr);
+   }
+   if (m_bufferMemory)
+   {
+      vkFreeMemory(Data::vk_device, m_bufferMemory, nullptr);
+   }
 }
 
 } // namespace shady::render

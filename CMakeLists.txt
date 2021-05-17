@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.18)
 
 set(PROJECT_NAME Shady)
 project(${PROJECT_NAME} VERSION 0.0.1)
@@ -8,6 +8,9 @@ set(OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/build)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_PATH})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${OUTPUT_PATH})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_PATH})
+
+set(ASSETS_PATH ${CMAKE_CURRENT_SOURCE_DIR}/assets)
+set(SHADERS_PATH ${ASSETS_PATH}/shaders)
 
 add_definitions( -DCMAKE_ROOT_DIR="${CMAKE_CURRENT_SOURCE_DIR}" )
 
@@ -35,20 +38,14 @@ add_executable(${PROJECT_NAME}
     src/time/timer.hpp src/time/timer.cpp src/time/scoped_timer.hpp src/time/scoped_timer.cpp src/time/utils.hpp src/time/utils.cpp
 
     # render
-    src/render/render_command.hpp src/render/render_command.cpp src/render/renderer_api.hpp src/render/renderer_api.cpp
-    src/render/vertex_array.hpp src/render/vertex_array.cpp src/render/buffer.hpp src/render/buffer.cpp
-    src/render/renderer.hpp src/render/renderer.cpp src/render/context.hpp src/render/context.cpp
-    src/render/texture.hpp src/render/texture.cpp src/render/shader.hpp src/render/shader.cpp
-    src/render/renderer_3D.hpp src/render/renderer_3D.cpp
-    src/render/vertex.hpp src/render/framebuffer.hpp src/render/framebuffer.cpp src/render/helpers.hpp
-    src/render/buffer_lock.hpp src/render/buffer_lock.cpp
+    src/render/helpers.hpp
 
-    # render/opengl
-    src/render/opengl/opengl_renderer_api.hpp src/render/opengl/opengl_renderer_api.cpp src/render/opengl/opengl_vertex_array.hpp
-    src/render/opengl/opengl_vertex_array.cpp src/render/opengl/opengl_context.hpp src/render/opengl/opengl_context.cpp
-    src/render/opengl/opengl_buffer.hpp src/render/opengl/opengl_buffer.cpp src/render/opengl/opengl_texture.hpp src/render/opengl/opengl_texture.cpp
-    src/render/opengl/opengl_shader.hpp src/render/opengl/opengl_shader.cpp src/render/opengl/opengl_framebuffer.hpp src/render/opengl/opengl_framebuffer.cpp
-    src/render/opengl/opengl_buffer_lock.hpp src/render/opengl/opengl_buffer_lock.cpp
+    # render/vulkan
+    "src/render/renderer.hpp" "src/render/renderer.cpp" "src/render/shader.hpp" "src/render/shader.cpp"
+    "src/render/buffer.hpp" "src/render/buffer.cpp" "src/render/texture.hpp" "src/render/texture.cpp"
+    "src/render/command.hpp" "src/render/command.cpp" "src/render/common.hpp" "src/render/common.cpp"
+    "src/render/vertex.hpp" "src/render/types.hpp" "src/render/framebuffer.hpp" "src/render/framebuffer.cpp"
+    "src/render/deferred_pipeline.hpp" "src/render/deferred_pipeline.cpp"
 
     # scene
     src/scene/mesh.hpp src/scene/mesh.cpp src/scene/model.hpp src/scene/model.cpp src/scene/light.hpp src/scene/light.cpp
@@ -60,10 +57,17 @@ add_executable(${PROJECT_NAME}
     src/utils/file_manager.hpp src/utils/file_manager.cpp src/utils/assert.hpp src/utils/assert.cpp
 )
 
+find_package(Vulkan REQUIRED FATAL_ERROR)
+
 add_subdirectory(lib)
 
 target_include_directories(${PROJECT_NAME}
                     PRIVATE src src/app src/app/input src/trace src/render src/utils src/scene src/time)
-target_link_libraries_system (${PROJECT_NAME} PRIVATE glm glfw glad stb_image assimp fmt imgui)
+target_link_libraries_system (${PROJECT_NAME} PRIVATE glm glfw stb_image assimp fmt imgui Vulkan::Vulkan)
 target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings)
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
+
+# include(cmake/compile_shaders.cmake)
+# compile_shader(SOURCE_FILE "${SHADERS_PATH}/default/default.vert"  OUTPUT_FILE_NAME "${SHADERS_PATH}/default/vert.spv")
+# compile_shader(SOURCE_FILE "${SHADERS_PATH}/default/default.frag"  OUTPUT_FILE_NAME "${SHADERS_PATH}/default/frag.spv")
+

@@ -1,16 +1,12 @@
 #pragma once
 
+#include "scene/camera.hpp"
 #include "scene/light.hpp"
 #include "scene/model.hpp"
 #include "scene/skybox.hpp"
-#include "scene/camera.hpp"
 
 #include <memory>
 #include <vector>
-
-namespace shady::render {
-class Camera;
-}
 
 namespace shady::scene {
 
@@ -44,9 +40,6 @@ class Scene
    std::unique_ptr< Camera > m_camera;
    std::vector< std::unique_ptr< Model > > m_models;
    std::unique_ptr< Light > m_light;
-//    std::shared_ptr< render::Shader > m_mainShader;
-
-   //Model* m_lightSphere = nullptr;
 };
 
 } // namespace shady::scene

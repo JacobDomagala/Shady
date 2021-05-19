@@ -39,14 +39,6 @@ struct
    DebugData debugData;
 } uboComposition;
 
-// This UBO stores the shadow matrices for all of the light sources
-// The matrices are indexed using geometry shader instancing
-// The instancePos is used to place the models using instanced draws
-// struct
-//{
-//   glm::mat4 mvp;
-//} uboShadowGeometryShader;
-
 VkDescriptorSet&
 DeferredPipeline::GetDescriptorSet()
 {
@@ -659,30 +651,6 @@ DeferredPipeline::SetupDescriptorSet()
 
    vkUpdateDescriptorSets(Data::vk_device, static_cast< uint32_t >(descriptorWrites.size()),
                           descriptorWrites.data(), 0, nullptr);
-
-
-   // std::array< VkWriteDescriptorSet, 1 > shadowMapDescriptorWrites{};
-
-   //// Shadow mapping
-   // VK_CHECK(vkAllocateDescriptorSets(Data::vk_device, &allocInfo, &m_shadowMapDescriptor), "");
-
-   // bufferInfo.buffer = m_shadowGeomBuffer.m_buffer;
-   // bufferInfo.offset = 0;
-   // bufferInfo.range = sizeof(uboShadowGeometryShader);
-
-   //// Binding 0: Vertex shader uniform buffer
-   // shadowMapDescriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-   // shadowMapDescriptorWrites[0].dstSet = m_shadowMapDescriptor;
-   // shadowMapDescriptorWrites[0].dstBinding = 0;
-   // shadowMapDescriptorWrites[0].dstArrayElement = 0;
-   // shadowMapDescriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-   // shadowMapDescriptorWrites[0].descriptorCount = 1;
-   // shadowMapDescriptorWrites[0].pBufferInfo = &bufferInfo;
-
-
-   // vkUpdateDescriptorSets(Data::vk_device,
-   //                       static_cast< uint32_t >(shadowMapDescriptorWrites.size()),
-   //                       shadowMapDescriptorWrites.data(), 0, nullptr);
 }
 
 void

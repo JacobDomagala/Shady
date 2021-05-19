@@ -1,19 +1,14 @@
 #include "app/shady.hpp"
 #include "app/input/input_manager.hpp"
-#include "common.hpp"
 #include "gui/gui.hpp"
 #include "scene/light.hpp"
 #include "scene/perspective_camera.hpp"
 #include "trace/logger.hpp"
-#include "utils/file_manager.hpp"
 
 #include "render/renderer.hpp"
 #include <GLFW/glfw3.h>
 
 namespace shady::app {
-
-using namespace shady::render;
-scene::Model model;
 
 void
 Shady::Init()

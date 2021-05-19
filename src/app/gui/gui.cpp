@@ -12,7 +12,6 @@
 #include <fmt/format.h>
 #include <imgui.h>
 
-
 namespace shady::app::gui {
 
 using namespace shady::render;
@@ -21,7 +20,7 @@ static inline void
 SetStyle()
 {
    ImGuiStyle& style = ImGui::GetStyle();
-   ImVec4* colors = style.Colors;
+   auto colors = style.Colors;
 
    /// 0 = FLAT APPEARENCE
    /// 1 = MORE "3D" LOOK

@@ -24,4 +24,5 @@ jobs:
         init_script: init_script.sh
         apt_pckgs: xorg-dev
         report_pr_changes_only: false
-
+        cppcheck_args: |
+            --enable=all --suppress=functionStatic --inline-suppr --inconclusive

@@ -207,12 +207,6 @@ Gui::UpdateBuffers()
 }
 
 bool
-Gui::CheckUpdateUI()
-{
-   return true;
-}
-
-bool
 Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
 {
    ImGuiIO& io = ImGui::GetIO();

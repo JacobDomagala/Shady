@@ -52,9 +52,6 @@ class Renderer
    CreateImageViews();
 
    static void
-   CreateDescriptorSetLayout();
-
-   static void
    CreateRenderPass();
 
    static void
@@ -64,16 +61,10 @@ class Renderer
    CreateFramebuffers();
 
    static void
-   CreateCommandBuffers();
-
-   static void
    CreateSyncObjects();
 
    static void
    CreatePipelineCache();
-
-   static void
-   CreatePipeline();
 
    static void
    CreateVertexBuffer();
@@ -95,9 +86,6 @@ class Renderer
 
    static void
    CreateColorResources();
-
-   static bool
-   HasStencilComponent(VkFormat format);
 
  private:
    inline static VkDebugUtilsMessengerCreateInfoEXT m_debugCreateInfo = {};

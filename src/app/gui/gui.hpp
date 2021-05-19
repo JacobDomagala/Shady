@@ -34,9 +34,6 @@ class Gui
    UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene);
 
    static bool
-   CheckUpdateUI();
-
-   static bool
    UpdateBuffers();
 
    static void

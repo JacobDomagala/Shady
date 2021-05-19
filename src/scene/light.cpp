@@ -40,46 +40,6 @@ Light::Light(const glm::vec3& position, const glm::vec3& color, LightType type)
    UpdateViewProjection();
 }
 
-void
-Light::BeginRenderToLightmap()
-{
-   m_viewMatrix = glm::lookAt(m_position, m_lookAt, glm::vec3(0.0f, 0.0f, 0.5f));
-   m_lightSpaceMatrix = m_projectionMatrix * m_viewMatrix;
-   m_shadowMatrix = m_biasMatrix * m_lightSpaceMatrix;
-
-
-   // m_shadowBuffer->Bind();
-   // render::RenderCommand::Clear();
-   // m_shadowBuffer->MakeTextureNonResident();
-}
-
-void
-Light::EndRenderToLightmap()
-{
-   // m_shadowBuffer->MakeTextureResident();
-   // m_shadowBuffer->Unbind();
-}
-
-// render::TextureHandleType
-// Light::GetDepthMapHandle()
-//{
-//   return m_shadowBuffer->GetDepthMapHandle();
-//   // m_shadowBuffer->Bind();
-//   // m_shadowBuffer->MakeResident();
-//}
-//
-// render::TextureIDType
-// Light::GetDepthMapID()
-//{
-//   return m_shadowBuffer->GetDepthMapID();
-//}
-
-void
-Light::BindLightMap(uint32_t /*slot*/)
-{
-   // m_shadowBuffer->BindTexture(slot);
-}
-
 const glm::mat4&
 Light::GetLightSpaceMat() const
 {

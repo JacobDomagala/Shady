@@ -16,18 +16,6 @@ class Light
  public:
    Light(const glm::vec3& position, const glm::vec3& color, LightType type);
 
-   void
-   BeginRenderToLightmap();
-
-   void
-   EndRenderToLightmap();
-
-   /*render::TextureHandleType
-   GetDepthMapHandle();
-
-   render::TextureIDType
-   GetDepthMapID();*/
-
    const glm::mat4&
    GetLightSpaceMat() const;
 
@@ -51,9 +39,6 @@ class Light
 
    void
    MoveBy(const glm::vec3& moveBy);
-
-   void
-   BindLightMap(uint32_t slot);
 
  private:
    void

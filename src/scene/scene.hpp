@@ -13,18 +13,11 @@ namespace shady::scene {
 class Scene
 {
  public:
-   void
-   AddCamera(CameraType type, const glm::vec3& position,
-             std::initializer_list< float > constructParams);
-
    scene::Camera&
    GetCamera();
 
    void
    AddModel(const std::string& fileName, LoadFlags additionalFlags = LoadFlags::None);
-
-   void
-   AddLight(LightType type, const glm::vec3& position, const glm::vec3& color);
 
    Light&
    GetLight();

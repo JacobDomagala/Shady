@@ -9,13 +9,6 @@
 
 namespace shady::scene {
 
-
-void
-Scene::AddCamera(CameraType /*type*/, const glm::vec3& /*position*/,
-                 std::initializer_list< float > /*constructParams*/)
-{
-}
-
 scene::Camera&
 Scene::GetCamera()
 {
@@ -27,11 +20,6 @@ Scene::AddModel(const std::string& fileName, LoadFlags additionalFlags)
 {
    auto model = std::make_unique< Model >(fileName, additionalFlags);
    m_models.push_back(std::move(model));
-}
-
-void
-Scene::AddLight(LightType /*type*/, const glm::vec3& /*position*/, const glm::vec3& /*color*/)
-{
 }
 
 Light&

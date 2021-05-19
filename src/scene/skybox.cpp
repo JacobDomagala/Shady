@@ -13,7 +13,7 @@ namespace shady::scene {
 using namespace render;
 
 void
-Skybox::LoadCubeMap(std::string_view directory)
+Skybox::LoadCubeMap(std::string_view skyboxName)
 {
    // Positions
    std::array< float, 24 > vertices = {
@@ -55,7 +55,7 @@ Skybox::LoadCubeMap(std::string_view directory)
    m_indexBuffer.CopyDataWithStaging(indicies.data(), index_buffer_size);
 
    CreateBuffers();
-   CreateImageAndSampler(directory);
+   CreateImageAndSampler(skyboxName);
    CreateDescriptorSet();
    CreatePipeline();
 }

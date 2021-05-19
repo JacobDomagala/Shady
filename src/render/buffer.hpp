@@ -43,7 +43,7 @@ class Buffer
                               const std::vector< VkBufferImageCopy >& copyRegions);
 
    void
-   Flush(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
+   Flush(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0) const;
 
    void
    SetupDescriptor(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);

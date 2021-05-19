@@ -1,4 +1,5 @@
 #include "scene/scene.hpp"
+#include "render/renderer.hpp"
 #include "scene/perspective_camera.hpp"
 #include "time/scoped_timer.hpp"
 #include "utils/file_manager.hpp"
@@ -31,7 +32,6 @@ Scene::AddModel(const std::string& fileName, LoadFlags additionalFlags)
 void
 Scene::AddLight(LightType /*type*/, const glm::vec3& /*position*/, const glm::vec3& /*color*/)
 {
-
 }
 
 Light&
@@ -40,10 +40,10 @@ Scene::GetLight()
    return *m_light;
 }
 
-void
-Scene::Render(uint32_t /*windowWidth*/, uint32_t /*windowHeight*/)
+void Scene::Render(uint32_t /*windowWidth*/, uint32_t /*windowHeight*/)
 {
-
+   render::Renderer::UpdateUniformBuffer(m_camera.get(), m_light.get());
+   render::Renderer::Draw();
 }
 
 void
@@ -51,11 +51,18 @@ Scene::LoadDefault()
 {
    time::ScopedTimer loadScope("Scene::LoadDefault");
 
-   m_light = std::make_unique< Light >(glm::vec3{0.0f, -200.0f, 0.0f}, glm::vec3{1.0f, 0.7f, 0.8f},
-                                        LightType::DIRECTIONAL_LIGHT);
+   AddModel((utils::FileManager::MODELS_DIR / "sponza" / "glTF" / "sponza.gltf").string(),
+            scene::LoadFlags::FlipUV);
 
-   m_camera = std::make_unique< PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 500.0f,
-                                                    glm::vec3(0.0f, 20.0f, 0.0f));
+   m_models.back()->ScaleModel(glm::vec3(0.1f, 0.1f, 0.1f));
+   m_models.back()->Submit();
+
+   m_light =
+      std::make_unique< scene::Light >(glm::vec3(0.0f, 450.0f, 0.0f), glm::vec3(1.0f, 0.8f, 0.7f),
+                                       scene::LightType::DIRECTIONAL_LIGHT);
+
+   m_camera = std::make_unique< scene::PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 500.0f,
+                                                           glm::vec3(0.0f, 20.0f, 0.0f));
 }
 
 } // namespace shady::scene

@@ -18,6 +18,9 @@ class Mesh
    AddTexture(const render::TexturePtr& texture);*/
 
    void
+   Submit();
+
+   void
    Draw(const std::string& modelName, const glm::mat4& modelMat, const glm::vec4& tintColor);
 
    void

@@ -81,6 +81,15 @@ Model::RotateModel(const glm::vec3& rotate, float angle)
 }
 
 void
+Model::Submit()
+{
+   for (auto& mesh : m_meshes)
+   {
+      mesh.Submit();
+   }
+}
+
+void
 Model::Draw()
 {
    for (auto& mesh : m_meshes)

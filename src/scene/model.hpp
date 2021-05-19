@@ -40,6 +40,9 @@ class Model
    RotateModel(const glm::vec3& rotate, float angle);
 
    void
+   Submit();
+
+   void
    Draw();
 
    std::vector< Mesh >&

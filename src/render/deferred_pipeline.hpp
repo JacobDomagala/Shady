@@ -9,6 +9,10 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
+namespace shady::scene {
+class Light;
+class Camera;
+} // namespace shady::scene
 
 namespace shady::render {
 
@@ -35,7 +39,7 @@ class DeferredPipeline
    GetOffscreenSemaphore();
 
    void
-   UpdateDeferred();
+   UpdateDeferred(const scene::Camera* camera, const scene::Light* light);
 
  private:
    void
@@ -64,9 +68,9 @@ class DeferredPipeline
    BuildDeferredCommandBuffer(const std::vector< VkImageView >& swapChainImageViews);
 
    void
-   UpdateUniformBufferComposition();
+   UpdateUniformBufferComposition(const scene::Camera* camera, const scene::Light* light);
    void
-   UpdateUniformBufferOffscreen();
+   UpdateUniformBufferOffscreen(const scene::Camera* camera);
 
    inline static VkRenderPass m_mainRenderPass = {};
    inline static VkPipeline m_graphicsPipeline = {};

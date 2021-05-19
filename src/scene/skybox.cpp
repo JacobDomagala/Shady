@@ -116,16 +116,13 @@ Skybox::CreateBuffers()
                                              | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
    m_uniformBuffer.Map();
-
-   UpdateBuffers();
 }
 
 void
-Skybox::UpdateBuffers()
+Skybox::UpdateBuffers(const scene::Camera* camera)
 {
    SkyboxUBO buffer;
-   buffer.viewProjection =
-      Data::m_camera->GetProjection() * glm::mat4(glm::mat3(Data::m_camera->GetView()));
+   buffer.viewProjection = camera->GetProjection() * glm::mat4(glm::mat3(camera->GetView()));
 
    m_uniformBuffer.CopyData(&buffer);
 }

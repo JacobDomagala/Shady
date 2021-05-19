@@ -10,7 +10,6 @@
 #include "utils/assert.hpp"
 #include "utils/file_manager.hpp"
 
-
 #include <GLFW/glfw3.h>
 #include <array>
 #include <glm/glm.hpp>
@@ -665,14 +664,10 @@ Renderer::CreateRenderPipeline()
    SetupData();
 
    CreateRenderPass();
-
-   // CreateDescriptorSetLayout();
-   // CreatePipeline();
    CreateColorResources();
    CreateDepthResources();
    CreateFramebuffers();
    CreatePipelineCache();
-   // CreateCommandBuffers();
 
    if (!is_deferred)
    {
@@ -682,7 +677,7 @@ Renderer::CreateRenderPipeline()
       m_deferredPipeline.Initialize(Data::m_renderPass, m_swapChainImageViews,
                                     Data::m_pipelineCache);
       app::gui::Gui::Init({Data::m_swapChainExtent.width, Data::m_swapChainExtent.height});
-      app::gui::Gui::UpdateUI({Data::m_swapChainExtent.width, Data::m_swapChainExtent.height});
+     //  app::gui::Gui::UpdateUI({Data::m_swapChainExtent.width, Data::m_swapChainExtent.height});
       CreateCommandBufferForDeferred();
    }
 
@@ -690,30 +685,26 @@ Renderer::CreateRenderPipeline()
 }
 
 void
-Renderer::UpdateUniformBuffer(uint32_t currentImage)
+Renderer::UpdateUniformBuffer(const scene::Camera* camera, const scene::Light* light)
 {
    UniformBufferObject ubo{};
 
-   ubo.view = view_mat;
-   ubo.proj = proj_mat;
-   ubo.lightView = Data::m_light->GetLightSpaceMat();
-
-   /*ubo.cameraPos = camera_pos;
-   ubo.lightPos = light_pos;*/
+   ubo.proj = camera->GetViewProjection();
+   ubo.lightView = light->GetLightSpaceMat();
 
    void* data;
-   vkMapMemory(Data::vk_device, Data::m_uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0,
+   vkMapMemory(Data::vk_device, Data::m_uniformBuffersMemory[m_imageIndex], 0, sizeof(ubo), 0,
                &data);
    memcpy(data, &ubo, sizeof(ubo));
-   vkUnmapMemory(Data::vk_device, Data::m_uniformBuffersMemory[currentImage]);
+   vkUnmapMemory(Data::vk_device, Data::m_uniformBuffersMemory[m_imageIndex]);
 
    void* data2;
-   vkMapMemory(Data::vk_device, Data::m_ssboMemory[currentImage], 0,
+   vkMapMemory(Data::vk_device, Data::m_ssboMemory[m_imageIndex], 0,
                Data::perInstance.size() * sizeof(PerInstanceBuffer), 0, &data2);
    memcpy(data2, Data::perInstance.data(), Data::perInstance.size() * sizeof(PerInstanceBuffer));
-   vkUnmapMemory(Data::vk_device, Data::m_ssboMemory[currentImage]);
+   vkUnmapMemory(Data::vk_device, Data::m_ssboMemory[m_imageIndex]);
 
-   m_deferredPipeline.UpdateDeferred();
+   m_deferredPipeline.UpdateDeferred(camera, light);
 }
 
 void
@@ -754,36 +745,17 @@ Renderer::HasStencilComponent(VkFormat format)
 }
 
 void
-Renderer::DrawDeferred()
-{
-   // vkWaitForFences(Data::vk_device, 1, &m_inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
-   // uint32_t imageIndex;
-   // vkAcquireNextImageKHR(Data::vk_device, m_swapChain, UINT64_MAX,
-   //                       m_imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
-
-   // if (m_imagesInFlight[imageIndex] != VK_NULL_HANDLE)
-   // {
-   //    vkWaitForFences(Data::vk_device, 1, &m_imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
-   // }
-
-   //  m_imagesInFlight[imageIndex] = m_inFlightFences[currentFrame];
-
-   //     VkSubmitInfo submitInfo{};
-   // submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-   // VkSemaphore waitSemaphores[] = {m_imageAvailableSemaphores[currentFrame]};
-   Draw();
-}
-
-void
 Renderer::Draw()
 {
+   // Always recreate the command buffers for composition, mostly due to imgui
+   CreateCommandBufferForDeferred();
+
    // vkWaitForFences(Data::vk_device, 1, &m_inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
-   uint32_t imageIndex;
    vkAcquireNextImageKHR(Data::vk_device, m_swapChain, UINT64_MAX,
-                         m_imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+                         m_imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &m_imageIndex);
 
-   UpdateUniformBuffer(imageIndex);
+   // UpdateUniformBuffer();
    // if (m_imagesInFlight[imageIndex] != VK_NULL_HANDLE)
    //{
    //   vkWaitForFences(Data::vk_device, 1, &m_imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
@@ -823,7 +795,7 @@ Renderer::Draw()
 
    submitInfo.pSignalSemaphores = &m_renderFinishedSemaphores[currentFrame];
 
-   submitInfo.pCommandBuffers = &m_commandBuffers[imageIndex];
+   submitInfo.pCommandBuffers = &m_commandBuffers[m_imageIndex];
    submitInfo.commandBufferCount = 1;
 
 
@@ -845,7 +817,7 @@ Renderer::Draw()
    presentInfo.swapchainCount = 1;
    presentInfo.pSwapchains = &m_swapChain;
 
-   presentInfo.pImageIndices = &imageIndex;
+   presentInfo.pImageIndices = &m_imageIndex;
 
    vkQueuePresentKHR(Data::m_presentQueue, &presentInfo);
 

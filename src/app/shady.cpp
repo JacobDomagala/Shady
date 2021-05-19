@@ -1,11 +1,11 @@
 #include "app/shady.hpp"
 #include "app/input/input_manager.hpp"
-#include "trace/logger.hpp"
-#include "utils/file_manager.hpp"
-#include "gui/gui.hpp"
 #include "common.hpp"
+#include "gui/gui.hpp"
 #include "scene/light.hpp"
 #include "scene/perspective_camera.hpp"
+#include "trace/logger.hpp"
+#include "utils/file_manager.hpp"
 
 #include "render/renderer.hpp"
 #include <GLFW/glfw3.h>
@@ -26,23 +26,11 @@ Shady::Init()
    input::InputManager::RegisterForMouseMovementInput(this);
    input::InputManager::RegisterForMouseScrollInput(this);
 
-   Data::m_light =
-      std::make_unique< scene::Light >(glm::vec3(0.0f, 450.0f, 0.0f), glm::vec3(1.0f, 0.8f, 0.7f),
-                                       scene::LightType::DIRECTIONAL_LIGHT);
-   Data::m_camera =
-      std::make_unique< scene::PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 500.0f, glm::vec3(0.0f, 20.0f, 0.0f));
-
    render::Renderer::Initialize(m_window->GetWindowHandle());
 
-   model = scene::Model((utils::FileManager::MODELS_DIR / "sponza" / "glTF" / "sponza.gltf").string(),
-                        scene::LoadFlags::FlipUV);
-
-   model.ScaleModel(glm::vec3(0.1f, 0.1f, 0.1f));
-   model.Draw();
+   m_currentScene.LoadDefault();
 
    render::Renderer::CreateRenderPipeline();
-
-   m_currentScene.LoadDefault();
 }
 
 void
@@ -54,33 +42,15 @@ Shady::MainLoop()
 
       input::InputManager::PollEvents();
 
-      if (!app::gui::Gui::UpdateUI({m_windowWidth, m_windowHeight}))
+      // Check if GUI captures the input. This could be moved into some kind
+      // of input layer stack, but since we only have UI and application,
+      // there's no need for that
+      if (!app::gui::Gui::UpdateUI({m_windowWidth, m_windowHeight}, m_currentScene))
       {
          OnUpdate();
       }
 
-      // m_currentScene.Render(m_windowWidth, m_windowHeight);
-      // render::Renderer::view_mat = Data::m_camera->GetView();
-      // render::Renderer::proj_mat = Data::m_camera->GetProjection();
-      render::Renderer::proj_mat = Data::m_camera->GetViewProjection();
-
-      render::Renderer::camera_pos = glm::vec4(Data::m_camera->GetPosition(), 0.0f);
-      render::Renderer::light_pos = glm::vec4(Data::m_light->GetPosition(), 0.0f);
-     /* render::Renderer::view_mat = m_currentScene.GetCamera().GetView();
-      render::Renderer::proj_mat = m_currentScene.GetCamera().GetProjection();
-      render::Renderer::camera_pos =
-         glm::vec4(m_currentScene.GetCamera().GetPosition(), 0.0f);
-
-      render::Renderer::light_pos =
-         glm::vec4(m_currentScene.GetLight().GetPosition(), 0.0f);*/
-
-      // render::Renderer::Draw();
-
-      // Always recreate the command buffers for composition, mostly due to imgui
-      Renderer::CreateCommandBufferForDeferred();
-      render::Renderer::DrawDeferred();
-
-      // m_gui.Render({m_windowWidth, m_windowHeight});
+      m_currentScene.Render(m_windowWidth, m_windowHeight);
 
       m_window->SwapBuffers();
    }
@@ -89,58 +59,59 @@ Shady::MainLoop()
 void
 Shady::OnUpdate()
 {
+   auto& camera = m_currentScene.GetCamera();
+   auto& light = m_currentScene.GetLight();
+
    constexpr auto cameraMoveBy = 0.05f;
    constexpr auto lightMoveBy = 0.02f;
 
+   /*
+    *  Camera movement
+    */
    if (input::InputManager::CheckKeyPressed(GLFW_KEY_W))
    {
-      m_currentScene.GetCamera().MoveCamera({0.0f, cameraMoveBy});
-      Data::m_camera->MoveCamera({0.0f, cameraMoveBy});
+      camera.MoveCamera({0.0f, cameraMoveBy});
    }
    if (input::InputManager::CheckKeyPressed(GLFW_KEY_S))
    {
-      m_currentScene.GetCamera().MoveCamera({0.0f, -cameraMoveBy});
-      Data::m_camera->MoveCamera({0.0f, -cameraMoveBy});
+      camera.MoveCamera({0.0f, -cameraMoveBy});
    }
    if (input::InputManager::CheckKeyPressed(GLFW_KEY_A))
    {
-      m_currentScene.GetCamera().MoveCamera({-cameraMoveBy, 0.0f});
-      Data::m_camera->MoveCamera({-cameraMoveBy, 0.0f});
+      camera.MoveCamera({-cameraMoveBy, 0.0f});
    }
    if (input::InputManager::CheckKeyPressed(GLFW_KEY_D))
    {
-      m_currentScene.GetCamera().MoveCamera({cameraMoveBy, 0.0f});
-      Data::m_camera->MoveCamera({cameraMoveBy, 0.0f});
+      camera.MoveCamera({cameraMoveBy, 0.0f});
    }
 
+   /*
+    * Light movement
+    */
    if (input::InputManager::CheckKeyPressed(GLFW_KEY_LEFT))
    {
-      m_currentScene.GetLight().MoveBy({lightMoveBy, 0.0f, 0.0f});
-      Data::m_light->MoveBy({lightMoveBy, 0.0f, 0.0f});
+      light.MoveBy({lightMoveBy, 0.0f, 0.0f});
    }
    if (input::InputManager::CheckKeyPressed(GLFW_KEY_UP))
    {
-      m_currentScene.GetLight().MoveBy({0.0f, -lightMoveBy, 0.0f});
-      Data::m_light->MoveBy({0.0f, lightMoveBy, 0.0f});
+      light.MoveBy({0.0f, -lightMoveBy, 0.0f});
    }
    if (input::InputManager::CheckKeyPressed(GLFW_KEY_DOWN))
    {
-      m_currentScene.GetLight().MoveBy({0.0f, lightMoveBy, 0.0f});
-      Data::m_light->MoveBy({0.0f, -lightMoveBy, 0.0f});
+      light.MoveBy({0.0f, lightMoveBy, 0.0f});
    }
    if (input::InputManager::CheckKeyPressed(GLFW_KEY_RIGHT))
    {
-      m_currentScene.GetLight().MoveBy({-lightMoveBy, 0.0f, 0.0f});
-      Data::m_light->MoveBy({-lightMoveBy, 0.0f, 0.0f});
+      light.MoveBy({-lightMoveBy, 0.0f, 0.0f});
    }
 
    if (input::InputManager::CheckKeyPressed(GLFW_KEY_R))
    {
-      Data::m_camera->SetView(Data::m_light->GetViewMat());
+      camera.SetView(light.GetViewMat());
    }
    if (input::InputManager::CheckKeyPressed(GLFW_KEY_T))
    {
-      Data::m_camera->SetViewProjection(Data::m_light->GetLightSpaceMat());
+      camera.SetViewProjection(light.GetLightSpaceMat());
    }
 }
 
@@ -165,22 +136,15 @@ void
 Shady::CursorPositionCallback(const input::CursorPositionEvent& event)
 {
    if (input::InputManager::CheckButtonPressed(GLFW_MOUSE_BUTTON_LEFT)
-       and !app::gui::Gui::UpdateUI({m_windowWidth, m_windowHeight}))
+       and !app::gui::Gui::UpdateUI({m_windowWidth, m_windowHeight}, m_currentScene))
    {
       m_currentScene.GetCamera().MouseMovement({event.m_xDelta, event.m_yDelta});
-      Data::m_camera->MouseMovement({event.m_xDelta, event.m_yDelta});
    }
-
-   // const auto upVec = m_currentScene.GetCamera().GetUpVec();
-   // const auto lookAt = m_currentScene.GetCamera().GetLookAtVec();
-   // trace::Logger::Debug("LookAtVec=({},{},{}); UpVec=({},{},{})", lookAt.x, lookAt.y, lookAt.z,
-   //                      upVec.x, upVec.y, upVec.z);
 }
 
 void
 Shady::MouseScrollCallback(const input::MouseScrollEvent& /*event*/)
 {
-
 }
 
 } // namespace shady::app

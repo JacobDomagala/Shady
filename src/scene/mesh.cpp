@@ -11,8 +11,6 @@ Mesh::Mesh(const std::string& name, std::vector< render::Vertex >&& vertices,
      m_textures(std::move(textures)),
      m_name(name)
 {
-   // render::Renderer3D::AddMesh(m_name, m_vertices, m_indices);
-//   render::Renderer::MeshLoaded(m_vertices, m_indices, m_textures, m_modelMat);
 }
 
 // void
@@ -22,7 +20,14 @@ Mesh::Mesh(const std::string& name, std::vector< render::Vertex >&& vertices,
 //}
 
 void
-Mesh::Draw(const std::string& /*modelName*/, const glm::mat4& /*modelMat*/, const glm::vec4& /*tintColor*/)
+Mesh::Submit()
+{
+   render::Renderer::MeshLoaded(m_vertices, m_indices, m_textures, m_modelMat);
+}
+
+void
+Mesh::Draw(const std::string& /*modelName*/, const glm::mat4& /*modelMat*/,
+           const glm::vec4& /*tintColor*/)
 {
    // render::Renderer3D::DrawMesh(m_name, modelMat, m_textures, tintColor);
    render::Renderer::MeshLoaded(m_vertices, m_indices, m_textures, m_modelMat);

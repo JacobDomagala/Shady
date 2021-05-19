@@ -42,7 +42,7 @@ struct
 // This UBO stores the shadow matrices for all of the light sources
 // The matrices are indexed using geometry shader instancing
 // The instancePos is used to place the models using instanced draws
-//struct
+// struct
 //{
 //   glm::mat4 mvp;
 //} uboShadowGeometryShader;
@@ -73,13 +73,13 @@ DeferredPipeline::GetOffscreenSemaphore()
 
 // Update matrices used for the offscreen rendering of the scene
 void
-DeferredPipeline::UpdateUniformBufferOffscreen()
+DeferredPipeline::UpdateUniformBufferOffscreen(const scene::Camera* camera)
 {
-   uboOffscreenVS.projection = Data::m_camera->GetProjection();
-   uboOffscreenVS.view = Data::m_camera->GetView();
+   uboOffscreenVS.projection = camera->GetProjection();
+   uboOffscreenVS.view = camera->GetView();
    uboOffscreenVS.model = glm::mat4(1.0f);
    m_offscreenBuffer.CopyData(&uboOffscreenVS);
-   m_skybox.UpdateBuffers();
+   m_skybox.UpdateBuffers(camera);
 }
 
 VkCommandBuffer&
@@ -90,13 +90,14 @@ DeferredPipeline::GetOffscreenCmdBuffer()
 
 // Update lights and parameters passed to the composition shaders
 void
-DeferredPipeline::UpdateUniformBufferComposition()
+DeferredPipeline::UpdateUniformBufferComposition(const scene::Camera* camera,
+                                                 const scene::Light* light)
 {
-   uboComposition.light.position = glm::vec4(Data::m_light->GetPosition(), 1.0f);
-   uboComposition.light.target = glm::vec4(Data::m_light->GetLookAt(), 1.0);
-   uboComposition.light.color = glm::vec4{Data::m_light->GetColor(), 1.0f};
-   uboComposition.light.viewMatrix = Data::m_light->GetLightSpaceMat();
-   uboComposition.viewPos = glm::vec4(Data::m_camera->GetPosition(), 0.0f);
+   uboComposition.light.position = glm::vec4(camera->GetPosition(), 1.0f);
+   uboComposition.light.target = glm::vec4(light->GetLookAt(), 1.0);
+   uboComposition.light.color = glm::vec4{light->GetColor(), 1.0f};
+   uboComposition.light.viewMatrix = light->GetLightSpaceMat();
+   uboComposition.viewPos = glm::vec4(camera->GetPosition(), 0.0f);
 
    uboComposition.debugData = Data::m_debugData;
 
@@ -156,10 +157,6 @@ DeferredPipeline::PrepareUniformBuffers()
    // Map persistent
    m_compositionBuffer.Map();
    m_offscreenBuffer.Map();
-
-   // Update
-   UpdateUniformBufferOffscreen();
-   UpdateUniformBufferComposition();
 }
 
 void
@@ -835,10 +832,10 @@ DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& s
 }
 
 void
-DeferredPipeline::UpdateDeferred()
+DeferredPipeline::UpdateDeferred(const scene::Camera* camera, const scene::Light* light)
 {
-   UpdateUniformBufferOffscreen();
-   UpdateUniformBufferComposition();
+   UpdateUniformBufferOffscreen(camera);
+   UpdateUniformBufferComposition(camera, light);
 }
 
 

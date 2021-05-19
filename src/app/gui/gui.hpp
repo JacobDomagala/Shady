@@ -9,6 +9,10 @@
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
 
+namespace shady::scene {
+class Scene;
+}
+
 namespace shady::app::gui {
 
 struct PushConstBlock
@@ -27,7 +31,7 @@ class Gui
    Shutdown();
 
    static bool
-   UpdateUI(const glm::ivec2& windowSize);
+   UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene);
 
    static bool
    CheckUpdateUI();

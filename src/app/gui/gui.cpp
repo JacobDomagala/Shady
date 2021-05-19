@@ -3,6 +3,7 @@
 #include "buffer.hpp"
 #include "render/common.hpp"
 #include "renderer.hpp"
+#include "scene/scene.hpp"
 #include "shader.hpp"
 #include "texture.hpp"
 #include "utils/file_manager.hpp"
@@ -213,7 +214,7 @@ Gui::CheckUpdateUI()
 }
 
 bool
-Gui::UpdateUI(const glm::ivec2& windowSize)
+Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
 {
    ImGuiIO& io = ImGui::GetIO();
    io.DisplaySize = ImVec2(static_cast< float >(windowSize.x), static_cast< float >(windowSize.y));
@@ -262,10 +263,11 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
       {
       }
 
-      auto cameraPos = Data::m_camera->GetPosition();
-      auto cameraLookAt = Data::m_camera->GetLookAtVec();
-      auto cameraUp = Data::m_camera->GetUpVec();
-      auto rightVec = Data::m_camera->GetRightVec();
+      const auto& camera = scene.GetCamera();
+      auto cameraPos = camera.GetPosition();
+      auto cameraLookAt = camera.GetLookAtVec();
+      auto cameraUp = camera.GetUpVec();
+      auto rightVec = camera.GetRightVec();
 
       ImGui::Text("");
       ImGui::Text("Camera");
@@ -288,13 +290,14 @@ Gui::UpdateUI(const glm::ivec2& windowSize)
    {
       ImGui::Text("Directional light");
 
-      auto lightPos = Data::m_light->GetPosition();
+      auto& light = scene.GetLight();
+      auto lightPos = light.GetPosition();
       ImGui::InputFloat3("Position", &lightPos[0], "%.3f", ImGuiInputTextFlags_ReadOnly);
 
-      auto light_color = Data::m_light->GetColor();
+      auto light_color = light.GetColor();
 
       ImGui::ColorEdit3("Color##1", &light_color[0], 0);
-      Data::m_light->SetColor(light_color);
+      light.SetColor(light_color);
    }
 
    if (ImGui::CollapsingHeader("Debug"))
@@ -344,8 +347,8 @@ Gui::Render(VkCommandBuffer commandBuffer)
       {
          const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[j];
          VkRect2D scissorRect;
-         scissorRect.offset.x = static_cast<int32_t>(glm::max(pcmd->ClipRect.x, 0.0f));
-         scissorRect.offset.y = static_cast<int32_t>(glm::max(pcmd->ClipRect.y, 0.0f));
+         scissorRect.offset.x = static_cast< int32_t >(glm::max(pcmd->ClipRect.x, 0.0f));
+         scissorRect.offset.y = static_cast< int32_t >(glm::max(pcmd->ClipRect.y, 0.0f));
          scissorRect.extent.width = static_cast< uint32_t >(pcmd->ClipRect.z - pcmd->ClipRect.x);
          scissorRect.extent.height = static_cast< uint32_t >(pcmd->ClipRect.w - pcmd->ClipRect.y);
          vkCmdSetScissor(commandBuffer, 0, 1, &scissorRect);

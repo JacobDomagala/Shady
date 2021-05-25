@@ -144,9 +144,9 @@ struct QueueFamilyIndices
 
 struct SwapChainSupportDetails
 {
-   VkSurfaceCapabilitiesKHR capabilities;
-   std::vector< VkSurfaceFormatKHR > formats;
-   std::vector< VkPresentModeKHR > presentModes;
+   VkSurfaceCapabilitiesKHR capabilities = {};
+   std::vector< VkSurfaceFormatKHR > formats = {};
+   std::vector< VkPresentModeKHR > presentModes = {};
 };
 
 
@@ -577,23 +577,17 @@ Renderer::CreateDescriptorSets()
       instanceBufferInfo.offset = 0;
       instanceBufferInfo.range = Data::perInstance.size() * sizeof(PerInstanceBuffer);
 
-      /*VkDescriptorImageInfo imageInfo{};
-      imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      imageInfo.imageView = imageView;
-      imageInfo.sampler = sampler;*/
+   std::vector< VkDescriptorImageInfo > descriptorImageInfos;
 
-      VkDescriptorImageInfo* descriptorImageInfos =
-         new VkDescriptorImageInfo[Data::textures.size()];
+      std::transform(Data::texturesVec.begin(), Data::texturesVec.end(),
+                     std::back_inserter(descriptorImageInfos), [](const auto& texture) {
+                        VkDescriptorImageInfo descriptorInfo;
+                        descriptorInfo.sampler = nullptr;
+                        descriptorInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                        descriptorInfo.imageView = texture;
 
-      uint32_t texI = 0;
-      for (const auto& texture : Data::texturesVec)
-      {
-         descriptorImageInfos[texI].sampler = nullptr;
-         descriptorImageInfos[texI].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-         descriptorImageInfos[texI].imageView = texture;
-
-         ++texI;
-      }
+                        return descriptorInfo;
+                     });
 
       std::array< VkWriteDescriptorSet, 4 > descriptorWrites{};
 
@@ -630,12 +624,10 @@ Renderer::CreateDescriptorSets()
       descriptorWrites[3].dstArrayElement = 0;
       descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
       descriptorWrites[3].descriptorCount = static_cast< uint32_t >(Data::textures.size());
-      descriptorWrites[3].pImageInfo = descriptorImageInfos;
+      descriptorWrites[3].pImageInfo = descriptorImageInfos.data();
 
       vkUpdateDescriptorSets(Data::vk_device, static_cast< uint32_t >(descriptorWrites.size()),
                              descriptorWrites.data(), 0, nullptr);
-
-      delete[] descriptorImageInfos;
    }
 }
 

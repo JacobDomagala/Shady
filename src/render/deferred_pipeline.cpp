@@ -19,24 +19,24 @@ constexpr float depthBiasSlope = 1.75f;
 
 struct Light
 {
-   glm::vec4 position;
-   glm::vec4 target;
-   glm::vec4 color;
-   glm::mat4 viewMatrix;
+   glm::vec4 position = {};
+   glm::vec4 target = {};
+   glm::vec4 color = {};
+   glm::mat4 viewMatrix = {};
 };
 
 struct
 {
-   glm::mat4 projection;
-   glm::mat4 model;
-   glm::mat4 view;
+   glm::mat4 projection = {};
+   glm::mat4 model = {};
+   glm::mat4 view = {};
 } uboOffscreenVS;
 
 struct
 {
-   Light light;
-   glm::vec4 viewPos;
-   DebugData debugData;
+   Light light = {};
+   glm::vec4 viewPos = {};
+   DebugData debugData = {};
 } uboComposition;
 
 VkDescriptorSet&
@@ -595,23 +595,17 @@ DeferredPipeline::SetupDescriptorSet()
    instanceBufferInfo.offset = 0;
    instanceBufferInfo.range = Data::perInstance.size() * sizeof(PerInstanceBuffer);
 
-   /*VkDescriptorImageInfo imageInfo{};
-   imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-   imageInfo.imageView = imageView;
-   imageInfo.sampler = sampler;*/
+   std::vector< VkDescriptorImageInfo > descriptorImageInfos;
 
-   VkDescriptorImageInfo* descriptorImageInfos = new VkDescriptorImageInfo[Data::textures.size()];
+   std::transform(Data::texturesVec.begin(), Data::texturesVec.end(),
+                  std::back_inserter(descriptorImageInfos), [](const auto& texture) {
+                     VkDescriptorImageInfo descriptorInfo;
+                     descriptorInfo.sampler = nullptr;
+                     descriptorInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                     descriptorInfo.imageView = texture;
 
-   uint32_t texI = 0;
-   for (const auto& texture : Data::texturesVec)
-   {
-      descriptorImageInfos[texI].sampler = nullptr;
-      descriptorImageInfos[texI].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      descriptorImageInfos[texI].imageView = texture;
-
-      ++texI;
-   }
-
+                     return descriptorInfo;
+                  });
 
    descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
    descriptorWrites[0].dstSet = m_descriptorSet;
@@ -640,14 +634,13 @@ DeferredPipeline::SetupDescriptorSet()
    descriptorWrites[2].descriptorCount = 1;
    descriptorWrites[2].pImageInfo = &samplerInfo;
 
-   descriptorWrites[3].pImageInfo = descriptorImageInfos;
    descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
    descriptorWrites[3].dstSet = m_descriptorSet;
    descriptorWrites[3].dstBinding = 3;
    descriptorWrites[3].dstArrayElement = 0;
    descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
    descriptorWrites[3].descriptorCount = static_cast< uint32_t >(Data::textures.size());
-   descriptorWrites[3].pImageInfo = descriptorImageInfos;
+   descriptorWrites[3].pImageInfo = descriptorImageInfos.data();
 
    vkUpdateDescriptorSets(Data::vk_device, static_cast< uint32_t >(descriptorWrites.size()),
                           descriptorWrites.data(), 0, nullptr);

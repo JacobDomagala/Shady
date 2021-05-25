@@ -16,9 +16,9 @@ enum class TextureType
 
 struct UniformBufferObject
 {
-   glm::mat4 proj;
-   glm::mat4 view;
-   glm::mat4 lightView;
+   glm::mat4 proj = {};
+   glm::mat4 view = {};
+   glm::mat4 lightView = {};
 };
 
 struct DebugData
@@ -31,7 +31,7 @@ struct DebugData
 
 struct PerInstanceBuffer
 {
-   glm::mat4 model;
+   glm::mat4 model = {};
    glm::vec4 textures = {};
 };
 

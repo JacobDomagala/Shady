@@ -271,7 +271,8 @@ Texture::CopyBufferToImage(VkImage image, uint32_t texWidth, uint32_t texHeight,
    region.imageOffset = {0, 0, 0};
    region.imageExtent = {texWidth, texHeight, 1};
 
-   Buffer::CopyDataToImageWithStaging(image, data, 4 * texWidth * texHeight, {region});
+   const auto size = static_cast< size_t >(texWidth) * static_cast< size_t >(texHeight) * size_t{4};
+   Buffer::CopyDataToImageWithStaging(image, data, size, {region});
 }
 
 void

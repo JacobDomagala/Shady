@@ -157,8 +157,7 @@ std::vector< const char* >
 getRequiredExtensions()
 {
    uint32_t glfwExtensionCount = 0;
-   const char** glfwExtensions = {};
-   glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+   const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
    std::vector< const char* > extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
@@ -643,8 +642,8 @@ Renderer::Draw()
 
    VkSubmitInfo submitInfo{};
    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-   VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-   submitInfo.pWaitDstStageMask = waitStages;
+   std::array<VkPipelineStageFlags, 1> waitStages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+   submitInfo.pWaitDstStageMask = waitStages.data();
 
    // Wait for swap chain presentation to finish
    submitInfo.pWaitSemaphores = &m_imageAvailableSemaphores[currentFrame];

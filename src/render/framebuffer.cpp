@@ -339,10 +339,8 @@ Framebuffer::CreateRenderPass()
    VK_CHECK(vkCreateRenderPass(Data::vk_device, &renderPassInfo, nullptr, &m_renderPass), "");
 
    std::vector< VkImageView > attachmentViews;
-   for (auto attachment : m_attachments)
-   {
-      attachmentViews.push_back(attachment.view);
-   }
+   std::transform(m_attachments.begin(), m_attachments.end(), std::back_inserter(attachmentViews),
+                  [](const auto& attachment) { return attachment.view; });
 
    // Find. max number of layers across attachments
    uint32_t maxLayers =

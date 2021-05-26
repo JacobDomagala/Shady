@@ -76,12 +76,6 @@ class Renderer
    CreateUniformBuffers();
 
    static void
-   CreateDescriptorPool();
-
-   static void
-   CreateDescriptorSets();
-
-   static void
    CreateDepthResources();
 
    static void

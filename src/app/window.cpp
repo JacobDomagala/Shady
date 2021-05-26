@@ -50,7 +50,7 @@ Window::SetIcon(const std::string& /*file*/)
    image.height = 16;
    // image.pixels = TextureLibrary::GetTexture(file)->GetData();
 
-   auto cursor = glfwCreateCursor(&image, 0, 0);
+   auto* cursor = glfwCreateCursor(&image, 0, 0);
    glfwSetCursor(m_pWindow, cursor);
 }
 

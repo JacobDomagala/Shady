@@ -44,7 +44,7 @@ class Gui
    PrepareResources();
 
    static void
-   PreparePipeline(const VkPipelineCache pipelineCache, const VkRenderPass renderPass);
+   PreparePipeline(VkPipelineCache pipelineCache, VkRenderPass renderPass);
 
  private:
    inline static VkImage m_fontImage = {};

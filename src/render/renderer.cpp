@@ -22,7 +22,7 @@
 
 namespace shady::render {
 
-size_t currentFrame = 0;
+static size_t currentFrame = 0;
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
 void
@@ -112,7 +112,7 @@ Renderer::SetupData()
                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                         Data::m_indirectDrawsBuffer, Data::m_indirectDrawsBufferMemory);
 
-   void* data;
+   void* data = nullptr;
    vkMapMemory(Data::vk_device, Data::m_indirectDrawsBufferMemory, 0, bufferSize, 0, &data);
    memcpy(data, Data::m_renderCommands.data(), static_cast< size_t >(bufferSize));
    memcpy(static_cast< uint8_t* >(data) + commandsSize, &Data::m_numMeshes, sizeof(uint32_t));
@@ -136,7 +136,7 @@ struct QueueFamilyIndices
    std::optional< uint32_t > presentFamily;
 
    bool
-   isComplete()
+   isComplete() const
    {
       return graphicsFamily.has_value() && presentFamily.has_value();
    }
@@ -157,7 +157,7 @@ std::vector< const char* >
 getRequiredExtensions()
 {
    uint32_t glfwExtensionCount = 0;
-   const char** glfwExtensions;
+   const char** glfwExtensions = {};
    glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
    std::vector< const char* > extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
@@ -173,7 +173,7 @@ getRequiredExtensions()
 bool
 checkValidationLayerSupport()
 {
-   uint32_t layerCount;
+   uint32_t layerCount = {};
    vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
    std::vector< VkLayerProperties > availableLayers(layerCount);
@@ -282,7 +282,7 @@ querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface)
 
    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
 
-   uint32_t formatCount;
+   uint32_t formatCount = {};
    vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
 
    if (formatCount != 0)
@@ -291,7 +291,7 @@ querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface)
       vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data());
    }
 
-   uint32_t presentModeCount;
+   uint32_t presentModeCount = {};
    vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
 
    if (presentModeCount != 0)
@@ -307,7 +307,7 @@ querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface)
 bool
 checkDeviceExtensionSupport(VkPhysicalDevice device)
 {
-   uint32_t extensionCount;
+   uint32_t extensionCount = {};
    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
    std::vector< VkExtensionProperties > availableExtensions(extensionCount);
@@ -392,14 +392,7 @@ chooseSwapSurfaceFormat(const std::vector< VkSurfaceFormatKHR >& availableFormat
                 && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
       });
 
-   if (found != availableFormats.end())
-   {
-      return *found;
-   }
-   else
-   {
-      return availableFormats[0];
-   }
+   return (found != availableFormats.end()) ? *found : availableFormats[0];
 }
 
 VkPresentModeKHR
@@ -425,13 +418,11 @@ chooseSwapPresentMode(const std::vector< VkPresentModeKHR >& availablePresentMod
 VkExtent2D
 chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, GLFWwindow* windowHandle)
 {
-   if (capabilities.currentExtent.width != UINT32_MAX)
+   if (capabilities.currentExtent.width == UINT32_MAX)
    {
-      return capabilities.currentExtent;
-   }
-   else
-   {
-      int width, height;
+      int width = {};
+      int height = {};
+
       glfwGetFramebufferSize(windowHandle, &width, &height);
 
       VkExtent2D actualExtent = {static_cast< uint32_t >(width), static_cast< uint32_t >(height)};
@@ -444,6 +435,8 @@ chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, GLFWwindow* windo
 
       return actualExtent;
    }
+
+   return capabilities.currentExtent;
 }
 
 void
@@ -451,13 +444,13 @@ Renderer::CreateVertexBuffer()
 {
    VkDeviceSize bufferSize = sizeof(Data::vertices[0]) * Data::vertices.size();
 
-   VkBuffer stagingBuffer;
-   VkDeviceMemory stagingBufferMemory;
+   VkBuffer stagingBuffer = {};
+   VkDeviceMemory stagingBufferMemory = {};
    Buffer::CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                         stagingBuffer, stagingBufferMemory);
 
-   void* data;
+   void* data = nullptr;
    vkMapMemory(Data::vk_device, stagingBufferMemory, 0, bufferSize, 0, &data);
    memcpy(data, Data::vertices.data(), static_cast< size_t >(bufferSize));
    vkUnmapMemory(Data::vk_device, stagingBufferMemory);
@@ -477,13 +470,13 @@ Renderer::CreateIndexBuffer()
 {
    VkDeviceSize bufferSize = sizeof(Data::indices[0]) * Data::indices.size();
 
-   VkBuffer stagingBuffer;
-   VkDeviceMemory stagingBufferMemory;
+   VkBuffer stagingBuffer = {};
+   VkDeviceMemory stagingBufferMemory = {};
    Buffer::CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                         stagingBuffer, stagingBufferMemory);
 
-   void* data;
+   void* data = nullptr;
    vkMapMemory(Data::vk_device, stagingBufferMemory, 0, bufferSize, 0, &data);
    memcpy(data, Data::indices.data(), static_cast< size_t >(bufferSize));
    vkUnmapMemory(Data::vk_device, stagingBufferMemory);
@@ -579,13 +572,13 @@ Renderer::UpdateUniformBuffer(const scene::Camera* camera, const scene::Light* l
    ubo.proj = camera->GetViewProjection();
    ubo.lightView = light->GetLightSpaceMat();
 
-   void* data;
+   void* data = nullptr;
    vkMapMemory(Data::vk_device, Data::m_uniformBuffersMemory[m_imageIndex], 0, sizeof(ubo), 0,
                &data);
    memcpy(data, &ubo, sizeof(ubo));
    vkUnmapMemory(Data::vk_device, Data::m_uniformBuffersMemory[m_imageIndex]);
 
-   void* data2;
+   void* data2 = nullptr;
    vkMapMemory(Data::vk_device, Data::m_ssboMemory[m_imageIndex], 0,
                Data::perInstance.size() * sizeof(PerInstanceBuffer), 0, &data2);
    memcpy(data2, Data::perInstance.data(), Data::perInstance.size() * sizeof(PerInstanceBuffer));

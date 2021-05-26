@@ -53,7 +53,7 @@ InputManager::BroadcastEvent(const Event& event)
    switch (event.m_type)
    {
       case Event::EventType::KEY: {
-         for (auto listener : s_keyListeners)
+         for (auto* listener : s_keyListeners)
          {
             listener->KeyCallback(static_cast< const KeyEvent& >(event));
          }
@@ -61,7 +61,7 @@ InputManager::BroadcastEvent(const Event& event)
       break;
 
       case Event::EventType::MOUSE_BUTTON: {
-         for (auto listener : s_mouseButtonListeners)
+         for (auto* listener : s_mouseButtonListeners)
          {
             listener->MouseButtonCallback(static_cast< const MouseButtonEvent& >(event));
          }
@@ -69,7 +69,7 @@ InputManager::BroadcastEvent(const Event& event)
       break;
 
       case Event::EventType::MOUSE_CURSOR: {
-         for (auto listener : s_mouseMovementListeners)
+         for (auto* listener : s_mouseMovementListeners)
          {
             listener->CursorPositionCallback(static_cast< const CursorPositionEvent& >(event));
          }
@@ -77,7 +77,7 @@ InputManager::BroadcastEvent(const Event& event)
       break;
 
       case Event::EventType::MOUSE_SCROLL: {
-         for (auto listener : s_mouseScrollListeners)
+         for (auto* listener : s_mouseScrollListeners)
          {
             listener->MouseScrollCallback(static_cast< const MouseScrollEvent& >(event));
          }

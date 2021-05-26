@@ -20,7 +20,7 @@ static inline void
 SetStyle()
 {
    ImGuiStyle& style = ImGui::GetStyle();
-   auto colors = style.Colors;
+   auto* colors = style.Colors;
 
    /// 0 = FLAT APPEARENCE
    /// 1 = MORE "3D" LOOK
@@ -185,8 +185,8 @@ Gui::UpdateBuffers()
    }
 
    // Upload data
-   ImDrawVert* vtxDst = reinterpret_cast< ImDrawVert* >(m_vertexBuffer.m_mappedMemory);
-   ImDrawIdx* idxDst = reinterpret_cast< ImDrawIdx* >(m_indexBuffer.m_mappedMemory);
+   auto* vtxDst = reinterpret_cast< ImDrawVert* >(m_vertexBuffer.m_mappedMemory);
+   auto* idxDst = reinterpret_cast< ImDrawIdx* >(m_indexBuffer.m_mappedMemory);
 
    for (int n = 0; n < imDrawData->CmdListsCount; n++)
    {
@@ -231,14 +231,15 @@ Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
 
    if (ImGui::CollapsingHeader("Scene"))
    {
-      const char* items[] = {"Full scene", "Position", "Normal", "Albedo", "Specular", "ShadowMap"};
+      const auto items =
+         std::to_array({"Full scene", "Position", "Normal", "Albedo", "Specular", "ShadowMap"});
 
-      const char* combo_label =
+      auto* combo_label =
          items[Data::m_debugData.displayDebugTarget]; // Label to preview before opening the combo
                                                       // (technically it could be anything)
       if (ImGui::BeginCombo("Render target", combo_label, ImGuiComboFlags_HeightSmall))
       {
-         for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+         for (int n = 0; n < items.size(); n++)
          {
             const bool is_selected = (Data::m_debugData.displayDebugTarget == n);
             if (ImGui::Selectable(items[n], is_selected))
@@ -322,15 +323,15 @@ Gui::Render(VkCommandBuffer commandBuffer)
 
    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1,
-                           &m_descriptorSet, 0, NULL);
+                           &m_descriptorSet, 0, nullptr);
 
    m_pushConstant.scale = glm::vec2(2.0f / io.DisplaySize.x, 2.0f / io.DisplaySize.y);
    m_pushConstant.translate = glm::vec2(-1.0f);
    vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
                       sizeof(PushConstBlock), &m_pushConstant);
 
-   VkDeviceSize offsets[1] = {0};
-   vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.m_buffer, offsets);
+   std::array<VkDeviceSize, 1> offsets = {0};
+   vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.m_buffer, offsets.data());
    vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.m_buffer, 0, VK_INDEX_TYPE_UINT16);
 
    for (int32_t i = 0; i < imDrawData->CmdListsCount; i++)
@@ -358,8 +359,9 @@ Gui::PrepareResources()
    ImGuiIO& io = ImGui::GetIO();
 
    // Create font texture
-   unsigned char* fontData;
-   int32_t texWidth, texHeight;
+   unsigned char* fontData = nullptr;
+   int32_t texWidth = 0;
+   int32_t texHeight = 0;
 
    const auto fontFilename = (utils::FileManager::FONTS_DIR / "Roboto-Medium.ttf").string();
 
@@ -455,7 +457,7 @@ Gui::PrepareResources()
 }
 
 void
-Gui::PreparePipeline(const VkPipelineCache pipelineCache, const VkRenderPass renderPass)
+Gui::PreparePipeline(VkPipelineCache pipelineCache, VkRenderPass renderPass)
 {
    // Pipeline layout
    // Push constants for UI rendering parameters
@@ -546,7 +548,7 @@ Gui::PreparePipeline(const VkPipelineCache pipelineCache, const VkRenderPass ren
 
    auto [vertexInfo, fragmentInfo] =
       Shader::CreateShader(Data::vk_device, "default/ui.vert.spv", "default/ui.frag.spv");
-   VkPipelineShaderStageCreateInfo shaderStages[] = {vertexInfo.shaderInfo,
+   std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages = {vertexInfo.shaderInfo,
                                                      fragmentInfo.shaderInfo};
 
    VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
@@ -564,7 +566,7 @@ Gui::PreparePipeline(const VkPipelineCache pipelineCache, const VkRenderPass ren
    pipelineCreateInfo.pDepthStencilState = &pipelineDepthStencilStateCreateInfo;
    pipelineCreateInfo.pDynamicState = &pipelineDynamicStateCreateInfo;
    pipelineCreateInfo.stageCount = 2;
-   pipelineCreateInfo.pStages = shaderStages;
+   pipelineCreateInfo.pStages = shaderStages.data();
    pipelineCreateInfo.subpass = m_subpass;
 
    // Vertex bindings an attributes based on ImGui vertex definition

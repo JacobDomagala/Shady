@@ -235,12 +235,12 @@ Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
       const auto items =
          std::to_array({"Full scene", "Position", "Normal", "Albedo", "Specular", "ShadowMap"});
 
-      auto* combo_label =
-         items[Data::m_debugData.displayDebugTarget]; // Label to preview before opening the combo
-                                                      // (technically it could be anything)
+      // Label to preview before opening the combo
+      auto* combo_label = items[static_cast< uint32_t >(Data::m_debugData.displayDebugTarget)];
+
       if (ImGui::BeginCombo("Render target", combo_label, ImGuiComboFlags_HeightSmall))
       {
-         for (int n = 0; n < items.size(); n++)
+         for (uint32_t n = 0; n < items.size(); n++)
          {
             const bool is_selected = (Data::m_debugData.displayDebugTarget == n);
             if (ImGui::Selectable(items[n], is_selected))

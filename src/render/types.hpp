@@ -23,8 +23,8 @@ struct UniformBufferObject
 
 struct DebugData
 {
-   int displayDebugTarget = 0;
-   int pcfShadow = 1;
+   uint32_t displayDebugTarget = 0;
+   int32_t pcfShadow = 1;
    float ambientLight = 0.1f;
    float shadowFactor = 0.1f;
 };

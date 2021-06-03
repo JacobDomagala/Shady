@@ -12,6 +12,7 @@ class Shady : public input::InputListener
 {
  public:
    ~Shady() override = default;
+
    void
    Init();
 

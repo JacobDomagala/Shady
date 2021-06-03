@@ -9,6 +9,10 @@
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
 
+namespace shady::scene {
+class Scene;
+}
+
 namespace shady::app::gui {
 
 struct PushConstBlock
@@ -27,10 +31,7 @@ class Gui
    Shutdown();
 
    static bool
-   UpdateUI(const glm::ivec2& windowSize);
-
-   static bool
-   CheckUpdateUI();
+   UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene);
 
    static bool
    UpdateBuffers();
@@ -43,7 +44,7 @@ class Gui
    PrepareResources();
 
    static void
-   PreparePipeline(const VkPipelineCache pipelineCache, const VkRenderPass renderPass);
+   PreparePipeline(VkPipelineCache pipelineCache, VkRenderPass renderPass);
 
  private:
    inline static VkImage m_fontImage = {};

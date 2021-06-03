@@ -158,7 +158,7 @@ Buffer::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
 }
 
 void
-Buffer::Flush(VkDeviceSize size, VkDeviceSize offset)
+Buffer::Flush(VkDeviceSize size, VkDeviceSize offset) const
 {
    VkMappedMemoryRange mappedRange = {};
    mappedRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;

@@ -13,6 +13,7 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
+// This should make use of <source_location> when it's supported by clang/mvcc
 #define VK_CHECK(vkFunction, errorMessage)                                              \
    do                                                                                   \
    {                                                                                    \
@@ -26,26 +27,6 @@
 
 namespace shady::render {
 
-struct UniformBufferObject
-{
-   glm::mat4 proj;
-   glm::mat4 view;
-   glm::mat4 lightView;
-};
-
-struct DebugData
-{
-   int displayDebugTarget = 0;
-   int pcfShadow = 1;
-   float ambientLight = 0.1f;
-   float shadowFactor = 0.1f;
-};
-
-struct PerInstanceBuffer
-{
-   glm::mat4 model;
-   glm::vec4 textures = {};
-};
 
 static constexpr bool ENABLE_VALIDATION = true;
 static constexpr std::array< const char*, 1 > VALIDATION_LAYERS = {"VK_LAYER_KHRONOS_validation"};
@@ -100,8 +81,6 @@ struct Data
    inline static VkRenderPass m_renderPass = {};
    inline static VkRenderPass m_deferredRenderPass = {};
 
-   inline static std::unique_ptr< scene::Light > m_light = {};
-   inline static std::unique_ptr< scene::Camera > m_camera = {};
    inline static DebugData m_debugData = {};
 };
 

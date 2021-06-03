@@ -7,6 +7,10 @@
 #include <vulkan/vulkan.h>
 
 namespace shady::scene {
+class Camera;
+}
+
+namespace shady::scene {
 
 struct SkyboxUBO
 {
@@ -38,7 +42,7 @@ class Skybox
     *  Update uniform buffer (SkyboxUBO)
     */
    void
-   UpdateBuffers();
+   UpdateBuffers(const scene::Camera* camera);
 
  private:
    void
@@ -59,10 +63,12 @@ class Skybox
    VkDescriptorSetLayout m_descriptorSetLayout = {};
    VkDescriptorSet m_descriptorSet = {};
    VkDescriptorPool m_descriptorPool = {};
+
    VkImage m_image = {};
    VkDeviceMemory m_imageMemory = {};
    VkImageView m_imageView = {};
    VkSampler m_sampler = {};
+
    render::Buffer m_vertexBuffer = {};
    render::Buffer m_indexBuffer = {};
    render::Buffer m_uniformBuffer = {};

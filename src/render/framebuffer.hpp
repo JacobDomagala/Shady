@@ -78,28 +78,28 @@ class Framebuffer
    CreateShadowMap(int32_t width, int32_t height, int32_t numLights);
 
    glm::ivec2
-   GetSize();
+   GetSize() const;
 
    VkRenderPass
-   GetRenderPass();
+   GetRenderPass() const;
 
    VkFramebuffer
-   GetFramebuffer();
+   GetFramebuffer() const;
 
    VkImageView
-   GetPositionsImageView();
+   GetPositionsImageView() const;
 
    VkImageView
-   GetNormalsImageView();
+   GetNormalsImageView() const;
 
    VkImageView
-   GetAlbedoImageView();
+   GetAlbedoImageView() const;
 
    VkImageView
-   GetShadowMapView();
+   GetShadowMapView() const;
 
    VkSampler
-   GetSampler();
+   GetSampler() const;
 
  private:
    /**
@@ -135,10 +135,11 @@ class Framebuffer
    CreateSampler(VkFilter magFilter, VkFilter minFilter, VkSamplerAddressMode adressMode);
 
  private:
-   int32_t m_width, m_height;
-   VkFramebuffer m_framebuffer;
-   std::vector< FramebufferAttachment > m_attachments;
-   VkRenderPass m_renderPass;
+   int32_t m_width = {};
+   int32_t m_height = {};
+   VkFramebuffer m_framebuffer = {};
+   std::vector< FramebufferAttachment > m_attachments = {};
+   VkRenderPass m_renderPass = {};
 
    VkSampler m_sampler = {};
 };

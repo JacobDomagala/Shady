@@ -8,7 +8,6 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-
 struct GLFWwindow;
 
 namespace shady::render {
@@ -26,20 +25,15 @@ class Renderer
    Draw();
 
    static void
-   DrawDeferred();
-
-   static void
    MeshLoaded(const std::vector< Vertex >& vertices,
               const std::vector< uint32_t >& indicies, const TextureMaps& textures,
               const glm::mat4& modelMat);
 
-   inline static glm::mat4 view_mat = glm::mat4(1.0f);
-   inline static glm::mat4 proj_mat = glm::mat4(1.0f);
-   inline static glm::vec4 camera_pos = {};
-   inline static glm::vec4 light_pos = {};
-
    static void
    CreateCommandBufferForDeferred();
+
+   static void
+   UpdateUniformBuffer(const scene::Camera* camera, const scene::Light* light);
 
  private:
    static void
@@ -58,9 +52,6 @@ class Renderer
    CreateImageViews();
 
    static void
-   CreateDescriptorSetLayout();
-
-   static void
    CreateRenderPass();
 
    static void
@@ -70,18 +61,10 @@ class Renderer
    CreateFramebuffers();
 
    static void
-   CreateCommandBuffers();
-
-
-   static void
    CreateSyncObjects();
 
    static void
    CreatePipelineCache();
-
-   static void
-   CreatePipeline();
-
 
    static void
    CreateVertexBuffer();
@@ -93,23 +76,10 @@ class Renderer
    CreateUniformBuffers();
 
    static void
-   UpdateUniformBuffer(uint32_t currentImage);
-
-   static void
-   CreateDescriptorPool();
-
-   static void
-   CreateDescriptorSets();
-
-
-   static void
    CreateDepthResources();
 
    static void
    CreateColorResources();
-
-   static bool
-   HasStencilComponent(VkFormat format);
 
  private:
    inline static VkDebugUtilsMessengerCreateInfoEXT m_debugCreateInfo = {};
@@ -143,6 +113,7 @@ class Renderer
    inline static VkImageView m_colorImageView = {};
 
    inline static DeferredPipeline m_deferredPipeline = {};
+   inline static uint32_t m_imageIndex = {};
 };
 
 } // namespace shady::render::vulkan

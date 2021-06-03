@@ -12,9 +12,9 @@ using ImageHandleType = std::unique_ptr< uint8_t[], std::function< void(uint8_t*
 
 struct ImageData
 {
-   ImageHandleType m_bytes;
-   glm::uvec2 m_size;
-   int32_t m_channels;
+   ImageHandleType m_bytes = {};
+   glm::uvec2 m_size = {};
+   int32_t m_channels = {};
 };
 
 } // namespace shady::render

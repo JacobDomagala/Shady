@@ -1,7 +1,7 @@
 #include "app/shady.hpp"
 
 int
-main(int, char**)
+main(int /*argc*/, char** /*argv*/)
 {
    shady::app::Shady shady;
 

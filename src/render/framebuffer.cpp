@@ -2,6 +2,8 @@
 #include "common.hpp"
 
 #include <fmt/format.h>
+#include <numeric>
+#include <algorithm>
 
 namespace shady::render {
 
@@ -13,8 +15,8 @@ Framebuffer::Create(int32_t width, int32_t height)
 
    // Four attachments (3 color, 1 depth)
    AttachmentCreateInfo attachmentInfo = {};
-   attachmentInfo.width = static_cast<uint32_t>(width);
-   attachmentInfo.height = static_cast<uint32_t>(height);
+   attachmentInfo.width = static_cast< uint32_t >(width);
+   attachmentInfo.height = static_cast< uint32_t >(height);
    attachmentInfo.layerCount = 1;
    attachmentInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
@@ -63,9 +65,9 @@ Framebuffer::CreateShadowMap(int32_t width, int32_t height, int32_t numLights)
    // current invocation
    AttachmentCreateInfo attachmentInfo = {};
    attachmentInfo.format = SHADOWMAP_FORMAT;
-   attachmentInfo.width = static_cast<uint32_t>(width);
-   attachmentInfo.height = static_cast<uint32_t>(height);
-   attachmentInfo.layerCount = static_cast<uint32_t>(numLights);
+   attachmentInfo.width = static_cast< uint32_t >(width);
+   attachmentInfo.height = static_cast< uint32_t >(height);
+   attachmentInfo.layerCount = static_cast< uint32_t >(numLights);
    attachmentInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
    AddAttachment(attachmentInfo);
@@ -80,52 +82,52 @@ Framebuffer::CreateShadowMap(int32_t width, int32_t height, int32_t numLights)
 }
 
 glm::ivec2
-Framebuffer::GetSize()
+Framebuffer::GetSize() const
 {
    return {m_width, m_height};
 }
 
 VkRenderPass
-Framebuffer::GetRenderPass()
+Framebuffer::GetRenderPass() const
 {
    return m_renderPass;
 }
 
 VkFramebuffer
-Framebuffer::GetFramebuffer()
+Framebuffer::GetFramebuffer() const
 {
    return m_framebuffer;
 }
 
 VkSampler
-Framebuffer::GetSampler()
+Framebuffer::GetSampler() const
 {
    return m_sampler;
 }
 
 VkImageView
-Framebuffer::GetPositionsImageView()
+Framebuffer::GetPositionsImageView() const
 {
    utils::Assert(m_attachments.size() > 0, "");
    return m_attachments[0].view;
 }
 
 VkImageView
-Framebuffer::GetNormalsImageView()
+Framebuffer::GetNormalsImageView() const
 {
    utils::Assert(m_attachments.size() > 1, "");
    return m_attachments[1].view;
 }
 
 VkImageView
-Framebuffer::GetAlbedoImageView()
+Framebuffer::GetAlbedoImageView() const
 {
    utils::Assert(m_attachments.size() > 2, "");
    return m_attachments[2].view;
 }
 
 VkImageView
-Framebuffer::GetShadowMapView()
+Framebuffer::GetShadowMapView() const
 {
    utils::Assert(m_attachments.size() > 0, "");
    return m_attachments[0].view;
@@ -261,10 +263,9 @@ void
 Framebuffer::CreateRenderPass()
 {
    std::vector< VkAttachmentDescription > attachmentDescriptions;
-   for (auto& attachment : m_attachments)
-   {
-      attachmentDescriptions.push_back(attachment.description);
-   };
+   std::transform(m_attachments.begin(), m_attachments.end(),
+                  std::back_inserter(attachmentDescriptions),
+                  [](const auto& attachment) { return attachment.description; });
 
    // Collect attachment references
    std::vector< VkAttachmentReference > colorReferences;
@@ -338,28 +339,23 @@ Framebuffer::CreateRenderPass()
    VK_CHECK(vkCreateRenderPass(Data::vk_device, &renderPassInfo, nullptr, &m_renderPass), "");
 
    std::vector< VkImageView > attachmentViews;
-   for (auto attachment : m_attachments)
-   {
-      attachmentViews.push_back(attachment.view);
-   }
+   std::transform(m_attachments.begin(), m_attachments.end(), std::back_inserter(attachmentViews),
+                  [](const auto& attachment) { return attachment.view; });
 
    // Find. max number of layers across attachments
-   uint32_t maxLayers = 0;
-   for (const auto& attachment : m_attachments)
-   {
-      if (attachment.subresourceRange.layerCount > maxLayers)
-      {
-         maxLayers = attachment.subresourceRange.layerCount;
-      }
-   }
+   uint32_t maxLayers =
+      std::accumulate(m_attachments.begin(), m_attachments.end(), uint32_t{0},
+                      [](uint32_t curMax, const auto& right) {
+                         return std::max({curMax, right.subresourceRange.layerCount});
+                      });
 
    VkFramebufferCreateInfo framebufferInfo = {};
    framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
    framebufferInfo.renderPass = m_renderPass;
    framebufferInfo.pAttachments = attachmentViews.data();
    framebufferInfo.attachmentCount = static_cast< uint32_t >(attachmentViews.size());
-   framebufferInfo.width = static_cast<uint32_t>(m_width);
-   framebufferInfo.height = static_cast<uint32_t>(m_height);
+   framebufferInfo.width = static_cast< uint32_t >(m_width);
+   framebufferInfo.height = static_cast< uint32_t >(m_height);
    framebufferInfo.layers = maxLayers;
    VK_CHECK(vkCreateFramebuffer(Data::vk_device, &framebufferInfo, nullptr, &m_framebuffer), "");
 }

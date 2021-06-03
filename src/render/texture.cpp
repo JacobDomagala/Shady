@@ -109,7 +109,6 @@ Texture::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspe
    viewInfo.image = image;
    viewInfo.viewType = not cubemap ? VK_IMAGE_VIEW_TYPE_2D : VK_IMAGE_VIEW_TYPE_CUBE;
    viewInfo.format = format;
-   viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
    viewInfo.subresourceRange.baseMipLevel = 0;
    viewInfo.subresourceRange.levelCount = mipLevels;
    viewInfo.subresourceRange.aspectMask = aspectFlags;
@@ -272,7 +271,8 @@ Texture::CopyBufferToImage(VkImage image, uint32_t texWidth, uint32_t texHeight,
    region.imageOffset = {0, 0, 0};
    region.imageExtent = {texWidth, texHeight, 1};
 
-   Buffer::CopyDataToImageWithStaging(image, data, 4 * texWidth * texHeight, {region});
+   const auto size = static_cast< size_t >(texWidth) * static_cast< size_t >(texHeight) * size_t{4};
+   Buffer::CopyDataToImageWithStaging(image, data, size, {region});
 }
 
 void

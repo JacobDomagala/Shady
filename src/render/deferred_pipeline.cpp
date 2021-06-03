@@ -9,6 +9,7 @@
 #include <fmt/format.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <algorithm>
 
 namespace shady::render {
 
@@ -19,33 +20,25 @@ constexpr float depthBiasSlope = 1.75f;
 
 struct Light
 {
-   glm::vec4 position;
-   glm::vec4 target;
-   glm::vec4 color;
-   glm::mat4 viewMatrix;
+   glm::vec4 position = {};
+   glm::vec4 target = {};
+   glm::vec4 color = {};
+   glm::mat4 viewMatrix = {};
 };
 
 struct
 {
-   glm::mat4 projection;
-   glm::mat4 model;
-   glm::mat4 view;
+   glm::mat4 projection = {};
+   glm::mat4 model = {};
+   glm::mat4 view = {};
 } uboOffscreenVS;
 
 struct
 {
-   Light light;
-   glm::vec4 viewPos;
-   DebugData debugData;
+   Light light = {};
+   glm::vec4 viewPos = {};
+   DebugData debugData = {};
 } uboComposition;
-
-// This UBO stores the shadow matrices for all of the light sources
-// The matrices are indexed using geometry shader instancing
-// The instancePos is used to place the models using instanced draws
-//struct
-//{
-//   glm::mat4 mvp;
-//} uboShadowGeometryShader;
 
 VkDescriptorSet&
 DeferredPipeline::GetDescriptorSet()
@@ -73,13 +66,13 @@ DeferredPipeline::GetOffscreenSemaphore()
 
 // Update matrices used for the offscreen rendering of the scene
 void
-DeferredPipeline::UpdateUniformBufferOffscreen()
+DeferredPipeline::UpdateUniformBufferOffscreen(const scene::Camera* camera)
 {
-   uboOffscreenVS.projection = Data::m_camera->GetProjection();
-   uboOffscreenVS.view = Data::m_camera->GetView();
+   uboOffscreenVS.projection = camera->GetProjection();
+   uboOffscreenVS.view = camera->GetView();
    uboOffscreenVS.model = glm::mat4(1.0f);
    m_offscreenBuffer.CopyData(&uboOffscreenVS);
-   m_skybox.UpdateBuffers();
+   m_skybox.UpdateBuffers(camera);
 }
 
 VkCommandBuffer&
@@ -90,13 +83,14 @@ DeferredPipeline::GetOffscreenCmdBuffer()
 
 // Update lights and parameters passed to the composition shaders
 void
-DeferredPipeline::UpdateUniformBufferComposition()
+DeferredPipeline::UpdateUniformBufferComposition(const scene::Camera* camera,
+                                                 const scene::Light* light)
 {
-   uboComposition.light.position = glm::vec4(Data::m_light->GetPosition(), 1.0f);
-   uboComposition.light.target = glm::vec4(Data::m_light->GetLookAt(), 1.0);
-   uboComposition.light.color = glm::vec4{Data::m_light->GetColor(), 1.0f};
-   uboComposition.light.viewMatrix = Data::m_light->GetLightSpaceMat();
-   uboComposition.viewPos = glm::vec4(Data::m_camera->GetPosition(), 0.0f);
+   uboComposition.light.position = glm::vec4(camera->GetPosition(), 1.0f);
+   uboComposition.light.target = glm::vec4(light->GetLookAt(), 1.0);
+   uboComposition.light.color = glm::vec4{light->GetColor(), 1.0f};
+   uboComposition.light.viewMatrix = light->GetLightSpaceMat();
+   uboComposition.viewPos = glm::vec4(camera->GetPosition(), 0.0f);
 
    uboComposition.debugData = Data::m_debugData;
 
@@ -156,10 +150,6 @@ DeferredPipeline::PrepareUniformBuffers()
    // Map persistent
    m_compositionBuffer.Map();
    m_offscreenBuffer.Map();
-
-   // Update
-   UpdateUniformBufferOffscreen();
-   UpdateUniformBufferComposition();
 }
 
 void
@@ -606,23 +596,17 @@ DeferredPipeline::SetupDescriptorSet()
    instanceBufferInfo.offset = 0;
    instanceBufferInfo.range = Data::perInstance.size() * sizeof(PerInstanceBuffer);
 
-   /*VkDescriptorImageInfo imageInfo{};
-   imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-   imageInfo.imageView = imageView;
-   imageInfo.sampler = sampler;*/
+   std::vector< VkDescriptorImageInfo > descriptorImageInfos;
 
-   VkDescriptorImageInfo* descriptorImageInfos = new VkDescriptorImageInfo[Data::textures.size()];
+   std::transform(Data::texturesVec.begin(), Data::texturesVec.end(),
+                  std::back_inserter(descriptorImageInfos), [](const auto& texture) {
+                     VkDescriptorImageInfo descriptorInfo;
+                     descriptorInfo.sampler = nullptr;
+                     descriptorInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                     descriptorInfo.imageView = texture;
 
-   uint32_t texI = 0;
-   for (const auto& texture : Data::texturesVec)
-   {
-      descriptorImageInfos[texI].sampler = nullptr;
-      descriptorImageInfos[texI].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-      descriptorImageInfos[texI].imageView = texture;
-
-      ++texI;
-   }
-
+                     return descriptorInfo;
+                  });
 
    descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
    descriptorWrites[0].dstSet = m_descriptorSet;
@@ -651,41 +635,16 @@ DeferredPipeline::SetupDescriptorSet()
    descriptorWrites[2].descriptorCount = 1;
    descriptorWrites[2].pImageInfo = &samplerInfo;
 
-   descriptorWrites[3].pImageInfo = descriptorImageInfos;
    descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
    descriptorWrites[3].dstSet = m_descriptorSet;
    descriptorWrites[3].dstBinding = 3;
    descriptorWrites[3].dstArrayElement = 0;
    descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
    descriptorWrites[3].descriptorCount = static_cast< uint32_t >(Data::textures.size());
-   descriptorWrites[3].pImageInfo = descriptorImageInfos;
+   descriptorWrites[3].pImageInfo = descriptorImageInfos.data();
 
    vkUpdateDescriptorSets(Data::vk_device, static_cast< uint32_t >(descriptorWrites.size()),
                           descriptorWrites.data(), 0, nullptr);
-
-
-   // std::array< VkWriteDescriptorSet, 1 > shadowMapDescriptorWrites{};
-
-   //// Shadow mapping
-   // VK_CHECK(vkAllocateDescriptorSets(Data::vk_device, &allocInfo, &m_shadowMapDescriptor), "");
-
-   // bufferInfo.buffer = m_shadowGeomBuffer.m_buffer;
-   // bufferInfo.offset = 0;
-   // bufferInfo.range = sizeof(uboShadowGeometryShader);
-
-   //// Binding 0: Vertex shader uniform buffer
-   // shadowMapDescriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-   // shadowMapDescriptorWrites[0].dstSet = m_shadowMapDescriptor;
-   // shadowMapDescriptorWrites[0].dstBinding = 0;
-   // shadowMapDescriptorWrites[0].dstArrayElement = 0;
-   // shadowMapDescriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-   // shadowMapDescriptorWrites[0].descriptorCount = 1;
-   // shadowMapDescriptorWrites[0].pBufferInfo = &bufferInfo;
-
-
-   // vkUpdateDescriptorSets(Data::vk_device,
-   //                       static_cast< uint32_t >(shadowMapDescriptorWrites.size()),
-   //                       shadowMapDescriptorWrites.data(), 0, nullptr);
 }
 
 void
@@ -835,10 +794,10 @@ DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& s
 }
 
 void
-DeferredPipeline::UpdateDeferred()
+DeferredPipeline::UpdateDeferred(const scene::Camera* camera, const scene::Light* light)
 {
-   UpdateUniformBufferOffscreen();
-   UpdateUniformBufferComposition();
+   UpdateUniformBufferOffscreen(camera);
+   UpdateUniformBufferComposition(camera, light);
 }
 
 

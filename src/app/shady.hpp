@@ -40,8 +40,8 @@ class Shady : public input::InputListener
  private:
   // Application settings
    Window m_window;
-   uint32_t m_windowWidth = 1920;
-   uint32_t m_windowHeight = 1080;
+   int32_t m_windowWidth = 1920;
+   int32_t m_windowHeight = 1080;
 
    scene::Scene m_currentScene;
 

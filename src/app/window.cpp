@@ -12,7 +12,7 @@ namespace shady::app {
 
 Window::Window(int32_t width, int32_t height, const std::string& title)
 {
-   Create(m_width, m_height, m_title);
+   Create(width, height, title);
 }
 
 Window::~Window()
@@ -43,9 +43,6 @@ Window::Create(int32_t width, int32_t height, const std::string& title)
 
    trace::Logger::Info("GLFW Window created! Name:{} Width:{} Height:{}", m_title, m_width,
                        m_height);
-
-   glfwMakeContextCurrent(m_pWindow);
-   glfwSwapInterval(1);
 
    m_created = true;
 }

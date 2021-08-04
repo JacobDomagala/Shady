@@ -13,7 +13,7 @@ namespace shady::app {
 void
 Shady::Init()
 {
-   m_window = std::make_unique< Window >(m_windowWidth, m_windowHeight, "Shady");
+   m_window.Create(m_windowWidth, m_windowHeight, "Shady");
 
    input::InputManager::Init(m_window.GetWindowHandle());
    input::InputManager::RegisterForKeyInput(this);
@@ -21,7 +21,7 @@ Shady::Init()
    input::InputManager::RegisterForMouseMovementInput(this);
    input::InputManager::RegisterForMouseScrollInput(this);
 
-   render::Renderer::Initialize(m_window->GetWindowHandle());
+   render::Renderer::Initialize(m_window.GetWindowHandle());
 
    m_currentScene.LoadDefault();
 

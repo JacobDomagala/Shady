@@ -23,7 +23,7 @@ class Scene
    GetLight();
 
    void
-   Render(uint32_t windowWidth, uint32_t windowHeight);
+   Render(int32_t windowWidth, int32_t windowHeight);
 
    void
    LoadDefault();

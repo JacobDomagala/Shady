@@ -51,14 +51,14 @@ Logger::Log(std::string_view buffer, Args&&... args)
          SetConsoleTextAttribute(hConsole, s_typeStyles.at(LogLevel));
 
          fmt::print("[{}]{} {}\n", time::GetTime(), ToString(LogLevel),
-                    fmt::format(buffer, std::forward< Args >(args)...));
+                    fmt::format(fmt::runtime(buffer), std::forward< Args >(args)...));
 
          // Set the color to white
          SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
 #else
          fmt::print(fmt::fg(s_typeStyles.at(LogLevel)), "[{}]{} {}\n", time::GetTime(),
                     ToString(LogLevel),
-                    fmt::format(buffer, std::forward< Args >(args)...));
+                    fmt::format(fmt::runtime(buffer), std::forward< Args >(args)...));
 #endif
    }
 }

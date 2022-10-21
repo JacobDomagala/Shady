@@ -8,7 +8,7 @@ Assert(bool assertion, std::string_view logMsg)
 {
    if (!assertion)
    {
-      trace::Logger::Fatal(logMsg);
+      trace::Logger::Fatal("{}", logMsg);
       std::terminate();
    }
 }

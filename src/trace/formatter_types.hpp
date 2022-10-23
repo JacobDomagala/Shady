@@ -15,7 +15,7 @@ struct fmt::formatter< glm::tmat4x4< T > >
 
    template < typename FormatContext >
    auto
-   format(const glm::tmat4x4< T >& mat, FormatContext& ctx)
+   format(const glm::tmat4x4< T >& mat, FormatContext& ctx) const
    {
       return fmt::format_to(
          ctx.out(),
@@ -40,7 +40,7 @@ struct fmt::formatter< glm::tvec4< T > >
 
    template < typename FormatContext >
    auto
-   format(const glm::tvec4< T >& vec, FormatContext& ctx)
+   format(const glm::tvec4< T >& vec, FormatContext& ctx) const
    {
       return fmt::format_to(ctx.out(),
                             std::is_same< T, float >::value ? "({:.1f}, {:.1f}, {:.1f}, {:.1f})"
@@ -60,7 +60,7 @@ struct fmt::formatter< glm::tvec3< T > >
 
    template < typename FormatContext >
    auto
-   format(const glm::tvec3< T >& vec, FormatContext& ctx)
+   format(const glm::tvec3< T >& vec, FormatContext& ctx) const
    {
       return fmt::format_to(ctx.out(),
                             std::is_same< T, float >::value ? "({:.1f}, {:.1f}, {:.1f})"
@@ -80,7 +80,7 @@ struct fmt::formatter< glm::tvec2< T > >
 
    template < typename FormatContext >
    auto
-   format(const glm::tvec2< T >& vec, FormatContext& ctx)
+   format(const glm::tvec2< T >& vec, FormatContext& ctx) const
    {
       return fmt::format_to(ctx.out(),
                             std::is_same< T, float >::value ? "({:.1f}, {:.1f})" : "({0:d}, {0:d})",

@@ -36,27 +36,27 @@ class Logger
  public:
    template < typename... Args >
    static constexpr void
-   Trace(std::string_view buffer, Args&&... args);
+   Trace(fmt::format_string<Args ...> buffer, Args&&... args);
 
    template < typename... Args >
    static constexpr void
-   Debug(std::string_view buffer, Args&&... args);
+   Debug(fmt::format_string<Args ...> buffer, Args&&... args);
 
    template < typename... Args >
    static constexpr void
-   Info(std::string_view buffer, Args&&... args);
+   Info(fmt::format_string<Args ...> buffer, Args&&... args);
 
    template < typename... Args >
    static constexpr void
-   Warn(std::string_view buffer, Args&&... args);
+   Warn(fmt::format_string<Args ...> buffer, Args&&... args);
 
    template < typename... Args >
    static constexpr void
-   Fatal(std::string_view buffer, Args&&... args);
+   Fatal(fmt::format_string<Args ...> buffer, Args&&... args);
 
    template < TYPE LogLevel, typename... Args >
    static constexpr void
-   Log(std::string_view buffer, Args&&... args);
+   Log(fmt::format_string<Args ...> buffer, Args&&... args);
 
    static void
    SetType(TYPE newType);

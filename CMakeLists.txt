@@ -57,7 +57,7 @@ add_executable(${PROJECT_NAME}
     src/utils/file_manager.hpp src/utils/file_manager.cpp src/utils/assert.hpp src/utils/assert.cpp
 )
 
-find_package(Vulkan REQUIRED FATAL_ERROR)
+find_package(Vulkan REQUIRED)
 
 add_subdirectory(lib)
 

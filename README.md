@@ -1,6 +1,6 @@
 # Shady
-[![Windows](https://github.com/JacobDomagala/Shady/actions/workflows/windows.yml/badge.svg?branch=master)](https://github.com/JacobDomagala/Shady/actions/workflows/windows.yml)
-[![Ubuntu](https://github.com/JacobDomagala/Shady/actions/workflows/ubuntu.yml/badge.svg?branch=master)](https://github.com/JacobDomagala/Shady/actions/workflows/ubuntu.yml)
+[![Windows](https://github.com/JacobDomagala/Shady/actions/workflows/windows.yml/badge.svg?branch=master)](https://github.com/JacobDomagala/Shady/actions/workflows/windows.yml?query=branch%3Amaster)
+[![Ubuntu](https://github.com/JacobDomagala/Shady/actions/workflows/ubuntu.yml/badge.svg?branch=master)](https://github.com/JacobDomagala/Shady/actions/workflows/ubuntu.yml?query=branch%3Amaster)
 
 ------------------------------------------------------------
 

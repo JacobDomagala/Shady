@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <vector>
+#include <algorithm>
 #include <vulkan/vulkan.h>
 
 namespace shady::render {

@@ -317,3 +317,4 @@ lib/glfw/glfw*
 lib/fmt/fmt*
 lib/imgui/imgui*
 *.cache
+compile_commands.json

@@ -236,19 +236,22 @@ Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
          std::to_array({"Full scene", "Position", "Normal", "Albedo", "Specular", "ShadowMap"});
 
       // Label to preview before opening the combo
-      auto* combo_label = items[static_cast< uint32_t >(Data::m_debugData.displayDebugTarget)];
+      const auto* combo_label = items.at(static_cast< uint32_t >(Data::m_debugData.displayDebugTarget));
 
       if (ImGui::BeginCombo("Render target", combo_label, ImGuiComboFlags_HeightSmall))
       {
-         for (uint32_t n = 0; n < items.size(); n++)
+         for (uint32_t item = 0; item < items.size(); item++)
          {
-            const bool is_selected = (Data::m_debugData.displayDebugTarget == n);
-            if (ImGui::Selectable(items[n], is_selected))
-               Data::m_debugData.displayDebugTarget = n;
+            const bool is_selected = (Data::m_debugData.displayDebugTarget == item);
+            if (ImGui::Selectable(items.at(item), is_selected)){
+               Data::m_debugData.displayDebugTarget = item;
+            }
 
             // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-            if (is_selected)
+            if (is_selected){
                ImGui::SetItemDefaultFocus();
+            }
+
          }
          ImGui::EndCombo();
       }

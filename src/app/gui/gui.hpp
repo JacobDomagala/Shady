@@ -19,7 +19,7 @@ struct PushConstBlock
 {
    glm::vec2 scale;
    glm::vec2 translate;
-};
+} __attribute__((aligned(16)));
 
 class Gui
 {

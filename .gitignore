@@ -316,3 +316,5 @@ lib/stb_image/stb_image*
 lib/glfw/glfw*
 lib/fmt/fmt*
 lib/imgui/imgui*
+*.cache
+compile_commands.json

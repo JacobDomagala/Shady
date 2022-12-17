@@ -15,11 +15,11 @@ class Scene;
 
 namespace shady::app::gui {
 
-struct PushConstBlock
+struct alignas(16) PushConstBlock
 {
    glm::vec2 scale;
    glm::vec2 translate;
-} __attribute__((aligned(16)));
+};
 
 class Gui
 {

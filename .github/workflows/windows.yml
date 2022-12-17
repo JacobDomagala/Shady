@@ -49,3 +49,4 @@ jobs:
         compile_result_file: ${{runner.workspace}}/build/output.txt
         compiler: MSVC
         exclude_dir: ${{github.workspace}}/lib
+        debug_output: true

@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.18)
 set(PROJECT_NAME Shady)
 project(${PROJECT_NAME} VERSION 0.0.1)
 
-include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
 set(OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/build)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_PATH})
@@ -62,16 +61,19 @@ add_executable(${PROJECT_NAME}
 
 find_package(assimp REQUIRED)
 find_package(fmt REQUIRED)
-find_package(glfw REQUIRED)
+find_package(glfw3 REQUIRED)
 find_package(imgui REQUIRED)
-find_package(stb_image REQUIRED)
+find_package(glm REQUIRED)
 find_package(Vulkan REQUIRED)
 
-# add_subdirectory(lib)
+add_subdirectory(lib)
+
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup()
 
 target_include_directories(${PROJECT_NAME}
                     PRIVATE src src/app src/app/input src/trace src/render src/utils src/scene src/time)
-target_link_libraries_system (${PROJECT_NAME} PRIVATE glm glfw stb_image assimp fmt imgui Vulkan::Vulkan)
+target_link_libraries_system (${PROJECT_NAME} PRIVATE glm::glm glfw assimp::assimp fmt::fmt stb_image imgui::imgui Vulkan::Vulkan)
 target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 

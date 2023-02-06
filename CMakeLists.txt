@@ -58,18 +58,17 @@ add_executable(${PROJECT_NAME}
     src/utils/file_manager.hpp src/utils/file_manager.cpp src/utils/assert.hpp src/utils/assert.cpp
 )
 
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup()
 
-find_package(assimp REQUIRED)
-find_package(fmt REQUIRED)
-find_package(glfw3 REQUIRED)
-find_package(imgui REQUIRED)
-find_package(glm REQUIRED)
+# find_package(assimp REQUIRED)
+# find_package(fmt REQUIRED)
+# find_package(glfw3 REQUIRED)
+# find_package(imgui REQUIRED)
+# find_package(glm REQUIRED)
 find_package(Vulkan REQUIRED)
 
 add_subdirectory(lib)
-
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()
 
 target_include_directories(${PROJECT_NAME}
                     PRIVATE src src/app src/app/input src/trace src/render src/utils src/scene src/time)

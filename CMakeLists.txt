@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.18)
 set(PROJECT_NAME Shady)
 project(${PROJECT_NAME} VERSION 0.0.1)
 
+include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
 set(OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/build)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_PATH})
@@ -11,6 +12,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_PATH})
 
 set(ASSETS_PATH ${CMAKE_CURRENT_SOURCE_DIR}/assets)
 set(SHADERS_PATH ${ASSETS_PATH}/shaders)
+
 
 add_definitions( -DCMAKE_ROOT_DIR="${CMAKE_CURRENT_SOURCE_DIR}" )
 
@@ -57,9 +59,15 @@ add_executable(${PROJECT_NAME}
     src/utils/file_manager.hpp src/utils/file_manager.cpp src/utils/assert.hpp src/utils/assert.cpp
 )
 
+
+find_package(assimp REQUIRED)
+find_package(fmt REQUIRED)
+find_package(glfw REQUIRED)
+find_package(imgui REQUIRED)
+find_package(stb_image REQUIRED)
 find_package(Vulkan REQUIRED)
 
-add_subdirectory(lib)
+# add_subdirectory(lib)
 
 target_include_directories(${PROJECT_NAME}
                     PRIVATE src src/app src/app/input src/trace src/render src/utils src/scene src/time)

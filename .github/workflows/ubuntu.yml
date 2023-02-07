@@ -46,7 +46,7 @@ jobs:
         conan install $GITHUB_WORKSPACE --output-folder=build --build=missing --settings=build_type=Release
 
         cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DWARNINGS_AS_ERRORS=ON \
-        -DENABLE_INCLUDE_WHAT_YOU_USE=OFF -DUNITY_BUILD=ON -DASSIMP_BUILD_TESTS=0
+        -DENABLE_INCLUDE_WHAT_YOU_USE=OFF -DUNITY_BUILD=ON
 
         cmake --build . --config $BUILD_TYPE 2> >(tee "output.txt")
 

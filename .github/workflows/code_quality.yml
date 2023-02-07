@@ -18,8 +18,8 @@ jobs:
         conan install /github/workspace --output-folder=build --build=missing --settings=build_type=Release -c tools.system.package_manager:mode=install
 
         wget https://sdk.lunarg.com/sdk/download/1.2.170.0/linux/vulkansdk-linux-x86_64-1.2.170.0.tar.gz
-        tar xf vulkansdk-linux-x86_64-1.2.170.0.tar.gz -C /github/workspace/Shady/lib
-        source /github/workspace/Shady/lib/1.2.170.0/setup-env.sh" > init_script.sh
+        tar xf vulkansdk-linux-x86_64-1.2.170.0.tar.gz -C /github/workspace/lib
+        source /github/workspace/lib/1.2.170.0/setup-env.sh" > init_script.sh
 
     - name: Run static analysis
       uses: JacobDomagala/StaticAnalysis@master

@@ -24,13 +24,20 @@ jobs:
         vulkan-components: Vulkan-Headers, Vulkan-Loader
         vulkan-use-cache: true
 
+    - name: Install Conan
+      id: conan
+      uses: turtlebrowser/get-conan@main
+
     - name: Create Build Environment
-      run: cmake -E make_directory ${{runner.workspace}}/build
+      run: |
+        cmake -E make_directory ${{runner.workspace}}/build
 
     - name: Configure CMake
       shell: bash
       working-directory: ${{runner.workspace}}/build
       run: |
+        conan install $GITHUB_WORKSPACE --output-folder=build --build=missing --settings=build_type=Release
+
         cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE\
         -DASSIMP_BUILD_TESTS=0 -DASSIMP_BUILD_ASSIMP_TOOLS=0 -DBUILD_SHARED_LIBS=0
 

@@ -61,19 +61,16 @@ add_executable(${PROJECT_NAME}
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
-# find_package(assimp REQUIRED)
-# find_package(fmt REQUIRED)
-# find_package(glfw3 REQUIRED)
-# find_package(imgui REQUIRED)
-# find_package(glm REQUIRED)
+message(STATUS "Libs = ${CONAN_LIBS}")
+
 find_package(Vulkan REQUIRED)
 
 add_subdirectory(lib)
 
 target_include_directories(${PROJECT_NAME}
                     PRIVATE src src/app src/app/input src/trace src/render src/utils src/scene src/time)
-target_link_libraries_system (${PROJECT_NAME} PRIVATE glm::glm glfw assimp::assimp fmt::fmt stb_image imgui::imgui Vulkan::Vulkan)
-target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings)
+target_link_libraries_system (${PROJECT_NAME} PRIVATE fmt glfw3 assimp imgui Vulkan::Vulkan)
+target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings ${CONAN_LIBS})
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
 # include(cmake/compile_shaders.cmake)

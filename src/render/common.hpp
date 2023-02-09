@@ -12,16 +12,17 @@
 #include <unordered_map>
 #include <vector>
 #include <vulkan/vulkan.h>
+#include <vulkan/vk_enum_string_helper.h>
 
 // This should make use of <source_location> when it's supported by clang/mvcc
-#define VK_CHECK(vkFunction, errorMessage)                                              \
-   do                                                                                   \
-   {                                                                                    \
-      const auto result = vkFunction;                                                   \
-      if (result != VK_SUCCESS)                                                         \
-      {                                                                                 \
-         utils::Assert(false, fmt::format("{} Return value {}", errorMessage, result)); \
-      }                                                                                 \
+#define VK_CHECK(vkFunction, errorMessage)                                                               \
+   do                                                                                                    \
+   {                                                                                                     \
+      const auto result = vkFunction;                                                                    \
+      if (result != VK_SUCCESS)                                                                          \
+      {                                                                                                  \
+         utils::Assert(false, fmt::format("{} Return value {}", errorMessage, string_VkResult(result))); \
+      }                                                                                                  \
    } while (0);
 
 

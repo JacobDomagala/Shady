@@ -14,13 +14,18 @@ Below you can see famous [Sponza](https://en.wikipedia.org/wiki/Sponza_Palace) s
 ------------------------------------------------------------
 ## Building
 
-Shady is CMake based project working both on Linux (Ubuntu) and Windows. To build it, you will need at least C++17 compiler and CMake version 3.18. </br>
-While most of the dependencies will be handled by CMake, it's required that you have Vulkan installed on your machine.
+Shady is CMake/Conan based project working both on Linux (Ubuntu) and Windows. To build it, you will need at least C++20 compiler and CMake version 3.18. </br>
+While most of the dependencies will be handled by Conan/CMake, it's required that you have Vulkan installed on your machine.
 
 Typical build process would look like this:
 ```bash
 # Create build directory
 mkdir build && cd build
+
+# Use newer ABI
+conan profile new default --detect
+conan profile update settings.compiler.libcxx=libstdc++11 default
+conan install $GITHUB_WORKSPACE --output-folder=build --build=missing --settings=build_type=Release
 
 # Generate build system for Windows/Linux
 cmake -G "Visual Studio 16 2019" ..

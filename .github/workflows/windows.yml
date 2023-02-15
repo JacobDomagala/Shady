@@ -8,8 +8,8 @@ on:
   pull_request:
 
 env:
+  VULKAN_DIR: C:\VulkanSDK
   SDK_VERSION: 1.3.204.1
-  VULKAN_SDK: 'C:\VulkanSDK\$env:SDK_VERSION'
   BUILD_TYPE: Release
 
 jobs:
@@ -17,14 +17,14 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Cache Vulkan SDK
       id: cache-vulkan-sdk
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
-        path: $VULKAN_SDK
-        key: vulkan-sdk-${{ runner.os }}-$SDK_VERSION
+        path: ${{env.VULKAN_DIR}}\${{env.SDK_VERSION}}
+        key: vulkan-sdk-${{ runner.os }}-${{env.SDK_VERSION}}
 
     - name: Download and install Vulkan SDK
       if: steps.cache-vulkan-sdk.outputs.cache-hit != 'true'
@@ -44,7 +44,7 @@ jobs:
     - name: Configure Conan and CMake
       working-directory: ${{runner.workspace}}/build
       run: |
-        $env:VULKAN_SDK="C:\\VulkanSDK\\$env:SDK_VERSION"
+        $env:VULKAN_SDK="$env:VULKAN_DIR\$env:SDK_VERSION"
         conan install $env:GITHUB_WORKSPACE --output-folder=build --build=missing --settings=build_type=$env:BUILD_TYPE
 
         cmake $env:GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$env:BUILD_TYPE

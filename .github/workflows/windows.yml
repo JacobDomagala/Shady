@@ -10,13 +10,11 @@ on:
 env:
   SDK_VERSION: 1.3.204.1
   VULKAN_SDK: 'C:\VulkanSDK\$env:SDK_VERSION'
+  BUILD_TYPE: Release
 
 jobs:
   build:
     runs-on: windows-latest
-
-    env:
-      ACTIONS_STEP_DEBUG: true
 
     steps:
     - uses: actions/checkout@v2
@@ -25,17 +23,13 @@ jobs:
       id: cache-vulkan-sdk
       uses: actions/cache@v2
       with:
-        path: $env:VULKAN_SDK
-        key: vulkan-sdk-${{ runner.os }}-$env:SDK_VERSION
+        path: $VULKAN_SDK
+        key: vulkan-sdk-${{ runner.os }}-$SDK_VERSION
 
     - name: Download and install Vulkan SDK
       if: steps.cache-vulkan-sdk.outputs.cache-hit != 'true'
       run: |
         Invoke-WebRequest -Uri "https://sdk.lunarg.com/sdk/download/$env:SDK_VERSION/windows/VulkanSDK-$env:SDK_VERSION-Installer.exe" -OutFile VulkanSDK.exe;
-
-    - name: Install Vulkan SDK
-      if: steps.cache-vulkan-sdk.outputs.cache-hit != 'true'
-      run: |
         $installer = Start-Process -FilePath VulkanSDK.exe -Wait -PassThru -ArgumentList @("--accept-licenses --default-answer --confirm-command install");
         $installer.WaitForExit();
 
@@ -47,21 +41,18 @@ jobs:
       run: |
         cmake -E make_directory ${{runner.workspace}}/build
 
-    - name: Configure CMake
-      shell: bash
+    - name: Configure Conan and CMake
       working-directory: ${{runner.workspace}}/build
       run: |
-        export VULKAN_SDK="C:\\VulkanSDK\\$env:SDK_VERSION"
-        conan install $GITHUB_WORKSPACE --output-folder=build --build=missing --settings=build_type=Release
+        $env:VULKAN_SDK="C:\\VulkanSDK\\$env:SDK_VERSION"
+        conan install $env:GITHUB_WORKSPACE --output-folder=build --build=missing --settings=build_type=$env:BUILD_TYPE
 
-        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE\
-        -DASSIMP_BUILD_TESTS=0 -DASSIMP_BUILD_ASSIMP_TOOLS=0 -DBUILD_SHARED_LIBS=0
+        cmake $env:GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$env:BUILD_TYPE
 
     - name: Build
       working-directory: ${{runner.workspace}}/build
-      shell: bash
       run: |
-        cmake --build . --config $BUILD_TYPE > output.txt
+        cmake --build . --config $env:BUILD_TYPE > output.txt
         cat output.txt
 
     - name: Post PR comment for warnings/errors

@@ -25,10 +25,9 @@ mkdir build && cd build
 # Use newer ABI
 conan profile new default --detect
 conan profile update settings.compiler.libcxx=libstdc++11 default
-conan install $GITHUB_WORKSPACE --output-folder=build --build=missing --settings=build_type=Release
+conan install .. --output-folder=build --build=missing --settings=build_type=Release
 
 # Generate build system for Windows/Linux
-cmake -G "Visual Studio 16 2019" ..
 cmake -G "Ninja" ..
 
 # Build

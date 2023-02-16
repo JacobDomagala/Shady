@@ -38,16 +38,26 @@ jobs:
 
         cmake -E make_directory ${{runner.workspace}}/build
 
+    - name: Cache Conan packages
+      id: cache-conan
+      uses: actions/cache@v3
+      with:
+        path: ~/.conan/data
+        key: conan-cache-${{ hashFiles('**/conanfile.txt') }}
+
+    - name: Install dependencies with Conan
+      working-directory: ${{runner.workspace}}/build
+      run: |
+        # Use newer ABI
+        conan profile new default --detect
+        conan profile update settings.compiler.libcxx=libstdc++11 default
+        conan install $GITHUB_WORKSPACE --output-folder=build --build=missing --settings=build_type=$BUILD_TYPE
+
     - name: Configure CMake and build
       shell: bash
       working-directory: ${{runner.workspace}}/build
       run: |
         source ${{runner.workspace}}/Shady/$SDK_VERSION/setup-env.sh
-
-        # Use newer ABI
-        conan profile new default --detect
-        conan profile update settings.compiler.libcxx=libstdc++11 default
-        conan install $GITHUB_WORKSPACE --output-folder=build --build=missing --settings=build_type=Release
 
         cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DWARNINGS_AS_ERRORS=ON \
         -DENABLE_INCLUDE_WHAT_YOU_USE=OFF -DUNITY_BUILD=ON

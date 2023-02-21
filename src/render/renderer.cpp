@@ -341,9 +341,13 @@ isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface)
    VkPhysicalDeviceFeatures supportedFeatures;
    vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
-   return indices.isComplete() && extensionsSupported && swapChainAdequate
-          && supportedFeatures.samplerAnisotropy && supportedFeatures.multiDrawIndirect
-          && supportedFeatures.geometryShader;
+   // Make sure we use discrete GPU
+   VkPhysicalDeviceProperties physicalDeviceProperties;
+   vkGetPhysicalDeviceProperties(device, &physicalDeviceProperties);
+   auto isDiscrete = physicalDeviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+
+   return indices.isComplete() && extensionsSupported && swapChainAdequate && isDiscrete
+          && supportedFeatures.samplerAnisotropy && supportedFeatures.multiDrawIndirect;
 }
 
 VkSampleCountFlagBits

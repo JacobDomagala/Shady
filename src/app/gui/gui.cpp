@@ -21,11 +21,11 @@ static inline void
 SetStyle()
 {
    ImGuiStyle& style = ImGui::GetStyle();
-   auto* colors = style.Colors;
+   auto* colors = &style.Colors[0];
 
    /// 0 = FLAT APPEARENCE
    /// 1 = MORE "3D" LOOK
-   int is3D = 1;
+   const int is3D = 1;
 
    colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
    colors[ImGuiCol_TextDisabled] = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
@@ -118,9 +118,9 @@ Gui::Init(const glm::ivec2& windowSize)
    ImGui::CreateContext();
 
    // Dimensions
-   ImGuiIO& io = ImGui::GetIO();
-   io.DisplaySize = ImVec2(static_cast< float >(windowSize.x), static_cast< float >(windowSize.y));
-   io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+   ImGuiIO& io_handle = ImGui::GetIO();
+   io_handle.DisplaySize = ImVec2(static_cast< float >(windowSize.x), static_cast< float >(windowSize.y));
+   io_handle.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
 
    SetStyle();
 
@@ -186,12 +186,12 @@ Gui::UpdateBuffers()
    }
 
    // Upload data
-   auto* vtxDst = reinterpret_cast< ImDrawVert* >(m_vertexBuffer.m_mappedMemory);
-   auto* idxDst = reinterpret_cast< ImDrawIdx* >(m_indexBuffer.m_mappedMemory);
+   auto* vtxDst = static_cast< ImDrawVert* >(m_vertexBuffer.m_mappedMemory);
+   auto* idxDst = static_cast< ImDrawIdx* >(m_indexBuffer.m_mappedMemory);
 
-   for (int n = 0; n < imDrawData->CmdListsCount; n++)
+   for (int cmd_idx = 0; cmd_idx < imDrawData->CmdListsCount; cmd_idx++)
    {
-      const ImDrawList* cmd_list = imDrawData->CmdLists[n];
+      const ImDrawList* cmd_list = imDrawData->CmdLists[cmd_idx];
       memcpy(vtxDst, cmd_list->VtxBuffer.Data,
              static_cast< size_t >(cmd_list->VtxBuffer.Size) * sizeof(ImDrawVert));
       memcpy(idxDst, cmd_list->IdxBuffer.Data,
@@ -210,14 +210,14 @@ Gui::UpdateBuffers()
 bool
 Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
 {
-   ImGuiIO& io = ImGui::GetIO();
-   io.DisplaySize = ImVec2(static_cast< float >(windowSize.x), static_cast< float >(windowSize.y));
+   ImGuiIO& io_handle = ImGui::GetIO();
+   io_handle.DisplaySize = ImVec2(static_cast< float >(windowSize.x), static_cast< float >(windowSize.y));
 
    auto mousePos = input::InputManager::GetMousePos();
 
-   io.MousePos = ImVec2(mousePos.x, mousePos.y);
-   io.MouseDown[0] = input::InputManager::CheckButtonPressed(GLFW_MOUSE_BUTTON_1);
-   io.MouseDown[1] = input::InputManager::CheckButtonPressed(GLFW_MOUSE_BUTTON_2);
+   io_handle.MousePos = ImVec2(mousePos.x, mousePos.y);
+   io_handle.MouseDown[0] = input::InputManager::CheckButtonPressed(GLFW_MOUSE_BUTTON_1);
+   io_handle.MouseDown[1] = input::InputManager::CheckButtonPressed(GLFW_MOUSE_BUTTON_2);
 
    ImGui::NewFrame();
 
@@ -308,7 +308,7 @@ Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
 
    UpdateBuffers();
 
-   return io.WantCaptureMouse;
+   return io_handle.WantCaptureMouse;
 }
 
 void
@@ -323,13 +323,13 @@ Gui::Render(VkCommandBuffer commandBuffer)
       return;
    }
 
-   ImGuiIO& io = ImGui::GetIO();
+   ImGuiIO& io_handle = ImGui::GetIO();
 
    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1,
                            &m_descriptorSet, 0, nullptr);
 
-   m_pushConstant.scale = glm::vec2(2.0f / io.DisplaySize.x, 2.0f / io.DisplaySize.y);
+   m_pushConstant.scale = glm::vec2(2.0f / io_handle.DisplaySize.x, 2.0f / io_handle.DisplaySize.y);
    m_pushConstant.translate = glm::vec2(-1.0f);
    vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
                       sizeof(PushConstBlock), &m_pushConstant);
@@ -360,7 +360,7 @@ Gui::Render(VkCommandBuffer commandBuffer)
 void
 Gui::PrepareResources()
 {
-   ImGuiIO& io = ImGui::GetIO();
+   ImGuiIO& io_handle = ImGui::GetIO();
 
    // Create font texture
    unsigned char* fontData = nullptr;
@@ -369,9 +369,9 @@ Gui::PrepareResources()
 
    const auto fontFilename = (utils::FileManager::FONTS_DIR / "Roboto-Medium.ttf").string();
 
-   io.Fonts->AddFontFromFileTTF(fontFilename.c_str(), 16.0f);
+   io_handle.Fonts->AddFontFromFileTTF(fontFilename.c_str(), 16.0f);
 
-   io.Fonts->GetTexDataAsRGBA32(&fontData, &texWidth, &texHeight);
+   io_handle.Fonts->GetTexDataAsRGBA32(&fontData, &texWidth, &texHeight);
 
 
    std::tie(m_fontImage, m_fontMemory) =

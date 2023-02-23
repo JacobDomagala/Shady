@@ -3,7 +3,7 @@ Checks:          '*,-fuchsia-*,-google-*,-zircon-*,-abseil-*,-modernize-use-trai
 				  -hicpp-uppercase-literal-suffix, -readability-uppercase-literal-suffix, -readability-implicit-bool-conversion,\
 				  -cppcoreguidelines-avoid-magic-numbers, -readability-magic-numbers, -cppcoreguidelines-pro-type-union-access,\
 				  -cppcoreguidelines-pro-bounds-pointer-arithmetic, -cppcoreguidelines-pro-type-reinterpret-cast\
-				  -cppcoreguidelines-pro-type-vararg, -unroll-loops'
+				  -cppcoreguidelines-pro-type-vararg, -unroll-loops, -hicpp-vararg'
 WarningsAsErrors: '*'
 HeaderFilterRegex: ''
 FormatStyle:     none

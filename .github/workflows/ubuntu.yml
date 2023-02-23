@@ -31,7 +31,7 @@ jobs:
         libxcb-sync-dev libxcb-xfixes0-dev libxcb-xinerama0-dev libxcb-dri3-dev \
         libxcb-util-dev libxcb-util0-dev
 
-        pip install conan
+        pip install conan==1.59.0
 
         wget https://sdk.lunarg.com/sdk/download/$SDK_VERSION/linux/vulkansdk-linux-x86_64-$SDK_VERSION.tar.gz
         tar xf vulkansdk-linux-x86_64-$SDK_VERSION.tar.gz

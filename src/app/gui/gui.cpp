@@ -146,9 +146,9 @@ Gui::UpdateBuffers()
    };
 
    // Note: Alignment is done inside buffer creation
-   VkDeviceSize vertexBufferSize =
+   const VkDeviceSize vertexBufferSize =
       static_cast< uint32_t >(imDrawData->TotalVtxCount) * sizeof(ImDrawVert);
-   VkDeviceSize indexBufferSize =
+   const VkDeviceSize indexBufferSize =
       static_cast< uint32_t >(imDrawData->TotalIdxCount) * sizeof(ImDrawIdx);
 
    // Update buffers only if vertex or index count has been changed compared to current buffer size

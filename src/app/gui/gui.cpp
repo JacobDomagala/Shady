@@ -277,6 +277,7 @@ Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
 
    if (ImGui::CollapsingHeader("Shadows"))
    {
+      //NOLINTNEXTLINE
       ImGui::Checkbox("Render PCF", reinterpret_cast< bool* >(&Data::m_debugData.pcfShadow));
 
       if (ImGui::SliderFloat("Shadow Factor", &Data::m_debugData.shadowFactor, 0.0f, 1.0f))
@@ -314,7 +315,7 @@ Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
 void
 Gui::Render(VkCommandBuffer commandBuffer)
 {
-   ImDrawData* imDrawData = ImGui::GetDrawData();
+   auto* imDrawData = ImGui::GetDrawData();
    int32_t vertexOffset = 0;
    uint32_t indexOffset = 0;
 
@@ -323,7 +324,7 @@ Gui::Render(VkCommandBuffer commandBuffer)
       return;
    }
 
-   ImGuiIO& io_handle = ImGui::GetIO();
+   const auto& io_handle = ImGui::GetIO();
 
    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1,
@@ -341,9 +342,9 @@ Gui::Render(VkCommandBuffer commandBuffer)
    for (int32_t i = 0; i < imDrawData->CmdListsCount; i++)
    {
       const ImDrawList* cmd_list = imDrawData->CmdLists[i];
-      for (int32_t j = 0; j < cmd_list->CmdBuffer.Size; j++)
+      for (int32_t cmd_buffer_idx = 0; cmd_buffer_idx < cmd_list->CmdBuffer.Size; cmd_buffer_idx++)
       {
-         const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[j];
+         const auto* pcmd = &cmd_list->CmdBuffer[cmd_buffer_idx];
          VkRect2D scissorRect;
          scissorRect.offset.x = static_cast< int32_t >(glm::max(pcmd->ClipRect.x, 0.0f));
          scissorRect.offset.y = static_cast< int32_t >(glm::max(pcmd->ClipRect.y, 0.0f));

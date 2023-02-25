@@ -35,8 +35,8 @@ FindSupportedFormat(const std::vector< VkFormat >& candidates, VkImageTiling til
       {
          return format;
       }
-      else if (tiling == VK_IMAGE_TILING_OPTIMAL
-               && (props.optimalTilingFeatures & features) == features)
+
+      if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features)
       {
          return format;
       }

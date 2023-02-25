@@ -94,7 +94,7 @@ DeferredPipeline::UpdateUniformBufferComposition(const scene::Camera* camera,
 
    uboComposition.debugData = Data::m_debugData;
 
-   memcpy(m_compositionBuffer.m_mappedMemory, &uboComposition, sizeof(uboComposition));
+   memcpy(m_compositionBuffer.GetMappedMemory(), &uboComposition, sizeof(uboComposition));
 }
 
 void
@@ -566,7 +566,7 @@ DeferredPipeline::SetupDescriptorSet()
    descriptorWrites[3].dstArrayElement = 0;
    descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
    descriptorWrites[3].descriptorCount = 1;
-   descriptorWrites[3].pBufferInfo = &m_compositionBuffer.m_descriptor;
+   descriptorWrites[3].pBufferInfo = &m_compositionBuffer.GetDescriptor();
 
    // Binding 8 : Shadowmap texture
    descriptorWrites[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

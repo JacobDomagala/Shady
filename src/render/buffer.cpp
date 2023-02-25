@@ -10,56 +10,56 @@ namespace shady::render {
 void
 Buffer::Map(VkDeviceSize size)
 {
-   vkMapMemory(Data::vk_device, m_bufferMemory, 0, size, 0, &m_mappedMemory);
-   m_mapped = true;
+   vkMapMemory(Data::vk_device, bufferMemory_, 0, size, 0, &mappedMemory_);
+   mapped_ = true;
 }
 
 void
 Buffer::Unmap()
 {
-   if (m_mapped)
+   if (mapped_)
    {
-      vkUnmapMemory(Data::vk_device, m_bufferMemory);
-      m_mapped = false;
-      m_mappedMemory = nullptr;
+      vkUnmapMemory(Data::vk_device, bufferMemory_);
+      mapped_ = false;
+      mappedMemory_ = nullptr;
    }
 }
 
 void
-Buffer::CopyData(const void* data)
+Buffer::CopyData(const void* data) const
 {
-   utils::Assert(m_mapped, "Buffer is not mapped!");
-   memcpy(m_mappedMemory, data, m_bufferSize);
+   utils::Assert(mapped_, "Buffer is not mapped!");
+   memcpy(mappedMemory_, data, bufferSize_);
 }
 
 void
 Buffer::CopyDataWithStaging(void* data, size_t dataSize)
 {
-   VkBuffer stagingBuffer;
-   VkDeviceMemory stagingBufferMemory;
+   VkBuffer stagingBuffer{};
+   VkDeviceMemory stagingBufferMemory{};
    Buffer::CreateBuffer(dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                         stagingBuffer, stagingBufferMemory);
 
-   void* mapped_data;
+   void* mapped_data{};
    vkMapMemory(Data::vk_device, stagingBufferMemory, 0, dataSize, 0, &mapped_data);
    memcpy(mapped_data, data, dataSize);
    vkUnmapMemory(Data::vk_device, stagingBufferMemory);
 
-   Buffer::CopyBuffer(stagingBuffer, m_buffer, dataSize);
+   Buffer::CopyBuffer(stagingBuffer, buffer_, dataSize);
 }
 
 void
 Buffer::CopyDataToImageWithStaging(VkImage image, void* data, size_t dataSize,
                                    const std::vector< VkBufferImageCopy >& copyRegions)
 {
-   VkBuffer stagingBuffer;
-   VkDeviceMemory stagingBufferMemory;
+   VkBuffer stagingBuffer{};
+   VkDeviceMemory stagingBufferMemory{};
    Buffer::CreateBuffer(dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                         stagingBuffer, stagingBufferMemory);
 
-   void* mapped_data;
+   void* mapped_data{};
    vkMapMemory(Data::vk_device, stagingBufferMemory, 0, dataSize, 0, &mapped_data);
    memcpy(mapped_data, data, dataSize);
    vkUnmapMemory(Data::vk_device, stagingBufferMemory);
@@ -67,7 +67,7 @@ Buffer::CopyDataToImageWithStaging(VkImage image, void* data, size_t dataSize,
    VkCommandBuffer commandBuffer = Command::BeginSingleTimeCommands();
 
    vkCmdCopyBufferToImage(commandBuffer, stagingBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                          static_cast<uint32_t>(copyRegions.size()), copyRegions.data());
+                          static_cast< uint32_t >(copyRegions.size()), copyRegions.data());
 
    Command::EndSingleTimeCommands(commandBuffer);
 
@@ -78,9 +78,9 @@ Buffer::CopyDataToImageWithStaging(VkImage image, void* data, size_t dataSize,
 void
 Buffer::SetupDescriptor(VkDeviceSize /*size*/, VkDeviceSize offset)
 {
-   m_descriptor.offset = offset;
-   m_descriptor.buffer = m_buffer;
-   m_descriptor.range = m_bufferSize;
+   descriptor_.offset = offset;
+   descriptor_.buffer = buffer_;
+   descriptor_.range = bufferSize_;
 }
 
 void
@@ -120,8 +120,8 @@ Buffer
 Buffer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
 {
    Buffer newBuffer;
-   newBuffer.m_bufferSize = size;
-   CreateBuffer(size, usage, properties, newBuffer.m_buffer, newBuffer.m_bufferMemory);
+   newBuffer.bufferSize_ = size;
+   CreateBuffer(size, usage, properties, newBuffer.buffer_, newBuffer.bufferMemory_);
    newBuffer.SetupDescriptor();
 
    return newBuffer;
@@ -162,7 +162,7 @@ Buffer::Flush(VkDeviceSize size, VkDeviceSize offset) const
 {
    VkMappedMemoryRange mappedRange = {};
    mappedRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-   mappedRange.memory = m_bufferMemory;
+   mappedRange.memory = bufferMemory_;
    mappedRange.offset = offset;
    mappedRange.size = size;
 
@@ -172,14 +172,32 @@ Buffer::Flush(VkDeviceSize size, VkDeviceSize offset) const
 void
 Buffer::Destroy()
 {
-   if (m_buffer)
+   if (buffer_)
    {
-      vkDestroyBuffer(Data::vk_device, m_buffer, nullptr);
+      vkDestroyBuffer(Data::vk_device, buffer_, nullptr);
    }
-   if (m_bufferMemory)
+   if (bufferMemory_)
    {
-      vkFreeMemory(Data::vk_device, m_bufferMemory, nullptr);
+      vkFreeMemory(Data::vk_device, bufferMemory_, nullptr);
    }
+}
+
+VkBuffer&
+Buffer::GetBuffer()
+{
+   return buffer_;
+}
+
+void*
+Buffer::GetMappedMemory()
+{
+   return mappedMemory_;
+}
+
+[[nodiscard]] VkDescriptorBufferInfo&
+Buffer::GetDescriptor()
+{
+   return descriptor_;
 }
 
 } // namespace shady::render

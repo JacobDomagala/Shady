@@ -182,7 +182,7 @@ Skybox::CreateDescriptorSet()
 
 
    VkDescriptorBufferInfo bufferInfo{};
-   bufferInfo.buffer = m_uniformBuffer.m_buffer;
+   bufferInfo.buffer = m_uniformBuffer.GetBuffer();
    bufferInfo.offset = 0;
    bufferInfo.range = sizeof(SkyboxUBO);
 
@@ -344,8 +344,8 @@ Skybox::Draw(VkCommandBuffer commandBuffer)
    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 
    VkDeviceSize offsets[1] = {0};
-   vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.m_buffer, offsets);
-   vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.m_buffer, 0, VK_INDEX_TYPE_UINT32);
+   vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.GetBuffer(), offsets);
+   vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
 
    vkCmdDrawIndexed(commandBuffer, 36, 1, 0, 0, 0);
 }

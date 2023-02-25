@@ -133,7 +133,7 @@ Window::GetCursor()
 glm::ivec2
 Window::GetSize() const
 {
-   return glm::ivec2(m_width, m_height);
+   return {m_width, m_height};
 }
 
 GLFWwindow*

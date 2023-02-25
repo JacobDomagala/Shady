@@ -13,9 +13,9 @@ class Shady : public input::InputListener
  public:
    Shady() = default;
    Shady(const Shady&) = delete;
-   Shady(Shady&&) = default;
+   Shady(Shady&&) = delete;
    Shady& operator=(const Shady&) = delete;
-   Shady& operator=(Shady&&) = default;
+   Shady& operator=(Shady&&) = delete;
   ~Shady() override = default;
 
    void

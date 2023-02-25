@@ -50,7 +50,7 @@ InputManager::InternalMouseScrollCallback(GLFWwindow* /* window */, double xoffs
 void
 InputManager::BroadcastEvent(const Event& event)
 {
-   switch (event.m_type)
+   switch (event.GetType())
    {
       case Event::EventType::KEY: {
          for (auto* listener : s_keyListeners)

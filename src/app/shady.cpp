@@ -113,7 +113,7 @@ Shady::OnUpdate()
 void
 Shady::KeyCallback(const input::KeyEvent& event)
 {
-   switch (event.m_key)
+   switch (event.GetKey())
    {
       case GLFW_KEY_ESCAPE: {
          m_active = false;
@@ -133,7 +133,7 @@ Shady::CursorPositionCallback(const input::CursorPositionEvent& event)
    if (input::InputManager::CheckButtonPressed(GLFW_MOUSE_BUTTON_LEFT)
        and !app::gui::Gui::UpdateUI({m_windowWidth, m_windowHeight}, m_currentScene))
    {
-      m_currentScene.GetCamera().MouseMovement({event.m_xDelta, event.m_yDelta});
+      m_currentScene.GetCamera().MouseMovement({event.GetXDelta(), event.GetYDelta()});
    }
 }
 

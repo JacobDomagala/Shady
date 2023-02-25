@@ -6,6 +6,12 @@ namespace shady::app::input {
 
 struct alignas(8) Event
 {
+   Event(const Event&) = default;
+   Event(Event&&) = default;
+   Event& operator=(const Event&) = default;
+   Event& operator=(Event&&) = default;
+   virtual ~Event() = default;
+
    enum class EventType
    {
       KEY,

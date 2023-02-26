@@ -8,9 +8,9 @@ ScopedTimer::ScopedTimer(std::string&& logMsg) : m_logMsg(std::move(logMsg))
    static_cast<void>(m_timer.ToggleTimer());
 }
 
+//NOLINTNEXTLINE
 ScopedTimer::~ScopedTimer()
 {
-   //NOLINTNEXTLINE
    trace::Logger::Debug("{} took {}", m_logMsg, m_timer.ToggleTimer().ToString());
 }
 

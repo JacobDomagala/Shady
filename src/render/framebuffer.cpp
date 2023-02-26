@@ -1,9 +1,11 @@
 #include "framebuffer.hpp"
+#include "assert.hpp"
 #include "common.hpp"
 
+#include <algorithm>
 #include <fmt/format.h>
 #include <numeric>
-#include <algorithm>
+
 
 namespace shady::render {
 
@@ -187,7 +189,7 @@ Framebuffer::AddAttachment(AttachmentCreateInfo createinfo)
       }
    }
 
-   assert(aspectMask > 0);
+   utils::Assert(aspectMask > 0, "Framebuffer::AddAttachment: aspectMask > 0 failed!\n");
 
    VkImageCreateInfo image = {};
    image.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -237,8 +239,8 @@ Framebuffer::AddAttachment(AttachmentCreateInfo createinfo)
    attachment.description_.samples = createinfo.imageSampleCount_;
    attachment.description_.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
    attachment.description_.storeOp = (createinfo.usage_ & VK_IMAGE_USAGE_SAMPLED_BIT)
-                                       ? VK_ATTACHMENT_STORE_OP_STORE
-                                       : VK_ATTACHMENT_STORE_OP_DONT_CARE;
+                                        ? VK_ATTACHMENT_STORE_OP_STORE
+                                        : VK_ATTACHMENT_STORE_OP_DONT_CARE;
    attachment.description_.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
    attachment.description_.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
    attachment.description_.format = createinfo.format_;
@@ -280,7 +282,8 @@ Framebuffer::CreateRenderPass()
       if (attachment.isDepthStencil())
       {
          // Only one depth attachment allowed
-         assert(!hasDepth);
+         utils::Assert(!hasDepth,
+                       "Framebuffer::CreateRenderPass: Only one depth attackment allowed!\n");
          depthReference.attachment = attachmentIndex;
          depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
          hasDepth = true;

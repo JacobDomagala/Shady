@@ -4,6 +4,7 @@
 #include "buffer.hpp"
 #include "command.hpp"
 #include "common.hpp"
+#include "deferred_pipeline.hpp"
 #include "shader.hpp"
 #include "texture.hpp"
 #include "trace/logger.hpp"
@@ -106,7 +107,7 @@ Renderer::SetupData()
    // VkDeviceMemory stagingBufferMemory;
 
    ////  Commands + draw count
-   VkDeviceSize bufferSize = commandsSize + sizeof(uint32_t);
+   const VkDeviceSize bufferSize = commandsSize + sizeof(uint32_t);
 
    Buffer::CreateBuffer(bufferSize, VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
@@ -135,7 +136,7 @@ struct QueueFamilyIndices
    std::optional< uint32_t > graphicsFamily;
    std::optional< uint32_t > presentFamily;
 
-   bool
+   [[nodiscard]] bool
    isComplete() const
    {
       return graphicsFamily.has_value() && presentFamily.has_value();
@@ -182,7 +183,7 @@ checkValidationLayerSupport()
 
    for (const auto& extension : availableLayers)
    {
-      validationLayers.erase(extension.layerName);
+      validationLayers.erase(&extension.layerName[0]);
    }
 
    return validationLayers.empty();
@@ -271,6 +272,8 @@ findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface)
       i++;
    }
 
+   utils::Assert(indices.isComplete(), "Renderer: findQueueFamilies indices are not complete!\n");
+
    return indices;
 }
 
@@ -317,7 +320,7 @@ checkDeviceExtensionSupport(VkPhysicalDevice device)
 
    for (const auto& extension : availableExtensions)
    {
-      requiredExtensions.erase(extension.extensionName);
+      requiredExtensions.erase(&extension.extensionName[0]);
    }
 
    return requiredExtensions.empty();
@@ -407,15 +410,9 @@ chooseSwapPresentMode(const std::vector< VkPresentModeKHR >& availablePresentMod
                                       // non-tearing present mode available
                                       return availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR;
                                    });
-   if (found != availablePresentModes.end())
-   {
-      return *found;
-   }
-   else
-   {
-      // VK_PRESENT_MODE_FIFO_KHR is v-sync
-      return VK_PRESENT_MODE_FIFO_KHR;
-   }
+
+   // VK_PRESENT_MODE_FIFO_KHR is v-sync
+   return found != availablePresentModes.end() ? *found : VK_PRESENT_MODE_FIFO_KHR;
 }
 
 VkExtent2D
@@ -558,7 +555,7 @@ Renderer::CreateRenderPipeline()
    CreatePipelineCache();
 
 
-   m_deferredPipeline.Initialize(Data::m_renderPass, m_swapChainImageViews, Data::m_pipelineCache);
+   DeferredPipeline::Initialize(Data::m_renderPass, m_swapChainImageViews, Data::m_pipelineCache);
    app::gui::Gui::Init({Data::m_swapChainExtent.width, Data::m_swapChainExtent.height});
    //  app::gui::Gui::UpdateUI({Data::m_swapChainExtent.width, Data::m_swapChainExtent.height});
    CreateCommandBufferForDeferred();
@@ -587,7 +584,7 @@ Renderer::UpdateUniformBuffer(const scene::Camera* camera, const scene::Light* l
    memcpy(data2, Data::perInstance.data(), Data::perInstance.size() * sizeof(PerInstanceBuffer));
    vkUnmapMemory(Data::vk_device, Data::m_ssboMemory[m_imageIndex]);
 
-   m_deferredPipeline.UpdateDeferred(camera, light);
+   DeferredPipeline::UpdateDeferred(camera, light);
 }
 
 void
@@ -646,7 +643,8 @@ Renderer::Draw()
 
    VkSubmitInfo submitInfo{};
    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-   std::array<VkPipelineStageFlags, 1> waitStages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+   std::array< VkPipelineStageFlags, 1 > waitStages = {
+      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
    submitInfo.pWaitDstStageMask = waitStages.data();
 
    // Wait for swap chain presentation to finish
@@ -654,12 +652,12 @@ Renderer::Draw()
    submitInfo.waitSemaphoreCount = 1;
 
    // Signal ready with offscreen semaphore
-   submitInfo.pSignalSemaphores = &m_deferredPipeline.GetOffscreenSemaphore();
+   submitInfo.pSignalSemaphores = &DeferredPipeline::GetOffscreenSemaphore();
    submitInfo.signalSemaphoreCount = 1;
 
    // Submit work
    submitInfo.commandBufferCount = 1;
-   submitInfo.pCommandBuffers = &m_deferredPipeline.GetOffscreenCmdBuffer();
+   submitInfo.pCommandBuffers = &DeferredPipeline::GetOffscreenCmdBuffer();
    VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE),
             "failed to submit offscreen draw command buffer!");
 
@@ -668,7 +666,7 @@ Renderer::Draw()
    // Scene rendering
    //
 
-   submitInfo.pWaitSemaphores = &m_deferredPipeline.GetOffscreenSemaphore();
+   submitInfo.pWaitSemaphores = &DeferredPipeline::GetOffscreenSemaphore();
 
    submitInfo.pSignalSemaphores = &m_renderFinishedSemaphores[currentFrame];
 
@@ -768,9 +766,9 @@ Renderer::CreateDevice()
    utils::Assert(Data::vk_physicalDevice != VK_NULL_HANDLE, "failed to find a suitable GPU!");
 
 
-   QueueFamilyIndices indices = findQueueFamilies(Data::vk_physicalDevice, Data::m_surface);
+   const auto indices = findQueueFamilies(Data::vk_physicalDevice, Data::m_surface);
 
-   std::vector< VkDeviceQueueCreateInfo > queueCreateInfos;
+   std::vector< VkDeviceQueueCreateInfo > queueCreateInfos{};
    std::set< uint32_t > uniqueQueueFamilies = {indices.graphicsFamily.value(),
                                                indices.presentFamily.value()};
 
@@ -855,14 +853,14 @@ Renderer::CreateSwapchain(GLFWwindow* windowHandle)
    swapChainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
    QueueFamilyIndices indicesSecond = findQueueFamilies(Data::vk_physicalDevice, Data::m_surface);
-   uint32_t queueFamilyIndices[2] = {indicesSecond.graphicsFamily.value(),
-                                     indicesSecond.presentFamily.value()};
+   std::array< uint32_t, 2 > queueFamilyIndices = {indicesSecond.graphicsFamily.value(),
+                                                   indicesSecond.presentFamily.value()};
 
    if (indicesSecond.graphicsFamily != indicesSecond.presentFamily)
    {
       swapChainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
       swapChainCreateInfo.queueFamilyIndexCount = 2;
-      swapChainCreateInfo.pQueueFamilyIndices = queueFamilyIndices;
+      swapChainCreateInfo.pQueueFamilyIndices = queueFamilyIndices.data();
    }
    else
    {
@@ -951,7 +949,7 @@ Renderer::CreateRenderPass()
    subpass.pDepthStencilAttachment = &depthAttachmentRef;
    // subpass.pResolveAttachments = &colorAttachmentResolveRef;
 
-   std::array< VkSubpassDependency, 2 > dependencies;
+   std::array< VkSubpassDependency, 2 > dependencies{};
 
    dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
    dependencies[0].dstSubpass = 0;
@@ -1095,11 +1093,11 @@ Renderer::CreateCommandBufferForDeferred()
        * STAGE 2 - COMPOSITION
        */
       vkCmdBindDescriptorSets(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                              m_deferredPipeline.GetPipelineLayout(), 0, 1,
-                              &m_deferredPipeline.GetDescriptorSet(), 0, nullptr);
+                              DeferredPipeline::GetPipelineLayout(), 0, 1,
+                              &DeferredPipeline::GetDescriptorSet(), 0, nullptr);
 
       vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                        m_deferredPipeline.GetCompositionPipeline());
+                        DeferredPipeline::GetCompositionPipeline());
 
       // Final composition as full screen quad
       vkCmdDraw(m_commandBuffers[i], 3, 1, 0, 0);

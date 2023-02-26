@@ -21,11 +21,11 @@ static inline void
 SetStyle()
 {
    ImGuiStyle& style = ImGui::GetStyle();
-   auto* colors = style.Colors;
+   auto* colors = &style.Colors[0];
 
    /// 0 = FLAT APPEARENCE
    /// 1 = MORE "3D" LOOK
-   int is3D = 1;
+   const int is3D = 1;
 
    colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
    colors[ImGuiCol_TextDisabled] = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
@@ -118,9 +118,9 @@ Gui::Init(const glm::ivec2& windowSize)
    ImGui::CreateContext();
 
    // Dimensions
-   ImGuiIO& io = ImGui::GetIO();
-   io.DisplaySize = ImVec2(static_cast< float >(windowSize.x), static_cast< float >(windowSize.y));
-   io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+   ImGuiIO& io_handle = ImGui::GetIO();
+   io_handle.DisplaySize = ImVec2(static_cast< float >(windowSize.x), static_cast< float >(windowSize.y));
+   io_handle.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
 
    SetStyle();
 
@@ -146,9 +146,9 @@ Gui::UpdateBuffers()
    };
 
    // Note: Alignment is done inside buffer creation
-   VkDeviceSize vertexBufferSize =
+   const VkDeviceSize vertexBufferSize =
       static_cast< uint32_t >(imDrawData->TotalVtxCount) * sizeof(ImDrawVert);
-   VkDeviceSize indexBufferSize =
+   const VkDeviceSize indexBufferSize =
       static_cast< uint32_t >(imDrawData->TotalIdxCount) * sizeof(ImDrawIdx);
 
    // Update buffers only if vertex or index count has been changed compared to current buffer size
@@ -158,7 +158,7 @@ Gui::UpdateBuffers()
    }
 
    // Vertex buffer
-   if ((m_vertexBuffer.m_buffer == VK_NULL_HANDLE) || (m_vertexCount != imDrawData->TotalVtxCount))
+   if ((m_vertexBuffer.GetBuffer() == VK_NULL_HANDLE) || (m_vertexCount != imDrawData->TotalVtxCount))
    {
       m_vertexBuffer.Unmap();
       m_vertexBuffer.Destroy();
@@ -172,7 +172,7 @@ Gui::UpdateBuffers()
    }
 
    // Index buffer
-   if ((m_indexBuffer.m_buffer == VK_NULL_HANDLE) || (m_indexCount < imDrawData->TotalIdxCount))
+   if ((m_indexBuffer.GetBuffer() == VK_NULL_HANDLE) || (m_indexCount < imDrawData->TotalIdxCount))
    {
       m_indexBuffer.Unmap();
       m_indexBuffer.Destroy();
@@ -186,12 +186,12 @@ Gui::UpdateBuffers()
    }
 
    // Upload data
-   auto* vtxDst = reinterpret_cast< ImDrawVert* >(m_vertexBuffer.m_mappedMemory);
-   auto* idxDst = reinterpret_cast< ImDrawIdx* >(m_indexBuffer.m_mappedMemory);
+   auto* vtxDst = static_cast< ImDrawVert* >(m_vertexBuffer.GetMappedMemory());
+   auto* idxDst = static_cast< ImDrawIdx* >(m_indexBuffer.GetMappedMemory());
 
-   for (int n = 0; n < imDrawData->CmdListsCount; n++)
+   for (int cmd_idx = 0; cmd_idx < imDrawData->CmdListsCount; cmd_idx++)
    {
-      const ImDrawList* cmd_list = imDrawData->CmdLists[n];
+      const ImDrawList* cmd_list = imDrawData->CmdLists[cmd_idx];
       memcpy(vtxDst, cmd_list->VtxBuffer.Data,
              static_cast< size_t >(cmd_list->VtxBuffer.Size) * sizeof(ImDrawVert));
       memcpy(idxDst, cmd_list->IdxBuffer.Data,
@@ -210,14 +210,14 @@ Gui::UpdateBuffers()
 bool
 Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
 {
-   ImGuiIO& io = ImGui::GetIO();
-   io.DisplaySize = ImVec2(static_cast< float >(windowSize.x), static_cast< float >(windowSize.y));
+   ImGuiIO& io_handle = ImGui::GetIO();
+   io_handle.DisplaySize = ImVec2(static_cast< float >(windowSize.x), static_cast< float >(windowSize.y));
 
    auto mousePos = input::InputManager::GetMousePos();
 
-   io.MousePos = ImVec2(mousePos.x, mousePos.y);
-   io.MouseDown[0] = input::InputManager::CheckButtonPressed(GLFW_MOUSE_BUTTON_1);
-   io.MouseDown[1] = input::InputManager::CheckButtonPressed(GLFW_MOUSE_BUTTON_2);
+   io_handle.MousePos = ImVec2(mousePos.x, mousePos.y);
+   io_handle.MouseDown[0] = input::InputManager::CheckButtonPressed(GLFW_MOUSE_BUTTON_1);
+   io_handle.MouseDown[1] = input::InputManager::CheckButtonPressed(GLFW_MOUSE_BUTTON_2);
 
    ImGui::NewFrame();
 
@@ -236,7 +236,7 @@ Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
          std::to_array({"Full scene", "Position", "Normal", "Albedo", "Specular", "ShadowMap"});
 
       // Label to preview before opening the combo
-      const auto* combo_label = items.at(static_cast< uint32_t >(Data::m_debugData.displayDebugTarget));
+      const auto* combo_label = items.at(Data::m_debugData.displayDebugTarget);
 
       if (ImGui::BeginCombo("Render target", combo_label, ImGuiComboFlags_HeightSmall))
       {
@@ -267,7 +267,7 @@ Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
       auto cameraUp = camera.GetUpVec();
       auto rightVec = camera.GetRightVec();
 
-      ImGui::Text("");
+      ImGui::Text(" ");
       ImGui::Text("Camera");
       ImGui::InputFloat3("Position", &cameraPos[0], "%.3f", ImGuiInputTextFlags_ReadOnly);
       ImGui::InputFloat3("Direction", &cameraLookAt[0], "%.3f", ImGuiInputTextFlags_ReadOnly);
@@ -277,6 +277,7 @@ Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
 
    if (ImGui::CollapsingHeader("Shadows"))
    {
+      //NOLINTNEXTLINE
       ImGui::Checkbox("Render PCF", reinterpret_cast< bool* >(&Data::m_debugData.pcfShadow));
 
       if (ImGui::SliderFloat("Shadow Factor", &Data::m_debugData.shadowFactor, 0.0f, 1.0f))
@@ -308,13 +309,13 @@ Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
 
    UpdateBuffers();
 
-   return io.WantCaptureMouse;
+   return io_handle.WantCaptureMouse;
 }
 
 void
 Gui::Render(VkCommandBuffer commandBuffer)
 {
-   ImDrawData* imDrawData = ImGui::GetDrawData();
+   auto* imDrawData = ImGui::GetDrawData();
    int32_t vertexOffset = 0;
    uint32_t indexOffset = 0;
 
@@ -323,27 +324,27 @@ Gui::Render(VkCommandBuffer commandBuffer)
       return;
    }
 
-   ImGuiIO& io = ImGui::GetIO();
+   const auto& io_handle = ImGui::GetIO();
 
    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1,
                            &m_descriptorSet, 0, nullptr);
 
-   m_pushConstant.scale = glm::vec2(2.0f / io.DisplaySize.x, 2.0f / io.DisplaySize.y);
+   m_pushConstant.scale = glm::vec2(2.0f / io_handle.DisplaySize.x, 2.0f / io_handle.DisplaySize.y);
    m_pushConstant.translate = glm::vec2(-1.0f);
    vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
                       sizeof(PushConstBlock), &m_pushConstant);
 
    std::array<VkDeviceSize, 1> offsets = {0};
-   vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.m_buffer, offsets.data());
-   vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.m_buffer, 0, VK_INDEX_TYPE_UINT16);
+   vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.GetBuffer(), offsets.data());
+   vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.GetBuffer(), 0, VK_INDEX_TYPE_UINT16);
 
    for (int32_t i = 0; i < imDrawData->CmdListsCount; i++)
    {
       const ImDrawList* cmd_list = imDrawData->CmdLists[i];
-      for (int32_t j = 0; j < cmd_list->CmdBuffer.Size; j++)
+      for (int32_t cmd_buffer_idx = 0; cmd_buffer_idx < cmd_list->CmdBuffer.Size; cmd_buffer_idx++)
       {
-         const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[j];
+         const auto* pcmd = &cmd_list->CmdBuffer[cmd_buffer_idx];
          VkRect2D scissorRect;
          scissorRect.offset.x = static_cast< int32_t >(glm::max(pcmd->ClipRect.x, 0.0f));
          scissorRect.offset.y = static_cast< int32_t >(glm::max(pcmd->ClipRect.y, 0.0f));
@@ -360,7 +361,7 @@ Gui::Render(VkCommandBuffer commandBuffer)
 void
 Gui::PrepareResources()
 {
-   ImGuiIO& io = ImGui::GetIO();
+   ImGuiIO& io_handle = ImGui::GetIO();
 
    // Create font texture
    unsigned char* fontData = nullptr;
@@ -369,9 +370,9 @@ Gui::PrepareResources()
 
    const auto fontFilename = (utils::FileManager::FONTS_DIR / "Roboto-Medium.ttf").string();
 
-   io.Fonts->AddFontFromFileTTF(fontFilename.c_str(), 16.0f);
+   io_handle.Fonts->AddFontFromFileTTF(fontFilename.c_str(), 16.0f);
 
-   io.Fonts->GetTexDataAsRGBA32(&fontData, &texWidth, &texHeight);
+   io_handle.Fonts->GetTexDataAsRGBA32(&fontData, &texWidth, &texHeight);
 
 
    std::tie(m_fontImage, m_fontMemory) =

@@ -91,7 +91,7 @@ Window::SwapBuffers()
 void
 Window::ShowCursor(bool choice)
 {
-   int mode = choice ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED;
+   const int mode = choice ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED;
    glfwSetInputMode(m_pWindow, GLFW_CURSOR, mode);
 }
 
@@ -112,7 +112,7 @@ Window::GetCursorNormalized()
 {
    auto cursorPos = GetCursor();
 
-   glm::vec2 centerOfScreen(static_cast< float >(m_width) / 2.0f,
+   const glm::vec2 centerOfScreen(static_cast< float >(m_width) / 2.0f,
                             static_cast< float >(m_height) / 2.0f);
 
    cursorPos -= centerOfScreen;
@@ -133,7 +133,7 @@ Window::GetCursor()
 glm::ivec2
 Window::GetSize() const
 {
-   return glm::ivec2(m_width, m_height);
+   return {m_width, m_height};
 }
 
 GLFWwindow*

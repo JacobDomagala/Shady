@@ -50,12 +50,12 @@ InputManager::InternalMouseScrollCallback(GLFWwindow* /* window */, double xoffs
 void
 InputManager::BroadcastEvent(const Event& event)
 {
-   switch (event.m_type)
+   switch (event.GetType())
    {
       case Event::EventType::KEY: {
          for (auto* listener : s_keyListeners)
          {
-            listener->KeyCallback(static_cast< const KeyEvent& >(event));
+            listener->KeyCallback(dynamic_cast< const KeyEvent& >(event));
          }
       }
       break;
@@ -63,7 +63,7 @@ InputManager::BroadcastEvent(const Event& event)
       case Event::EventType::MOUSE_BUTTON: {
          for (auto* listener : s_mouseButtonListeners)
          {
-            listener->MouseButtonCallback(static_cast< const MouseButtonEvent& >(event));
+            listener->MouseButtonCallback(dynamic_cast< const MouseButtonEvent& >(event));
          }
       }
       break;
@@ -71,7 +71,7 @@ InputManager::BroadcastEvent(const Event& event)
       case Event::EventType::MOUSE_CURSOR: {
          for (auto* listener : s_mouseMovementListeners)
          {
-            listener->CursorPositionCallback(static_cast< const CursorPositionEvent& >(event));
+            listener->CursorPositionCallback(dynamic_cast< const CursorPositionEvent& >(event));
          }
       }
       break;
@@ -79,7 +79,7 @@ InputManager::BroadcastEvent(const Event& event)
       case Event::EventType::MOUSE_SCROLL: {
          for (auto* listener : s_mouseScrollListeners)
          {
-            listener->MouseScrollCallback(static_cast< const MouseScrollEvent& >(event));
+            listener->MouseScrollCallback(dynamic_cast< const MouseScrollEvent& >(event));
          }
       }
       break;

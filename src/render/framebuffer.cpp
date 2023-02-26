@@ -1,9 +1,11 @@
 #include "framebuffer.hpp"
+#include "assert.hpp"
 #include "common.hpp"
 
+#include <algorithm>
 #include <fmt/format.h>
 #include <numeric>
-#include <algorithm>
+
 
 namespace shady::render {
 
@@ -15,30 +17,30 @@ Framebuffer::Create(int32_t width, int32_t height)
 
    // Four attachments (3 color, 1 depth)
    AttachmentCreateInfo attachmentInfo = {};
-   attachmentInfo.width = static_cast< uint32_t >(width);
-   attachmentInfo.height = static_cast< uint32_t >(height);
-   attachmentInfo.layerCount = 1;
-   attachmentInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+   attachmentInfo.width_ = static_cast< uint32_t >(width);
+   attachmentInfo.height_ = static_cast< uint32_t >(height);
+   attachmentInfo.layerCount_ = 1;
+   attachmentInfo.usage_ = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
    // Color attachments
    // Attachment 0: (World space) Positions
-   attachmentInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+   attachmentInfo.format_ = VK_FORMAT_R16G16B16A16_SFLOAT;
    AddAttachment(attachmentInfo);
 
    // Attachment 1: (World space) Normals
-   attachmentInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+   attachmentInfo.format_ = VK_FORMAT_R16G16B16A16_SFLOAT;
    AddAttachment(attachmentInfo);
 
    // Attachment 2: Albedo (color)
-   attachmentInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+   attachmentInfo.format_ = VK_FORMAT_R8G8B8A8_UNORM;
    AddAttachment(attachmentInfo);
 
    // Depth attachment
    // Find a suitable depth format
    const auto attDepthFormat = FindDepthFormat();
 
-   attachmentInfo.format = attDepthFormat;
-   attachmentInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+   attachmentInfo.format_ = attDepthFormat;
+   attachmentInfo.usage_ = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
    AddAttachment(attachmentInfo);
 
    // Create sampler to sample from the color attachments
@@ -64,11 +66,11 @@ Framebuffer::CreateShadowMap(int32_t width, int32_t height, int32_t numLights)
    // instancing We will pass the matrices of the lights to the GS that selects the layer by the
    // current invocation
    AttachmentCreateInfo attachmentInfo = {};
-   attachmentInfo.format = SHADOWMAP_FORMAT;
-   attachmentInfo.width = static_cast< uint32_t >(width);
-   attachmentInfo.height = static_cast< uint32_t >(height);
-   attachmentInfo.layerCount = static_cast< uint32_t >(numLights);
-   attachmentInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+   attachmentInfo.format_ = SHADOWMAP_FORMAT;
+   attachmentInfo.width_ = static_cast< uint32_t >(width);
+   attachmentInfo.height_ = static_cast< uint32_t >(height);
+   attachmentInfo.layerCount_ = static_cast< uint32_t >(numLights);
+   attachmentInfo.usage_ = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
    AddAttachment(attachmentInfo);
 
@@ -108,35 +110,35 @@ Framebuffer::GetSampler() const
 VkImageView
 Framebuffer::GetPositionsImageView() const
 {
-   utils::Assert(m_attachments.size() > 0, "");
-   return m_attachments[0].view;
+   utils::Assert(not m_attachments.empty(), "");
+   return m_attachments[0].view_;
 }
 
 VkImageView
 Framebuffer::GetNormalsImageView() const
 {
    utils::Assert(m_attachments.size() > 1, "");
-   return m_attachments[1].view;
+   return m_attachments[1].view_;
 }
 
 VkImageView
 Framebuffer::GetAlbedoImageView() const
 {
    utils::Assert(m_attachments.size() > 2, "");
-   return m_attachments[2].view;
+   return m_attachments[2].view_;
 }
 
 VkImageView
 Framebuffer::GetShadowMapView() const
 {
-   utils::Assert(m_attachments.size() > 0, "");
-   return m_attachments[0].view;
+   utils::Assert(not m_attachments.empty(), "");
+   return m_attachments[0].view_;
 }
 
 VkSampler
 Framebuffer::CreateSampler(VkFilter magFilter, VkFilter minFilter, VkSamplerAddressMode adressMode)
 {
-   VkSampler sampler;
+   VkSampler sampler{};
 
    VkSamplerCreateInfo samplerInfo{};
    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -160,22 +162,22 @@ Framebuffer::CreateSampler(VkFilter magFilter, VkFilter minFilter, VkSamplerAddr
 uint32_t
 Framebuffer::AddAttachment(AttachmentCreateInfo createinfo)
 {
-   FramebufferAttachment attachment;
+   FramebufferAttachment attachment{};
 
-   attachment.format = createinfo.format;
+   attachment.format_ = createinfo.format_;
 
-   VkImageAspectFlags aspectMask = 0;
+   VkImageAspectFlags aspectMask = VK_IMAGE_ASPECT_NONE_KHR;
 
    // Select aspect mask and layout depending on usage
 
    // Color attachment
-   if (createinfo.usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+   if (createinfo.usage_ & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
    {
       aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
    }
 
    // Depth (and/or stencil) attachment
-   if (createinfo.usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
+   if (createinfo.usage_ & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
    {
       if (attachment.hasDepth())
       {
@@ -187,71 +189,71 @@ Framebuffer::AddAttachment(AttachmentCreateInfo createinfo)
       }
    }
 
-   assert(aspectMask > 0);
+   utils::Assert(aspectMask > 0, "Framebuffer::AddAttachment: aspectMask > 0 failed!\n");
 
    VkImageCreateInfo image = {};
    image.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
    image.imageType = VK_IMAGE_TYPE_2D;
-   image.format = createinfo.format;
-   image.extent.width = createinfo.width;
-   image.extent.height = createinfo.height;
+   image.format = createinfo.format_;
+   image.extent.width = createinfo.width_;
+   image.extent.height = createinfo.height_;
    image.extent.depth = 1;
    image.mipLevels = 1;
-   image.arrayLayers = createinfo.layerCount;
-   image.samples = createinfo.imageSampleCount;
+   image.arrayLayers = createinfo.layerCount_;
+   image.samples = createinfo.imageSampleCount_;
    image.tiling = VK_IMAGE_TILING_OPTIMAL;
-   image.usage = createinfo.usage;
+   image.usage = createinfo.usage_;
 
    VkMemoryAllocateInfo memAlloc = {};
    memAlloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
    VkMemoryRequirements memReqs;
 
    // Create image for this attachment
-   VK_CHECK(vkCreateImage(Data::vk_device, &image, nullptr, &attachment.image), "");
-   vkGetImageMemoryRequirements(Data::vk_device, attachment.image, &memReqs);
+   VK_CHECK(vkCreateImage(Data::vk_device, &image, nullptr, &attachment.image_), "");
+   vkGetImageMemoryRequirements(Data::vk_device, attachment.image_, &memReqs);
    memAlloc.allocationSize = memReqs.size;
    memAlloc.memoryTypeIndex =
       FindMemoryType(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-   VK_CHECK(vkAllocateMemory(Data::vk_device, &memAlloc, nullptr, &attachment.memory), "");
-   VK_CHECK(vkBindImageMemory(Data::vk_device, attachment.image, attachment.memory, 0), "");
+   VK_CHECK(vkAllocateMemory(Data::vk_device, &memAlloc, nullptr, &attachment.memory_), "");
+   VK_CHECK(vkBindImageMemory(Data::vk_device, attachment.image_, attachment.memory_, 0), "");
 
-   attachment.subresourceRange = {};
-   attachment.subresourceRange.aspectMask = aspectMask;
-   attachment.subresourceRange.levelCount = 1;
-   attachment.subresourceRange.layerCount = createinfo.layerCount;
+   attachment.subresourceRange_ = {};
+   attachment.subresourceRange_.aspectMask = aspectMask;
+   attachment.subresourceRange_.levelCount = 1;
+   attachment.subresourceRange_.layerCount = createinfo.layerCount_;
 
    VkImageViewCreateInfo imageView = {};
    imageView.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
    imageView.viewType =
-      (createinfo.layerCount == 1) ? VK_IMAGE_VIEW_TYPE_2D : VK_IMAGE_VIEW_TYPE_2D_ARRAY;
-   imageView.format = createinfo.format;
-   imageView.subresourceRange = attachment.subresourceRange;
+      (createinfo.layerCount_ == 1) ? VK_IMAGE_VIEW_TYPE_2D : VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+   imageView.format = createinfo.format_;
+   imageView.subresourceRange = attachment.subresourceRange_;
    // todo: workaround for depth+stencil attachments
    imageView.subresourceRange.aspectMask =
       (attachment.hasDepth()) ? VK_IMAGE_ASPECT_DEPTH_BIT : aspectMask;
-   imageView.image = attachment.image;
-   VK_CHECK(vkCreateImageView(Data::vk_device, &imageView, nullptr, &attachment.view), "");
+   imageView.image = attachment.image_;
+   VK_CHECK(vkCreateImageView(Data::vk_device, &imageView, nullptr, &attachment.view_), "");
 
    // Fill attachment description
-   attachment.description = {};
-   attachment.description.samples = createinfo.imageSampleCount;
-   attachment.description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-   attachment.description.storeOp = (createinfo.usage & VK_IMAGE_USAGE_SAMPLED_BIT)
-                                       ? VK_ATTACHMENT_STORE_OP_STORE
-                                       : VK_ATTACHMENT_STORE_OP_DONT_CARE;
-   attachment.description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-   attachment.description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-   attachment.description.format = createinfo.format;
-   attachment.description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+   attachment.description_ = {};
+   attachment.description_.samples = createinfo.imageSampleCount_;
+   attachment.description_.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+   attachment.description_.storeOp = (createinfo.usage_ & VK_IMAGE_USAGE_SAMPLED_BIT)
+                                        ? VK_ATTACHMENT_STORE_OP_STORE
+                                        : VK_ATTACHMENT_STORE_OP_DONT_CARE;
+   attachment.description_.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+   attachment.description_.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+   attachment.description_.format = createinfo.format_;
+   attachment.description_.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
    // Final layout
    // If not, final layout depends on attachment type
    if (attachment.hasDepth() || attachment.hasStencil())
    {
-      attachment.description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+      attachment.description_.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
    }
    else
    {
-      attachment.description.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      attachment.description_.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
    }
 
    m_attachments.push_back(attachment);
@@ -265,7 +267,7 @@ Framebuffer::CreateRenderPass()
    std::vector< VkAttachmentDescription > attachmentDescriptions;
    std::transform(m_attachments.begin(), m_attachments.end(),
                   std::back_inserter(attachmentDescriptions),
-                  [](const auto& attachment) { return attachment.description; });
+                  [](const auto& attachment) { return attachment.description_; });
 
    // Collect attachment references
    std::vector< VkAttachmentReference > colorReferences;
@@ -275,12 +277,13 @@ Framebuffer::CreateRenderPass()
 
    uint32_t attachmentIndex = 0;
 
-   for (auto& attachment : m_attachments)
+   for (const auto& attachment : m_attachments)
    {
       if (attachment.isDepthStencil())
       {
          // Only one depth attachment allowed
-         assert(!hasDepth);
+         utils::Assert(!hasDepth,
+                       "Framebuffer::CreateRenderPass: Only one depth attackment allowed!\n");
          depthReference.attachment = attachmentIndex;
          depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
          hasDepth = true;
@@ -307,7 +310,7 @@ Framebuffer::CreateRenderPass()
    }
 
    // Use subpass dependencies for attachment layout transitions
-   std::array< VkSubpassDependency, 2 > dependencies;
+   std::array< VkSubpassDependency, 2 > dependencies{};
 
    dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
    dependencies[0].dstSubpass = 0;
@@ -340,13 +343,13 @@ Framebuffer::CreateRenderPass()
 
    std::vector< VkImageView > attachmentViews;
    std::transform(m_attachments.begin(), m_attachments.end(), std::back_inserter(attachmentViews),
-                  [](const auto& attachment) { return attachment.view; });
+                  [](const auto& attachment) { return attachment.view_; });
 
    // Find. max number of layers across attachments
-   uint32_t maxLayers =
+   const uint32_t maxLayers =
       std::accumulate(m_attachments.begin(), m_attachments.end(), uint32_t{0},
                       [](uint32_t curMax, const auto& right) {
-                         return std::max({curMax, right.subresourceRange.layerCount});
+                         return std::max({curMax, right.subresourceRange_.layerCount});
                       });
 
    VkFramebufferCreateInfo framebufferInfo = {};

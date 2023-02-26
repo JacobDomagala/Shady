@@ -1,7 +1,8 @@
 #pragma once
 
-#include <vulkan/vulkan.h>
 #include <vector>
+#include <vulkan/vulkan.h>
+
 
 namespace shady::render {
 
@@ -33,7 +34,7 @@ class Buffer
    Unmap();
 
    void
-   CopyData(const void* data);
+   CopyData(const void* data) const;
 
    void
    CopyDataWithStaging(void* data, size_t dataSize);
@@ -51,14 +52,23 @@ class Buffer
    void
    Destroy();
 
- public:
-   void* m_mappedMemory = nullptr;
-   bool m_mapped = false;
-   VkBuffer m_buffer = {};
-   VkDeviceMemory m_bufferMemory = {};
-   VkDeviceSize m_bufferSize = {};
-   VkDescriptorBufferInfo m_descriptor = {};
+   [[nodiscard]] VkBuffer&
+   GetBuffer();
+
+   [[nodiscard]] void*
+   GetMappedMemory();
+
+   [[nodiscard]] VkDescriptorBufferInfo&
+   GetDescriptor();
+
+ private:
+   void* mappedMemory_ = nullptr;
+   bool mapped_ = false;
+   VkBuffer buffer_ = {};
+   VkDeviceMemory bufferMemory_ = {};
+   VkDeviceSize bufferSize_ = {};
+   VkDescriptorBufferInfo descriptor_ = {};
 };
 
 
-} // namespace shady::render::vulkan
+} // namespace shady::render

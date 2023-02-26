@@ -66,8 +66,8 @@ Texture::CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels,
                      VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling,
                      VkImageUsageFlags usage, VkMemoryPropertyFlags properties, bool cubemap)
 {
-   VkImage image;
-   VkDeviceMemory imageMemory;
+   VkImage image{};
+   VkDeviceMemory imageMemory{};
 
    VkImageCreateInfo imageInfo{};
    imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -115,7 +115,7 @@ Texture::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspe
    viewInfo.subresourceRange.baseArrayLayer = 0;
    viewInfo.subresourceRange.layerCount = not cubemap ? 1 : 6;
 
-   VkImageView imageView;
+   VkImageView imageView{};
    VK_CHECK(vkCreateImageView(Data::vk_device, &viewInfo, nullptr, &imageView),
             "Failed to create texture image view!");
 
@@ -125,7 +125,7 @@ Texture::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspe
 VkSampler
 Texture::CreateSampler(uint32_t mipLevels)
 {
-   VkSampler sampler;
+   VkSampler sampler{};
 
    VkPhysicalDeviceProperties properties{};
    vkGetPhysicalDeviceProperties(Data::vk_physicalDevice, &properties);
@@ -221,9 +221,14 @@ Texture::GenerateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, 
                            &barrier);
 
       if (mipWidth > 1)
+      {
          mipWidth /= 2;
+      }
+
       if (mipHeight > 1)
+      {
          mipHeight /= 2;
+      }
    }
 
    barrier.subresourceRange.baseMipLevel = mipLevels - 1;
@@ -297,7 +302,7 @@ Texture::CopyBufferToCubemapImage(VkImage image, uint32_t texWidth, uint32_t tex
       bufferCopyRegion.imageExtent.width = texWidth;
       bufferCopyRegion.imageExtent.height = texHeight;
       bufferCopyRegion.imageExtent.depth = 1;
-      bufferCopyRegion.bufferOffset = static_cast<VkDeviceSize>(face * single_face_size);
+      bufferCopyRegion.bufferOffset = face * single_face_size;
 
       bufferCopyRegions.push_back(bufferCopyRegion);
    }

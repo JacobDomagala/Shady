@@ -6,7 +6,7 @@
 namespace shady::scene {
 
 Camera::Camera(const glm::mat4& projection, const glm::vec3& position)
-   : m_projectionMat(projection), m_position(position)
+   : projectionMat_(projection), position_(position)
 {
    UpdateViewMatrix();
 }
@@ -14,13 +14,13 @@ Camera::Camera(const glm::mat4& projection, const glm::vec3& position)
 void
 Camera::SetProjection(const glm::mat4& projection)
 {
-   m_projectionMat = projection;
+   projectionMat_ = projection;
 }
 
 const glm::mat4&
 Camera::GetProjection() const
 {
-   return m_projectionMat;
+   return projectionMat_;
 }
 
 void
@@ -28,12 +28,12 @@ Camera::SetView(const glm::mat4& view)
 {
    const auto inversed = glm::inverse(view);
 
-   m_rightVector = glm::normalize(inversed[0]);
-   m_position = inversed[3];
-   m_lookAtDirection = glm::vec3(inversed[1]) - m_position;
-   m_upVector = glm::normalize(glm::cross(m_rightVector, glm::normalize(m_lookAtDirection)));
+   rightVector_ = glm::normalize(inversed[0]);
+   position_ = inversed[3];
+   lookAtDirection_ = glm::vec3(inversed[1]) - position_;
+   upVector_ = glm::normalize(glm::cross(rightVector_, glm::normalize(lookAtDirection_)));
 
-   m_viewMat = view;
+   viewMat_ = view;
 
    UpdateViewProjection();
 }
@@ -41,63 +41,63 @@ Camera::SetView(const glm::mat4& view)
 const glm::mat4&
 Camera::GetView() const
 {
-   return m_viewMat;
+   return viewMat_;
 }
 
 void
 Camera::SetViewProjection(const glm::mat4& viewProjection)
 {
-   m_viewProjectionMat = viewProjection;
+   viewProjectionMat_ = viewProjection;
 }
 
 const glm::mat4&
 Camera::GetViewProjection() const
 {
-   return m_viewProjectionMat;
+   return viewProjectionMat_;
 }
 
 void
 Camera::SetPosition(const glm::vec3& position)
 {
-   m_position = position;
+   position_ = position;
    UpdateViewMatrix();
 }
 
 const glm::vec3&
 Camera::GetPosition() const
 {
-   return m_position;
+   return position_;
 }
 
 const glm::vec3&
 Camera::GetLookAtVec() const
 {
-   return m_lookAtDirection;
+   return lookAtDirection_;
 }
 
 const glm::vec3&
 Camera::GetUpVec() const
 {
-   return m_upVector;
+   return upVector_;
 }
 
 const glm::vec3&
 Camera::GetRightVec() const
 {
-   return m_rightVector;
+   return rightVector_;
 }
 
 void
 Camera::UpdateViewMatrix()
 {
-   m_viewMat = glm::lookAt(m_position, m_position + m_lookAtDirection, m_upVector);
+   viewMat_ = glm::lookAt(position_, position_ + lookAtDirection_, upVector_);
    UpdateViewProjection();
 }
 
 void
 Camera::UpdateViewProjection()
 {
-   m_viewProjectionMat = m_projectionMat * m_viewMat;
+   viewProjectionMat_ = projectionMat_ * viewMat_;
 }
 
 } // namespace shady::scene

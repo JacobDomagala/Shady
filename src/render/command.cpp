@@ -12,7 +12,7 @@ Command::BeginSingleTimeCommands()
    allocInfo.commandPool = Data::vk_commandPool;
    allocInfo.commandBufferCount = 1;
 
-   VkCommandBuffer commandBuffer;
+   VkCommandBuffer commandBuffer{};
    vkAllocateCommandBuffers(Data::vk_device, &allocInfo, &commandBuffer);
 
    VkCommandBufferBeginInfo beginInfo{};

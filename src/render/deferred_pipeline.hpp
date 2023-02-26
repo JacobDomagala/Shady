@@ -19,57 +19,58 @@ namespace shady::render {
 class DeferredPipeline
 {
  public:
-   void
+   static void
    Initialize(VkRenderPass mainRenderPass, const std::vector< VkImageView >& swapChainImageViews,
               VkPipelineCache pipelineCache);
 
-   VkDescriptorSet&
+   static VkDescriptorSet&
    GetDescriptorSet();
 
-   VkPipelineLayout
+   static VkPipelineLayout
    GetPipelineLayout();
 
-   VkPipeline
+   static VkPipeline
    GetCompositionPipeline();
 
-   VkCommandBuffer&
+   static VkCommandBuffer&
    GetOffscreenCmdBuffer();
 
-   VkSemaphore&
+   static VkSemaphore&
    GetOffscreenSemaphore();
 
-   void
+   static void
    UpdateDeferred(const scene::Camera* camera, const scene::Light* light);
 
  private:
-   void
+   static void
    ShadowSetup();
 
    // Prepare a new framebuffer and attachments for offscreen rendering (G-Buffer)
-   void
+   static void
    PrepareOffscreenFramebuffer();
 
-   void
+   static void
    PrepareUniformBuffers();
 
-   void
+   static void
    SetupDescriptorSetLayout();
 
-   void
+   static void
    PreparePipelines();
 
-   void
+   static void
    SetupDescriptorPool();
 
-   void
+   static void
    SetupDescriptorSet();
 
-   void
+   static void
    BuildDeferredCommandBuffer(const std::vector< VkImageView >& swapChainImageViews);
 
-   void
+   static void
    UpdateUniformBufferComposition(const scene::Camera* camera, const scene::Light* light);
-   void
+
+   static void
    UpdateUniformBufferOffscreen(const scene::Camera* camera);
 
    inline static VkRenderPass m_mainRenderPass = {};

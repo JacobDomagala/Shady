@@ -11,7 +11,12 @@ namespace shady::app {
 class Shady : public input::InputListener
 {
  public:
-   ~Shady() override = default;
+   Shady() = default;
+   Shady(const Shady&) = delete;
+   Shady(Shady&&) = delete;
+   Shady& operator=(const Shady&) = delete;
+   Shady& operator=(Shady&&) = delete;
+  ~Shady() override = default;
 
    void
    Init();

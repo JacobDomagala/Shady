@@ -121,7 +121,7 @@ Skybox::CreateBuffers()
 void
 Skybox::UpdateBuffers(const scene::Camera* camera)
 {
-   SkyboxUBO buffer;
+   SkyboxUBO buffer{};
    buffer.viewProjection = camera->GetProjection() * glm::mat4(glm::mat3(camera->GetView()));
 
    m_uniformBuffer.CopyData(&buffer);
@@ -182,7 +182,7 @@ Skybox::CreateDescriptorSet()
 
 
    VkDescriptorBufferInfo bufferInfo{};
-   bufferInfo.buffer = m_uniformBuffer.m_buffer;
+   bufferInfo.buffer = m_uniformBuffer.GetBuffer();
    bufferInfo.offset = 0;
    bufferInfo.range = sizeof(SkyboxUBO);
 
@@ -229,8 +229,8 @@ Skybox::CreatePipeline()
 
    auto [vertexInfo, fragmentInfo] =
       Shader::CreateShader(Data::vk_device, "default/skybox.vert.spv", "default/skybox.frag.spv");
-   VkPipelineShaderStageCreateInfo shaderStages[] = {vertexInfo.shaderInfo,
-                                                     fragmentInfo.shaderInfo};
+   std::array< VkPipelineShaderStageCreateInfo, 2 > shaderStages = {vertexInfo.shaderInfo,
+                                                                    fragmentInfo.shaderInfo};
 
    VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
    vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -318,7 +318,7 @@ Skybox::CreatePipeline()
    VkGraphicsPipelineCreateInfo pipelineInfo{};
    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
    pipelineInfo.stageCount = 2;
-   pipelineInfo.pStages = shaderStages;
+   pipelineInfo.pStages = shaderStages.data();
    pipelineInfo.pVertexInputState = &vertexInputInfo;
    pipelineInfo.pInputAssemblyState = &inputAssembly;
    pipelineInfo.pViewportState = &viewportState;
@@ -343,9 +343,9 @@ Skybox::Draw(VkCommandBuffer commandBuffer)
                            &m_descriptorSet, 0, nullptr);
    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 
-   VkDeviceSize offsets[1] = {0};
-   vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.m_buffer, offsets);
-   vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.m_buffer, 0, VK_INDEX_TYPE_UINT32);
+   std::array<VkDeviceSize, 1> offsets = {0};
+   vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.GetBuffer(), offsets.data());
+   vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
 
    vkCmdDrawIndexed(commandBuffer, 36, 1, 0, 0, 0);
 }

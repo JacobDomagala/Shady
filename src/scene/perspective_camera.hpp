@@ -7,6 +7,14 @@ namespace shady::scene {
 class PerspectiveCamera : public Camera
 {
  public:
+   PerspectiveCamera() = delete;
+   PerspectiveCamera(const PerspectiveCamera&) = delete;
+   PerspectiveCamera(PerspectiveCamera&&) = delete;
+   PerspectiveCamera&
+   operator=(const PerspectiveCamera&) = delete;
+   PerspectiveCamera&
+   operator=(PerspectiveCamera&&) = delete;
+
    PerspectiveCamera(const glm::mat4& projection, const glm::vec3& position);
    PerspectiveCamera(float fieldOfView, float aspectRatio, float nearClip, float farClip,
                      const glm::vec3& position);
@@ -23,9 +31,9 @@ class PerspectiveCamera : public Camera
    RotateCamera(float angle, const glm::vec3& axis) override;
 
  private:
-   float m_yaw = 0.0f;
-   float m_pitch = 0.0f;
-   bool m_constrainPitch = true;
+   float yaw_ = 0.0f;
+   float pitch_ = 0.0f;
+   bool constrainPitch_ = true;
 };
 
 } // namespace shady::scene

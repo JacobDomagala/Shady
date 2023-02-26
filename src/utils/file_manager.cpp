@@ -10,7 +10,7 @@
 
 namespace shady::utils {
 
-auto static CreatePath(std::filesystem::path rootPath, std::string_view assetPath)
+auto static CreatePath(const std::filesystem::path& rootPath, std::string_view assetPath)
 {
    auto new_path = rootPath / "";
    new_path += std::filesystem::path(assetPath);
@@ -78,8 +78,10 @@ render::ImageData
 FileManager::ReadTexture(std::string_view fileName, bool flipVertical)
 {
    const auto pathToImage = CreatePath(TEXTURES_DIR, fileName);
-   int force_channels = STBI_rgb_alpha;
-   int w, h, n;
+   const int force_channels = STBI_rgb_alpha;
+   int w{};
+   int h{};
+   int n{};
 
    stbi_set_flip_vertically_on_load(flipVertical);
 

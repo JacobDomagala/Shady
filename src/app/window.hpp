@@ -13,6 +13,11 @@ class Window
 {
  public:
    Window() = default;
+   Window(const Window&) = delete;
+   Window(Window&&) = delete;
+   Window& operator=(const Window&) = delete;
+   Window& operator=(Window&&) = delete;
+
    Window(int32_t width, int32_t height, const std::string& title);
    ~Window();
 
@@ -22,6 +27,7 @@ class Window
    void
    ShutDown();
 
+   [[nodiscard]]
    glm::ivec2
    GetSize() const;
 
@@ -44,18 +50,22 @@ class Window
 
    // update and get cursor position <-1, 1>
    // with positive 'y' is up
+   [[nodiscard]]
    glm::vec2
    GetCursorScreenPosition(const glm::mat4& projectionMatrix);
 
    // update and get cursor position <-1, 1>
    // with positive 'y' is down
+   [[nodiscard]]
    glm::vec2
    GetCursorNormalized();
 
    // return current cursor position on window
+   [[nodiscard]]
    glm::vec2
    GetCursor();
 
+   [[nodiscard]]
    GLFWwindow*
    GetWindowHandle();
 

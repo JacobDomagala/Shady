@@ -8,6 +8,7 @@
 
 namespace shady::render {
 
+//NOLINTNEXTLINE
 using ImageHandleType = std::unique_ptr< uint8_t[], std::function< void(uint8_t*) > >;
 
 struct ImageData
@@ -24,6 +25,7 @@ namespace shady::utils {
 class FileManager
 {
  public:
+ //NOLINTBEGIN
    static inline const std::filesystem::path ROOT_DIR =
       std::filesystem::path(std::string(CMAKE_ROOT_DIR));
    static inline const std::filesystem::path ASSETS_DIR = ROOT_DIR / "assets";
@@ -31,6 +33,7 @@ class FileManager
    static inline const std::filesystem::path SHADERS_DIR = ASSETS_DIR / "shaders";
    static inline const std::filesystem::path MODELS_DIR = ASSETS_DIR / "models";
    static inline const std::filesystem::path FONTS_DIR = ASSETS_DIR / "fonts";
+//NOLINTEND
 
  public:
    static std::string

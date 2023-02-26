@@ -4,60 +4,61 @@
 
 namespace shady::scene {
 
+//NOLINTNEXTLINE
 Mesh::Mesh(const std::string& name, std::vector< render::Vertex >&& vertices,
            std::vector< uint32_t >&& indices, render::TextureMaps&& textures)
-   : m_vertices(std::move(vertices)),
-     m_indices(std::move(indices)),
-     m_textures(std::move(textures)),
-     m_name(name)
+   : vertices_(std::move(vertices)),
+     indices_(std::move(indices)),
+     textures_(std::move(textures)),
+     name_(name)
 {
 }
 
 // void
 // Mesh::AddTexture(const render::TexturePtr& texture)
 //{
-//   //m_textures.push_back(texture);
+//   //textures_.push_back(texture);
 //}
 
 void
 Mesh::Submit()
 {
-   render::Renderer::MeshLoaded(m_vertices, m_indices, m_textures, m_modelMat);
+   render::Renderer::MeshLoaded(vertices_, indices_, textures_, modelMat_);
 }
 
 void
 Mesh::Draw(const std::string& /*modelName*/, const glm::mat4& /*modelMat*/,
            const glm::vec4& /*tintColor*/)
 {
-   // render::Renderer3D::DrawMesh(m_name, modelMat, m_textures, tintColor);
-   render::Renderer::MeshLoaded(m_vertices, m_indices, m_textures, m_modelMat);
+   // render::Renderer3D::DrawMesh(name_, modelMat, textures_, tintColor);
+   render::Renderer::MeshLoaded(vertices_, indices_, textures_, modelMat_);
 }
 
 void
 Mesh::Scale(const glm::vec3& scale)
 {
-   m_scaleMat = glm::scale(glm::mat4(1.0f), scale);
+   scaleMat_ = glm::scale(glm::mat4(1.0f), scale);
    RebuildModelMat();
 }
 
 void
 Mesh::Rotate(float roateVal, const glm::vec3& axis)
 {
-   m_rotateMat = glm::rotate(glm::mat4(1.0f), roateVal, axis);
+   rotateMat_ = glm::rotate(glm::mat4(1.0f), roateVal, axis);
    RebuildModelMat();
 }
 
 void
 Mesh::Translate(const glm::vec3& translateVal)
 {
-   m_translateMat = glm::translate(glm::mat4(1.0f), translateVal);
+   translateMat_ = glm::translate(glm::mat4(1.0f), translateVal);
    RebuildModelMat();
 }
 
 void
 Mesh::RebuildModelMat()
 {
-   m_modelMat = m_translateMat * m_scaleMat * m_rotateMat;
+   modelMat_ = translateMat_ * scaleMat_ * rotateMat_;
 }
 
 } // namespace shady::scene

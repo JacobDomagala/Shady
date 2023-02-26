@@ -114,7 +114,7 @@ Renderer::SetupData()
 
    void* data = nullptr;
    vkMapMemory(Data::vk_device, Data::m_indirectDrawsBufferMemory, 0, bufferSize, 0, &data);
-   memcpy(data, Data::m_renderCommands.data(), static_cast< size_t >(bufferSize));
+   memcpy(data, Data::m_renderCommands.data(), bufferSize);
    memcpy(static_cast< uint8_t* >(data) + commandsSize, &Data::m_numMeshes, sizeof(uint32_t));
 
 
@@ -455,7 +455,7 @@ Renderer::CreateVertexBuffer()
 
    void* data = nullptr;
    vkMapMemory(Data::vk_device, stagingBufferMemory, 0, bufferSize, 0, &data);
-   memcpy(data, Data::vertices.data(), static_cast< size_t >(bufferSize));
+   memcpy(data, Data::vertices.data(), bufferSize);
    vkUnmapMemory(Data::vk_device, stagingBufferMemory);
 
    Buffer::CreateBuffer(
@@ -481,7 +481,7 @@ Renderer::CreateIndexBuffer()
 
    void* data = nullptr;
    vkMapMemory(Data::vk_device, stagingBufferMemory, 0, bufferSize, 0, &data);
-   memcpy(data, Data::indices.data(), static_cast< size_t >(bufferSize));
+   memcpy(data, Data::indices.data(), bufferSize);
    vkUnmapMemory(Data::vk_device, stagingBufferMemory);
 
    Buffer::CreateBuffer(

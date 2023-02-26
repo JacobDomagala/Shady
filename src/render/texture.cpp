@@ -297,7 +297,7 @@ Texture::CopyBufferToCubemapImage(VkImage image, uint32_t texWidth, uint32_t tex
       bufferCopyRegion.imageExtent.width = texWidth;
       bufferCopyRegion.imageExtent.height = texHeight;
       bufferCopyRegion.imageExtent.depth = 1;
-      bufferCopyRegion.bufferOffset = static_cast<VkDeviceSize>(face * single_face_size);
+      bufferCopyRegion.bufferOffset = face * single_face_size;
 
       bufferCopyRegions.push_back(bufferCopyRegion);
    }

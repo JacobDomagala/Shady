@@ -236,7 +236,7 @@ Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
          std::to_array({"Full scene", "Position", "Normal", "Albedo", "Specular", "ShadowMap"});
 
       // Label to preview before opening the combo
-      const auto* combo_label = items.at(static_cast< uint32_t >(Data::m_debugData.displayDebugTarget));
+      const auto* combo_label = items.at(Data::m_debugData.displayDebugTarget);
 
       if (ImGui::BeginCombo("Render target", combo_label, ImGuiComboFlags_HeightSmall))
       {
@@ -267,7 +267,7 @@ Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
       auto cameraUp = camera.GetUpVec();
       auto rightVec = camera.GetRightVec();
 
-      ImGui::Text("");
+      ImGui::Text(" ");
       ImGui::Text("Camera");
       ImGui::InputFloat3("Position", &cameraPos[0], "%.3f", ImGuiInputTextFlags_ReadOnly);
       ImGui::InputFloat3("Direction", &cameraLookAt[0], "%.3f", ImGuiInputTextFlags_ReadOnly);

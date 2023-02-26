@@ -275,7 +275,7 @@ Framebuffer::CreateRenderPass()
 
    uint32_t attachmentIndex = 0;
 
-   for (auto& attachment : m_attachments)
+   for (const auto& attachment : m_attachments)
    {
       if (attachment.isDepthStencil())
       {
@@ -343,7 +343,7 @@ Framebuffer::CreateRenderPass()
                   [](const auto& attachment) { return attachment.view_; });
 
    // Find. max number of layers across attachments
-   uint32_t maxLayers =
+   const uint32_t maxLayers =
       std::accumulate(m_attachments.begin(), m_attachments.end(), uint32_t{0},
                       [](uint32_t curMax, const auto& right) {
                          return std::max({curMax, right.subresourceRange_.layerCount});

@@ -38,9 +38,6 @@ add_executable(${PROJECT_NAME}
     # time
     src/time/timer.hpp src/time/timer.cpp src/time/scoped_timer.hpp src/time/scoped_timer.cpp src/time/utils.hpp src/time/utils.cpp
 
-    # render
-    src/render/helpers.hpp
-
     # render/vulkan
     "src/render/renderer.hpp" "src/render/renderer.cpp" "src/render/shader.hpp" "src/render/shader.cpp"
     "src/render/buffer.hpp" "src/render/buffer.cpp" "src/render/texture.hpp" "src/render/texture.cpp"

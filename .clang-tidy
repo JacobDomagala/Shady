@@ -6,7 +6,7 @@ Checks:          '*,-fuchsia-*,-google-*,-zircon-*,-abseil-*,-modernize-use-trai
 				  -cppcoreguidelines-pro-type-vararg, -altera-unroll-loops, -hicpp-vararg, -avoid-non-const-global-variables,\
 				  -cppcoreguidelines-avoid-non-const-global-variables, -altera-id-dependent-backward-branch, -hicpp-signed-bitwise,\
 				  -readability-identifier-length, -readability-redundant-access-specifiers, -bugprone-easily-swappable-parameters,\
-				  -misc-non-private-member-variables-in-classes, -altera-struct-pack-align'
+				  -misc-non-private-member-variables-in-classes, -altera-struct-pack-align, -cppcoreguidelines-non-private-member-variables-in-classes'
 WarningsAsErrors: '*'
 HeaderFilterRegex: ''
 FormatStyle:     none

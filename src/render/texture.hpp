@@ -47,13 +47,13 @@ class Texture
    static void
    CopyBufferToCubemapImage(VkImage image, uint32_t texWidth, uint32_t texHeight, uint8_t* data);
 
-   std::pair< VkImageView, VkSampler >
+   [[nodiscard]] std::pair< VkImageView, VkSampler >
    GetImageViewAndSampler() const;
 
    void
    CreateTextureSampler();
 
-   TextureType
+   [[nodiscard]] TextureType
    GetType() const;
 
  private:

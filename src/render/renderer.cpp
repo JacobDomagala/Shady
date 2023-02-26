@@ -336,16 +336,16 @@ isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface)
    bool swapChainAdequate = false;
    if (extensionsSupported)
    {
-      SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device, surface);
+      const auto swapChainSupport = querySwapChainSupport(device, surface);
       swapChainAdequate =
          !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
    }
 
-   VkPhysicalDeviceFeatures supportedFeatures;
+   VkPhysicalDeviceFeatures supportedFeatures{};
    vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
    // Make sure we use discrete GPU
-   VkPhysicalDeviceProperties physicalDeviceProperties;
+   VkPhysicalDeviceProperties physicalDeviceProperties{};
    vkGetPhysicalDeviceProperties(device, &physicalDeviceProperties);
    auto isDiscrete = physicalDeviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
 
@@ -356,11 +356,11 @@ isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface)
 VkSampleCountFlagBits
 getMaxUsableSampleCount(VkPhysicalDevice& physicalDevice)
 {
-   VkPhysicalDeviceProperties physicalDeviceProperties;
+   VkPhysicalDeviceProperties physicalDeviceProperties{};
    vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
 
-   VkSampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts
-                               & physicalDeviceProperties.limits.framebufferDepthSampleCounts;
+   const VkSampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts
+                                     & physicalDeviceProperties.limits.framebufferDepthSampleCounts;
    if (counts & VK_SAMPLE_COUNT_64_BIT)
    {
       return VK_SAMPLE_COUNT_64_BIT;
@@ -442,7 +442,7 @@ chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, GLFWwindow* windo
 void
 Renderer::CreateVertexBuffer()
 {
-   VkDeviceSize bufferSize = sizeof(Data::vertices[0]) * Data::vertices.size();
+   const VkDeviceSize bufferSize = sizeof(Data::vertices[0]) * Data::vertices.size();
 
    VkBuffer stagingBuffer = {};
    VkDeviceMemory stagingBufferMemory = {};
@@ -494,8 +494,8 @@ Renderer::CreateIndexBuffer()
 void
 Renderer::CreateUniformBuffers()
 {
-   VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-   VkDeviceSize SSBObufferSize = Data::perInstance.size() * sizeof(PerInstanceBuffer);
+   const VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+   const VkDeviceSize SSBObufferSize = Data::perInstance.size() * sizeof(PerInstanceBuffer);
 
    const auto swapchainImagesSize = m_swapChainImages.size();
 
@@ -590,7 +590,7 @@ Renderer::UpdateUniformBuffer(const scene::Camera* camera, const scene::Light* l
 void
 Renderer::CreateColorResources()
 {
-   VkFormat colorFormat = m_swapChainImageFormat;
+   const VkFormat colorFormat = m_swapChainImageFormat;
 
    std::tie(m_colorImage, m_colorImageMemory) = Texture::CreateImage(
       Data::m_swapChainExtent.width, Data::m_swapChainExtent.height, 1,
@@ -604,7 +604,7 @@ Renderer::CreateColorResources()
 void
 Renderer::CreateDepthResources()
 {
-   VkFormat depthFormat = FindDepthFormat();
+   const VkFormat depthFormat = FindDepthFormat();
 
    const auto [depthImage, depthImageMemory] = Texture::CreateImage(
       Data::m_swapChainExtent.width, Data::m_swapChainExtent.height, 1,
@@ -769,10 +769,14 @@ Renderer::CreateDevice()
    const auto indices = findQueueFamilies(Data::vk_physicalDevice, Data::m_surface);
 
    std::vector< VkDeviceQueueCreateInfo > queueCreateInfos{};
-   std::set< uint32_t > uniqueQueueFamilies = {indices.graphicsFamily.value(),
-                                               indices.presentFamily.value()};
 
-   float queuePriority = 1.0f;
+   // indices.isComplete() is called in findQueueFamilies
+   // NOLINTBEGIN
+   const std::set< uint32_t > uniqueQueueFamilies = {indices.graphicsFamily.value(),
+                                                     indices.presentFamily.value()};
+   // NOLINTEND
+
+   const auto queuePriority = 1.0f;
    for (auto queueFamily : uniqueQueueFamilies)
    {
       VkDeviceQueueCreateInfo queueCreateInfo{};
@@ -819,19 +823,22 @@ Renderer::CreateDevice()
    VK_CHECK(vkCreateDevice(Data::vk_physicalDevice, &createInfo, nullptr, &Data::vk_device),
             "failed to create logical device!");
 
+   // indices.isComplete() is called in findQueueFamilies
+
+   // NOLINTBEGIN
    vkGetDeviceQueue(Data::vk_device, indices.graphicsFamily.value(), 0, &Data::vk_graphicsQueue);
    vkGetDeviceQueue(Data::vk_device, indices.presentFamily.value(), 0, &Data::m_presentQueue);
+   // NOLINTEND
 }
 
 void
 Renderer::CreateSwapchain(GLFWwindow* windowHandle)
 {
-   SwapChainSupportDetails swapChainSupport =
-      querySwapChainSupport(Data::vk_physicalDevice, Data::m_surface);
+   const auto swapChainSupport = querySwapChainSupport(Data::vk_physicalDevice, Data::m_surface);
 
-   VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
-   VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
-   VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities, windowHandle);
+   const auto surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
+   const auto presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
+   const auto extent = chooseSwapExtent(swapChainSupport.capabilities, windowHandle);
 
    uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
    if (swapChainSupport.capabilities.maxImageCount > 0
@@ -852,9 +859,13 @@ Renderer::CreateSwapchain(GLFWwindow* windowHandle)
    swapChainCreateInfo.imageArrayLayers = 1;
    swapChainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-   QueueFamilyIndices indicesSecond = findQueueFamilies(Data::vk_physicalDevice, Data::m_surface);
-   std::array< uint32_t, 2 > queueFamilyIndices = {indicesSecond.graphicsFamily.value(),
+   const auto indicesSecond = findQueueFamilies(Data::vk_physicalDevice, Data::m_surface);
+   // indices.isComplete() is called in findQueueFamilies
+
+   // NOLINTBEGIN
+   const std::array< uint32_t, 2 > queueFamilyIndices = {indicesSecond.graphicsFamily.value(),
                                                    indicesSecond.presentFamily.value()};
+   // NOLINTEND
 
    if (indicesSecond.graphicsFamily != indicesSecond.presentFamily)
    {
@@ -1027,6 +1038,10 @@ Renderer::CreateCommandPool()
    VkCommandPoolCreateInfo poolInfo{};
    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
    poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+   // indices.isComplete() is called in findQueueFamilies
+
+   // NOLINTNEXTLINE
    poolInfo.queueFamilyIndex = queueFamilyIndicesTwo.graphicsFamily.value();
 
    VK_CHECK(vkCreateCommandPool(Data::vk_device, &poolInfo, nullptr, &Data::vk_commandPool),

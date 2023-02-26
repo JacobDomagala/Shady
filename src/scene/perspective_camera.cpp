@@ -19,21 +19,21 @@ PerspectiveCamera::PerspectiveCamera(float fieldOfView, float aspectRatio, float
 void
 PerspectiveCamera::MouseMovement(const glm::vec2& mouseMovement)
 {
-   m_yaw += mouseMovement.x;
-   m_pitch += mouseMovement.y;
+   yaw_ += mouseMovement.x;
+   pitch_ += mouseMovement.y;
 
-   if (m_constrainPitch)
+   if (constrainPitch_)
    {
-      m_pitch = glm::clamp(m_pitch, -89.0f, 89.0f);
+      pitch_ = glm::clamp(pitch_, -89.0f, 89.0f);
    }
 
-   m_lookAtDirection.x = -glm::cos(glm::radians(m_yaw)) * glm::cos(glm::radians(m_pitch));
-   m_lookAtDirection.y = glm::sin(glm::radians(m_pitch));
-   m_lookAtDirection.z = -glm::sin(glm::radians(m_yaw)) * glm::cos(glm::radians(m_pitch));
-   m_lookAtDirection = glm::normalize(m_lookAtDirection);
+   lookAtDirection_.x = -glm::cos(glm::radians(yaw_)) * glm::cos(glm::radians(pitch_));
+   lookAtDirection_.y = glm::sin(glm::radians(pitch_));
+   lookAtDirection_.z = -glm::sin(glm::radians(yaw_)) * glm::cos(glm::radians(pitch_));
+   lookAtDirection_ = glm::normalize(lookAtDirection_);
 
-   m_rightVector = glm::normalize(glm::cross(m_lookAtDirection, m_worldUp));
-   m_upVector = glm::normalize(glm::cross(m_rightVector, m_lookAtDirection));
+   rightVector_ = glm::normalize(glm::cross(lookAtDirection_, worldUp_));
+   upVector_ = glm::normalize(glm::cross(rightVector_, lookAtDirection_));
 
    UpdateViewMatrix();
 }
@@ -43,10 +43,10 @@ PerspectiveCamera::MoveCamera(const glm::vec2& leftRightVec)
 {
    constexpr auto cameraSpeed = 0.5f;
 
-   trace::Logger::Trace("Camera Pos:{} LookAtDir:{} RightVec:{}", m_position, m_lookAtDirection,
-                        m_rightVector);
-   m_position += cameraSpeed * (leftRightVec.y * m_lookAtDirection);
-   m_position += cameraSpeed * (leftRightVec.x * m_rightVector);
+   trace::Logger::Trace("Camera Pos:{} LookAtDir:{} RightVec:{}", position_, lookAtDirection_,
+                        rightVector_);
+   position_ += cameraSpeed * (leftRightVec.y * lookAtDirection_);
+   position_ += cameraSpeed * (leftRightVec.x * rightVector_);
 
    UpdateViewMatrix();
 }
@@ -54,10 +54,10 @@ PerspectiveCamera::MoveCamera(const glm::vec2& leftRightVec)
 void
 PerspectiveCamera::RotateCamera(float /*angle*/, const glm::vec3& /*axis*/)
 {
-   m_lookAtDirection = glm::normalize(m_lookAtDirection);
+   lookAtDirection_ = glm::normalize(lookAtDirection_);
 
-   m_rightVector = glm::normalize(glm::cross(m_lookAtDirection, m_worldUp));
-   m_upVector = glm::normalize(glm::cross(m_rightVector, m_lookAtDirection));
+   rightVector_ = glm::normalize(glm::cross(lookAtDirection_, worldUp_));
+   upVector_ = glm::normalize(glm::cross(rightVector_, lookAtDirection_));
    UpdateViewMatrix();
 }
 

@@ -15,7 +15,7 @@ class Scene;
 
 namespace shady::app::gui {
 
-struct alignas(16) PushConstBlock
+struct PushConstBlock
 {
    glm::vec2 scale;
    glm::vec2 translate;

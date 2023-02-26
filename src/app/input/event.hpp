@@ -4,7 +4,7 @@
 
 namespace shady::app::input {
 
-struct alignas(8) Event
+struct Event
 {
    Event(const Event&) = default;
    Event(Event&&) = default;
@@ -41,7 +41,7 @@ struct alignas(8) Event
    bool handled_ = false;
 };
 
-struct alignas(16) KeyEvent : public Event
+struct KeyEvent : public Event
 {
    KeyEvent(int32_t key, int32_t scanCode, int32_t action, int32_t mods)
       : Event(EventType::KEY), key_(key), scanCode_(scanCode), action_(action), mods_(mods)
@@ -79,7 +79,7 @@ struct alignas(16) KeyEvent : public Event
    int32_t mods_;
 };
 
-struct alignas(16) MouseButtonEvent : public Event
+struct MouseButtonEvent : public Event
 {
    MouseButtonEvent(int32_t button, int32_t action, int32_t mods)
       : Event(EventType::MOUSE_BUTTON), buttton_(button), action_(action), mods_(mods)
@@ -110,7 +110,7 @@ struct alignas(16) MouseButtonEvent : public Event
    int32_t mods_;
 };
 
-struct alignas(32) CursorPositionEvent : public Event
+struct CursorPositionEvent : public Event
 {
    CursorPositionEvent(double x, double y, double xDelta, double yDelta)
       : Event(EventType::MOUSE_CURSOR), xPos_(x), yPos_(y), xDelta_(xDelta), yDelta_(yDelta)
@@ -148,7 +148,7 @@ struct alignas(32) CursorPositionEvent : public Event
    double yDelta_;
 };
 
-struct alignas(16) MouseScrollEvent : public Event
+struct MouseScrollEvent : public Event
 {
    MouseScrollEvent(double xOffset, double yOffset)
       : Event(EventType::MOUSE_SCROLL), xOffset_(xOffset), yOffset_(yOffset)

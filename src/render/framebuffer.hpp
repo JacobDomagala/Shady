@@ -1,9 +1,10 @@
 #pragma once
 
+#include <algorithm>
 #include <glm/glm.hpp>
 #include <vector>
-#include <algorithm>
 #include <vulkan/vulkan.h>
+
 
 namespace shady::render {
 
@@ -12,31 +13,24 @@ namespace shady::render {
  */
 struct FramebufferAttachment
 {
-   VkImage image;
-   VkDeviceMemory memory;
-   VkImageView view;
-   VkFormat format;
-   VkImageSubresourceRange subresourceRange;
-   VkAttachmentDescription description;
-
    /**
     * @brief Returns true if the attachment has a depth component
     */
-   bool
-   hasDepth()
+   [[nodiscard]] bool
+   hasDepth() const
    {
       std::vector< VkFormat > formats = {
          VK_FORMAT_D16_UNORM,         VK_FORMAT_X8_D24_UNORM_PACK32, VK_FORMAT_D32_SFLOAT,
          VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT,   VK_FORMAT_D32_SFLOAT_S8_UINT,
       };
-      return std::find(formats.begin(), formats.end(), format) != std::end(formats);
+      return std::find(formats.begin(), formats.end(), format_) != std::end(formats);
    }
 
    /**
     * @brief Returns true if the attachment has a stencil component
     */
-   bool
-   hasStencil()
+   [[nodiscard]] bool
+   hasStencil() const
    {
       std::vector< VkFormat > formats = {
          VK_FORMAT_S8_UINT,
@@ -44,17 +38,25 @@ struct FramebufferAttachment
          VK_FORMAT_D24_UNORM_S8_UINT,
          VK_FORMAT_D32_SFLOAT_S8_UINT,
       };
-      return std::find(formats.begin(), formats.end(), format) != std::end(formats);
+      return std::find(formats.begin(), formats.end(), format_) != std::end(formats);
    }
 
    /**
     * @brief Returns true if the attachment is a depth and/or stencil attachment
     */
-   bool
-   isDepthStencil()
+   [[nodiscard]] bool
+   isDepthStencil() const
    {
       return (hasDepth() || hasStencil());
    }
+
+ public:
+   VkImage image_ = {};
+   VkDeviceMemory memory_ = {};
+   VkImageView view_ = {};
+   VkFormat format_ = {};
+   VkImageSubresourceRange subresourceRange_ = {};
+   VkAttachmentDescription description_ = {};
 };
 
 /**
@@ -62,11 +64,12 @@ struct FramebufferAttachment
  */
 struct AttachmentCreateInfo
 {
-   uint32_t width, height;
-   uint32_t layerCount;
-   VkFormat format;
-   VkImageUsageFlags usage;
-   VkSampleCountFlagBits imageSampleCount = VK_SAMPLE_COUNT_1_BIT;
+   uint32_t width_ = {};
+   uint32_t height_ = {};
+   uint32_t layerCount_ = {};
+   VkFormat format_ = {};
+   VkImageUsageFlags usage_ = {};
+   VkSampleCountFlagBits imageSampleCount_ = VK_SAMPLE_COUNT_1_BIT;
 };
 
 class Framebuffer
@@ -78,28 +81,28 @@ class Framebuffer
    void
    CreateShadowMap(int32_t width, int32_t height, int32_t numLights);
 
-   glm::ivec2
+   [[nodiscard]] glm::ivec2
    GetSize() const;
 
-   VkRenderPass
+   [[nodiscard]] VkRenderPass
    GetRenderPass() const;
 
-   VkFramebuffer
+   [[nodiscard]] VkFramebuffer
    GetFramebuffer() const;
 
-   VkImageView
+   [[nodiscard]] VkImageView
    GetPositionsImageView() const;
 
-   VkImageView
+   [[nodiscard]] VkImageView
    GetNormalsImageView() const;
 
-   VkImageView
+   [[nodiscard]] VkImageView
    GetAlbedoImageView() const;
 
-   VkImageView
+   [[nodiscard]] VkImageView
    GetShadowMapView() const;
 
-   VkSampler
+   [[nodiscard]] VkSampler
    GetSampler() const;
 
  private:
@@ -132,7 +135,7 @@ class Framebuffer
     *
     * @return VkResult for the sampler creation
     */
-   VkSampler
+   static VkSampler
    CreateSampler(VkFilter magFilter, VkFilter minFilter, VkSamplerAddressMode adressMode);
 
  private:
@@ -141,8 +144,7 @@ class Framebuffer
    VkFramebuffer m_framebuffer = {};
    std::vector< FramebufferAttachment > m_attachments = {};
    VkRenderPass m_renderPass = {};
-
    VkSampler m_sampler = {};
 };
 
-} // namespace shady::render::vulkan
+} // namespace shady::render

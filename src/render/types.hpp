@@ -14,14 +14,14 @@ enum class TextureType
    CUBE_MAP = 3
 };
 
-struct alignas(128) UniformBufferObject
+struct UniformBufferObject
 {
    glm::mat4 proj = {};
    glm::mat4 view = {};
    glm::mat4 lightView = {};
 };
 
-struct alignas(16) DebugData
+struct DebugData
 {
    uint32_t displayDebugTarget = 0;
    int32_t pcfShadow = 1;
@@ -29,7 +29,7 @@ struct alignas(16) DebugData
    float shadowFactor = 0.1f;
 };
 
-struct alignas(128) PerInstanceBuffer
+struct PerInstanceBuffer
 {
    glm::mat4 model = {};
    glm::vec4 textures = {};

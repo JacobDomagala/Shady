@@ -19,7 +19,7 @@ float timer = 0.0f;
 constexpr float depthBiasConstant = 1.25f;
 constexpr float depthBiasSlope = 1.75f;
 
-struct alignas(128) Light
+struct Light
 {
    glm::vec4 position = {};
    glm::vec4 target = {};
@@ -27,14 +27,14 @@ struct alignas(128) Light
    glm::mat4 viewMatrix = {};
 };
 
-struct alignas(128) UboOffscreenVS
+struct UboOffscreenVS
 {
    glm::mat4 projection = {};
    glm::mat4 model = {};
    glm::mat4 view = {};
 };
 
-struct alignas(256) UboComposition
+struct UboComposition
 {
    Light light = {};
    glm::vec4 viewPos = {};

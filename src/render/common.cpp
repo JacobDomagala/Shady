@@ -26,7 +26,7 @@ VkFormat
 FindSupportedFormat(const std::vector< VkFormat >& candidates, VkImageTiling tiling,
                     VkFormatFeatureFlags features)
 {
-   for (VkFormat format : candidates)
+   for (const VkFormat format : candidates)
    {
       VkFormatProperties props;
       vkGetPhysicalDeviceFormatProperties(Data::vk_physicalDevice, format, &props);

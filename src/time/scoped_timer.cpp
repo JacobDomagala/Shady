@@ -5,11 +5,12 @@ namespace shady::time {
 
 ScopedTimer::ScopedTimer(std::string&& logMsg) : m_logMsg(std::move(logMsg))
 {
-   m_timer.ToggleTimer();
+   static_cast<void>(m_timer.ToggleTimer());
 }
 
 ScopedTimer::~ScopedTimer()
 {
+   //NOLINTNEXTLINE
    trace::Logger::Debug("{} took {}", m_logMsg, m_timer.ToggleTimer().ToString());
 }
 

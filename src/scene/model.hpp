@@ -45,10 +45,10 @@ class Model
    void
    Draw();
 
-   std::vector< Mesh >&
+   [[nodiscard]] std::vector< Mesh >&
    GetMeshes();
 
-   static std::unique_ptr< Model >
+   [[nodiscard]] static std::unique_ptr< Model >
    CreatePlane();
 
    //  void
@@ -58,18 +58,15 @@ class Model
    void
    ProcessNode(aiNode* node, const aiScene* scene);
 
-   Mesh
+   [[nodiscard]] Mesh
    ProcessMesh(aiMesh* mesh, const aiScene* scene);
 
-   void
-   LoadMaterialTextures(aiMaterial* mat, aiTextureType type, render::TextureMaps& textures);
-
  private:
-   std::vector< Mesh > m_meshes = {};
-   uint32_t m_numVertices = 0;
-   uint32_t m_numIndices = 0;
+   std::vector< Mesh > meshes_ = {};
+   uint32_t numVertices_ = 0;
+   uint32_t numIndices_ = 0;
 
-   std::string m_name = "DefaultName";
+   std::string name_ = "DefaultName";
 };
 
 } // namespace shady::scene

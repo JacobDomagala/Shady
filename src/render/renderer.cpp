@@ -329,11 +329,11 @@ checkDeviceExtensionSupport(VkPhysicalDevice device)
 bool
 isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface)
 {
-   QueueFamilyIndices indices = findQueueFamilies(device, surface);
+   const auto indices = findQueueFamilies(device, surface);
 
-   bool extensionsSupported = checkDeviceExtensionSupport(device);
+   const auto extensionsSupported = checkDeviceExtensionSupport(device);
 
-   bool swapChainAdequate = false;
+   auto swapChainAdequate = false;
    if (extensionsSupported)
    {
       const auto swapChainSupport = querySwapChainSupport(device, surface);
@@ -468,7 +468,7 @@ Renderer::CreateVertexBuffer()
 void
 Renderer::CreateIndexBuffer()
 {
-   VkDeviceSize bufferSize = sizeof(Data::indices[0]) * Data::indices.size();
+   const VkDeviceSize bufferSize = sizeof(Data::indices[0]) * Data::indices.size();
 
    VkBuffer stagingBuffer = {};
    VkDeviceMemory stagingBufferMemory = {};

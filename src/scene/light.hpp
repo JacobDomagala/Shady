@@ -16,25 +16,25 @@ class Light
  public:
    Light(const glm::vec3& position, const glm::vec3& color, LightType type);
 
-   const glm::mat4&
+   [[nodiscard]] const glm::mat4&
    GetLightSpaceMat() const;
 
-   const glm::mat4&
+   [[nodiscard]] const glm::mat4&
    GetViewMat() const;
 
-   glm::vec3
+   [[nodiscard]] glm::vec3
    GetPosition() const;
 
-   glm::vec3
+   [[nodiscard]] glm::vec3
    GetLookAt() const;
 
-   glm::vec3
+   [[nodiscard]] glm::vec3
    GetColor() const;
 
    void
    SetColor(const glm::vec3& new_color);
 
-   glm::tvec2< uint32_t >
+   [[nodiscard]] glm::tvec2< uint32_t >
    GetLightmapSize() const;
 
    void
@@ -45,20 +45,20 @@ class Light
    UpdateViewProjection();
 
  private:
-   uint32_t m_shadowTextureWidth = 4096;
-   uint32_t m_shadowTextureHeight = 4096;
+   uint32_t shadowTextureWidth_ = 4096;
+   uint32_t shadowTextureHeight_ = 4096;
    // std::shared_ptr< render::FrameBuffer > m_shadowBuffer;
 
-   glm::vec3 m_position = glm::vec3(0.0f);
-   glm::vec3 m_lookAt = glm::vec3(0.0f);
-   glm::vec3 m_upVec = glm::vec3(0.0f);
-   glm::vec3 m_color = glm::vec3(1.0f);
+   glm::vec3 position_ = glm::vec3(0.0f);
+   glm::vec3 lookAt_ = glm::vec3(0.0f);
+   glm::vec3 upVec_ = glm::vec3(0.0f);
+   glm::vec3 color_ = glm::vec3(1.0f);
 
-   glm::mat4 m_projectionMatrix = glm::mat4();
-   glm::mat4 m_viewMatrix = glm::mat4();
-   glm::mat4 m_lightSpaceMatrix = glm::mat4();
-   glm::mat4 m_biasMatrix = glm::mat4();
-   glm::mat4 m_shadowMatrix = glm::mat4();
+   glm::mat4 projectionMatrix_ = glm::mat4();
+   glm::mat4 viewMatrix_ = glm::mat4();
+   glm::mat4 lightSpaceMatrix_ = glm::mat4();
+   glm::mat4 biasMatrix_ = glm::mat4();
+   glm::mat4 shadowMatrix_ = glm::mat4();
 };
 
 } // namespace shady::scene

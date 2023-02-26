@@ -76,6 +76,7 @@ class Logger
       {TYPE::WARNING, FOREGROUND_GREEN | FOREGROUND_RED},
       {TYPE::FATAL, FOREGROUND_RED}};
 #else
+   //NOLINTNEXTLINE
    static const inline std::unordered_map< TYPE, fmt::color, LoggerTypeHash > s_typeStyles = {
       {TYPE::TRACE, fmt::color::azure},
       {TYPE::DEBUG, fmt::color::blanched_almond},

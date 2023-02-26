@@ -1,8 +1,8 @@
 #include "model.hpp"
+#include "render/texture.hpp"
+#include "render/vertex.hpp"
 #include "trace/logger.hpp"
 #include "utils/file_manager.hpp"
-#include "render/vertex.hpp"
-#include "render/texture.hpp"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -26,11 +26,25 @@ GetShadyTexFromAssimpTex(aiTextureType assimpTex)
    }
 }
 
+static void
+LoadMaterialTextures(aiMaterial* mat, aiTextureType type, render::TextureMaps& textures)
+{
+   for (uint32_t i = 0; i < mat->GetTextureCount(type); i++)
+   {
+      aiString str;
+      mat->GetTexture(type, i, &str);
+
+      const auto texType = GetShadyTexFromAssimpTex(type);
+      render::TextureLibrary::CreateTexture(texType, str.C_Str());
+      textures[static_cast< uint32_t >(texType)] = str.C_Str();
+   }
+}
+
 Model::Model(const std::string& path, LoadFlags additionalAssimpFlags)
 {
    Assimp::Importer importer;
 
-   auto scene = importer.ReadFile(
+   const auto* scene = importer.ReadFile(
       path, aiProcess_FlipWindingOrder | aiProcess_GenSmoothNormals | aiProcess_Triangulate
                | /*aiProcess_CalcTangentSpace |*/ aiProcess_JoinIdenticalVertices
                | aiProcess_ValidateDataStructure | static_cast< uint32_t >(additionalAssimpFlags));
@@ -48,15 +62,15 @@ Model::Model(const std::string& path, LoadFlags additionalAssimpFlags)
    // Process ASSIMP's root node recursively
    ProcessNode(scene->mRootNode, scene);
 
-   m_name = scene->mRootNode->mName.C_Str();
-   trace::Logger::Info("Loaded model: {} numVertices: {} numIndices: {}", m_name, m_numVertices,
-                       m_numIndices);
+   name_ = scene->mRootNode->mName.C_Str();
+   trace::Logger::Info("Loaded model: {} numVertices: {} numIndices: {}", name_, numVertices_,
+                       numIndices_);
 }
 
 void
 Model::ScaleModel(const glm::vec3& scale)
 {
-   for (auto& mesh : m_meshes)
+   for (auto& mesh : meshes_)
    {
       mesh.Scale(scale);
    }
@@ -65,7 +79,7 @@ Model::ScaleModel(const glm::vec3& scale)
 void
 Model::TranslateModel(const glm::vec3& translate)
 {
-   for (auto& mesh : m_meshes)
+   for (auto& mesh : meshes_)
    {
       mesh.Translate(translate);
    }
@@ -74,7 +88,7 @@ Model::TranslateModel(const glm::vec3& translate)
 void
 Model::RotateModel(const glm::vec3& rotate, float angle)
 {
-   for (auto& mesh : m_meshes)
+   for (auto& mesh : meshes_)
    {
       mesh.Rotate(angle, rotate);
    }
@@ -83,7 +97,7 @@ Model::RotateModel(const glm::vec3& rotate, float angle)
 void
 Model::Submit()
 {
-   for (auto& mesh : m_meshes)
+   for (auto& mesh : meshes_)
    {
       mesh.Submit();
    }
@@ -92,16 +106,16 @@ Model::Submit()
 void
 Model::Draw()
 {
-   for (auto& mesh : m_meshes)
+   for (auto& mesh : meshes_)
    {
-      mesh.Draw(m_name, glm::mat4(1.0f), {1.0f, 1.0f, 1.0f, 1.0f});
+      mesh.Draw(name_, glm::mat4(1.0f), {1.0f, 1.0f, 1.0f, 1.0f});
    }
 }
 
 std::vector< Mesh >&
 Model::GetMeshes()
 {
-   return m_meshes;
+   return meshes_;
 }
 
 void
@@ -112,8 +126,8 @@ Model::ProcessNode(aiNode* node, const aiScene* scene)
       // The node object only contains indices to index the actual objects in the scene.
       // The scene contains all the data, node is just to keep stuff organized (like relations
       // between nodes).
-      auto mesh = scene->mMeshes[node->mMeshes[i]];
-      m_meshes.push_back(ProcessMesh(mesh, scene));
+      auto* mesh = scene->mMeshes[node->mMeshes[i]];
+      meshes_.push_back(ProcessMesh(mesh, scene));
    }
 
    trace::Logger::Debug("Processed node: {}", node->mName.C_Str());
@@ -135,8 +149,8 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
    // Walk through each of the mesh's vertices
    for (uint32_t i = 0; i < mesh->mNumVertices; i++)
    {
-      render::Vertex vertex;
-      glm::vec3 vector;
+      render::Vertex vertex{};
+      glm::vec3 vector{};
       // Positions
       vector.x = mesh->mVertices[i].x;
       vector.y = mesh->mVertices[i].y;
@@ -155,7 +169,7 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
       // Texture Coordinates
       if (mesh->HasTextureCoords(0))
       {
-         glm::vec2 vec;
+         glm::vec2 vec{};
          // A vertex can contain up to 8 different texture coordinates. We thus make the assumption
          // that we won't use models where a vertex can have multiple texture coordinates so we
          // always take the first set (0).
@@ -180,12 +194,12 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
       vertices.push_back(vertex);
    }
 
-   std::vector< uint32_t > indices;
+   std::vector< uint32_t > indices{};
    // Now walk through each of the mesh's faces (a face is a mesh its triangle) and retrieve the
    // corresponding vertex indices.
    for (uint32_t i = 0; i < mesh->mNumFaces; i++)
    {
-      aiFace face = mesh->mFaces[i];
+      const auto face = mesh->mFaces[i];
       // Retrieve all indices of the face and store them in the indices vector
       for (uint32_t j = 0; j < face.mNumIndices; j++)
       {
@@ -198,32 +212,18 @@ Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 
    // Process materials
    aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-    LoadMaterialTextures(material, aiTextureType_DIFFUSE, textures);
-    // LoadMaterialTextures(material, aiTextureType_SPECULAR, textures);
-    LoadMaterialTextures(material, aiTextureType_UNKNOWN, textures);
-    LoadMaterialTextures(material, aiTextureType_NORMALS, textures);
-
+   LoadMaterialTextures(material, aiTextureType_DIFFUSE, textures);
+   // LoadMaterialTextures(material, aiTextureType_SPECULAR, textures);
+   LoadMaterialTextures(material, aiTextureType_UNKNOWN, textures);
+   LoadMaterialTextures(material, aiTextureType_NORMALS, textures);
 
 
    trace::Logger::Debug("Processed mesh: {}", mesh->mName.C_Str());
-   m_numVertices += mesh->mNumVertices;
-   m_numIndices += static_cast< uint32_t >(indices.size());
+   numVertices_ += mesh->mNumVertices;
+   numIndices_ += static_cast< uint32_t >(indices.size());
 
+   // NOLINTNEXTLINE
    return Mesh(mesh->mName.C_Str(), std::move(vertices), std::move(indices), std::move(textures));
-}
-
-void
-Model::LoadMaterialTextures(aiMaterial* mat, aiTextureType type, render::TextureMaps& textures)
-{
-   for (uint32_t i = 0; i < mat->GetTextureCount(type); i++)
-   {
-      aiString str;
-      mat->GetTexture(type, i, &str);
-
-      const auto texType = GetShadyTexFromAssimpTex(type);
-      render::TextureLibrary::CreateTexture(texType, str.C_Str());
-      textures[static_cast< uint32_t >(texType)] = str.C_Str();
-   }
 }
 
 std::unique_ptr< Model >
@@ -232,27 +232,27 @@ Model::CreatePlane()
    auto model = std::make_unique< Model >();
    model->GetMeshes().push_back({"Plane",
                                  {{
-                                     {25.0f, -0.5f, 25.0f},   // Position
-                                     {0.0f, 1.0f, 0.0f},      // Normal
-                                     {25.0f, 0.0f},           // Texcoord
-                                     {50.0f, 0.0f, 0.0f}     // Tangent
+                                     {25.0f, -0.5f, 25.0f}, // Position
+                                     {0.0f, 1.0f, 0.0f},    // Normal
+                                     {25.0f, 0.0f},         // Texcoord
+                                     {50.0f, 0.0f, 0.0f}    // Tangent
                                   },
                                   {
-                                     {-25.0f, -0.5f, 25.0f},  // Position
-                                     {0.0f, 1.0f, 0.0f},      // Normal
-                                     {0.0f, 0.0f},            // Texcoord
+                                     {-25.0f, -0.5f, 25.0f}, // Position
+                                     {0.0f, 1.0f, 0.0f},     // Normal
+                                     {0.0f, 0.0f},           // Texcoord
                                      {50.0f, 0.0f, 0.0f}     // Tangent
                                   },
                                   {
                                      {-25.0f, -0.5f, -25.0f}, // Position
                                      {0.0f, 1.0f, 0.0f},      // Normal
                                      {0.0f, 25.0f},           // Texcoord
-                                     {50.0f, 0.0f, 0.0f}     // Tangent
+                                     {50.0f, 0.0f, 0.0f}      // Tangent
                                   },
                                   {
-                                     {25.0f, -0.5f, -25.0f},  // Position
-                                     {0.0f, 1.0f, 0.0f},      // Normal
-                                     {25.0f, 25.0f},          // Texcoord
+                                     {25.0f, -0.5f, -25.0f}, // Position
+                                     {0.0f, 1.0f, 0.0f},     // Normal
+                                     {25.0f, 25.0f},         // Texcoord
                                      {50.0f, 0.0f, 0.0f}     // Tangent
                                   }},
                                  {2, 1, 0, 3, 2, 0}, // Indices

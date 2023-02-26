@@ -13,17 +13,17 @@ struct TimeStep
 {
    explicit TimeStep(milliseconds time);
 
-   std::string
+   [[nodiscard]] std::string
    ToString() const;
 
-   seconds
+   [[nodiscard]] seconds
    GetSeconds() const;
 
-   milliseconds
+   [[nodiscard]] milliseconds
    GetMilliseconds() const;
 
  private:
-   milliseconds m_time;
+   milliseconds time_;
 };
 
 
@@ -32,11 +32,11 @@ class Timer
  public:
    Timer();
 
-   TimeStep
+   [[nodiscard]] TimeStep
    ToggleTimer();
 
  private:
-   timeStamp m_lastTimeStamp;
+   timeStamp lastTimeStamp_;
 };
 
 } // namespace shady::time

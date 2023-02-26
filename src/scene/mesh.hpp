@@ -37,17 +37,17 @@ class Mesh
    RebuildModelMat();
 
  private:
-   glm::mat4 m_modelMat = glm::mat4(1.0f);
+   glm::mat4 modelMat_ = glm::mat4(1.0f);
 
-   glm::mat4 m_translateMat = glm::mat4(1.0f);
-   glm::mat4 m_rotateMat = glm::mat4(1.0f);
-   glm::mat4 m_scaleMat = glm::mat4(1.0f);
+   glm::mat4 translateMat_ = glm::mat4(1.0f);
+   glm::mat4 rotateMat_ = glm::mat4(1.0f);
+   glm::mat4 scaleMat_ = glm::mat4(1.0f);
 
-   std::vector< render::Vertex > m_vertices = {};
-   std::vector< uint32_t > m_indices = {};
+   std::vector< render::Vertex > vertices_ = {};
+   std::vector< uint32_t > indices_ = {};
    // render::TexturePtrVec m_textures = {};
-   render::TextureMaps m_textures;
-   std::string m_name = "dummyMeshName";
+   render::TextureMaps textures_;
+   std::string name_ = "dummyMeshName";
 };
 
 } // namespace shady::scene

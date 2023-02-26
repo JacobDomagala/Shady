@@ -37,7 +37,7 @@ void Scene::Render(int32_t /*windowWidth*/, int32_t /*windowHeight*/)
 void
 Scene::LoadDefault()
 {
-   time::ScopedTimer loadScope("Scene::LoadDefault");
+   const time::ScopedTimer loadScope("Scene::LoadDefault");
 
    AddModel((utils::FileManager::MODELS_DIR / "sponza" / "glTF" / "Sponza.gltf").string(),
             scene::LoadFlags::FlipUV);

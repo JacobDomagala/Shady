@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 
 set(PROJECT_NAME Shady)
-project(${PROJECT_NAME} VERSION 0.0.1)
+project(${PROJECT_NAME} VERSION 0.0.2)
 
 set(OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/build)
 

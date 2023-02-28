@@ -6,7 +6,7 @@
 
 Shady is a 3D rendering engine written in modern C++ and Vulkan. It's not meant to be a fully fledged rendering/game engine, it's just a fun project I'm doing in my free time. </br>
 
-This project is in an early stage so it's still missing many basic features. For current roadmap/planned features see [Github Project](https://github.com/JacobDomagala/Shady/projects/2) </br>
+This project is in an early stage so it's still missing many basic features. For current roadmap/planned features see [Github Project](https://github.com/JacobDomagala/Shady/projects/3) </br>
 
 Below you can see famous [Sponza](https://en.wikipedia.org/wiki/Sponza_Palace) scene rendered using Shady.
 ![Sponza](https://github.com/JacobDomagala/Shady/wiki/screenshot_vulkan.PNG)

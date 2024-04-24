@@ -55,15 +55,12 @@ add_executable(${PROJECT_NAME}
     src/utils/file_manager.hpp src/utils/file_manager.cpp src/utils/assert.hpp src/utils/assert.cpp
 )
 
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup(TARGETS)
-
 add_subdirectory(lib)
 find_package(Vulkan REQUIRED)
 
 target_include_directories(${PROJECT_NAME}
                     PRIVATE src src/app src/app/input src/trace src/render src/utils src/scene src/time)
-target_link_libraries_system (${PROJECT_NAME} PRIVATE CONAN_PKG::fmt CONAN_PKG::glfw CONAN_PKG::assimp CONAN_PKG::imgui CONAN_PKG::glm Vulkan::Vulkan)
+target_link_libraries_system (${PROJECT_NAME} PRIVATE stb::stb fmt::fmt glfw imgui::imgui glm::glm assimp::assimp Vulkan::Vulkan)
 target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 

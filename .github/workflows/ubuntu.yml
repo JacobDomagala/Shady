@@ -9,8 +9,9 @@ on:
 
 env:
   BUILD_TYPE: Release
-  CXX: clang++-14
-  SDK_VERSION: 1.3.204.1
+  SDK_VERSION: 1.3.268.0
+  CXX: clang++-15
+  CC: clang-15
 
 jobs:
   build:
@@ -22,19 +23,22 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y xorg-dev llvm-dev python3-pip libgl-dev libgl1-mesa-dev \
+        sudo apt-get install -y xorg-dev clang++-15 llvm-dev python3-pip libgl-dev libgl1-mesa-dev \
         libx11-xcb-dev libxcb-render-util0-dev libxcb-xkb-dev libxcb-icccm4-dev \
         libxcb-image0-dev libxcb-keysyms1-dev libxcb-randr0-dev libxcb-shape0-dev \
         libxcb-sync-dev libxcb-xfixes0-dev libxcb-xinerama0-dev libxcb-dri3-dev \
         libx11-xcb-dev libxcb-render-util0-dev libxcb-xkb-dev libxcb-icccm4-dev \
         libxcb-image0-dev libxcb-keysyms1-dev libxcb-randr0-dev libxcb-shape0-dev \
         libxcb-sync-dev libxcb-xfixes0-dev libxcb-xinerama0-dev libxcb-dri3-dev \
-        libxcb-util-dev libxcb-util0-dev
+        libxcb-util-dev libxcb-util0-dev \
+        libx11-dev libfontenc-dev libice-dev libsm-dev libxau-dev \
+        libxaw7-dev libxcb-glx0-dev libxcb-cursor-dev libxcb-dri2-0-dev libxcb-present-dev \
+        libxcb-composite0-dev libxcb-ewmh-dev libxcb-res0-dev
 
-        pip install conan==1.59.0
+        pip install conan
 
-        wget https://sdk.lunarg.com/sdk/download/$SDK_VERSION/linux/vulkansdk-linux-x86_64-$SDK_VERSION.tar.gz
-        tar xf vulkansdk-linux-x86_64-$SDK_VERSION.tar.gz
+        wget https://sdk.lunarg.com/sdk/download/$SDK_VERSION/linux/vulkansdk-linux-x86_64-$SDK_VERSION.tar.xz
+        tar xf vulkansdk-linux-x86_64-$SDK_VERSION.tar.xz
 
         cmake -E make_directory ${{runner.workspace}}/build
 
@@ -48,10 +52,8 @@ jobs:
     - name: Install dependencies with Conan
       working-directory: ${{runner.workspace}}/build
       run: |
-        # Use newer ABI
-        conan profile new default --detect
-        conan profile update settings.compiler.libcxx=libstdc++11 default
-        conan install $GITHUB_WORKSPACE --output-folder=build --build=missing --settings=build_type=$BUILD_TYPE
+        conan profile detect
+        conan install $GITHUB_WORKSPACE --output-folder=build --build=missing --settings=build_type=$BUILD_TYPE -s compiler.cppstd=gnu20
 
     - name: Configure CMake and build
       shell: bash
@@ -60,7 +62,7 @@ jobs:
         source ${{runner.workspace}}/Shady/$SDK_VERSION/setup-env.sh
 
         cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DWARNINGS_AS_ERRORS=ON \
-        -DENABLE_INCLUDE_WHAT_YOU_USE=OFF -DUNITY_BUILD=ON
+        -DENABLE_INCLUDE_WHAT_YOU_USE=OFF -DUNITY_BUILD=ON -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake
 
         cmake --build . --config $BUILD_TYPE 2> >(tee "output.txt")
 

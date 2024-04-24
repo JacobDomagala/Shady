@@ -55,8 +55,13 @@ add_executable(${PROJECT_NAME}
     src/utils/file_manager.hpp src/utils/file_manager.cpp src/utils/assert.hpp src/utils/assert.cpp
 )
 
-add_subdirectory(lib)
 find_package(Vulkan REQUIRED)
+find_package(stb REQUIRED)
+find_package(fmt REQUIRED)
+find_package(glfw3 REQUIRED)
+find_package(imgui REQUIRED)
+find_package(glm REQUIRED)
+find_package(assimp REQUIRED)
 
 target_include_directories(${PROJECT_NAME}
                     PRIVATE src src/app src/app/input src/trace src/render src/utils src/scene src/time)

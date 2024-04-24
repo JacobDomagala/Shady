@@ -62,7 +62,7 @@ jobs:
         source ${{runner.workspace}}/Shady/$SDK_VERSION/setup-env.sh
 
         cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DWARNINGS_AS_ERRORS=ON \
-        -DENABLE_INCLUDE_WHAT_YOU_USE=OFF -DUNITY_BUILD=ON
+        -DENABLE_INCLUDE_WHAT_YOU_USE=OFF -DUNITY_BUILD=ON -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake
 
         cmake --build . --config $BUILD_TYPE 2> >(tee "output.txt")
 

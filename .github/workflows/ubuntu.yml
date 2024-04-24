@@ -50,7 +50,7 @@ jobs:
       working-directory: ${{runner.workspace}}/build
       run: |
         conan profile detect
-        conan install $GITHUB_WORKSPACE --output-folder=build --build=missing --settings=build_type=$BUILD_TYPE
+        conan install $GITHUB_WORKSPACE --output-folder=build --build=missing --settings=build_type=$BUILD_TYPE -s compiler.cppstd=gnu20
 
     - name: Configure CMake and build
       shell: bash

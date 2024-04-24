@@ -34,8 +34,8 @@ jobs:
 
         pip install conan
 
-        wget https://sdk.lunarg.com/sdk/download/$SDK_VERSION/linux/vulkansdk-linux-x86_64-$SDK_VERSION.tar.gz
-        tar xf vulkansdk-linux-x86_64-$SDK_VERSION.tar.gz
+        wget https://sdk.lunarg.com/sdk/download/$SDK_VERSION/linux/vulkansdk-linux-x86_64-$SDK_VERSION.tar.xz
+        tar xf vulkansdk-linux-x86_64-$SDK_VERSION.tar.xz
 
         cmake -E make_directory ${{runner.workspace}}/build
 

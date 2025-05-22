@@ -6,6 +6,7 @@ glfw/3.4
 imgui/1.91.4
 stb/cci.20230920
 glm/1.0.1
+tinygltf/2.9.0
 
 [tool_requires]
 

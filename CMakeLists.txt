@@ -59,11 +59,14 @@ find_package(fmt REQUIRED)
 find_package(glm REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(imgui REQUIRED)
+find_package(stb REQUIRED)
+find_package(TinyGLTF)
+
 find_package(Vulkan REQUIRED)
 
 target_include_directories(${PROJECT_NAME}
                     PRIVATE src src/app src/app/input src/trace src/render src/utils src/scene src/time)
-target_link_libraries_system (${PROJECT_NAME} PRIVATE fmt::fmt glfw imgui::imgui glm::glm Vulkan::Vulkan)
+target_link_libraries_system (${PROJECT_NAME} PRIVATE fmt::fmt glfw imgui::imgui glm::glm Vulkan::Vulkan stb::stb TinyGLTF::TinyGLTF)
 target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 

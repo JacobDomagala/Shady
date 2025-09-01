@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.27)
 
 set(PROJECT_NAME Shady)
 project(${PROJECT_NAME} VERSION 0.0.2)
@@ -55,19 +55,19 @@ add_executable(${PROJECT_NAME}
     src/utils/file_manager.hpp src/utils/file_manager.cpp src/utils/assert.hpp src/utils/assert.cpp
 )
 
-find_package(Vulkan REQUIRED)
-find_package(stb REQUIRED)
 find_package(fmt REQUIRED)
+find_package(glm REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(imgui REQUIRED)
-find_package(glm REQUIRED)
-find_package(assimp REQUIRED)
+find_package(Vulkan REQUIRED)
 
 target_include_directories(${PROJECT_NAME}
                     PRIVATE src src/app src/app/input src/trace src/render src/utils src/scene src/time)
-target_link_libraries_system (${PROJECT_NAME} PRIVATE stb::stb fmt::fmt glfw imgui::imgui glm::glm assimp::assimp Vulkan::Vulkan)
+target_link_libraries_system (${PROJECT_NAME} PRIVATE fmt::fmt glfw imgui::imgui glm::glm Vulkan::Vulkan)
 target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE FMT_USE_CONSTEXPR_CONSTRUCTION=0)
 
 # include(cmake/compile_shaders.cmake)
 # compile_shader(SOURCE_FILE "${SHADERS_PATH}/default/default.vert"  OUTPUT_FILE_NAME "${SHADERS_PATH}/default/vert.spv")

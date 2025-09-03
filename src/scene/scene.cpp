@@ -16,9 +16,9 @@ Scene::GetCamera()
 }
 
 void
-Scene::AddModel(const std::string& fileName, LoadFlags additionalFlags)
+Scene::AddModel(const std::string& fileName)
 {
-   auto model = std::make_unique< Model >(fileName, additionalFlags);
+   auto model = std::make_unique< Model >(fileName);
    m_models.push_back(std::move(model));
 }
 
@@ -39,8 +39,7 @@ Scene::LoadDefault()
 {
    const time::ScopedTimer loadScope("Scene::LoadDefault");
 
-   AddModel((utils::FileManager::MODELS_DIR / "sponza" / "glTF" / "Sponza.gltf").string(),
-            scene::LoadFlags::FlipUV);
+   AddModel((utils::FileManager::MODELS_DIR / "sponza" / "glTF" / "Sponza.gltf").string());
 
    m_models.back()->ScaleModel(glm::vec3(0.1f, 0.1f, 0.1f));
    m_models.back()->Submit();

@@ -56,6 +56,9 @@ class Texture
    [[nodiscard]] TextureType
    GetType() const;
 
+   [[nodiscard]] std::string_view
+   GetName() const;
+
  private:
    void
    TransitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
@@ -74,7 +77,7 @@ class Texture
    uint32_t m_mips = {};
    uint32_t m_width = {};
    uint32_t m_height = {};
-   std::string m_name = "default_texture_name";
+   std::string m_name = "196.png";
 };
 
 class TextureLibrary

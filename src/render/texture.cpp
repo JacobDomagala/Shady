@@ -256,6 +256,11 @@ Texture::GetType() const
    return m_type;
 }
 
+[[nodiscard]] std::string_view
+Texture::GetName() const {
+   return m_name;
+}
+
 void
 Texture::CreateTextureSampler()
 {

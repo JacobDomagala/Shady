@@ -56,7 +56,7 @@ class Texture
    [[nodiscard]] TextureType
    GetType() const;
 
-   [[nodiscard]] std::string_view
+   [[nodiscard]] std::string
    GetName() const;
 
  private:

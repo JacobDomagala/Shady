@@ -3,12 +3,13 @@
 #include "render/vertex.hpp"
 #include "trace/logger.hpp"
 #include "utils/file_manager.hpp"
+#include "utils/assert.hpp"
 
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #define TINYGLTF_NOEXCEPTION
-#include "tiny_gltf.h"
+#include <tiny_gltf.h>
 
 namespace shady::scene {
 
@@ -43,8 +44,8 @@ namespace shady::scene {
 //    }
 // }
 
-static std::vector< Mesh >
-load_gltf(const std::string& file)
+void
+Model::LoadModel(const std::string& file)
 {
    tinygltf::Model model;
    tinygltf::TinyGLTF loader;
@@ -53,11 +54,11 @@ load_gltf(const std::string& file)
 
    const bool ok = (file.ends_with(".glb") ? loader.LoadBinaryFromFile(&model, &err, &warn, file)
                                            : loader.LoadASCIIFromFile(&model, &err, &warn, file));
+   utils::Assert(ok, fmt::format("tinygltf load error: {}\n", err));
 
-   if (!ok)
-      throw std::runtime_error("tinygltf load error: " + err);
+   name_ = file;
 
-   std::vector< const render::Texture* > gpuImages(model.images.size());
+   std::vector< const render::Texture* > gpuImages(model.images. size());
 
    for (size_t i = 0; i < model.images.size(); ++i)
    {
@@ -95,8 +96,6 @@ load_gltf(const std::string& file)
       gpuMaterials[i].normal = texOf(m.normalTexture.index);
    }
 
-   std::vector< Mesh > output;
-
    auto fetch = [&](const tinygltf::Accessor& acc, const tinygltf::Model& m) -> const uint8_t* {
       const auto& view = m.bufferViews[acc.bufferView];
       const auto& buffer = m.buffers[view.buffer];
@@ -110,9 +109,9 @@ load_gltf(const std::string& file)
          Mesh md;
          auto& materials = gpuMaterials[prim.material];
          render::TextureMaps texts;
-         texts[0] = materials.baseColor->GetName();
+         texts[0] = materials.baseColor ? materials.baseColor->GetName() : "196.png";
          texts[1] = materials.mr ? materials.mr->GetName() : texts[0];
-         texts[2] =  materials.normal ? materials.normal->GetName() : texts[0];
+         texts[2] = materials.normal ? materials.normal->GetName() : texts[0];
 
          const auto& posAcc = model.accessors[prim.attributes.at("POSITION")];
          const auto* posPtr = reinterpret_cast< const glm::vec3* >(fetch(posAcc, model));
@@ -155,39 +154,23 @@ load_gltf(const std::string& file)
          else
             throw std::runtime_error("unsupported index type");
 
-         output.emplace_back(Mesh{mesh.name, std::move(vertices), std::move(indices), std::move(texts)});
-      }
-   }
+         numVertices_ += vertices.size();
+         numIndices_ += static_cast< uint32_t >(indices.size());
 
-   return output;
+         meshes_.emplace_back(
+            Mesh{mesh.name, std::move(vertices), std::move(indices), std::move(texts)});
+      }
+
+      trace::Logger::Debug("Loaded mesh {}", mesh.name);
+   }
 }
 
 Model::Model(const std::string& path)
 {
-   meshes_ = load_gltf(path);
+   trace::Logger::Debug("Loading model: {}", path);
 
-   // Assimp::Importer importer;
+   LoadModel(path);
 
-   // const auto* scene = importer.ReadFile(
-   //    path, aiProcess_FlipWindingOrder | aiProcess_GenSmoothNormals | aiProcess_Triangulate
-   //             | /*aiProcess_CalcTangentSpace |*/ aiProcess_JoinIdenticalVertices
-   //             | aiProcess_ValidateDataStructure | static_cast< uint32_t
-   //             >(additionalAssimpFlags));
-
-   // // Check for errors
-   // if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
-   // {
-   //    trace::Logger::Fatal("Error loading model: {} \n Error message: {}", path,
-   //                         importer.GetErrorString());
-   //    return;
-   // }
-
-   // trace::Logger::Debug("Loading model: {}", path);
-
-   // // Process ASSIMP's root node recursively
-   // ProcessNode(scene->mRootNode, scene);
-
-   // name_ = scene->mRootNode->mName.C_Str();
    trace::Logger::Info("Loaded model: {} numVertices: {} numIndices: {}", name_, numVertices_,
                        numIndices_);
 }

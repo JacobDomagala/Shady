@@ -39,9 +39,8 @@ Scene::LoadDefault()
 {
    const time::ScopedTimer loadScope("Scene::LoadDefault");
 
-   AddModel((utils::FileManager::MODELS_DIR / "sponza" / "glTF" / "Sponza.gltf").string());
+   AddModel((utils::FileManager::MODELS_DIR / "new_sponza" / "NewSponza_Main_glTF_003.gltf").string());
 
-   m_models.back()->ScaleModel(glm::vec3(0.1f, 0.1f, 0.1f));
    m_models.back()->Submit();
 
    m_light =

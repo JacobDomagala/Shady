@@ -50,6 +50,9 @@ class Model
    [[nodiscard]] Mesh
    ProcessMesh(void* mesh, const void* scene);
 
+   void
+   LoadModel(const std::string& path);
+
  private:
    std::vector< Mesh > meshes_ = {};
    uint32_t numVertices_ = 0;

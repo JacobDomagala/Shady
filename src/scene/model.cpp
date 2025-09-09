@@ -58,23 +58,6 @@ Model::LoadModel(const std::string& file)
 
    name_ = file;
 
-   std::vector< const render::Texture* > gpuImages(model.images. size());
-
-   for (size_t i = 0; i < model.images.size(); ++i)
-   {
-      const auto& img = model.images[i];
-      const std::string id = img.uri.empty() ? ("embed_" + std::to_string(i)) : img.uri;
-
-      // register in library if not present
-      render::TextureLibrary::CreateTexture(render::TextureType::DIFFUSE_MAP, id);
-
-      // store pointer for quick access
-      gpuImages[i] = &render::TextureLibrary::GetTexture(id);
-
-      // if image is embedded (uri empty) load from img.image vector
-      // ─ your FileManager::ReadTexture takes a path; embed support needs another branch
-   }
-
    struct MaterialGPU
    {
       const render::Texture* baseColor{};
@@ -84,16 +67,26 @@ Model::LoadModel(const std::string& file)
 
    std::vector< MaterialGPU > gpuMaterials(model.materials.size());
 
-   auto texOf = [&](int texIndex) -> const render::Texture* {
-      return texIndex >= 0 ? gpuImages[model.textures[texIndex].source] : nullptr;
+   auto texOf = [&](int idx, render::TextureType type) -> const render::Texture* {
+      if (idx < 0)
+         return nullptr;
+
+      const auto& tex = model.textures[idx];
+      const auto& img = model.images[tex.source];
+      std::string id = img.uri.empty() ? ("embed_" + std::to_string(tex.source)) : img.uri;
+      
+      render::TextureLibrary::CreateTexture(type, id);
+      return &render::TextureLibrary::GetTexture(id);
    };
 
    for (size_t i = 0; i < model.materials.size(); ++i)
    {
       const auto& m = model.materials[i];
-      gpuMaterials[i].baseColor = texOf(m.pbrMetallicRoughness.baseColorTexture.index);
-      gpuMaterials[i].mr = texOf(m.pbrMetallicRoughness.metallicRoughnessTexture.index);
-      gpuMaterials[i].normal = texOf(m.normalTexture.index);
+          
+      gpuMaterials[i].baseColor =
+         texOf(m.pbrMetallicRoughness.baseColorTexture.index, render::TextureType::DIFFUSE_MAP);
+      gpuMaterials[i].mr = texOf(m.pbrMetallicRoughness.metallicRoughnessTexture.index, render::TextureType::SPECULAR_MAP);
+      gpuMaterials[i].normal = texOf(m.normalTexture.index, render::TextureType::NORMAL_MAP);
    }
 
    auto fetch = [&](const tinygltf::Accessor& acc, const tinygltf::Model& m) -> const uint8_t* {

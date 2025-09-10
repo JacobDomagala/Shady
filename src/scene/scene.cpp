@@ -44,7 +44,7 @@ Scene::LoadDefault()
    m_models.back()->Submit();
 
    m_light =
-      std::make_unique< scene::Light >(glm::vec3(0.0f, 450.0f, 0.0f), glm::vec3(1.0f, 0.8f, 0.7f),
+      std::make_unique< scene::Light >(glm::vec3(0.0f, 150.0f, 0.0f), glm::vec3(1.0f, 0.8f, 0.7f),
                                        scene::LightType::DIRECTIONAL_LIGHT);
 
    m_camera = std::make_unique< scene::PerspectiveCamera >(70.0f, 16.0f / 9.0f, 0.1f, 500.0f,

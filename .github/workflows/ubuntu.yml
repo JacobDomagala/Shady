@@ -9,13 +9,13 @@ on:
 
 env:
   BUILD_TYPE: Release
-  SDK_VERSION: 1.4.313.0
-  CXX: clang++-15
-  CC: clang-15
+  SDK_VERSION: 1.4.341.0
+  CXX: clang++-17
+  CC: clang-17
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4

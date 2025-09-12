@@ -7,6 +7,7 @@
 
 #include <functional>
 #include <numeric>
+#include <string_view>
 #include <stdexcept>
 #include <glm/gtc/quaternion.hpp>
 
@@ -67,6 +68,14 @@ Model::LoadModel(const std::string& file)
 
    name_ = file;
 
+   auto checkedIndex = [](int idx, size_t containerSize, std::string_view name) -> size_t {
+      utils::Assert(idx >= 0, fmt::format("glTF {} index is negative: {}", name, idx));
+      const auto converted = static_cast< size_t >(idx);
+      utils::Assert(converted < containerSize,
+                    fmt::format("glTF {} index out of range: {}", name, idx));
+      return converted;
+   };
+
    struct MaterialGPU
    {
       const render::Texture* baseColor{};
@@ -80,9 +89,12 @@ Model::LoadModel(const std::string& file)
       if (idx < 0)
          return nullptr;
 
-      const auto& tex = model.textures[idx];
-      const auto& img = model.images[tex.source];
-      std::string id = img.uri.empty() ? ("embed_" + std::to_string(tex.source)) : img.uri;
+      const auto texIdx = checkedIndex(idx, model.textures.size(), "texture");
+      const auto& tex = model.textures[texIdx];
+
+      const auto imgIdx = checkedIndex(tex.source, model.images.size(), "image");
+      const auto& img = model.images[imgIdx];
+      std::string id = img.uri.empty() ? ("embed_" + std::to_string(imgIdx)) : img.uri;
       
       render::TextureLibrary::CreateTexture(type, id);
       return &render::TextureLibrary::GetTexture(id);
@@ -99,8 +111,10 @@ Model::LoadModel(const std::string& file)
    }
 
    auto fetch = [&](const tinygltf::Accessor& acc, const tinygltf::Model& m) -> const uint8_t* {
-      const auto& view = m.bufferViews[acc.bufferView];
-      const auto& buffer = m.buffers[view.buffer];
+      const auto viewIdx = checkedIndex(acc.bufferView, m.bufferViews.size(), "bufferView");
+      const auto& view = m.bufferViews[viewIdx];
+      const auto bufferIdx = checkedIndex(view.buffer, m.buffers.size(), "buffer");
+      const auto& buffer = m.buffers[bufferIdx];
       return buffer.data.data() + view.byteOffset + acc.byteOffset;
    };
 
@@ -109,10 +123,12 @@ Model::LoadModel(const std::string& file)
                        && acc.type == TINYGLTF_TYPE_VEC2,
                     "Unsupported accessor format for VEC2");
 
-      const auto& view = model.bufferViews[acc.bufferView];
+      const auto viewIdx = checkedIndex(acc.bufferView, model.bufferViews.size(), "bufferView");
+      const auto& view = model.bufferViews[viewIdx];
       const auto* basePtr = fetch(acc, model);
-      const auto stride = acc.ByteStride(view);
-      utils::Assert(stride > 0, "Invalid byte stride for VEC2 accessor");
+      const auto strideSigned = acc.ByteStride(view);
+      utils::Assert(strideSigned > 0, "Invalid byte stride for VEC2 accessor");
+      const auto stride = static_cast< size_t >(strideSigned);
       const auto* elemPtr = basePtr + idx * stride;
       return *reinterpret_cast< const glm::vec2* >(elemPtr);
    };
@@ -122,10 +138,12 @@ Model::LoadModel(const std::string& file)
                        && acc.type == TINYGLTF_TYPE_VEC3,
                     "Unsupported accessor format for VEC3");
 
-      const auto& view = model.bufferViews[acc.bufferView];
+      const auto viewIdx = checkedIndex(acc.bufferView, model.bufferViews.size(), "bufferView");
+      const auto& view = model.bufferViews[viewIdx];
       const auto* basePtr = fetch(acc, model);
-      const auto stride = acc.ByteStride(view);
-      utils::Assert(stride > 0, "Invalid byte stride for VEC3 accessor");
+      const auto strideSigned = acc.ByteStride(view);
+      utils::Assert(strideSigned > 0, "Invalid byte stride for VEC3 accessor");
+      const auto stride = static_cast< size_t >(strideSigned);
       const auto* elemPtr = basePtr + idx * stride;
       return *reinterpret_cast< const glm::vec3* >(elemPtr);
    };
@@ -135,10 +153,12 @@ Model::LoadModel(const std::string& file)
                        && acc.type == TINYGLTF_TYPE_VEC4,
                     "Unsupported accessor format for VEC4");
 
-      const auto& view = model.bufferViews[acc.bufferView];
+      const auto viewIdx = checkedIndex(acc.bufferView, model.bufferViews.size(), "bufferView");
+      const auto& view = model.bufferViews[viewIdx];
       const auto* basePtr = fetch(acc, model);
-      const auto stride = acc.ByteStride(view);
-      utils::Assert(stride > 0, "Invalid byte stride for VEC4 accessor");
+      const auto strideSigned = acc.ByteStride(view);
+      utils::Assert(strideSigned > 0, "Invalid byte stride for VEC4 accessor");
+      const auto stride = static_cast< size_t >(strideSigned);
       const auto* elemPtr = basePtr + idx * stride;
       return *reinterpret_cast< const glm::vec4* >(elemPtr);
    };
@@ -147,9 +167,10 @@ Model::LoadModel(const std::string& file)
       if (node.matrix.size() == 16)
       {
          glm::mat4 local = glm::mat4(1.0f);
-         for (int i = 0; i < 16; ++i)
+         for (size_t i = 0; i < 16; ++i)
          {
-            local[i / 4][i % 4] = static_cast< float >(node.matrix[i]);
+            local[static_cast< int >(i / 4)][static_cast< int >(i % 4)] =
+               static_cast< float >(node.matrix[i]);
          }
          return local;
       }
@@ -205,13 +226,15 @@ Model::LoadModel(const std::string& file)
 
       if (prim.material >= 0 && static_cast< size_t >(prim.material) < gpuMaterials.size())
       {
-         const auto& materials = gpuMaterials[prim.material];
+         const auto& materials = gpuMaterials[static_cast< size_t >(prim.material)];
          texts[0] = materials.baseColor ? materials.baseColor->GetName() : texts[0];
          texts[1] = materials.mr ? materials.mr->GetName() : texts[0];
          texts[2] = materials.normal ? materials.normal->GetName() : texts[0];
       }
 
-      const auto& posAcc = model.accessors[posIt->second];
+      const auto posAccessorIdx =
+         checkedIndex(posIt->second, model.accessors.size(), "POSITION accessor");
+      const auto& posAcc = model.accessors[posAccessorIdx];
 
       const tinygltf::Accessor* nrmAcc = nullptr;
       const tinygltf::Accessor* uvAcc = nullptr;
@@ -219,15 +242,21 @@ Model::LoadModel(const std::string& file)
 
       if (auto it = prim.attributes.find("NORMAL"); it != prim.attributes.end())
       {
-         nrmAcc = &model.accessors[it->second];
+         const auto nrmAccessorIdx =
+            checkedIndex(it->second, model.accessors.size(), "NORMAL accessor");
+         nrmAcc = &model.accessors[nrmAccessorIdx];
       }
       if (auto it = prim.attributes.find("TEXCOORD_0"); it != prim.attributes.end())
       {
-         uvAcc = &model.accessors[it->second];
+         const auto uvAccessorIdx =
+            checkedIndex(it->second, model.accessors.size(), "TEXCOORD_0 accessor");
+         uvAcc = &model.accessors[uvAccessorIdx];
       }
       if (auto it = prim.attributes.find("TANGENT"); it != prim.attributes.end())
       {
-         tanAcc = &model.accessors[it->second];
+         const auto tanAccessorIdx =
+            checkedIndex(it->second, model.accessors.size(), "TANGENT accessor");
+         tanAcc = &model.accessors[tanAccessorIdx];
       }
 
       std::vector< render::Vertex > vertices(posAcc.count);
@@ -274,13 +303,24 @@ Model::LoadModel(const std::string& file)
       std::vector< uint32_t > indices;
       if (prim.indices >= 0)
       {
-         const auto& idxAcc = model.accessors[prim.indices];
-         const auto& idxView = model.bufferViews[idxAcc.bufferView];
+         const auto idxAccessorIdx =
+            checkedIndex(prim.indices, model.accessors.size(), "indices accessor");
+         const auto& idxAcc = model.accessors[idxAccessorIdx];
+         const auto idxViewIdx =
+            checkedIndex(idxAcc.bufferView, model.bufferViews.size(), "indices bufferView");
+         const auto& idxView = model.bufferViews[idxViewIdx];
          const auto* idxPtr = fetch(idxAcc, model);
-         const auto componentSize = tinygltf::GetComponentSizeInBytes(idxAcc.componentType);
+         const auto componentSize = tinygltf::GetComponentSizeInBytes(
+            static_cast< uint32_t >(idxAcc.componentType));
+         utils::Assert(componentSize > 0, "Invalid component size for index accessor");
+
          const auto rawStride = idxAcc.ByteStride(idxView);
-         const auto stride = rawStride == 0 ? componentSize : rawStride;
-         utils::Assert(stride > 0, "Invalid byte stride for index accessor");
+         if (rawStride != 0)
+         {
+            utils::Assert(rawStride > 0, "Invalid byte stride for index accessor");
+         }
+         const auto stride =
+            rawStride == 0 ? static_cast< size_t >(componentSize) : static_cast< size_t >(rawStride);
 
          indices.resize(idxAcc.count);
          for (size_t i = 0; i < idxAcc.count; ++i)
@@ -315,12 +355,13 @@ Model::LoadModel(const std::string& file)
 
    std::function< void(int, const glm::mat4&) > processNode =
       [&](int nodeIndex, const glm::mat4& parentMat) {
-         const auto& node = model.nodes[nodeIndex];
+         const auto nodeIdx = checkedIndex(nodeIndex, model.nodes.size(), "node");
+         const auto& node = model.nodes[nodeIdx];
          const auto worldMat = parentMat * nodeLocalMat(node);
 
          if (node.mesh >= 0 && static_cast< size_t >(node.mesh) < model.meshes.size())
          {
-            const auto& mesh = model.meshes[node.mesh];
+            const auto& mesh = model.meshes[static_cast< size_t >(node.mesh)];
             for (const auto& prim : mesh.primitives)
             {
                processPrimitive(prim, worldMat, mesh.name);
@@ -342,7 +383,8 @@ Model::LoadModel(const std::string& file)
 
    if (sceneIndex >= 0 && static_cast< size_t >(sceneIndex) < model.scenes.size())
    {
-      for (const auto rootNode : model.scenes[sceneIndex].nodes)
+      const auto& scene = model.scenes[static_cast< size_t >(sceneIndex)];
+      for (const auto rootNode : scene.nodes)
       {
          processNode(rootNode, glm::mat4(1.0f));
       }
@@ -357,14 +399,14 @@ Model::LoadModel(const std::string& file)
          {
             if (childNode >= 0 && static_cast< size_t >(childNode) < isChild.size())
             {
-               isChild[childNode] = true;
+               isChild[static_cast< size_t >(childNode)] = true;
             }
          }
       }
 
       for (int i = 0; i < static_cast< int >(model.nodes.size()); ++i)
       {
-         if (!isChild[i])
+         if (!isChild[static_cast< size_t >(i)])
          {
             processNode(i, glm::mat4(1.0f));
          }

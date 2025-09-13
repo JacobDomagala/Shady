@@ -2,13 +2,15 @@
 #include "render/texture.hpp"
 #include "render/vertex.hpp"
 #include "trace/logger.hpp"
-#include "utils/file_manager.hpp"
 #include "utils/assert.hpp"
 
+#include <cstdint>
 #include <functional>
-#include <numeric>
+#include <limits>
 #include <string_view>
 #include <stdexcept>
+#include <utility>
+#include <vector>
 #include <glm/gtc/quaternion.hpp>
 
 #define TINYGLTF_IMPLEMENTATION
@@ -75,6 +77,11 @@ Model::LoadModel(const std::string& file)
                     fmt::format("glTF {} index out of range: {}", name, idx));
       return converted;
    };
+   auto checkedInt = [](size_t idx, std::string_view name) -> int {
+      utils::Assert(idx <= static_cast< size_t >((std::numeric_limits< int >::max)()),
+                    fmt::format("glTF {} index does not fit int: {}", name, idx));
+      return static_cast< int >(idx);
+   };
 
    struct MaterialGPU
    {
@@ -115,6 +122,7 @@ Model::LoadModel(const std::string& file)
       const auto& view = m.bufferViews[viewIdx];
       const auto bufferIdx = checkedIndex(view.buffer, m.buffers.size(), "buffer");
       const auto& buffer = m.buffers[bufferIdx];
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
       return buffer.data.data() + view.byteOffset + acc.byteOffset;
    };
 
@@ -129,7 +137,8 @@ Model::LoadModel(const std::string& file)
       const auto strideSigned = acc.ByteStride(view);
       utils::Assert(strideSigned > 0, "Invalid byte stride for VEC2 accessor");
       const auto stride = static_cast< size_t >(strideSigned);
-      const auto* elemPtr = basePtr + idx * stride;
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+      const auto* elemPtr = basePtr + (idx * stride);
       return *reinterpret_cast< const glm::vec2* >(elemPtr);
    };
 
@@ -144,7 +153,8 @@ Model::LoadModel(const std::string& file)
       const auto strideSigned = acc.ByteStride(view);
       utils::Assert(strideSigned > 0, "Invalid byte stride for VEC3 accessor");
       const auto stride = static_cast< size_t >(strideSigned);
-      const auto* elemPtr = basePtr + idx * stride;
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+      const auto* elemPtr = basePtr + (idx * stride);
       return *reinterpret_cast< const glm::vec3* >(elemPtr);
    };
 
@@ -159,14 +169,15 @@ Model::LoadModel(const std::string& file)
       const auto strideSigned = acc.ByteStride(view);
       utils::Assert(strideSigned > 0, "Invalid byte stride for VEC4 accessor");
       const auto stride = static_cast< size_t >(strideSigned);
-      const auto* elemPtr = basePtr + idx * stride;
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+      const auto* elemPtr = basePtr + (idx * stride);
       return *reinterpret_cast< const glm::vec4* >(elemPtr);
    };
 
    auto nodeLocalMat = [](const tinygltf::Node& node) {
       if (node.matrix.size() == 16)
       {
-         glm::mat4 local = glm::mat4(1.0f);
+         glm::mat4 local = glm::mat4(1.0F);
          for (size_t i = 0; i < 16; ++i)
          {
             local[static_cast< int >(i / 4)][static_cast< int >(i % 4)] =
@@ -175,7 +186,7 @@ Model::LoadModel(const std::string& file)
          return local;
       }
 
-      glm::mat4 local = glm::mat4(1.0f);
+      glm::mat4 local = glm::mat4(1.0F);
       if (node.translation.size() == 3)
       {
          local = glm::translate(local,
@@ -224,9 +235,10 @@ Model::LoadModel(const std::string& file)
       texts[1] = texts[0];
       texts[2] = texts[0];
 
-      if (prim.material >= 0 && static_cast< size_t >(prim.material) < gpuMaterials.size())
+      if (prim.material >= 0)
       {
-         const auto& materials = gpuMaterials[static_cast< size_t >(prim.material)];
+         const auto materialIdx = checkedIndex(prim.material, gpuMaterials.size(), "material");
+         const auto& materials = gpuMaterials[materialIdx];
          texts[0] = materials.baseColor ? materials.baseColor->GetName() : texts[0];
          texts[1] = materials.mr ? materials.mr->GetName() : texts[0];
          texts[2] = materials.normal ? materials.normal->GetName() : texts[0];
@@ -267,7 +279,7 @@ Model::LoadModel(const std::string& file)
          render::Vertex v{};
 
          const auto localPos = readVec3(posAcc, i);
-         v.m_position = glm::vec3(worldMat * glm::vec4(localPos, 1.0f));
+         v.m_position = glm::vec3(worldMat * glm::vec4(localPos, 1.0F));
 
          if (nrmAcc != nullptr)
          {
@@ -275,7 +287,7 @@ Model::LoadModel(const std::string& file)
          }
          else
          {
-            v.m_normal = glm::vec3(0.0f);
+            v.m_normal = glm::vec3(0.0F);
          }
 
          if (uvAcc != nullptr)
@@ -284,7 +296,7 @@ Model::LoadModel(const std::string& file)
          }
          else
          {
-            v.m_texCoords = glm::vec2(0.0f);
+            v.m_texCoords = glm::vec2(0.0F);
          }
 
          if (tanAcc != nullptr)
@@ -294,7 +306,7 @@ Model::LoadModel(const std::string& file)
          }
          else
          {
-            v.m_tangent = glm::vec3(0.0f);
+            v.m_tangent = glm::vec3(0.0F);
          }
 
          vertices[i] = v;
@@ -325,7 +337,8 @@ Model::LoadModel(const std::string& file)
          indices.resize(idxAcc.count);
          for (size_t i = 0; i < idxAcc.count; ++i)
          {
-            const auto* elemPtr = idxPtr + i * stride;
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            const auto* elemPtr = idxPtr + (i * stride);
             switch (idxAcc.componentType)
             {
                case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
@@ -345,12 +358,15 @@ Model::LoadModel(const std::string& file)
       else
       {
          indices.resize(vertices.size());
-         std::iota(indices.begin(), indices.end(), 0);
+         for (size_t i = 0; i < indices.size(); ++i)
+         {
+            indices[i] = static_cast< uint32_t >(i);
+         }
       }
 
       numVertices_ += static_cast< uint32_t >(vertices.size());
       numIndices_ += static_cast< uint32_t >(indices.size());
-      meshes_.emplace_back(Mesh{meshName, std::move(vertices), std::move(indices), std::move(texts)});
+      meshes_.emplace_back(meshName, std::move(vertices), std::move(indices), std::move(texts));
    };
 
    std::function< void(int, const glm::mat4&) > processNode =
@@ -359,9 +375,10 @@ Model::LoadModel(const std::string& file)
          const auto& node = model.nodes[nodeIdx];
          const auto worldMat = parentMat * nodeLocalMat(node);
 
-         if (node.mesh >= 0 && static_cast< size_t >(node.mesh) < model.meshes.size())
+         if (node.mesh >= 0)
          {
-            const auto& mesh = model.meshes[static_cast< size_t >(node.mesh)];
+            const auto meshIdx = checkedIndex(node.mesh, model.meshes.size(), "mesh");
+            const auto& mesh = model.meshes[meshIdx];
             for (const auto& prim : mesh.primitives)
             {
                processPrimitive(prim, worldMat, mesh.name);
@@ -386,7 +403,7 @@ Model::LoadModel(const std::string& file)
       const auto& scene = model.scenes[static_cast< size_t >(sceneIndex)];
       for (const auto rootNode : scene.nodes)
       {
-         processNode(rootNode, glm::mat4(1.0f));
+         processNode(rootNode, glm::mat4(1.0F));
       }
    }
    else
@@ -404,11 +421,11 @@ Model::LoadModel(const std::string& file)
          }
       }
 
-      for (int i = 0; i < static_cast< int >(model.nodes.size()); ++i)
+      for (size_t i = 0; i < model.nodes.size(); ++i)
       {
-         if (!isChild[static_cast< size_t >(i)])
+         if (!isChild[i])
          {
-            processNode(i, glm::mat4(1.0f));
+            processNode(checkedInt(i, "node"), glm::mat4(1.0F));
          }
       }
    }
@@ -465,7 +482,7 @@ Model::Draw()
 {
    for (auto& mesh : meshes_)
    {
-      mesh.Draw(name_, glm::mat4(1.0f), {1.0f, 1.0f, 1.0f, 1.0f});
+      mesh.Draw(name_, glm::mat4(1.0F), {1.0F, 1.0F, 1.0F, 1.0F});
    }
 }
 
@@ -592,28 +609,28 @@ Model::CreatePlane()
    auto model = std::make_unique< Model >();
    model->GetMeshes().push_back({"Plane",
                                  {{
-                                     {25.0f, -0.5f, 25.0f}, // Position
-                                     {0.0f, 1.0f, 0.0f},    // Normal
-                                     {25.0f, 0.0f},         // Texcoord
-                                     {50.0f, 0.0f, 0.0f}    // Tangent
+                                     {25.0F, -0.5F, 25.0F}, // Position
+                                     {0.0F, 1.0F, 0.0F},    // Normal
+                                     {25.0F, 0.0F},         // Texcoord
+                                     {50.0F, 0.0F, 0.0F}    // Tangent
                                   },
                                   {
-                                     {-25.0f, -0.5f, 25.0f}, // Position
-                                     {0.0f, 1.0f, 0.0f},     // Normal
-                                     {0.0f, 0.0f},           // Texcoord
-                                     {50.0f, 0.0f, 0.0f}     // Tangent
+                                     {-25.0F, -0.5F, 25.0F}, // Position
+                                     {0.0F, 1.0F, 0.0F},     // Normal
+                                     {0.0F, 0.0F},           // Texcoord
+                                     {50.0F, 0.0F, 0.0F}     // Tangent
                                   },
                                   {
-                                     {-25.0f, -0.5f, -25.0f}, // Position
-                                     {0.0f, 1.0f, 0.0f},      // Normal
-                                     {0.0f, 25.0f},           // Texcoord
-                                     {50.0f, 0.0f, 0.0f}      // Tangent
+                                     {-25.0F, -0.5F, -25.0F}, // Position
+                                     {0.0F, 1.0F, 0.0F},      // Normal
+                                     {0.0F, 25.0F},           // Texcoord
+                                     {50.0F, 0.0F, 0.0F}      // Tangent
                                   },
                                   {
-                                     {25.0f, -0.5f, -25.0f}, // Position
-                                     {0.0f, 1.0f, 0.0f},     // Normal
-                                     {25.0f, 25.0f},         // Texcoord
-                                     {50.0f, 0.0f, 0.0f}     // Tangent
+                                     {25.0F, -0.5F, -25.0F}, // Position
+                                     {0.0F, 1.0F, 0.0F},     // Normal
+                                     {25.0F, 25.0F},         // Texcoord
+                                     {50.0F, 0.0F, 0.0F}     // Tangent
                                   }},
                                  {2, 1, 0, 3, 2, 0}, // Indices
                                  {}});

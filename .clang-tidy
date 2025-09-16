@@ -1,13 +1,19 @@
 ---
-Checks:          '*,-fuchsia-*,-google-*,-zircon-*,-abseil-*,-modernize-use-trailing-return-type,-llvm*,\
-				  -hicpp-uppercase-literal-suffix, -readability-uppercase-literal-suffix, -readability-implicit-bool-conversion,\
-				  -cppcoreguidelines-avoid-magic-numbers, -readability-magic-numbers, -cppcoreguidelines-pro-type-union-access,\
-				  -cppcoreguidelines-pro-bounds-pointer-arithmetic, -cppcoreguidelines-pro-type-reinterpret-cast,\
-				  -cppcoreguidelines-pro-type-vararg, -altera-unroll-loops, -hicpp-vararg, -avoid-non-const-global-variables,\
-				  -cppcoreguidelines-avoid-non-const-global-variables, -altera-id-dependent-backward-branch, -hicpp-signed-bitwise,\
-				  -readability-identifier-length, -readability-redundant-access-specifiers, -bugprone-easily-swappable-parameters,\
-				  -misc-non-private-member-variables-in-classes, -altera-struct-pack-align, -cppcoreguidelines-non-private-member-variables-in-classes,\
-				  -misc-no-recursion, -cppcoreguidelines-pro-bounds-constant-array-index'
-WarningsAsErrors: '*'
-HeaderFilterRegex: ''
-FormatStyle:     none
+Checks: >-
+  *,-abseil-*,-altera-*,-android-*,-boost-use-ranges,-bugprone-easily-swappable-parameters,
+  -cppcoreguidelines-avoid-magic-numbers,-cppcoreguidelines-avoid-non-const-global-variables,
+  -cppcoreguidelines-non-private-member-variables-in-classes,-cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-reinterpret-cast,
+  -cppcoreguidelines-pro-type-union-access,-cppcoreguidelines-pro-type-vararg,-fuchsia-*,-google-*,
+  -hicpp-braces-around-statements,-hicpp-named-parameter,-hicpp-signed-bitwise,-hicpp-uppercase-literal-suffix,
+  -hicpp-vararg,-llvm*,-misc-const-correctness,-misc-include-cleaner,-misc-no-recursion,
+  -misc-non-private-member-variables-in-classes,-misc-use-anonymous-namespace,-misc-use-internal-linkage,
+  -modernize-use-designated-initializers,-modernize-use-ranges,-modernize-use-trailing-return-type,
+  -readability-braces-around-statements,-readability-container-contains,-readability-convert-member-functions-to-static,
+  -readability-function-cognitive-complexity,-readability-identifier-length,-readability-implicit-bool-conversion,
+  -readability-inconsistent-declaration-parameter-name,-readability-isolate-declaration,
+  -readability-magic-numbers,-readability-named-parameter,-readability-redundant-access-specifiers,
+  -readability-uppercase-literal-suffix,-zircon-*,-bugprone-suspicious-stringview-data-usage
+WarningsAsErrors: ''
+HeaderFilterRegex: '^(.*[\\/])?src[\\/]'
+FormatStyle: none

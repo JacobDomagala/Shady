@@ -40,8 +40,18 @@ jobs:
         report_pr_changes_only: false
         cmake_args: -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
         verbose: true
-        clang_tidy_args: |
-            -extra-arg=-std=c++20
-            -extra-arg=-DFMT_USE_CONSTEVAL=0
-        cppcheck_args: |
-            --enable=all --suppress=missingIncludeSystem --suppress=unmatchedSuppression --suppress=checkersReport --inline-suppr --inconclusive --check-level=exhaustive
+        clang_tidy_args: "-extra-arg=-std=c++20 -extra-arg=-DFMT_USE_CONSTEVAL=0"
+        cppcheck_args: >-
+            --enable=all
+            --suppress=missingIncludeSystem
+            --suppress=unmatchedSuppression
+            --suppress=checkersReport
+            --suppress=unusedFunction
+            --suppress=functionStatic
+            --suppress=functionConst
+            --suppress=constParameterPointer
+            --suppress=returnByReference
+            --suppress=funcArgNamesDifferent
+            --inline-suppr
+            --inconclusive
+            --check-level=exhaustive

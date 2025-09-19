@@ -1,10 +1,11 @@
 #pragma once
 
+#include <cstdint>
 #include <glm/gtc/type_ptr.hpp>
 
 namespace shady::scene {
 
-enum class LightType
+enum class LightType : std::uint8_t
 {
    DIRECTIONAL_LIGHT,
    POINT_LIGHT,

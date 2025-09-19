@@ -1,10 +1,11 @@
 #pragma once
 
+#include <cstdint>
 #include <glm/glm.hpp>
 
 namespace shady::scene {
 
-enum class CameraType
+enum class CameraType : std::uint8_t
 {
    orthographic,
    perspective

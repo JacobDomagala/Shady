@@ -44,8 +44,8 @@ class Mesh
    glm::mat4 rotateMat_ = glm::mat4(1.0f);
    glm::mat4 scaleMat_ = glm::mat4(1.0f);
 
-   std::vector< render::Vertex > vertices_ = {};
-   std::vector< uint32_t > indices_ = {};
+   std::vector< render::Vertex > vertices_;
+   std::vector< uint32_t > indices_;
    // render::TexturePtrVec m_textures = {};
    render::TextureMaps textures_;
    std::string name_ = "dummyMeshName";

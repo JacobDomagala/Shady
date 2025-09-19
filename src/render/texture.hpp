@@ -1,6 +1,5 @@
 #pragma once
 
-#include "texture.hpp"
 #include "types.hpp"
 
 #include <unordered_map>

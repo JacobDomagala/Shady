@@ -19,7 +19,7 @@ struct fmt::formatter< glm::tmat4x4< T > >
    {
       return fmt::format_to(
          ctx.out(),
-         std::is_same< T, float >::value
+         std::is_same_v< T, float >
             ? "\n[{:.1f}, {:.1f}, {:.1f}, {:.1f}]\n[{:.1f}, {:.1f}, {:.1f}, {:.1f}]\n[{:.1f}, "
               "{:.1f}, {:.1f}, {:.1f}]\n[{:.1f}, {:.1f}, {:.1f}, {:.1f}]"
             : "\n[{0:d}, {0:d}, {0:d}, {0:d}]\n[{0:d}, {0:d}, {0:d}, {0:d}]\n[{0:d}, {0:d}, {0:d}, "
@@ -43,8 +43,8 @@ struct fmt::formatter< glm::tvec4< T > >
    format(const glm::tvec4< T >& vec, FormatContext& ctx) const
    {
       return fmt::format_to(ctx.out(),
-                            std::is_same< T, float >::value ? "({:.1f}, {:.1f}, {:.1f}, {:.1f})"
-                                                            : "({0:d}, {0:d}, {0:d}, {0:d})",
+                            std::is_same_v< T, float > ? "({:.1f}, {:.1f}, {:.1f}, {:.1f})"
+                                                       : "({0:d}, {0:d}, {0:d}, {0:d})",
                             vec.x, vec.y, vec.z, vec.y);
    }
 };
@@ -63,8 +63,8 @@ struct fmt::formatter< glm::tvec3< T > >
    format(const glm::tvec3< T >& vec, FormatContext& ctx) const
    {
       return fmt::format_to(ctx.out(),
-                            std::is_same< T, float >::value ? "({:.1f}, {:.1f}, {:.1f})"
-                                                            : "({0:d}, {0:d}, {0:d})",
+                            std::is_same_v< T, float > ? "({:.1f}, {:.1f}, {:.1f})"
+                                                       : "({0:d}, {0:d}, {0:d})",
                             vec.x, vec.y, vec.z);
    }
 };
@@ -83,7 +83,7 @@ struct fmt::formatter< glm::tvec2< T > >
    format(const glm::tvec2< T >& vec, FormatContext& ctx) const
    {
       return fmt::format_to(ctx.out(),
-                            std::is_same< T, float >::value ? "({:.1f}, {:.1f})" : "({0:d}, {0:d})",
+                            std::is_same_v< T, float > ? "({:.1f}, {:.1f})" : "({0:d}, {0:d})",
                             vec.x, vec.y);
    }
 };

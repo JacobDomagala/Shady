@@ -177,7 +177,7 @@ Model::LoadModel(const std::string& file)
    auto nodeLocalMat = [](const tinygltf::Node& node) {
       if (node.matrix.size() == 16)
       {
-         glm::mat4 local = glm::mat4(1.0F);
+         auto local = glm::mat4(1.0F);
          for (size_t i = 0; i < 16; ++i)
          {
             local[static_cast< int >(i / 4)][static_cast< int >(i % 4)] =
@@ -186,7 +186,7 @@ Model::LoadModel(const std::string& file)
          return local;
       }
 
-      glm::mat4 local = glm::mat4(1.0F);
+      auto local = glm::mat4(1.0F);
       if (node.translation.size() == 3)
       {
          local = glm::translate(local,

@@ -7,7 +7,7 @@
 namespace shady::render {
 
 static VkShaderModule
-CreateShaderModule(VkDevice device, std::vector< char >&& shaderByteCode)
+CreateShaderModule(VkDevice device, const std::vector< char >& shaderByteCode)
 {
    VkShaderModuleCreateInfo createInfo{};
    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

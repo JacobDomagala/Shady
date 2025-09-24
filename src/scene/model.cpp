@@ -21,37 +21,6 @@
 
 namespace shady::scene {
 
-// static render::TextureType
-// GetShadyTexFromAssimpTex(aiTextureType assimpTex)
-// {
-//    switch (assimpTex)
-//    {
-//       case aiTextureType_SPECULAR:
-//       case aiTextureType_UNKNOWN:
-//          return render::TextureType::SPECULAR_MAP;
-//       case aiTextureType_NORMALS:
-//          return render::TextureType::NORMAL_MAP;
-//       case aiTextureType_DIFFUSE:
-//       default: {
-//          return render::TextureType::DIFFUSE_MAP;
-//       }
-//    }
-// }
-
-// static void
-// LoadMaterialTextures(aiMaterial* mat, aiTextureType type, render::TextureMaps& textures)
-// {
-//    for (uint32_t i = 0; i < mat->GetTextureCount(type); i++)
-//    {
-//       aiString str;
-//       mat->GetTexture(type, i, &str);
-
-//       const auto texType = GetShadyTexFromAssimpTex(type);
-//       render::TextureLibrary::CreateTexture(texType, str.C_Str());
-//       textures[static_cast< uint32_t >(texType)] = str.C_Str();
-//    }
-// }
-
 void
 Model::LoadModel(const std::string& file)
 {
@@ -102,7 +71,7 @@ Model::LoadModel(const std::string& file)
       const auto imgIdx = checkedIndex(tex.source, model.images.size(), "image");
       const auto& img = model.images[imgIdx];
       std::string id = img.uri.empty() ? ("embed_" + std::to_string(imgIdx)) : img.uri;
-      
+
       render::TextureLibrary::CreateTexture(type, id);
       return &render::TextureLibrary::GetTexture(id);
    };
@@ -110,7 +79,7 @@ Model::LoadModel(const std::string& file)
    for (size_t i = 0; i < model.materials.size(); ++i)
    {
       const auto& m = model.materials[i];
-          
+
       gpuMaterials[i].baseColor =
          texOf(m.pbrMetallicRoughness.baseColorTexture.index, render::TextureType::DIFFUSE_MAP);
       gpuMaterials[i].mr = texOf(m.pbrMetallicRoughness.metallicRoughnessTexture.index, render::TextureType::SPECULAR_MAP);
@@ -490,117 +459,6 @@ std::vector< Mesh >&
 Model::GetMeshes()
 {
    return meshes_;
-}
-
-void
-Model::ProcessNode(void*, const void*)
-{
-   // for (uint32_t i = 0; i < node->mNumMeshes; i++)
-   // {
-   //    // The node object only contains indices to index the actual objects in the scene.
-   //    // The scene contains all the data, node is just to keep stuff organized (like relations
-   //    // between nodes).
-   //    auto* mesh = scene->mMeshes[node->mMeshes[i]];
-   //    meshes_.push_back(ProcessMesh(mesh, scene));
-   // }
-
-   // trace::Logger::Debug("Processed node: {}", node->mName.C_Str());
-
-   // // After we've processed all of the meshes (if any) we then recursively process each of the
-   // // children nodes
-   // for (uint32_t i = 0; i < node->mNumChildren; i++)
-   // {
-   //    ProcessNode(node->mChildren[i], scene);
-   // }
-}
-
-Mesh
-Model::ProcessMesh(void*, const void*)
-{
-   // Data to fill
-   // std::vector< render::Vertex > vertices;
-
-   // // Walk through each of the mesh's vertices
-   // for (uint32_t i = 0; i < mesh->mNumVertices; i++)
-   // {
-   //    render::Vertex vertex{};
-   //    glm::vec3 vector{};
-   //    // Positions
-   //    vector.x = mesh->mVertices[i].x;
-   //    vector.y = mesh->mVertices[i].y;
-   //    vector.z = mesh->mVertices[i].z;
-   //    vertex.m_position = vector;
-
-   //    // Normals
-   //    if (mesh->HasNormals())
-   //    {
-   //       vector.x = mesh->mNormals[i].x;
-   //       vector.y = mesh->mNormals[i].y;
-   //       vector.z = mesh->mNormals[i].z;
-   //       vertex.m_normal = vector;
-   //    }
-
-   //    // Texture Coordinates
-   //    if (mesh->HasTextureCoords(0))
-   //    {
-   //       glm::vec2 vec{};
-   //       // A vertex can contain up to 8 different texture coordinates. We thus make the
-   //       assumption
-   //       // that we won't use models where a vertex can have multiple texture coordinates so we
-   //       // always take the first set (0).
-   //       vec.x = mesh->mTextureCoords[0][i].x;
-   //       vec.y = mesh->mTextureCoords[0][i].y;
-   //       vertex.m_texCoords = vec;
-   //    }
-   //    else
-   //    {
-   //       vertex.m_texCoords = glm::vec2(0.0f, 0.0f);
-   //    }
-
-   //    if (mesh->HasTangentsAndBitangents())
-   //    {
-   //       // Tangents
-   //       vector.x = mesh->mTangents[i].x;
-   //       vector.y = mesh->mTangents[i].y;
-   //       vector.z = mesh->mTangents[i].z;
-   //       vertex.m_tangent = vector;
-   //    }
-
-   //    vertices.push_back(vertex);
-   // }
-
-   // std::vector< uint32_t > indices{};
-   // // Now walk through each of the mesh's faces (a face is a mesh its triangle) and retrieve the
-   // // corresponding vertex indices.
-   // for (uint32_t i = 0; i < mesh->mNumFaces; i++)
-   // {
-   //    const auto face = mesh->mFaces[i];
-   //    // Retrieve all indices of the face and store them in the indices vector
-   //    for (uint32_t j = 0; j < face.mNumIndices; j++)
-   //    {
-   //       indices.push_back(face.mIndices[j]);
-   //    }
-   // }
-
-   // // render::TexturePtrVec textures;
-   // render::TextureMaps textures = {};
-
-   // // Process materials
-   // aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-   // LoadMaterialTextures(material, aiTextureType_DIFFUSE, textures);
-   // // LoadMaterialTextures(material, aiTextureType_SPECULAR, textures);
-   // LoadMaterialTextures(material, aiTextureType_UNKNOWN, textures);
-   // LoadMaterialTextures(material, aiTextureType_NORMALS, textures);
-
-
-   // trace::Logger::Debug("Processed mesh: {}", mesh->mName.C_Str());
-   // numVertices_ += mesh->mNumVertices;
-   // numIndices_ += static_cast< uint32_t >(indices.size());
-
-   // // NOLINTNEXTLINE
-   // return Mesh(mesh->mName.C_Str(), std::move(vertices), std::move(indices),
-   // std::move(textures));
-   return {};
 }
 
 std::unique_ptr< Model >

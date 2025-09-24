@@ -91,7 +91,7 @@ DeferredPipeline::UpdateUniformBufferComposition(const scene::Camera* camera,
                                                  const scene::Light* light)
 {
    UboComposition uboComposition{};
-   uboComposition.light.position = glm::vec4(camera->GetPosition(), 1.0f);
+   uboComposition.light.position = glm::vec4(light->GetPosition(), 1.0f);
    uboComposition.light.target = glm::vec4(light->GetLookAt(), 1.0);
    uboComposition.light.color = glm::vec4{light->GetColor(), 1.0f};
    uboComposition.light.viewMatrix = light->GetLightSpaceMat();

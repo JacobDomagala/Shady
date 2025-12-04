@@ -42,7 +42,7 @@ jobs:
     - name: Run static analysis
       uses: JacobDomagala/StaticAnalysis@master
       with:
-        exclude_dir: lib
+        exclude_dir: lib vulkan
         init_script: init_script.sh
         apt_pckgs: xorg-dev python3-pip python3.12-venv wget
         report_pr_changes_only: false

@@ -23,7 +23,15 @@ jobs:
         pip install conan PyGithub
 
         conan profile detect
-        conan install \$root_dir --output-folder=build --build=missing --settings=build_type=Release -c tools.system.package_manager:mode=install
+        conan install \$root_dir --output-folder=build --build=missing \
+            -s:h "build_type=Release" \
+            -s:h "compiler=clang" \
+            -s:h "compiler.version=22" \
+            -s:h "compiler.cppstd=20" \
+            -s:b "compiler=clang" \
+            -s:b "compiler.version=22" \
+            -s:b "compiler.cppstd=20" \
+            -c tools.system.package_manager:mode=install
 
 
         wget https://sdk.lunarg.com/sdk/download/1.4.313.0/linux/vulkansdk-linux-x86_64-1.4.313.0.tar.xz
@@ -36,7 +44,7 @@ jobs:
       with:
         exclude_dir: lib
         init_script: init_script.sh
-        apt_pckgs: xorg-dev python3-pip python3.12-venv
+        apt_pckgs: xorg-dev python3-pip python3.12-venv wget
         report_pr_changes_only: false
         cmake_args: -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
         verbose: false

@@ -713,7 +713,7 @@ Renderer::CreateInstance()
    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
    appInfo.pApplicationName = "Shady";
    appInfo.applicationVersion = VK_MAKE_VERSION(0, 0, 1);
-   appInfo.apiVersion = VK_API_VERSION_1_3;
+   appInfo.apiVersion = VK_API_VERSION_1_4;
 
    VkInstanceCreateInfo createInfo{};
    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -813,12 +813,6 @@ Renderer::CreateDevice()
 
    createInfo.enabledExtensionCount = static_cast< uint32_t >(DEVICE_EXTENSIONS.size());
    createInfo.ppEnabledExtensionNames = DEVICE_EXTENSIONS.data();
-
-   if constexpr (ENABLE_VALIDATION)
-   {
-      createInfo.enabledLayerCount = static_cast< uint32_t >(VALIDATION_LAYERS.size());
-      createInfo.ppEnabledLayerNames = VALIDATION_LAYERS.data();
-   }
 
    VK_CHECK(vkCreateDevice(Data::vk_physicalDevice, &createInfo, nullptr, &Data::vk_device),
             "failed to create logical device!");

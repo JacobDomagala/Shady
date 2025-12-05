@@ -10,8 +10,10 @@ class InputListener
    InputListener() = default;
    InputListener(const InputListener&) = default;
    InputListener(InputListener&&) = default;
-   InputListener& operator=(const InputListener&) = default;
-   InputListener& operator=(InputListener&&) = default;
+   InputListener&
+   operator=(const InputListener&) = default;
+   InputListener&
+   operator=(InputListener&&) = default;
    virtual ~InputListener() = default;
 
    virtual void

@@ -28,7 +28,7 @@ Light::Light(const glm::vec3& position, const glm::vec3& color, LightType type)
    // m_shadowBuffer = render::FrameBuffer::Create({shadowTextureWidth_, shadowTextureHeight_},
    // buffer_type);
    biasMatrix_ = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f))
-                  * glm::scale(glm::mat4(1.0f), glm::vec3(0.5f));
+                 * glm::scale(glm::mat4(1.0f), glm::vec3(0.5f));
    lookAt_ = glm::vec3(0.0f, -1.0f, 0.0f);
    upVec_ = glm::vec3(0.0f, 0.0f, 0.5f);
    // m_shadowBuffer->MakeTextureResident();

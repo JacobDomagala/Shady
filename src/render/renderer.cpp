@@ -36,7 +36,7 @@ Renderer::MeshLoaded(const std::vector< Vertex >& vertices, const std::vector< u
    VkDrawIndexedIndirectCommand newModel = {};
    newModel.firstIndex = Data::m_currentIndex;
    newModel.indexCount = static_cast< uint32_t >(indicies.size());
-   newModel.firstInstance = 0;
+   newModel.firstInstance = static_cast< uint32_t >(Data::perInstance.size());
    newModel.instanceCount = 1;
    newModel.vertexOffset = static_cast< int32_t >(Data::m_currentVertex);
    Data::m_renderCommands.push_back(newModel);
@@ -54,6 +54,7 @@ Renderer::MeshLoaded(const std::vector< Vertex >& vertices, const std::vector< u
          continue;
       }
 
+      // TODO: textures is hash map, we should use count() here?
       const auto it = std::find_if(Data::textures.begin(), Data::textures.end(),
                                    [texture](const auto& tex) { return texture == tex.first; });
       if (it == Data::textures.end())
@@ -641,10 +642,11 @@ Renderer::Draw()
    // Offscreen rendering
    //
 
-   VkSubmitInfo submitInfo{};
-   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
    std::array< VkPipelineStageFlags, 1 > waitStages = {
       VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+
+   VkSubmitInfo submitInfo{};
+   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
    submitInfo.pWaitDstStageMask = waitStages.data();
 
    // Wait for swap chain presentation to finish
@@ -667,9 +669,7 @@ Renderer::Draw()
    //
 
    submitInfo.pWaitSemaphores = &DeferredPipeline::GetOffscreenSemaphore();
-
    submitInfo.pSignalSemaphores = &m_renderFinishedSemaphores[currentFrame];
-
    submitInfo.pCommandBuffers = &m_commandBuffers[m_imageIndex];
    submitInfo.commandBufferCount = 1;
 
@@ -685,13 +685,10 @@ Renderer::Draw()
 
    VkPresentInfoKHR presentInfo{};
    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
    presentInfo.waitSemaphoreCount = 1;
    presentInfo.pWaitSemaphores = &m_renderFinishedSemaphores[currentFrame];
-
    presentInfo.swapchainCount = 1;
    presentInfo.pSwapchains = &m_swapChain;
-
    presentInfo.pImageIndices = &m_imageIndex;
 
    vkQueuePresentKHR(Data::m_presentQueue, &presentInfo);
@@ -858,7 +855,7 @@ Renderer::CreateSwapchain(GLFWwindow* windowHandle)
 
    // NOLINTBEGIN
    const std::array< uint32_t, 2 > queueFamilyIndices = {indicesSecond.graphicsFamily.value(),
-                                                   indicesSecond.presentFamily.value()};
+                                                         indicesSecond.presentFamily.value()};
    // NOLINTEND
 
    if (indicesSecond.graphicsFamily != indicesSecond.presentFamily)
@@ -982,7 +979,8 @@ Renderer::CreateRenderPass()
    // dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
    // dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-   std::array< VkAttachmentDescription, 2 > attachments = {colorAttachment, depthAttachment,
+   std::array< VkAttachmentDescription, 2 > attachments = {colorAttachment,
+                                                           depthAttachment,
                                                            /*colorAttachmentResolve*/};
    VkRenderPassCreateInfo renderPassInfo{};
    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -1004,7 +1002,8 @@ Renderer::CreateFramebuffers()
 
    for (size_t i = 0; i < m_swapChainImageViews.size(); i++)
    {
-      std::array< VkImageView, 2 > attachments = {m_swapChainImageViews[i], m_depthImageView,
+      std::array< VkImageView, 2 > attachments = {m_swapChainImageViews[i],
+                                                  m_depthImageView,
                                                   /*m_swapChainImageViews[i]*/};
 
 

@@ -258,7 +258,8 @@ Texture::GetType() const
 }
 
 [[nodiscard]] std::string
-Texture::GetName() const {
+Texture::GetName() const
+{
    return m_name;
 }
 

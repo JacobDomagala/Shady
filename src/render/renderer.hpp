@@ -1,8 +1,8 @@
 #pragma once
 
 #include "deferred_pipeline.hpp"
-#include "vertex.hpp"
 #include "types.hpp"
+#include "vertex.hpp"
 
 #include <glm/glm.hpp>
 #include <vector>
@@ -25,9 +25,8 @@ class Renderer
    Draw();
 
    static void
-   MeshLoaded(const std::vector< Vertex >& vertices,
-              const std::vector< uint32_t >& indicies, const TextureMaps& textures,
-              const glm::mat4& modelMat);
+   MeshLoaded(const std::vector< Vertex >& vertices, const std::vector< uint32_t >& indicies,
+              const TextureMaps& textures, const glm::mat4& modelMat);
 
    static void
    CreateCommandBufferForDeferred();
@@ -116,4 +115,4 @@ class Renderer
    inline static uint32_t m_imageIndex = {};
 };
 
-} // namespace shady::render::vulkan
+} // namespace shady::render

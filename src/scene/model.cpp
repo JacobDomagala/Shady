@@ -6,12 +6,12 @@
 
 #include <cstdint>
 #include <functional>
+#include <glm/gtc/quaternion.hpp>
 #include <limits>
-#include <string_view>
 #include <stdexcept>
+#include <string_view>
 #include <utility>
 #include <vector>
-#include <glm/gtc/quaternion.hpp>
 
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
@@ -82,7 +82,8 @@ Model::LoadModel(const std::string& file)
 
       gpuMaterials[i].baseColor =
          texOf(m.pbrMetallicRoughness.baseColorTexture.index, render::TextureType::DIFFUSE_MAP);
-      gpuMaterials[i].mr = texOf(m.pbrMetallicRoughness.metallicRoughnessTexture.index, render::TextureType::SPECULAR_MAP);
+      gpuMaterials[i].mr = texOf(m.pbrMetallicRoughness.metallicRoughnessTexture.index,
+                                 render::TextureType::SPECULAR_MAP);
       gpuMaterials[i].normal = texOf(m.normalTexture.index, render::TextureType::NORMAL_MAP);
    }
 
@@ -158,18 +159,16 @@ Model::LoadModel(const std::string& file)
       auto local = glm::mat4(1.0F);
       if (node.translation.size() == 3)
       {
-         local = glm::translate(local,
-                                glm::vec3(static_cast< float >(node.translation[0]),
-                                          static_cast< float >(node.translation[1]),
-                                          static_cast< float >(node.translation[2])));
+         local = glm::translate(local, glm::vec3(static_cast< float >(node.translation[0]),
+                                                 static_cast< float >(node.translation[1]),
+                                                 static_cast< float >(node.translation[2])));
       }
 
       if (node.rotation.size() == 4)
       {
-         const glm::quat rotation(static_cast< float >(node.rotation[3]),
-                                  static_cast< float >(node.rotation[0]),
-                                  static_cast< float >(node.rotation[1]),
-                                  static_cast< float >(node.rotation[2]));
+         const glm::quat rotation(
+            static_cast< float >(node.rotation[3]), static_cast< float >(node.rotation[0]),
+            static_cast< float >(node.rotation[1]), static_cast< float >(node.rotation[2]));
          local *= glm::mat4_cast(rotation);
       }
 
@@ -291,8 +290,8 @@ Model::LoadModel(const std::string& file)
             checkedIndex(idxAcc.bufferView, model.bufferViews.size(), "indices bufferView");
          const auto& idxView = model.bufferViews[idxViewIdx];
          const auto* idxPtr = fetch(idxAcc, model);
-         const auto componentSize = tinygltf::GetComponentSizeInBytes(
-            static_cast< uint32_t >(idxAcc.componentType));
+         const auto componentSize =
+            tinygltf::GetComponentSizeInBytes(static_cast< uint32_t >(idxAcc.componentType));
          utils::Assert(componentSize > 0, "Invalid component size for index accessor");
 
          const auto rawStride = idxAcc.ByteStride(idxView);
@@ -300,8 +299,8 @@ Model::LoadModel(const std::string& file)
          {
             utils::Assert(rawStride > 0, "Invalid byte stride for index accessor");
          }
-         const auto stride =
-            rawStride == 0 ? static_cast< size_t >(componentSize) : static_cast< size_t >(rawStride);
+         const auto stride = rawStride == 0 ? static_cast< size_t >(componentSize)
+                                            : static_cast< size_t >(rawStride);
 
          indices.resize(idxAcc.count);
          for (size_t i = 0; i < idxAcc.count; ++i)
@@ -338,28 +337,28 @@ Model::LoadModel(const std::string& file)
       meshes_.emplace_back(meshName, std::move(vertices), std::move(indices), std::move(texts));
    };
 
-   std::function< void(int, const glm::mat4&) > processNode =
-      [&](int nodeIndex, const glm::mat4& parentMat) {
-         const auto nodeIdx = checkedIndex(nodeIndex, model.nodes.size(), "node");
-         const auto& node = model.nodes[nodeIdx];
-         const auto worldMat = parentMat * nodeLocalMat(node);
+   std::function< void(int, const glm::mat4&) > processNode = [&](int nodeIndex,
+                                                                  const glm::mat4& parentMat) {
+      const auto nodeIdx = checkedIndex(nodeIndex, model.nodes.size(), "node");
+      const auto& node = model.nodes[nodeIdx];
+      const auto worldMat = parentMat * nodeLocalMat(node);
 
-         if (node.mesh >= 0)
+      if (node.mesh >= 0)
+      {
+         const auto meshIdx = checkedIndex(node.mesh, model.meshes.size(), "mesh");
+         const auto& mesh = model.meshes[meshIdx];
+         for (const auto& prim : mesh.primitives)
          {
-            const auto meshIdx = checkedIndex(node.mesh, model.meshes.size(), "mesh");
-            const auto& mesh = model.meshes[meshIdx];
-            for (const auto& prim : mesh.primitives)
-            {
-               processPrimitive(prim, worldMat, mesh.name);
-            }
-            trace::Logger::Debug("Loaded mesh {} from node {}", mesh.name, node.name);
+            processPrimitive(prim, worldMat, mesh.name);
          }
+         trace::Logger::Debug("Loaded mesh {} from node {}", mesh.name, node.name);
+      }
 
-         for (const auto childNode : node.children)
-         {
-            processNode(childNode, worldMat);
-         }
-      };
+      for (const auto childNode : node.children)
+      {
+         processNode(childNode, worldMat);
+      }
+   };
 
    int sceneIndex = model.defaultScene;
    if (sceneIndex < 0)

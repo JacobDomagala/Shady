@@ -4,8 +4,7 @@
 #include <glm/glm.hpp>
 #include <type_traits>
 
-template < typename T >
-struct fmt::formatter< glm::tmat4x4< T > >
+template < typename T > struct fmt::formatter< glm::tmat4x4< T > >
 {
    constexpr auto
    parse(format_parse_context& ctx)
@@ -29,8 +28,7 @@ struct fmt::formatter< glm::tmat4x4< T > >
    }
 };
 
-template < typename T >
-struct fmt::formatter< glm::tvec4< T > >
+template < typename T > struct fmt::formatter< glm::tvec4< T > >
 {
    constexpr auto
    parse(format_parse_context& ctx)
@@ -49,8 +47,7 @@ struct fmt::formatter< glm::tvec4< T > >
    }
 };
 
-template < typename T >
-struct fmt::formatter< glm::tvec3< T > >
+template < typename T > struct fmt::formatter< glm::tvec3< T > >
 {
    constexpr auto
    parse(format_parse_context& ctx)
@@ -69,8 +66,7 @@ struct fmt::formatter< glm::tvec3< T > >
    }
 };
 
-template < typename T >
-struct fmt::formatter< glm::tvec2< T > >
+template < typename T > struct fmt::formatter< glm::tvec2< T > >
 {
    constexpr auto
    parse(format_parse_context& ctx)

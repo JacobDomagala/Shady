@@ -2,8 +2,8 @@
 
 #include <array>
 #include <cstdint>
-#include <string>
 #include <glm/glm.hpp>
+#include <string>
 
 namespace shady::render {
 

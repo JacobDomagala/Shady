@@ -8,8 +8,10 @@ struct Event
 {
    Event(const Event&) = default;
    Event(Event&&) = default;
-   Event& operator=(const Event&) = default;
-   Event& operator=(Event&&) = default;
+   Event&
+   operator=(const Event&) = default;
+   Event&
+   operator=(Event&&) = default;
    virtual ~Event() = default;
 
    enum class EventType : std::uint8_t

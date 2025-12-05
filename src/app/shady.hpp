@@ -14,9 +14,11 @@ class Shady : public input::InputListener
    Shady() = default;
    Shady(const Shady&) = delete;
    Shady(Shady&&) = delete;
-   Shady& operator=(const Shady&) = delete;
-   Shady& operator=(Shady&&) = delete;
-  ~Shady() override = default;
+   Shady&
+   operator=(const Shady&) = delete;
+   Shady&
+   operator=(Shady&&) = delete;
+   ~Shady() override = default;
 
    void
    Init();
@@ -43,7 +45,7 @@ class Shady : public input::InputListener
    OnUpdate();
 
  private:
-  // Application settings
+   // Application settings
    Window m_window;
    int32_t m_windowWidth = 1920;
    int32_t m_windowHeight = 1080;

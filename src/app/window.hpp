@@ -15,8 +15,10 @@ class Window
    Window() = default;
    Window(const Window&) = delete;
    Window(Window&&) = delete;
-   Window& operator=(const Window&) = delete;
-   Window& operator=(Window&&) = delete;
+   Window&
+   operator=(const Window&) = delete;
+   Window&
+   operator=(Window&&) = delete;
 
    Window(int32_t width, int32_t height, const std::string& title);
    ~Window();

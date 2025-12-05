@@ -9,9 +9,9 @@
 #include "utils/file_manager.hpp"
 
 #include <GLFW/glfw3.h>
+#include <array>
 #include <fmt/format.h>
 #include <imgui.h>
-#include <array>
 
 namespace shady::app::gui {
 
@@ -119,7 +119,8 @@ Gui::Init(const glm::ivec2& windowSize)
 
    // Dimensions
    ImGuiIO& io_handle = ImGui::GetIO();
-   io_handle.DisplaySize = ImVec2(static_cast< float >(windowSize.x), static_cast< float >(windowSize.y));
+   io_handle.DisplaySize =
+      ImVec2(static_cast< float >(windowSize.x), static_cast< float >(windowSize.y));
    io_handle.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
 
    SetStyle();
@@ -158,7 +159,8 @@ Gui::UpdateBuffers()
    }
 
    // Vertex buffer
-   if ((m_vertexBuffer.GetBuffer() == VK_NULL_HANDLE) || (m_vertexCount != imDrawData->TotalVtxCount))
+   if ((m_vertexBuffer.GetBuffer() == VK_NULL_HANDLE)
+       || (m_vertexCount != imDrawData->TotalVtxCount))
    {
       m_vertexBuffer.Unmap();
       m_vertexBuffer.Destroy();
@@ -211,7 +213,8 @@ bool
 Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
 {
    ImGuiIO& io_handle = ImGui::GetIO();
-   io_handle.DisplaySize = ImVec2(static_cast< float >(windowSize.x), static_cast< float >(windowSize.y));
+   io_handle.DisplaySize =
+      ImVec2(static_cast< float >(windowSize.x), static_cast< float >(windowSize.y));
 
    auto mousePos = input::InputManager::GetMousePos();
 
@@ -243,15 +246,16 @@ Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
          for (uint32_t item = 0; item < items.size(); item++)
          {
             const bool is_selected = (Data::m_debugData.displayDebugTarget == item);
-            if (ImGui::Selectable(items.at(item), is_selected)){
+            if (ImGui::Selectable(items.at(item), is_selected))
+            {
                Data::m_debugData.displayDebugTarget = item;
             }
 
             // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-            if (is_selected){
+            if (is_selected)
+            {
                ImGui::SetItemDefaultFocus();
             }
-
          }
          ImGui::EndCombo();
       }
@@ -277,7 +281,7 @@ Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
 
    if (ImGui::CollapsingHeader("Shadows"))
    {
-      //NOLINTNEXTLINE
+      // NOLINTNEXTLINE
       ImGui::Checkbox("Render PCF", reinterpret_cast< bool* >(&Data::m_debugData.pcfShadow));
 
       if (ImGui::SliderFloat("Shadow Factor", &Data::m_debugData.shadowFactor, 0.0f, 1.0f))
@@ -335,7 +339,7 @@ Gui::Render(VkCommandBuffer commandBuffer)
    vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
                       sizeof(PushConstBlock), &m_pushConstant);
 
-   std::array<VkDeviceSize, 1> offsets = {0};
+   std::array< VkDeviceSize, 1 > offsets = {0};
    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.GetBuffer(), offsets.data());
    vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.GetBuffer(), 0, VK_INDEX_TYPE_UINT16);
 
@@ -553,8 +557,8 @@ Gui::PreparePipeline(VkPipelineCache pipelineCache, VkRenderPass renderPass)
 
    auto [vertexInfo, fragmentInfo] =
       Shader::CreateShader(Data::vk_device, "default/ui.vert.spv", "default/ui.frag.spv");
-   std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages = {vertexInfo.shaderInfo,
-                                                     fragmentInfo.shaderInfo};
+   std::array< VkPipelineShaderStageCreateInfo, 2 > shaderStages = {vertexInfo.shaderInfo,
+                                                                    fragmentInfo.shaderInfo};
 
    VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
    pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;

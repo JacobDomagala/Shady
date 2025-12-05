@@ -4,8 +4,8 @@
 
 #include <algorithm>
 #include <fmt/format.h>
-#include <numeric>
 #include <iterator>
+#include <numeric>
 
 namespace shady::render {
 

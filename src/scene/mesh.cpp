@@ -4,7 +4,7 @@
 
 namespace shady::scene {
 
-//NOLINTNEXTLINE
+// NOLINTNEXTLINE
 Mesh::Mesh(const std::string& name, std::vector< render::Vertex >&& vertices,
            std::vector< uint32_t >&& indices, render::TextureMaps&& textures)
    : vertices_(std::move(vertices)),

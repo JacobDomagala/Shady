@@ -7,10 +7,10 @@
 #include "vertex.hpp"
 
 #include <algorithm>
-#include <iterator>
 #include <fmt/format.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <iterator>
 
 
 namespace shady::render {
@@ -779,7 +779,7 @@ DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& s
                      m_offscreenPipeline);
 
 
-   std::array<VkDeviceSize, 1> offsets = {0};
+   std::array< VkDeviceSize, 1 > offsets = {0};
    vkCmdBindVertexBuffers(m_offscreenCommandBuffer, 0, 1, &Data::m_vertexBuffer, offsets.data());
 
    vkCmdBindIndexBuffer(m_offscreenCommandBuffer, Data::m_indexBuffer, 0, VK_INDEX_TYPE_UINT32);

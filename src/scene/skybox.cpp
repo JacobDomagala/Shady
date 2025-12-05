@@ -343,7 +343,7 @@ Skybox::Draw(VkCommandBuffer commandBuffer)
                            &m_descriptorSet, 0, nullptr);
    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 
-   std::array<VkDeviceSize, 1> offsets = {0};
+   std::array< VkDeviceSize, 1 > offsets = {0};
    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.GetBuffer(), offsets.data());
    vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
 

@@ -9,8 +9,8 @@
 namespace shady::app::input {
 
 void
-InputManager::InternalKeyCallback(GLFWwindow* /* window */, int32_t key, int32_t scancode, int32_t action,
-                                  int32_t mods)
+InputManager::InternalKeyCallback(GLFWwindow* /* window */, int32_t key, int32_t scancode,
+                                  int32_t action, int32_t mods)
 {
    trace::Logger::Trace("GLFW key {} {} scan code - {}", action, key, scancode);
 

@@ -19,6 +19,7 @@ add_definitions( -DCMAKE_ROOT_DIR="${CMAKE_CURRENT_SOURCE_DIR}" )
 add_library(project_warnings INTERFACE)
 
 include(cmake/compile_warnings.cmake)
+include(cmake/clang_format.cmake)
 include(cmake/util_functions.cmake)
 set_target_warnings(project_warnings)
 
@@ -54,6 +55,8 @@ add_executable(${PROJECT_NAME}
     # utils
     src/utils/file_manager.hpp src/utils/file_manager.cpp src/utils/assert.hpp src/utils/assert.cpp
 )
+
+add_clang_format_target(${PROJECT_NAME})
 
 find_package(fmt REQUIRED)
 find_package(glm REQUIRED)

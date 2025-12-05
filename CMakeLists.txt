@@ -75,7 +75,7 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE FMT_USE_CONSTEXPR_CONSTRUCTION=0)
 target_compile_options(${PROJECT_NAME} PRIVATE -O0 -g3 -fno-omit-frame-pointer)
-# include(cmake/compile_shaders.cmake)
-# compile_shader(SOURCE_FILE "${SHADERS_PATH}/default/default.vert"  OUTPUT_FILE_NAME "${SHADERS_PATH}/default/vert.spv")
-# compile_shader(SOURCE_FILE "${SHADERS_PATH}/default/default.frag"  OUTPUT_FILE_NAME "${SHADERS_PATH}/default/frag.spv")
 
+include(cmake/compile_shaders.cmake)
+add_shader_target(shaders)
+add_dependencies(${PROJECT_NAME} shaders)

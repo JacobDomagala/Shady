@@ -48,5 +48,8 @@ cmake -S "${SOURCE_DIR}" -B "${BUILD_DIR}" \
     -A "${GENERATOR_PLATFORM}" \
     --fresh
 
+echo "== clang-format =="
+cmake --build build --target format
+
 echo "== build =="
 cmake --build "${BUILD_DIR}" --config "${BUILD_TYPE}"

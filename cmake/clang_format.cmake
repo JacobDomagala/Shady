@@ -1,8 +1,4 @@
 function(add_clang_format_target target)
-    if(NOT TARGET ${target})
-        message(FATAL_ERROR "Cannot add clang-format target for unknown target '${target}'")
-    endif()
-
     if(NOT CLANG_FORMAT_EXECUTABLE)
         unset(CLANG_FORMAT_EXECUTABLE CACHE)
         set(clang_format_hints)

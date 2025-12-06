@@ -480,6 +480,9 @@ DeferredPipeline::PreparePipelines()
 void
 DeferredPipeline::SetupDescriptorPool()
 {
+   const auto textureDescriptorCount = static_cast< uint32_t >(Data::textures.size());
+   utils::Assert(textureDescriptorCount > 0, "Descriptor pool requires at least one texture");
+
    std::array< VkDescriptorPoolSize, 5 > poolSizes{};
    poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
    poolSizes[0].descriptorCount = 8; // 3 * numfrabuffers in swapchain?
@@ -490,7 +493,7 @@ DeferredPipeline::SetupDescriptorPool()
    poolSizes[3].type = VK_DESCRIPTOR_TYPE_SAMPLER;
    poolSizes[3].descriptorCount = 3; // 1 * numfrabuffers in swapchain?
    poolSizes[4].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-   poolSizes[4].descriptorCount = 3; // 1 * numfrabuffers in swapchain?
+   poolSizes[4].descriptorCount = textureDescriptorCount;
 
 
    VkDescriptorPoolCreateInfo poolInfo{};

@@ -1,3 +1,13 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:8aafaae01012f85103545a2158ba0dfef9319e5f600f207d67b6a09272527dac
-size 264
+#version 460
+
+layout (binding = 0) uniform sampler2D fontSampler;
+
+layout (location = 0) in vec2 inUV;
+layout (location = 1) in vec4 inColor;
+
+layout (location = 0) out vec4 outColor;
+
+void main()
+{
+	outColor = inColor * texture(fontSampler, inUV);
+}

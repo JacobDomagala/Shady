@@ -9,10 +9,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_PATH})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${OUTPUT_PATH})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_PATH})
 
-set(ASSETS_PATH ${CMAKE_CURRENT_SOURCE_DIR}/assets)
-set(SHADERS_PATH ${ASSETS_PATH}/shaders)
-
-
 add_definitions( -DCMAKE_ROOT_DIR="${CMAKE_CURRENT_SOURCE_DIR}" )
 
 # Link this 'library' to use the warnings specified in CompilerWarnings.cmake
@@ -77,5 +73,3 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE FMT_USE_CONSTEXPR_CONSTRUCTIO
 target_compile_options(${PROJECT_NAME} PRIVATE -O0 -g3 -fno-omit-frame-pointer)
 
 include(cmake/compile_shaders.cmake)
-add_shader_target(shaders)
-add_dependencies(${PROJECT_NAME} shaders)

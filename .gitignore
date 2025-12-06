@@ -319,3 +319,4 @@ lib/imgui/imgui*
 *.cache
 compile_commands.json
 CMakeUserPresets.json
+imgui.ini

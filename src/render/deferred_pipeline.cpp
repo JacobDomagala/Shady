@@ -54,6 +54,12 @@ DeferredPipeline::GetCompositionPipeline()
    return m_compositionPipeline;
 }
 
+void
+DeferredPipeline::DrawSkybox(VkCommandBuffer commandBuffer)
+{
+   m_skybox.Draw(commandBuffer);
+}
+
 VkPipelineLayout
 DeferredPipeline::GetPipelineLayout()
 {
@@ -111,7 +117,7 @@ DeferredPipeline::Initialize(VkRenderPass mainRenderPass,
    ShadowSetup();
    PrepareOffscreenFramebuffer();
 
-   m_skybox.LoadCubeMap("default");
+   m_skybox.LoadCubeMap("default", mainRenderPass);
 
    PrepareUniformBuffers();
    SetupDescriptorSetLayout();
@@ -775,8 +781,6 @@ DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& s
    scissor.offset.y = 0;
 
    vkCmdSetScissor(m_offscreenCommandBuffer, 0, 1, &scissor);
-
-   m_skybox.Draw(m_offscreenCommandBuffer);
 
    vkCmdBindPipeline(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                      m_offscreenPipeline);

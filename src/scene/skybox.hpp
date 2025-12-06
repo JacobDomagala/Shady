@@ -30,7 +30,7 @@ class Skybox
     * param[in]: skyboxName prefix for each face file
     */
    void
-   LoadCubeMap(std::string_view skyboxName);
+   LoadCubeMap(std::string_view skyboxName, VkRenderPass renderPass);
 
    /*
     *  Draw commands for 'commandBuffer'
@@ -46,7 +46,7 @@ class Skybox
 
  private:
    void
-   CreatePipeline();
+   CreatePipeline(VkRenderPass renderPass);
 
    void
    CreateDescriptorSet();

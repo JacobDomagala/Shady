@@ -1098,7 +1098,12 @@ Renderer::CreateCommandBufferForDeferred()
       vkCmdSetScissor(m_commandBuffers[i], 0, 1, &scissor);
 
       /*
-       * STAGE 2 - COMPOSITION
+       * STAGE 2 - SKYBOX
+       */
+      DeferredPipeline::DrawSkybox(m_commandBuffers[i]);
+
+      /*
+       * STAGE 3 - COMPOSITION
        */
       vkCmdBindDescriptorSets(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
                               DeferredPipeline::GetPipelineLayout(), 0, 1,
@@ -1111,7 +1116,7 @@ Renderer::CreateCommandBufferForDeferred()
       vkCmdDraw(m_commandBuffers[i], 3, 1, 0, 0);
 
       /*
-       * STAGE 3 - DRAW UI
+       * STAGE 4 - DRAW UI
        */
       app::gui::Gui::Render(m_commandBuffers[i]);
 

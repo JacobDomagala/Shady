@@ -19,7 +19,7 @@ Light::Light(const glm::vec3& position, const glm::vec3& color, LightType type)
 
       case LightType::POINT_LIGHT:
       case LightType::SPOTLIGHT: {
-         projectionMatrix_ = glm::perspective(60.0f, 1.0f, 0.1f, 100.0f);
+         projectionMatrix_ = glm::perspective(glm::radians(60.0F), 1.0F, 0.1F, 100.0F);
          // buffer_type = render::FrameBufferType::CUBE;
       }
       break;

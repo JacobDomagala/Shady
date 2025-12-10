@@ -139,9 +139,11 @@ DeferredPipeline::ShadowSetup()
 void
 DeferredPipeline::PrepareOffscreenFramebuffer()
 {
-   m_offscreenFrameBuffer.Create(2048, 2048);
+   const auto width = static_cast< int32_t >(Data::m_swapChainExtent.width);
+   const auto height = static_cast< int32_t >(Data::m_swapChainExtent.height);
+   m_offscreenFrameBuffer.Create(width, height);
    Data::m_deferredRenderPass = m_offscreenFrameBuffer.GetRenderPass();
-   Data::m_deferredExtent = {2048, 2048};
+   Data::m_deferredExtent = Data::m_swapChainExtent;
 }
 
 void

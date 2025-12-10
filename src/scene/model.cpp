@@ -57,6 +57,11 @@ Model::LoadModel(const std::string& file)
       const render::Texture* baseColor{};
       const render::Texture* normal{};
       const render::Texture* mr{};
+      glm::vec4 baseColorFactor = glm::vec4(1.0F);
+      float metallicFactor = 1.0F;
+      float roughnessFactor = 1.0F;
+      float normalScale = 1.0F;
+      bool alphaBlend = false;
    };
 
    std::vector< MaterialGPU > gpuMaterials(model.materials.size());
@@ -83,8 +88,19 @@ Model::LoadModel(const std::string& file)
       gpuMaterials[i].baseColor =
          texOf(m.pbrMetallicRoughness.baseColorTexture.index, render::TextureType::DIFFUSE_MAP);
       gpuMaterials[i].mr = texOf(m.pbrMetallicRoughness.metallicRoughnessTexture.index,
-                                 render::TextureType::SPECULAR_MAP);
+                                 render::TextureType::METALLIC_ROUGHNESS_MAP);
       gpuMaterials[i].normal = texOf(m.normalTexture.index, render::TextureType::NORMAL_MAP);
+
+      for (size_t channel = 0; channel < m.pbrMetallicRoughness.baseColorFactor.size(); ++channel)
+      {
+         gpuMaterials[i].baseColorFactor[static_cast< glm::length_t >(channel)] =
+            static_cast< float >(m.pbrMetallicRoughness.baseColorFactor[channel]);
+      }
+      gpuMaterials[i].metallicFactor = static_cast< float >(m.pbrMetallicRoughness.metallicFactor);
+      gpuMaterials[i].roughnessFactor =
+         static_cast< float >(m.pbrMetallicRoughness.roughnessFactor);
+      gpuMaterials[i].normalScale = static_cast< float >(m.normalTexture.scale);
+      gpuMaterials[i].alphaBlend = m.alphaMode == "BLEND";
    }
 
    auto fetch = [&](const tinygltf::Accessor& acc, const tinygltf::Model& m) -> const uint8_t* {
@@ -198,18 +214,27 @@ Model::LoadModel(const std::string& file)
          return;
       }
 
-      render::TextureMaps texts = {};
-      texts[0] = "196.png";
-      texts[1] = texts[0];
-      texts[2] = texts[0];
+      render::MaterialData material{};
 
       if (prim.material >= 0)
       {
          const auto materialIdx = checkedIndex(prim.material, gpuMaterials.size(), "material");
          const auto& materials = gpuMaterials[materialIdx];
-         texts[0] = materials.baseColor ? materials.baseColor->GetName() : texts[0];
-         texts[1] = materials.mr ? materials.mr->GetName() : texts[0];
-         texts[2] = materials.normal ? materials.normal->GetName() : texts[0];
+         if (materials.alphaBlend)
+         {
+            trace::Logger::Warn(
+               "Skipping blended primitive in mesh {}: deferred transparency is unsupported",
+               meshName);
+            return;
+         }
+
+         material.textures[0] = materials.baseColor ? materials.baseColor->GetName() : "";
+         material.textures[1] = materials.mr ? materials.mr->GetName() : "";
+         material.textures[2] = materials.normal ? materials.normal->GetName() : "";
+         material.baseColorFactor = materials.baseColorFactor;
+         material.metallicFactor = materials.metallicFactor;
+         material.roughnessFactor = materials.roughnessFactor;
+         material.normalScale = materials.normalScale;
       }
 
       const auto posAccessorIdx =
@@ -241,6 +266,8 @@ Model::LoadModel(const std::string& file)
 
       std::vector< render::Vertex > vertices(posAcc.count);
       const glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(worldMat)));
+      const glm::mat3 tangentMat = glm::mat3(worldMat);
+      const float tangentOrientation = glm::determinant(tangentMat) < 0.0F ? -1.0F : 1.0F;
 
       for (size_t i = 0; i < posAcc.count; ++i)
       {
@@ -270,11 +297,12 @@ Model::LoadModel(const std::string& file)
          if (tanAcc != nullptr)
          {
             const auto tangent = readVec4(*tanAcc, i);
-            v.m_tangent = glm::normalize(normalMat * glm::vec3(tangent));
+            v.m_tangent = glm::vec4(glm::normalize(tangentMat * glm::vec3(tangent)),
+                                    tangent.w * tangentOrientation);
          }
          else
          {
-            v.m_tangent = glm::vec3(0.0F);
+            v.m_tangent = glm::vec4(0.0F);
          }
 
          vertices[i] = v;
@@ -334,7 +362,7 @@ Model::LoadModel(const std::string& file)
 
       numVertices_ += static_cast< uint32_t >(vertices.size());
       numIndices_ += static_cast< uint32_t >(indices.size());
-      meshes_.emplace_back(meshName, std::move(vertices), std::move(indices), std::move(texts));
+      meshes_.emplace_back(meshName, std::move(vertices), std::move(indices), std::move(material));
    };
 
    std::function< void(int, const glm::mat4&) > processNode = [&](int nodeIndex,
@@ -466,28 +494,28 @@ Model::CreatePlane()
    auto model = std::make_unique< Model >();
    model->GetMeshes().push_back({"Plane",
                                  {{
-                                     {25.0F, -0.5F, 25.0F}, // Position
-                                     {0.0F, 1.0F, 0.0F},    // Normal
-                                     {25.0F, 0.0F},         // Texcoord
-                                     {50.0F, 0.0F, 0.0F}    // Tangent
+                                     {25.0F, -0.5F, 25.0F},    // Position
+                                     {0.0F, 1.0F, 0.0F},       // Normal
+                                     {25.0F, 0.0F},            // Texcoord
+                                     {50.0F, 0.0F, 0.0F, 1.0F} // Tangent
                                   },
                                   {
-                                     {-25.0F, -0.5F, 25.0F}, // Position
-                                     {0.0F, 1.0F, 0.0F},     // Normal
-                                     {0.0F, 0.0F},           // Texcoord
-                                     {50.0F, 0.0F, 0.0F}     // Tangent
+                                     {-25.0F, -0.5F, 25.0F},   // Position
+                                     {0.0F, 1.0F, 0.0F},       // Normal
+                                     {0.0F, 0.0F},             // Texcoord
+                                     {50.0F, 0.0F, 0.0F, 1.0F} // Tangent
                                   },
                                   {
-                                     {-25.0F, -0.5F, -25.0F}, // Position
-                                     {0.0F, 1.0F, 0.0F},      // Normal
-                                     {0.0F, 25.0F},           // Texcoord
-                                     {50.0F, 0.0F, 0.0F}      // Tangent
+                                     {-25.0F, -0.5F, -25.0F},  // Position
+                                     {0.0F, 1.0F, 0.0F},       // Normal
+                                     {0.0F, 25.0F},            // Texcoord
+                                     {50.0F, 0.0F, 0.0F, 1.0F} // Tangent
                                   },
                                   {
-                                     {25.0F, -0.5F, -25.0F}, // Position
-                                     {0.0F, 1.0F, 0.0F},     // Normal
-                                     {25.0F, 25.0F},         // Texcoord
-                                     {50.0F, 0.0F, 0.0F}     // Tangent
+                                     {25.0F, -0.5F, -25.0F},   // Position
+                                     {0.0F, 1.0F, 0.0F},       // Normal
+                                     {25.0F, 25.0F},           // Texcoord
+                                     {50.0F, 0.0F, 0.0F, 1.0F} // Tangent
                                   }},
                                  {2, 1, 0, 3, 2, 0}, // Indices
                                  {}});

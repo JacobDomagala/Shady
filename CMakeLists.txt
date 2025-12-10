@@ -69,7 +69,10 @@ target_link_libraries_system (${PROJECT_NAME} PRIVATE fmt::fmt glfw imgui::imgui
 target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE FMT_USE_CONSTEXPR_CONSTRUCTION=0)
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    FMT_USE_CONSTEXPR_CONSTRUCTION=0
+    GLM_FORCE_DEPTH_ZERO_TO_ONE
+)
 target_compile_options(${PROJECT_NAME} PRIVATE -O0 -g3 -fno-omit-frame-pointer)
 
 include(cmake/compile_shaders.cmake)

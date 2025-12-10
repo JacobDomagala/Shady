@@ -26,7 +26,7 @@ class Renderer
 
    static void
    MeshLoaded(const std::vector< Vertex >& vertices, const std::vector< uint32_t >& indicies,
-              const TextureMaps& textures, const glm::mat4& modelMat);
+              const MaterialData& material, const glm::mat4& modelMat);
 
    static void
    CreateCommandBufferForDeferred();

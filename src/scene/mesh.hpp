@@ -13,7 +13,7 @@ class Mesh
  public:
    Mesh() = default;
    Mesh(const std::string& name, std::vector< render::Vertex >&& vertices,
-        std::vector< uint32_t >&& indices, render::TextureMaps&& textures);
+        std::vector< uint32_t >&& indices, render::MaterialData&& material);
 
    /*void
    AddTexture(const render::TexturePtr& texture);*/
@@ -47,7 +47,7 @@ class Mesh
    std::vector< render::Vertex > vertices_;
    std::vector< uint32_t > indices_;
    // render::TexturePtrVec m_textures = {};
-   render::TextureMaps textures_;
+   render::MaterialData material_;
    std::string name_ = "dummyMeshName";
 };
 

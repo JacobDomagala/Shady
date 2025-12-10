@@ -40,7 +40,7 @@ struct Vertex
    glm::vec3 m_position;
    glm::vec3 m_normal;
    glm::vec2 m_texCoords;
-   glm::vec3 m_tangent;
+   glm::vec4 m_tangent;
 
    static auto
    getBindingDescription()
@@ -75,7 +75,7 @@ struct Vertex
 
       attributeDescriptions[3].binding = 0;
       attributeDescriptions[3].location = 3;
-      attributeDescriptions[3].format = VK_FORMAT_R32G32B32_SFLOAT;
+      attributeDescriptions[3].format = VK_FORMAT_R32G32B32A32_SFLOAT;
       attributeDescriptions[3].offset = offsetof(Vertex, m_tangent);
 
       return attributeDescriptions;

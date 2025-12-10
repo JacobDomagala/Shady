@@ -28,7 +28,7 @@ constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
 void
 Renderer::MeshLoaded(const std::vector< Vertex >& vertices, const std::vector< uint32_t >& indicies,
-                     const TextureMaps& textures, const glm::mat4& modelMat)
+                     const MaterialData& material, const glm::mat4& modelMat)
 {
    std::copy(vertices.begin(), vertices.end(), std::back_inserter(Data::vertices));
    std::copy(indicies.begin(), indicies.end(), std::back_inserter(Data::indices));
@@ -44,11 +44,15 @@ Renderer::MeshLoaded(const std::vector< Vertex >& vertices, const std::vector< u
    Data::m_currentVertex += static_cast< uint32_t >(vertices.size());
    Data::m_currentIndex += static_cast< uint32_t >(indicies.size());
 
-   PerInstanceBuffer newInstance;
+   PerInstanceBuffer newInstance{};
    newInstance.model = modelMat;
+   newInstance.baseColorFactor = material.baseColorFactor;
+   newInstance.materialFactors =
+      glm::vec4(material.metallicFactor, material.roughnessFactor, material.normalScale, 0.0F);
 
-   for (const auto& texture : textures)
+   for (size_t textureSlot = 0; textureSlot < material.textures.size(); ++textureSlot)
    {
+      const auto& texture = material.textures[textureSlot];
       if (texture.empty())
       {
          continue;
@@ -67,28 +71,7 @@ Renderer::MeshLoaded(const std::vector< Vertex >& vertices, const std::vector< u
       }
 
       const auto idx = Data::textures[texture].first;
-      const auto& tex = TextureLibrary::GetTexture(texture);
-      switch (tex.GetType())
-      {
-         case TextureType::DIFFUSE_MAP: {
-            newInstance.textures.x = static_cast< float >(idx);
-         }
-         break;
-
-         case TextureType::NORMAL_MAP: {
-            newInstance.textures.y = static_cast< float >(idx);
-         }
-         break;
-
-         case TextureType::SPECULAR_MAP: {
-            newInstance.textures.z = static_cast< float >(idx);
-         }
-         break;
-
-         case TextureType::CUBE_MAP:
-         default:
-            break;
-      }
+      newInstance.textures[static_cast< glm::length_t >(textureSlot)] = idx;
    }
 
    Data::perInstance.push_back(newInstance);
@@ -116,8 +99,9 @@ Renderer::SetupData()
 
    void* data = nullptr;
    vkMapMemory(Data::vk_device, Data::m_indirectDrawsBufferMemory, 0, bufferSize, 0, &data);
-   memcpy(data, Data::m_renderCommands.data(), bufferSize);
+   memcpy(data, Data::m_renderCommands.data(), commandsSize);
    memcpy(static_cast< uint8_t* >(data) + commandsSize, &Data::m_numMeshes, sizeof(uint32_t));
+   vkUnmapMemory(Data::vk_device, Data::m_indirectDrawsBufferMemory);
 
 
    // vkUnmapMemory(Data::vk_device, stagingBufferMemory);
@@ -351,7 +335,8 @@ isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface)
    auto isDiscrete = physicalDeviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
 
    return indices.isComplete() && extensionsSupported && swapChainAdequate && isDiscrete
-          && supportedFeatures.samplerAnisotropy && supportedFeatures.multiDrawIndirect;
+          && supportedFeatures.samplerAnisotropy && supportedFeatures.multiDrawIndirect
+          && supportedFeatures.drawIndirectFirstInstance;
 }
 
 VkSampleCountFlagBits
@@ -574,16 +559,15 @@ Renderer::UpdateUniformBuffer(const scene::Camera* camera, const scene::Light* l
    ubo.lightView = light->GetLightSpaceMat();
 
    void* data = nullptr;
-   vkMapMemory(Data::vk_device, Data::m_uniformBuffersMemory[m_imageIndex], 0, sizeof(ubo), 0,
-               &data);
+   vkMapMemory(Data::vk_device, Data::m_uniformBuffersMemory[0], 0, sizeof(ubo), 0, &data);
    memcpy(data, &ubo, sizeof(ubo));
-   vkUnmapMemory(Data::vk_device, Data::m_uniformBuffersMemory[m_imageIndex]);
+   vkUnmapMemory(Data::vk_device, Data::m_uniformBuffersMemory[0]);
 
    void* data2 = nullptr;
-   vkMapMemory(Data::vk_device, Data::m_ssboMemory[m_imageIndex], 0,
+   vkMapMemory(Data::vk_device, Data::m_ssboMemory[0], 0,
                Data::perInstance.size() * sizeof(PerInstanceBuffer), 0, &data2);
    memcpy(data2, Data::perInstance.data(), Data::perInstance.size() * sizeof(PerInstanceBuffer));
-   vkUnmapMemory(Data::vk_device, Data::m_ssboMemory[m_imageIndex]);
+   vkUnmapMemory(Data::vk_device, Data::m_ssboMemory[0]);
 
    DeferredPipeline::UpdateDeferred(camera, light);
 }
@@ -642,25 +626,13 @@ Renderer::Draw()
    // Offscreen rendering
    //
 
-   std::array< VkPipelineStageFlags, 1 > waitStages = {
-      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-
-   VkSubmitInfo submitInfo{};
-   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-   submitInfo.pWaitDstStageMask = waitStages.data();
-
-   // Wait for swap chain presentation to finish
-   submitInfo.pWaitSemaphores = &m_imageAvailableSemaphores[currentFrame];
-   submitInfo.waitSemaphoreCount = 1;
-
-   // Signal ready with offscreen semaphore
-   submitInfo.pSignalSemaphores = &DeferredPipeline::GetOffscreenSemaphore();
-   submitInfo.signalSemaphoreCount = 1;
-
-   // Submit work
-   submitInfo.commandBufferCount = 1;
-   submitInfo.pCommandBuffers = &DeferredPipeline::GetOffscreenCmdBuffer();
-   VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE),
+   VkSubmitInfo offscreenSubmitInfo{};
+   offscreenSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+   offscreenSubmitInfo.pSignalSemaphores = &DeferredPipeline::GetOffscreenSemaphore();
+   offscreenSubmitInfo.signalSemaphoreCount = 1;
+   offscreenSubmitInfo.commandBufferCount = 1;
+   offscreenSubmitInfo.pCommandBuffers = &DeferredPipeline::GetOffscreenCmdBuffer();
+   VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &offscreenSubmitInfo, VK_NULL_HANDLE),
             "failed to submit offscreen draw command buffer!");
 
 
@@ -668,10 +640,20 @@ Renderer::Draw()
    // Scene rendering
    //
 
-   submitInfo.pWaitSemaphores = &DeferredPipeline::GetOffscreenSemaphore();
-   submitInfo.pSignalSemaphores = &m_renderFinishedSemaphores[currentFrame];
-   submitInfo.pCommandBuffers = &m_commandBuffers[m_imageIndex];
-   submitInfo.commandBufferCount = 1;
+   const std::array< VkSemaphore, 2 > waitSemaphores = {m_imageAvailableSemaphores[currentFrame],
+                                                        DeferredPipeline::GetOffscreenSemaphore()};
+   const std::array< VkPipelineStageFlags, 2 > waitStages = {
+      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT};
+
+   VkSubmitInfo sceneSubmitInfo{};
+   sceneSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+   sceneSubmitInfo.waitSemaphoreCount = static_cast< uint32_t >(waitSemaphores.size());
+   sceneSubmitInfo.pWaitSemaphores = waitSemaphores.data();
+   sceneSubmitInfo.pWaitDstStageMask = waitStages.data();
+   sceneSubmitInfo.pSignalSemaphores = &m_renderFinishedSemaphores[currentFrame];
+   sceneSubmitInfo.signalSemaphoreCount = 1;
+   sceneSubmitInfo.pCommandBuffers = &m_commandBuffers[m_imageIndex];
+   sceneSubmitInfo.commandBufferCount = 1;
 
 
    // vkResetFences(Data::vk_device, 1, &m_inFlightFences[currentFrame]);
@@ -680,7 +662,7 @@ Renderer::Draw()
    // m_inFlightFences[currentFrame]),
    //         "failed to submit draw command buffer!");
 
-   VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE),
+   VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &sceneSubmitInfo, VK_NULL_HANDLE),
             "failed to submit draw command buffer!");
 
    VkPresentInfoKHR presentInfo{};
@@ -797,6 +779,7 @@ Renderer::CreateDevice()
    VkPhysicalDeviceFeatures deviceFeatures{};
    deviceFeatures.samplerAnisotropy = VK_TRUE;
    deviceFeatures.multiDrawIndirect = VK_TRUE;
+   deviceFeatures.drawIndirectFirstInstance = VK_TRUE;
    deviceFeatures.geometryShader = VK_TRUE;
 
    VkDeviceCreateInfo createInfo{};

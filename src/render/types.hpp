@@ -10,7 +10,7 @@ namespace shady::render {
 enum class TextureType : std::uint8_t
 {
    DIFFUSE_MAP = 0,
-   SPECULAR_MAP = 1,
+   METALLIC_ROUGHNESS_MAP = 1,
    NORMAL_MAP = 2,
    CUBE_MAP = 3
 };
@@ -33,10 +33,21 @@ struct DebugData
 struct PerInstanceBuffer
 {
    glm::mat4 model = {};
-   glm::vec4 textures = {};
+   glm::ivec4 textures = glm::ivec4(-1);
+   glm::vec4 baseColorFactor = glm::vec4(1.0F);
+   glm::vec4 materialFactors = glm::vec4(1.0F, 1.0F, 1.0F, 0.0F);
 };
 
-// DIFFUSE_MAP SPECULAR_MAP NORMAL_MAP
+// Base color, metallic-roughness, normal.
 using TextureMaps = std::array< std::string, 3 >;
+
+struct MaterialData
+{
+   TextureMaps textures = {};
+   glm::vec4 baseColorFactor = glm::vec4(1.0F);
+   float metallicFactor = 1.0F;
+   float roughnessFactor = 1.0F;
+   float normalScale = 1.0F;
+};
 
 } // namespace shady::render

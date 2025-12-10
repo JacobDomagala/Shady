@@ -6,7 +6,6 @@ layout(binding = 6) uniform sampler2D samplerNormal;
 layout(binding = 8) uniform sampler2D samplerShadowMap;
 
 layout(location = 0) in vec2 inUV;
-
 layout(location = 0) out vec4 outFragcolor;
 
 #define LIGHT_COUNT 1
@@ -14,17 +13,17 @@ layout(location = 0) out vec4 outFragcolor;
 struct Light
 {
    vec4 position;
-	vec4 target;
-	vec4 color;
-	mat4 viewMatrix;
+   vec4 target;
+   vec4 color;
+   mat4 viewMatrix;
 };
 
 struct DebugData
 {
-	int displayDebugTarget;
-	int pcfShadow;
-	float ambientLight;
-	float shadowFactor;
+   int displayDebugTarget;
+   int pcfShadow;
+   float ambientLight;
+   float shadowFactor;
 };
 
 layout(binding = 7) uniform UBO
@@ -35,66 +34,87 @@ layout(binding = 7) uniform UBO
 }
 ubo;
 
-float textureProj(vec4 P, float layer, vec2 offset)
+float
+textureProj(vec4 P, vec2 offset)
 {
-	float shadow = 1.0;
-	vec4 shadowCoord = P / P.w;
-	shadowCoord.st = shadowCoord.st * 0.5 + 0.5;
+   float shadow = 1.0;
+   vec4 shadowCoord = P / P.w;
+   shadowCoord.st = shadowCoord.st * 0.5 + 0.5;
 
-	if (shadowCoord.z > -1.0 && shadowCoord.z < 1.0)
-	{
-		float dist = texture(samplerShadowMap, shadowCoord.st + offset).r;
-		if (shadowCoord.w > 0.0 && dist < shadowCoord.z)
-		{
-			shadow = ubo.debug.shadowFactor;
-		}
-	}
-	return shadow;
+   if (shadowCoord.z >= 0.0 && shadowCoord.z <= 1.0)
+   {
+      float dist = texture(samplerShadowMap, shadowCoord.st + offset).r;
+      if (shadowCoord.w > 0.0 && dist < shadowCoord.z)
+      {
+         shadow = ubo.debug.shadowFactor;
+      }
+   }
+   return shadow;
 }
 
-float filterPCF(vec4 sc, float layer)
+float
+filterPCF(vec4 shadowClip)
 {
-	ivec2 texDim = textureSize(samplerShadowMap, 0).xy;
-	float scale = 1.5;
-	float dx = scale * 1.0 / float(texDim.x);
-	float dy = scale * 1.0 / float(texDim.y);
+   ivec2 texDim = textureSize(samplerShadowMap, 0).xy;
+   vec2 texelSize = vec2(1.5) / vec2(texDim);
+   float shadowFactor = 0.0;
+   int count = 0;
 
-	float shadowFactor = 0.0;
-	int count = 0;
-	int range = 1;
-
-	for (int x = -range; x <= range; x++)
-	{
-		for (int y = -range; y <= range; y++)
-		{
-			shadowFactor += textureProj(sc, layer, vec2(dx*x, dy*y));
-			count++;
-		}
-
-	}
-	return shadowFactor / count;
+   for (int x = -1; x <= 1; ++x)
+   {
+      for (int y = -1; y <= 1; ++y)
+      {
+         shadowFactor += textureProj(shadowClip, vec2(x, y) * texelSize);
+         ++count;
+      }
+   }
+   return shadowFactor / count;
 }
 
-vec3 shadow(vec3 fragcolor, vec3 fragpos) {
-	for(int i = 0; i < LIGHT_COUNT; ++i)
-	{
-		vec4 shadowClip	= ubo.lights[i].viewMatrix * vec4(fragpos, 1.0);
+float
+shadowFactor(vec3 fragPos)
+{
+   vec4 shadowClip = ubo.lights[0].viewMatrix * vec4(fragPos, 1.0);
+   return ubo.debug.pcfShadow > 0 ? filterPCF(shadowClip)
+                                 : textureProj(shadowClip, vec2(0.0));
+}
 
-		float shadowFactor;
-		if(ubo.debug.pcfShadow > 0)
-			shadowFactor = filterPCF(shadowClip, i);
-		else
-			shadowFactor = textureProj(shadowClip, i, vec2(0.0));
+const float PI = 3.14159265359;
 
-		fragcolor *= shadowFactor;
-	}
-	return fragcolor;
+float
+distributionGGX(vec3 N, vec3 H, float roughness)
+{
+   float a = roughness * roughness;
+   float a2 = a * a;
+   float NdotH = max(dot(N, H), 0.0);
+   float denominator = NdotH * NdotH * (a2 - 1.0) + 1.0;
+   return a2 / max(PI * denominator * denominator, 0.0001);
+}
+
+float
+geometrySchlickGGX(float NdotV, float roughness)
+{
+   float r = roughness + 1.0;
+   float k = (r * r) / 8.0;
+   return NdotV / max(NdotV * (1.0 - k) + k, 0.0001);
+}
+
+float
+geometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
+{
+   return geometrySchlickGGX(max(dot(N, V), 0.0), roughness)
+          * geometrySchlickGGX(max(dot(N, L), 0.0), roughness);
+}
+
+vec3
+fresnelSchlick(float cosTheta, vec3 F0)
+{
+   return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
 void
 main()
 {
-   // Get G-Buffer values
    vec4 positionSample = texture(samplerPosition, inUV);
    if (positionSample.a == 0.0)
    {
@@ -102,11 +122,12 @@ main()
    }
 
    vec3 fragPos = positionSample.rgb;
-   vec3 normal = texture(samplerNormal, inUV).rgb;
+   vec4 normalSample = texture(samplerNormal, inUV);
+   vec3 normal = normalSample.rgb;
+   float metallic = normalSample.a;
    vec4 albedo = texture(samplerAlbedo, inUV);
-   vec4 shadow_sample = texture(samplerShadowMap, inUV);
+   float roughness = albedo.a;
 
-   // Debug display
    if (ubo.debug.displayDebugTarget > 0)
    {
       switch (ubo.debug.displayDebugTarget)
@@ -121,55 +142,43 @@ main()
             outFragcolor.rgb = albedo.rgb;
             break;
          case 4:
-            outFragcolor.rgb = albedo.aaa;
+            outFragcolor.rgb = vec3(roughness);
             break;
          case 5:
-            outFragcolor.rgb = vec3(shadow_sample.r);
+            outFragcolor.rgb = vec3(texture(samplerShadowMap, inUV).r);
             break;
       }
       outFragcolor.a = 1.0;
       return;
    }
 
-   // Ambient part
-   vec3 fragcolor = albedo.rgb * ubo.debug.ambientLight;
+   vec3 N = normalize(normal);
+   vec3 V = normalize(ubo.viewPos.xyz - fragPos);
+   vec3 F0 = mix(vec3(0.04), albedo.rgb, metallic);
+   vec3 fragcolor = albedo.rgb * ubo.debug.ambientLight * (1.0 - metallic);
 
    for (int i = 0; i < LIGHT_COUNT; ++i)
    {
-      // Vector to light
-      vec3 L = ubo.lights[i].position.xyz - fragPos;
-      // Distance from light to fragment position
-      float dist = length(L);
-
-      // Viewer to fragment
-      vec3 V = ubo.viewPos.xyz - fragPos;
-      V = normalize(V);
-
-      // if(dist < ubo.lights[i].radius)
+      vec3 lightDelta = ubo.lights[i].position.xyz - fragPos;
+      if (length(lightDelta) <= 0.0001)
       {
-         // Light to fragment
-         L = normalize(L);
-
-         // Attenuation
-         float atten = 1.0f; //ubo.lights[i].radius / (pow(dist, 2.0) + 1.0);
-
-         // Diffuse part
-         vec3 N = normalize(normal);
-         float NdotL = max(0.0, dot(N, L));
-         vec3 diff = ubo.lights[i].color.rgb * albedo.rgb * NdotL * atten;
-
-         // Specular part
-         // Specular map values are stored in alpha of albedo mrt
-         vec3 R = reflect(-L, N);
-         float NdotR = max(0.0, dot(R, V));
-         vec3 spec = ubo.lights[i].color.rgb * albedo.a * pow(NdotR, 16.0) * atten;
-
-         fragcolor += diff + spec;
+         continue;
       }
+
+      vec3 L = normalize(lightDelta);
+      vec3 H = normalize(V + L);
+      float NdotL = max(dot(N, L), 0.0);
+      float NdotV = max(dot(N, V), 0.0);
+      vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
+      float D = distributionGGX(N, H, roughness);
+      float G = geometrySmith(N, V, L, roughness);
+      vec3 specular = (D * G * F) / max(4.0 * NdotV * NdotL, 0.0001);
+
+      vec3 diffuseWeight = (vec3(1.0) - F) * (1.0 - metallic);
+      vec3 diffuse = diffuseWeight * albedo.rgb / PI;
+      fragcolor += (diffuse + specular) * ubo.lights[i].color.rgb * NdotL;
    }
 
-   // Shadow calculations in a separate pass
-	fragcolor = shadow(fragcolor, fragPos);
-
+   fragcolor *= shadowFactor(fragPos);
    outFragcolor = vec4(fragcolor, 1.0);
 }

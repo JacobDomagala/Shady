@@ -6,15 +6,19 @@
 namespace shady::time {
 
 using timeStamp = std::chrono::time_point< std::chrono::steady_clock >;
+using duration = std::chrono::steady_clock::duration;
 using milliseconds = std::chrono::milliseconds;
 using seconds = std::chrono::seconds;
 
 struct TimeStep
 {
-   explicit TimeStep(milliseconds time);
+   explicit TimeStep(duration time);
 
    [[nodiscard]] std::string
    ToString() const;
+
+   [[nodiscard]] duration
+   GetDuration() const;
 
    [[nodiscard]] seconds
    GetSeconds() const;
@@ -23,7 +27,7 @@ struct TimeStep
    GetMilliseconds() const;
 
  private:
-   milliseconds time_;
+   duration time_;
 };
 
 
@@ -35,8 +39,12 @@ class Timer
    [[nodiscard]] TimeStep
    ToggleTimer();
 
+   [[nodiscard]] TimeStep
+   Elapsed() const;
+
  private:
    timeStamp lastTimeStamp_;
+   duration elapsed_ = {};
 };
 
 } // namespace shady::time

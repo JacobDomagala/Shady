@@ -83,6 +83,8 @@ struct Data
    inline static VkRenderPass m_renderPass = {};
    inline static VkRenderPass m_deferredRenderPass = {};
 
+   inline static int32_t m_fps = 0;
+
    inline static DebugData m_debugData = {};
 };
 

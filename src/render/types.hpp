@@ -30,6 +30,27 @@ struct DebugData
    float shadowFactor = 0.1f;
 };
 
+enum class TimestampQuery : uint32_t
+{
+   FrameStart,
+   OffscreenStart,
+   OffscreenEnd,
+   CompositionStart,
+   CompositionEnd,
+   ImGuiStart,
+   ImGuiEnd,
+   FrameEnd,
+   QueryCount
+};
+
+constexpr uint32_t TIMESTAMP_QUERY_COUNT = static_cast< uint32_t >(TimestampQuery::QueryCount);
+
+constexpr uint32_t
+TimestampQueryIndex(TimestampQuery query)
+{
+   return static_cast< uint32_t >(query);
+}
+
 struct FrameDiagnostics
 {
    float totalMs = 0.0f;
@@ -42,7 +63,13 @@ struct FrameDiagnostics
    float queueSubmitMs = 0.0f;
    float presentMs = 0.0f;
    float queueIdleMs = 0.0f;
+   float gpuFrameMs = 0.0f;
+   float gpuOffscreenMs = 0.0f;
+   float gpuBarrierMs = 0.0f;
+   float gpuCompositionMs = 0.0f;
+   float gpuImGuiMs = 0.0f;
    uint32_t sampleCount = 0;
+   uint32_t gpuSampleCount = 0;
 };
 
 struct PerInstanceBuffer

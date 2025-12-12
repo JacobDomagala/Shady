@@ -709,6 +709,13 @@ DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& s
 
    VK_CHECK(vkBeginCommandBuffer(m_offscreenCommandBuffer, &cmdBufInfo), "");
 
+   const auto timestampQueryPool = Data::m_timestampQueryPools.front();
+   vkCmdResetQueryPool(m_offscreenCommandBuffer, timestampQueryPool, 0, TIMESTAMP_QUERY_COUNT);
+   vkCmdWriteTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                       timestampQueryPool, TimestampQueryIndex(TimestampQuery::FrameStart));
+   vkCmdWriteTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                       timestampQueryPool, TimestampQueryIndex(TimestampQuery::OffscreenStart));
+
    VkViewport viewport{};
    viewport.width = static_cast< float >(m_shadowMap.GetSize().x);
    viewport.height = static_cast< float >(m_shadowMap.GetSize().y);
@@ -803,6 +810,9 @@ DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& s
                                  Data::m_numMeshes, sizeof(VkDrawIndexedIndirectCommand));
 
    vkCmdEndRenderPass(m_offscreenCommandBuffer);
+
+   vkCmdWriteTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                       timestampQueryPool, TimestampQueryIndex(TimestampQuery::OffscreenEnd));
 
    VK_CHECK(vkEndCommandBuffer(m_offscreenCommandBuffer), "");
 }

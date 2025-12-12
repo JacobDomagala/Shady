@@ -343,6 +343,19 @@ Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
          timingRow("Queue submit", diagnostics.queueSubmitMs);
          timingRow("Present", diagnostics.presentMs);
          timingRow("Queue idle", diagnostics.queueIdleMs);
+
+         if (diagnostics.gpuSampleCount > 0)
+         {
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+            ImGui::Text("GPU diagnostics (%u-frame average)", diagnostics.gpuSampleCount);
+            timingRow("GPU frame", diagnostics.gpuFrameMs);
+            timingRow("GPU offscreen", diagnostics.gpuOffscreenMs);
+            timingRow("GPU queue gap", diagnostics.gpuBarrierMs);
+            timingRow("GPU composition", diagnostics.gpuCompositionMs);
+            timingRow("GPU ImGui", diagnostics.gpuImGuiMs);
+         }
       }
    }
 

@@ -37,6 +37,26 @@ ElapsedMilliseconds(FrameClock::time_point start, FrameClock::time_point end)
    return std::chrono::duration< float, std::milli >(end - start).count();
 }
 
+uint64_t
+TimestampDelta(uint64_t start, uint64_t end, uint32_t validBits)
+{
+   if (validBits == 64)
+   {
+      return end - start;
+   }
+
+   const uint64_t mask = (uint64_t{1} << validBits) - 1;
+   return (end - start) & mask;
+}
+
+float
+TimestampMilliseconds(uint64_t start, uint64_t end, uint32_t validBits, float timestampPeriod)
+{
+   constexpr float NANOSECONDS_PER_MILLISECOND = 1'000'000.0f;
+   const auto ticks = TimestampDelta(start, end, validBits);
+   return static_cast< float >(ticks) * timestampPeriod / NANOSECONDS_PER_MILLISECOND;
+}
+
 void
 PublishFrameDiagnostics(const FrameDiagnostics& frame)
 {
@@ -53,6 +73,15 @@ PublishFrameDiagnostics(const FrameDiagnostics& frame)
    totals.queueSubmitMs += frame.queueSubmitMs;
    totals.presentMs += frame.presentMs;
    totals.queueIdleMs += frame.queueIdleMs;
+   if (frame.gpuSampleCount > 0)
+   {
+      totals.gpuFrameMs += frame.gpuFrameMs;
+      totals.gpuOffscreenMs += frame.gpuOffscreenMs;
+      totals.gpuBarrierMs += frame.gpuBarrierMs;
+      totals.gpuCompositionMs += frame.gpuCompositionMs;
+      totals.gpuImGuiMs += frame.gpuImGuiMs;
+      ++totals.gpuSampleCount;
+   }
    ++totals.sampleCount;
 
    if (totals.sampleCount < SAMPLE_WINDOW)
@@ -74,6 +103,17 @@ PublishFrameDiagnostics(const FrameDiagnostics& frame)
       .queueIdleMs = totals.queueIdleMs / sampleCount,
       .sampleCount = totals.sampleCount,
    };
+
+   if (totals.gpuSampleCount > 0)
+   {
+      const auto gpuSampleCount = static_cast< float >(totals.gpuSampleCount);
+      Data::m_frameDiagnostics.gpuFrameMs = totals.gpuFrameMs / gpuSampleCount;
+      Data::m_frameDiagnostics.gpuOffscreenMs = totals.gpuOffscreenMs / gpuSampleCount;
+      Data::m_frameDiagnostics.gpuBarrierMs = totals.gpuBarrierMs / gpuSampleCount;
+      Data::m_frameDiagnostics.gpuCompositionMs = totals.gpuCompositionMs / gpuSampleCount;
+      Data::m_frameDiagnostics.gpuImGuiMs = totals.gpuImGuiMs / gpuSampleCount;
+      Data::m_frameDiagnostics.gpuSampleCount = totals.gpuSampleCount;
+   }
 
    totals = {};
 }
@@ -593,6 +633,7 @@ Renderer::CreateRenderPipeline()
    CreateDepthResources();
    CreateFramebuffers();
    CreatePipelineCache();
+   CreateTimestampQueryPools();
 
 
    DeferredPipeline::Initialize(Data::m_renderPass, m_swapChainImageViews, Data::m_pipelineCache);
@@ -664,6 +705,40 @@ void
 Renderer::Draw()
 {
    const auto frameStart = FrameClock::now();
+
+   FrameDiagnostics gpuDiagnostics{};
+   if (m_timestampResultsReady)
+   {
+      std::array< uint64_t, TIMESTAMP_QUERY_COUNT > timestamps{};
+      const auto result = vkGetQueryPoolResults(
+         Data::vk_device, Data::m_timestampQueryPools.front(), 0, TIMESTAMP_QUERY_COUNT,
+         sizeof(timestamps), timestamps.data(), sizeof(uint64_t), VK_QUERY_RESULT_64_BIT);
+
+      if (result == VK_SUCCESS)
+      {
+         const auto milliseconds = [&timestamps](TimestampQuery start, TimestampQuery end) {
+            return TimestampMilliseconds(timestamps[TimestampQueryIndex(start)],
+                                         timestamps[TimestampQueryIndex(end)], m_timestampValidBits,
+                                         m_timestampPeriod);
+         };
+
+         gpuDiagnostics.gpuFrameMs =
+            milliseconds(TimestampQuery::FrameStart, TimestampQuery::FrameEnd);
+         gpuDiagnostics.gpuOffscreenMs =
+            milliseconds(TimestampQuery::OffscreenStart, TimestampQuery::OffscreenEnd);
+         gpuDiagnostics.gpuBarrierMs =
+            milliseconds(TimestampQuery::OffscreenEnd, TimestampQuery::CompositionStart);
+         gpuDiagnostics.gpuCompositionMs =
+            milliseconds(TimestampQuery::CompositionStart, TimestampQuery::CompositionEnd);
+         gpuDiagnostics.gpuImGuiMs =
+            milliseconds(TimestampQuery::ImGuiStart, TimestampQuery::ImGuiEnd);
+         gpuDiagnostics.gpuSampleCount = 1;
+      }
+      else if (result != VK_NOT_READY)
+      {
+         VK_CHECK(result, "failed to read GPU timestamp queries!");
+      }
+   }
 
    // Always recreate the command buffers for composition, mostly due to imgui
    CreateCommandBufferForDeferred();
@@ -741,6 +816,7 @@ Renderer::Draw()
 
    vkQueueWaitIdle(Data::vk_graphicsQueue);
    const auto queueIdleEnd = FrameClock::now();
+   m_timestampResultsReady = true;
 
    PublishFrameDiagnostics({
       .totalMs = ElapsedMilliseconds(frameStart, queueIdleEnd),
@@ -752,6 +828,12 @@ Renderer::Draw()
                        + ElapsedMilliseconds(offscreenSubmitEnd, sceneSubmitEnd),
       .presentMs = ElapsedMilliseconds(sceneSubmitEnd, presentEnd),
       .queueIdleMs = ElapsedMilliseconds(presentEnd, queueIdleEnd),
+      .gpuFrameMs = gpuDiagnostics.gpuFrameMs,
+      .gpuOffscreenMs = gpuDiagnostics.gpuOffscreenMs,
+      .gpuBarrierMs = gpuDiagnostics.gpuBarrierMs,
+      .gpuCompositionMs = gpuDiagnostics.gpuCompositionMs,
+      .gpuImGuiMs = gpuDiagnostics.gpuImGuiMs,
+      .gpuSampleCount = gpuDiagnostics.gpuSampleCount,
    });
 
    currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
@@ -1139,6 +1221,11 @@ Renderer::CreateCommandBufferForDeferred()
 
       VK_CHECK(vkBeginCommandBuffer(m_commandBuffers[i], &beginInfo), "");
 
+      const auto timestampQueryPool = Data::m_timestampQueryPools.front();
+      vkCmdWriteTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                          timestampQueryPool,
+                          TimestampQueryIndex(TimestampQuery::CompositionStart));
+
       vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
       VkViewport viewport{};
@@ -1175,15 +1262,59 @@ Renderer::CreateCommandBufferForDeferred()
       // Final composition as full screen quad
       vkCmdDraw(m_commandBuffers[i], 3, 1, 0, 0);
 
+      vkCmdWriteTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                          timestampQueryPool,
+                          TimestampQueryIndex(TimestampQuery::CompositionEnd));
+
       /*
        * STAGE 4 - DRAW UI
        */
+      vkCmdWriteTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                          timestampQueryPool, TimestampQueryIndex(TimestampQuery::ImGuiStart));
+
       app::gui::Gui::Render(m_commandBuffers[i]);
+
+      vkCmdWriteTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                          timestampQueryPool, TimestampQueryIndex(TimestampQuery::ImGuiEnd));
 
       vkCmdEndRenderPass(m_commandBuffers[i]);
 
+      vkCmdWriteTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                          timestampQueryPool, TimestampQueryIndex(TimestampQuery::FrameEnd));
+
       VK_CHECK(vkEndCommandBuffer(m_commandBuffers[i]), "");
    }
+}
+
+void
+Renderer::CreateTimestampQueryPools()
+{
+   VkPhysicalDeviceProperties properties{};
+   vkGetPhysicalDeviceProperties(Data::vk_physicalDevice, &properties);
+   m_timestampPeriod = properties.limits.timestampPeriod;
+
+   uint32_t queueFamilyCount = 0;
+   vkGetPhysicalDeviceQueueFamilyProperties(Data::vk_physicalDevice, &queueFamilyCount, nullptr);
+
+   std::vector< VkQueueFamilyProperties > queueFamilies(queueFamilyCount);
+   vkGetPhysicalDeviceQueueFamilyProperties(Data::vk_physicalDevice, &queueFamilyCount,
+                                            queueFamilies.data());
+
+   const auto queueFamilyIndices = findQueueFamilies(Data::vk_physicalDevice, Data::m_surface);
+   m_timestampValidBits =
+      queueFamilies.at(queueFamilyIndices.graphicsFamily.value()).timestampValidBits;
+   utils::Assert(m_timestampValidBits > 0, "graphics queue does not support timestamp queries!");
+
+   Data::m_timestampQueryPools.resize(1);
+
+   VkQueryPoolCreateInfo queryPoolInfo{};
+   queryPoolInfo.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
+   queryPoolInfo.queryType = VK_QUERY_TYPE_TIMESTAMP;
+   queryPoolInfo.queryCount = TIMESTAMP_QUERY_COUNT;
+
+   VK_CHECK(vkCreateQueryPool(Data::vk_device, &queryPoolInfo, nullptr,
+                              &Data::m_timestampQueryPools.front()),
+            "failed to create timestamp query pool!");
 }
 
 void

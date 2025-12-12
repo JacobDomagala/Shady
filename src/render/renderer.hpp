@@ -63,6 +63,9 @@ class Renderer
    CreateSyncObjects();
 
    static void
+   CreateTimestampQueryPools();
+
+   static void
    CreatePipelineCache();
 
    static void
@@ -102,6 +105,9 @@ class Renderer
    inline static std::vector< VkSemaphore > m_renderFinishedSemaphores = {};
    inline static std::vector< VkFence > m_inFlightFences = {};
    inline static std::vector< VkFence > m_imagesInFlight = {};
+   inline static bool m_timestampResultsReady = false;
+   inline static float m_timestampPeriod = 0.0f;
+   inline static uint32_t m_timestampValidBits = 0;
 
    inline static VkImage m_depthImage = {};
    inline static VkDeviceMemory m_depthImageMemory = {};

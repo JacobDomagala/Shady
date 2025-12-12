@@ -20,8 +20,7 @@ class DeferredPipeline
 {
  public:
    static void
-   Initialize(VkRenderPass mainRenderPass, const std::vector< VkImageView >& swapChainImageViews,
-              VkPipelineCache pipelineCache);
+   Initialize(VkRenderPass mainRenderPass, VkPipelineCache pipelineCache);
 
    static VkDescriptorSet&
    GetDescriptorSet();
@@ -68,7 +67,7 @@ class DeferredPipeline
    SetupDescriptorSet();
 
    static void
-   BuildDeferredCommandBuffer(const std::vector< VkImageView >& swapChainImageViews);
+   BuildDeferredCommandBuffer();
 
    static void
    UpdateUniformBufferComposition(const scene::Camera* camera, const scene::Light* light);
@@ -101,7 +100,6 @@ class DeferredPipeline
 
    inline static VkSampler m_colorSampler = {};
 
-   inline static std::vector< VkCommandBuffer > m_commandBuffers = {};
    inline static VkCommandBuffer m_offscreenCommandBuffer = {};
    inline static VkSemaphore m_offscreenSemaphore = {};
 

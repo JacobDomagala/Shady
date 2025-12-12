@@ -108,9 +108,7 @@ DeferredPipeline::UpdateUniformBufferComposition(const scene::Camera* camera,
 }
 
 void
-DeferredPipeline::Initialize(VkRenderPass mainRenderPass,
-                             const std::vector< VkImageView >& swapChainImageViews,
-                             VkPipelineCache pipelineCache)
+DeferredPipeline::Initialize(VkRenderPass mainRenderPass, VkPipelineCache pipelineCache)
 {
    m_pipelineCache = pipelineCache;
    m_mainRenderPass = mainRenderPass;
@@ -127,7 +125,7 @@ DeferredPipeline::Initialize(VkRenderPass mainRenderPass,
    SetupDescriptorSet();
 
 
-   BuildDeferredCommandBuffer(swapChainImageViews);
+   BuildDeferredCommandBuffer();
 }
 
 void
@@ -664,17 +662,15 @@ DeferredPipeline::SetupDescriptorSet()
 }
 
 void
-DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& swapChainImageViews)
+DeferredPipeline::BuildDeferredCommandBuffer()
 {
    if (m_offscreenCommandBuffer == VK_NULL_HANDLE)
    {
-      m_commandBuffers.resize(swapChainImageViews.size());
-
       VkCommandBufferAllocateInfo allocInfo{};
       allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
       allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
       allocInfo.commandPool = Data::vk_commandPool;
-      allocInfo.commandBufferCount = static_cast< uint32_t >(m_commandBuffers.size());
+      allocInfo.commandBufferCount = 1;
 
       VK_CHECK(vkAllocateCommandBuffers(Data::vk_device, &allocInfo, &m_offscreenCommandBuffer),
                "");

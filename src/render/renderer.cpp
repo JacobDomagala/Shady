@@ -735,7 +735,7 @@ Renderer::CreateRenderPipeline()
    CreateTimestampQueryPools();
 
 
-   DeferredPipeline::Initialize(Data::m_renderPass, m_swapChainImageViews, Data::m_pipelineCache);
+   DeferredPipeline::Initialize(Data::m_renderPass, Data::m_pipelineCache);
    app::gui::Gui::Init({Data::m_swapChainExtent.width, Data::m_swapChainExtent.height});
    //  app::gui::Gui::UpdateUI({Data::m_swapChainExtent.width, Data::m_swapChainExtent.height});
    CreateCommandBufferForDeferred();

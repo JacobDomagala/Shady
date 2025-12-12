@@ -344,6 +344,59 @@ Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
          timingRow("Present", diagnostics.presentMs);
          timingRow("Queue idle", diagnostics.queueIdleMs);
 
+         if (diagnostics.pacingSampleCount > 0)
+         {
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+            ImGui::Text("Frame pacing (%u-sample rolling window, ms)",
+                        diagnostics.pacingSampleCount);
+
+            const auto pacingValueColumn = ImGui::GetCursorPosX()
+                                           + ImGui::CalcTextSize("Present interval").x
+                                           + ImGui::GetStyle().ItemSpacing.x;
+            const auto pacingColumnWidth =
+               ImGui::CalcTextSize("999.999").x + (ImGui::GetStyle().ItemSpacing.x * 2.0f);
+            const auto pacingHeader = [pacingValueColumn, pacingColumnWidth]() {
+               ImGui::TextUnformatted("Metric");
+               ImGui::SameLine(pacingValueColumn);
+               ImGui::TextUnformatted("p50");
+               ImGui::SameLine(pacingValueColumn + pacingColumnWidth);
+               ImGui::TextUnformatted("p95");
+               ImGui::SameLine(pacingValueColumn + (pacingColumnWidth * 2.0f));
+               ImGui::TextUnformatted("p99");
+               ImGui::SameLine(pacingValueColumn + (pacingColumnWidth * 3.0f));
+               ImGui::TextUnformatted("max");
+            };
+            const auto pacingRow = [pacingValueColumn, pacingColumnWidth](
+                                      const char* label,
+                                      const render::TimingPercentiles& percentiles) {
+               ImGui::TextUnformatted(label);
+               ImGui::SameLine(pacingValueColumn);
+               ImGui::Text("%.3f", static_cast< double >(percentiles.p50));
+               ImGui::SameLine(pacingValueColumn + pacingColumnWidth);
+               ImGui::Text("%.3f", static_cast< double >(percentiles.p95));
+               ImGui::SameLine(pacingValueColumn + (pacingColumnWidth * 2.0f));
+               ImGui::Text("%.3f", static_cast< double >(percentiles.p99));
+               ImGui::SameLine(pacingValueColumn + (pacingColumnWidth * 3.0f));
+               ImGui::Text("%.3f", static_cast< double >(percentiles.maximum));
+            };
+
+            pacingHeader();
+            pacingRow("Frame interval", diagnostics.frameInterval);
+            pacingRow("Present interval", diagnostics.presentInterval);
+            pacingRow("Queue idle", diagnostics.queueIdle);
+            pacingRow("GPU frame", diagnostics.gpuFrame);
+
+            ImGui::Spacing();
+            ImGui::Text("Frame slot: %u    Image index: %u", diagnostics.currentFrameIndex,
+                        diagnostics.acquiredImageIndex);
+            ImGui::Text("Acquire: %s",
+                        string_VkResult(static_cast< VkResult >(diagnostics.acquireResult)));
+            ImGui::Text("Present: %s",
+                        string_VkResult(static_cast< VkResult >(diagnostics.presentResult)));
+         }
+
          if (diagnostics.gpuSampleCount > 0)
          {
             ImGui::Spacing();

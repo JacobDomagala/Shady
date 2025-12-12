@@ -54,6 +54,14 @@ TimestampQueryIndex(TimestampQuery query)
    return static_cast< uint32_t >(query);
 }
 
+struct TimingPercentiles
+{
+   float p50 = 0.0f;
+   float p95 = 0.0f;
+   float p99 = 0.0f;
+   float maximum = 0.0f;
+};
+
 struct FrameDiagnostics
 {
    float totalMs = 0.0f;
@@ -73,8 +81,17 @@ struct FrameDiagnostics
    float gpuBarrierMs = 0.0f;
    float gpuCompositionMs = 0.0f;
    float gpuImGuiMs = 0.0f;
+   TimingPercentiles frameInterval = {};
+   TimingPercentiles presentInterval = {};
+   TimingPercentiles queueIdle = {};
+   TimingPercentiles gpuFrame = {};
    uint32_t sampleCount = 0;
    uint32_t gpuSampleCount = 0;
+   uint32_t pacingSampleCount = 0;
+   uint32_t currentFrameIndex = 0;
+   uint32_t acquiredImageIndex = 0;
+   int32_t acquireResult = 0;
+   int32_t presentResult = 0;
 };
 
 struct PerInstanceBuffer

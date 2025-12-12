@@ -12,8 +12,11 @@
 #include "utils/file_manager.hpp"
 
 #include <GLFW/glfw3.h>
+#include <algorithm>
 #include <array>
 #include <chrono>
+#include <cmath>
+#include <deque>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <optional>
@@ -30,6 +33,65 @@ constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 namespace {
 
 using FrameClock = std::chrono::steady_clock;
+
+struct FramePacingSample
+{
+   std::optional< float > frameIntervalMs;
+   std::optional< float > presentIntervalMs;
+   float queueIdleMs = 0.0f;
+   std::optional< float > gpuFrameMs;
+};
+
+class TimingSampleWindow
+{
+ public:
+   void
+   Push(float sample)
+   {
+      samples_.push_back(sample);
+      if (samples_.size() > MAX_SAMPLES)
+      {
+         samples_.pop_front();
+      }
+   }
+
+   [[nodiscard]] TimingPercentiles
+   Percentiles() const
+   {
+      TimingPercentiles result{};
+      if (samples_.empty())
+      {
+         return result;
+      }
+
+      std::vector< float > sorted(samples_.begin(), samples_.end());
+      std::sort(sorted.begin(), sorted.end());
+
+      const auto percentile = [&sorted](float value) {
+         const float position = value * static_cast< float >(sorted.size() - 1);
+         const auto lower = static_cast< size_t >(std::floor(position));
+         const auto upper = static_cast< size_t >(std::ceil(position));
+         const float weight = position - static_cast< float >(lower);
+         return sorted[lower] + ((sorted[upper] - sorted[lower]) * weight);
+      };
+
+      result.p50 = percentile(0.50f);
+      result.p95 = percentile(0.95f);
+      result.p99 = percentile(0.99f);
+      result.maximum = sorted.back();
+      return result;
+   }
+
+   [[nodiscard]] uint32_t
+   Size() const
+   {
+      return static_cast< uint32_t >(samples_.size());
+   }
+
+ private:
+   static constexpr size_t MAX_SAMPLES = 240;
+   std::deque< float > samples_;
+};
 
 float
 ElapsedMilliseconds(FrameClock::time_point start, FrameClock::time_point end)
@@ -58,10 +120,33 @@ TimestampMilliseconds(uint64_t start, uint64_t end, uint32_t validBits, float ti
 }
 
 void
-PublishFrameDiagnostics(const FrameDiagnostics& frame)
+PublishFrameDiagnostics(const FrameDiagnostics& frame, const FramePacingSample& pacing)
 {
    static FrameDiagnostics totals{};
+   static TimingSampleWindow frameIntervals;
+   static TimingSampleWindow presentIntervals;
+   static TimingSampleWindow queueIdles;
+   static TimingSampleWindow gpuFrames;
    constexpr uint32_t SAMPLE_WINDOW = 60;
+
+   Data::m_frameDiagnostics.currentFrameIndex = frame.currentFrameIndex;
+   Data::m_frameDiagnostics.acquiredImageIndex = frame.acquiredImageIndex;
+   Data::m_frameDiagnostics.acquireResult = frame.acquireResult;
+   Data::m_frameDiagnostics.presentResult = frame.presentResult;
+
+   if (pacing.frameIntervalMs)
+   {
+      frameIntervals.Push(*pacing.frameIntervalMs);
+   }
+   if (pacing.presentIntervalMs)
+   {
+      presentIntervals.Push(*pacing.presentIntervalMs);
+   }
+   queueIdles.Push(pacing.queueIdleMs);
+   if (pacing.gpuFrameMs)
+   {
+      gpuFrames.Push(*pacing.gpuFrameMs);
+   }
 
    totals.totalMs += frame.totalMs;
    totals.fenceWaitMs += frame.fenceWaitMs;
@@ -104,6 +189,10 @@ PublishFrameDiagnostics(const FrameDiagnostics& frame)
       .presentMs = totals.presentMs / sampleCount,
       .queueIdleMs = totals.queueIdleMs / sampleCount,
       .sampleCount = totals.sampleCount,
+      .currentFrameIndex = frame.currentFrameIndex,
+      .acquiredImageIndex = frame.acquiredImageIndex,
+      .acquireResult = frame.acquireResult,
+      .presentResult = frame.presentResult,
    };
 
    if (totals.gpuSampleCount > 0)
@@ -118,6 +207,12 @@ PublishFrameDiagnostics(const FrameDiagnostics& frame)
       Data::m_frameDiagnostics.gpuImGuiMs = totals.gpuImGuiMs / gpuSampleCount;
       Data::m_frameDiagnostics.gpuSampleCount = totals.gpuSampleCount;
    }
+
+   Data::m_frameDiagnostics.frameInterval = frameIntervals.Percentiles();
+   Data::m_frameDiagnostics.presentInterval = presentIntervals.Percentiles();
+   Data::m_frameDiagnostics.queueIdle = queueIdles.Percentiles();
+   Data::m_frameDiagnostics.gpuFrame = gpuFrames.Percentiles();
+   Data::m_frameDiagnostics.pacingSampleCount = frameIntervals.Size();
 
    totals = {};
 }
@@ -708,7 +803,16 @@ Renderer::CreateDepthResources()
 void
 Renderer::Draw()
 {
+   static std::optional< FrameClock::time_point > previousFrameStart;
+   static std::optional< FrameClock::time_point > previousPresentReturn;
+
    const auto frameStart = FrameClock::now();
+   std::optional< float > frameIntervalMs;
+   if (previousFrameStart)
+   {
+      frameIntervalMs = ElapsedMilliseconds(*previousFrameStart, frameStart);
+   }
+   previousFrameStart = frameStart;
 
    FrameDiagnostics gpuDiagnostics{};
    if (m_timestampResultsReady)
@@ -754,8 +858,9 @@ Renderer::Draw()
 
    // vkWaitForFences(Data::vk_device, 1, &m_inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
-   vkAcquireNextImageKHR(Data::vk_device, m_swapChain, UINT64_MAX,
-                         m_imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &m_imageIndex);
+   const VkResult acquireResult = vkAcquireNextImageKHR(
+      Data::vk_device, m_swapChain, UINT64_MAX, m_imageAvailableSemaphores[currentFrame],
+      VK_NULL_HANDLE, &m_imageIndex);
    const auto imageAcquireEnd = FrameClock::now();
 
    // UpdateUniformBuffer();
@@ -819,32 +924,53 @@ Renderer::Draw()
    presentInfo.pSwapchains = &m_swapChain;
    presentInfo.pImageIndices = &m_imageIndex;
 
-   vkQueuePresentKHR(Data::m_presentQueue, &presentInfo);
+   const VkResult presentResult = vkQueuePresentKHR(Data::m_presentQueue, &presentInfo);
    const auto presentEnd = FrameClock::now();
 
    vkQueueWaitIdle(Data::vk_graphicsQueue);
    const auto queueIdleEnd = FrameClock::now();
    m_timestampResultsReady = true;
 
-   PublishFrameDiagnostics({
-      .totalMs = ElapsedMilliseconds(frameStart, queueIdleEnd),
-      .imageAcquireMs = ElapsedMilliseconds(commandRecordEnd, imageAcquireEnd),
-      .guiUploadMs = Data::m_guiUploadMs,
-      .commandRecordMs = ElapsedMilliseconds(frameStart, commandRecordEnd),
-      .uniformUpdateMs = Data::m_uniformUpdateMs,
-      .queueSubmitMs = ElapsedMilliseconds(imageAcquireEnd, offscreenSubmitEnd)
-                       + ElapsedMilliseconds(offscreenSubmitEnd, sceneSubmitEnd),
-      .presentMs = ElapsedMilliseconds(sceneSubmitEnd, presentEnd),
-      .queueIdleMs = ElapsedMilliseconds(presentEnd, queueIdleEnd),
-      .gpuFrameMs = gpuDiagnostics.gpuFrameMs,
-      .gpuOffscreenMs = gpuDiagnostics.gpuOffscreenMs,
-      .gpuShadowMs = gpuDiagnostics.gpuShadowMs,
-      .gpuGBufferMs = gpuDiagnostics.gpuGBufferMs,
-      .gpuBarrierMs = gpuDiagnostics.gpuBarrierMs,
-      .gpuCompositionMs = gpuDiagnostics.gpuCompositionMs,
-      .gpuImGuiMs = gpuDiagnostics.gpuImGuiMs,
-      .gpuSampleCount = gpuDiagnostics.gpuSampleCount,
-   });
+   std::optional< float > presentIntervalMs;
+   if (previousPresentReturn)
+   {
+      presentIntervalMs = ElapsedMilliseconds(*previousPresentReturn, presentEnd);
+   }
+   previousPresentReturn = presentEnd;
+
+   const float queueIdleMs = ElapsedMilliseconds(presentEnd, queueIdleEnd);
+   PublishFrameDiagnostics(
+      {
+         .totalMs = ElapsedMilliseconds(frameStart, queueIdleEnd),
+         .imageAcquireMs = ElapsedMilliseconds(commandRecordEnd, imageAcquireEnd),
+         .guiUploadMs = Data::m_guiUploadMs,
+         .commandRecordMs = ElapsedMilliseconds(frameStart, commandRecordEnd),
+         .uniformUpdateMs = Data::m_uniformUpdateMs,
+         .queueSubmitMs = ElapsedMilliseconds(imageAcquireEnd, offscreenSubmitEnd)
+                          + ElapsedMilliseconds(offscreenSubmitEnd, sceneSubmitEnd),
+         .presentMs = ElapsedMilliseconds(sceneSubmitEnd, presentEnd),
+         .queueIdleMs = queueIdleMs,
+         .gpuFrameMs = gpuDiagnostics.gpuFrameMs,
+         .gpuOffscreenMs = gpuDiagnostics.gpuOffscreenMs,
+         .gpuShadowMs = gpuDiagnostics.gpuShadowMs,
+         .gpuGBufferMs = gpuDiagnostics.gpuGBufferMs,
+         .gpuBarrierMs = gpuDiagnostics.gpuBarrierMs,
+         .gpuCompositionMs = gpuDiagnostics.gpuCompositionMs,
+         .gpuImGuiMs = gpuDiagnostics.gpuImGuiMs,
+         .gpuSampleCount = gpuDiagnostics.gpuSampleCount,
+         .currentFrameIndex = static_cast< uint32_t >(currentFrame),
+         .acquiredImageIndex = m_imageIndex,
+         .acquireResult = static_cast< int32_t >(acquireResult),
+         .presentResult = static_cast< int32_t >(presentResult),
+      },
+      {
+         .frameIntervalMs = frameIntervalMs,
+         .presentIntervalMs = presentIntervalMs,
+         .queueIdleMs = queueIdleMs,
+         .gpuFrameMs = gpuDiagnostics.gpuSampleCount > 0
+                          ? std::optional< float >(gpuDiagnostics.gpuFrameMs)
+                          : std::nullopt,
+      });
 
    currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }

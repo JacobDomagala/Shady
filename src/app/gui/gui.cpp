@@ -352,6 +352,8 @@ Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
             ImGui::Text("GPU diagnostics (%u-frame average)", diagnostics.gpuSampleCount);
             timingRow("GPU frame", diagnostics.gpuFrameMs);
             timingRow("GPU offscreen", diagnostics.gpuOffscreenMs);
+            timingRow("GPU shadow", diagnostics.gpuShadowMs);
+            timingRow("GPU G-buffer", diagnostics.gpuGBufferMs);
             timingRow("GPU queue gap", diagnostics.gpuBarrierMs);
             timingRow("GPU composition", diagnostics.gpuCompositionMs);
             timingRow("GPU ImGui", diagnostics.gpuImGuiMs);

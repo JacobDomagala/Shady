@@ -715,6 +715,8 @@ DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& s
                        timestampQueryPool, TimestampQueryIndex(TimestampQuery::FrameStart));
    vkCmdWriteTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
                        timestampQueryPool, TimestampQueryIndex(TimestampQuery::OffscreenStart));
+   vkCmdWriteTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                       timestampQueryPool, TimestampQueryIndex(TimestampQuery::ShadowStart));
 
    VkViewport viewport{};
    viewport.width = static_cast< float >(m_shadowMap.GetSize().x);
@@ -756,6 +758,8 @@ DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& s
    }
 
    vkCmdEndRenderPass(m_offscreenCommandBuffer);
+   vkCmdWriteTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                       timestampQueryPool, TimestampQueryIndex(TimestampQuery::ShadowEnd));
 
    // Second pass: Deferred calculations
    // -------------------------------------------------------------------------------------------------------
@@ -810,6 +814,8 @@ DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& s
                                  Data::m_numMeshes, sizeof(VkDrawIndexedIndirectCommand));
 
    vkCmdEndRenderPass(m_offscreenCommandBuffer);
+   vkCmdWriteTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                       timestampQueryPool, TimestampQueryIndex(TimestampQuery::GBufferEnd));
 
    vkCmdWriteTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
                        timestampQueryPool, TimestampQueryIndex(TimestampQuery::OffscreenEnd));

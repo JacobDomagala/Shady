@@ -77,6 +77,8 @@ PublishFrameDiagnostics(const FrameDiagnostics& frame)
    {
       totals.gpuFrameMs += frame.gpuFrameMs;
       totals.gpuOffscreenMs += frame.gpuOffscreenMs;
+      totals.gpuShadowMs += frame.gpuShadowMs;
+      totals.gpuGBufferMs += frame.gpuGBufferMs;
       totals.gpuBarrierMs += frame.gpuBarrierMs;
       totals.gpuCompositionMs += frame.gpuCompositionMs;
       totals.gpuImGuiMs += frame.gpuImGuiMs;
@@ -109,6 +111,8 @@ PublishFrameDiagnostics(const FrameDiagnostics& frame)
       const auto gpuSampleCount = static_cast< float >(totals.gpuSampleCount);
       Data::m_frameDiagnostics.gpuFrameMs = totals.gpuFrameMs / gpuSampleCount;
       Data::m_frameDiagnostics.gpuOffscreenMs = totals.gpuOffscreenMs / gpuSampleCount;
+      Data::m_frameDiagnostics.gpuShadowMs = totals.gpuShadowMs / gpuSampleCount;
+      Data::m_frameDiagnostics.gpuGBufferMs = totals.gpuGBufferMs / gpuSampleCount;
       Data::m_frameDiagnostics.gpuBarrierMs = totals.gpuBarrierMs / gpuSampleCount;
       Data::m_frameDiagnostics.gpuCompositionMs = totals.gpuCompositionMs / gpuSampleCount;
       Data::m_frameDiagnostics.gpuImGuiMs = totals.gpuImGuiMs / gpuSampleCount;
@@ -726,6 +730,10 @@ Renderer::Draw()
             milliseconds(TimestampQuery::FrameStart, TimestampQuery::FrameEnd);
          gpuDiagnostics.gpuOffscreenMs =
             milliseconds(TimestampQuery::OffscreenStart, TimestampQuery::OffscreenEnd);
+         gpuDiagnostics.gpuShadowMs =
+            milliseconds(TimestampQuery::ShadowStart, TimestampQuery::ShadowEnd);
+         gpuDiagnostics.gpuGBufferMs =
+            milliseconds(TimestampQuery::ShadowEnd, TimestampQuery::GBufferEnd);
          gpuDiagnostics.gpuBarrierMs =
             milliseconds(TimestampQuery::OffscreenEnd, TimestampQuery::CompositionStart);
          gpuDiagnostics.gpuCompositionMs =
@@ -830,6 +838,8 @@ Renderer::Draw()
       .queueIdleMs = ElapsedMilliseconds(presentEnd, queueIdleEnd),
       .gpuFrameMs = gpuDiagnostics.gpuFrameMs,
       .gpuOffscreenMs = gpuDiagnostics.gpuOffscreenMs,
+      .gpuShadowMs = gpuDiagnostics.gpuShadowMs,
+      .gpuGBufferMs = gpuDiagnostics.gpuGBufferMs,
       .gpuBarrierMs = gpuDiagnostics.gpuBarrierMs,
       .gpuCompositionMs = gpuDiagnostics.gpuCompositionMs,
       .gpuImGuiMs = gpuDiagnostics.gpuImGuiMs,

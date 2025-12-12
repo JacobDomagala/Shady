@@ -34,6 +34,9 @@ enum class TimestampQuery : uint32_t
 {
    FrameStart,
    OffscreenStart,
+   ShadowStart,
+   ShadowEnd,
+   GBufferEnd,
    OffscreenEnd,
    CompositionStart,
    CompositionEnd,
@@ -65,6 +68,8 @@ struct FrameDiagnostics
    float queueIdleMs = 0.0f;
    float gpuFrameMs = 0.0f;
    float gpuOffscreenMs = 0.0f;
+   float gpuShadowMs = 0.0f;
+   float gpuGBufferMs = 0.0f;
    float gpuBarrierMs = 0.0f;
    float gpuCompositionMs = 0.0f;
    float gpuImGuiMs = 0.0f;

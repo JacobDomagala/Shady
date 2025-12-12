@@ -10,6 +10,7 @@
 
 #include <GLFW/glfw3.h>
 #include <array>
+#include <chrono>
 #include <fmt/format.h>
 #include <imgui.h>
 
@@ -316,12 +317,43 @@ Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
       ImGui::TextUnformatted("FPS");
       ImGui::SameLine(valueColumn);
       ImGui::Text("%d", render::Data::m_fps);
+
+      const auto& diagnostics = render::Data::m_frameDiagnostics;
+      if (diagnostics.sampleCount > 0)
+      {
+         ImGui::Separator();
+         ImGui::Text("Frame diagnostics (%u-frame CPU average)", diagnostics.sampleCount);
+
+         const auto timingValueColumn = ImGui::GetCursorPosX()
+                                        + ImGui::CalcTextSize("Command recording").x
+                                        + ImGui::GetStyle().ItemSpacing.x;
+         const auto timingRow = [timingValueColumn](const char* label, float milliseconds) {
+            ImGui::TextUnformatted(label);
+            ImGui::SameLine(timingValueColumn);
+            ImGui::Text("%.3f ms", static_cast< double >(milliseconds));
+         };
+
+         timingRow("Total Draw", diagnostics.totalMs);
+         timingRow("Fence wait", diagnostics.fenceWaitMs);
+         timingRow("Image acquire", diagnostics.imageAcquireMs);
+         timingRow("Fence reset", diagnostics.fenceResetMs);
+         timingRow("GUI upload", diagnostics.guiUploadMs);
+         timingRow("Command recording", diagnostics.commandRecordMs);
+         timingRow("Uniform updates", diagnostics.uniformUpdateMs);
+         timingRow("Queue submit", diagnostics.queueSubmitMs);
+         timingRow("Present", diagnostics.presentMs);
+         timingRow("Queue idle", diagnostics.queueIdleMs);
+      }
    }
 
    ImGui::End();
    ImGui::Render();
 
+   const auto uploadStart = std::chrono::steady_clock::now();
    UpdateBuffers();
+   const auto uploadEnd = std::chrono::steady_clock::now();
+   Data::m_guiUploadMs =
+      std::chrono::duration< float, std::milli >(uploadEnd - uploadStart).count();
 
    return io_handle.WantCaptureMouse;
 }

@@ -30,6 +30,21 @@ struct DebugData
    float shadowFactor = 0.1f;
 };
 
+struct FrameDiagnostics
+{
+   float totalMs = 0.0f;
+   float fenceWaitMs = 0.0f;
+   float imageAcquireMs = 0.0f;
+   float fenceResetMs = 0.0f;
+   float guiUploadMs = 0.0f;
+   float commandRecordMs = 0.0f;
+   float uniformUpdateMs = 0.0f;
+   float queueSubmitMs = 0.0f;
+   float presentMs = 0.0f;
+   float queueIdleMs = 0.0f;
+   uint32_t sampleCount = 0;
+};
+
 struct PerInstanceBuffer
 {
    glm::mat4 model = {};

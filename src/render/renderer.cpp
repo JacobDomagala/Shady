@@ -13,6 +13,7 @@
 
 #include <GLFW/glfw3.h>
 #include <array>
+#include <chrono>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <optional>
@@ -25,6 +26,59 @@ namespace shady::render {
 
 static size_t currentFrame = 0;
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+
+namespace {
+
+using FrameClock = std::chrono::steady_clock;
+
+float
+ElapsedMilliseconds(FrameClock::time_point start, FrameClock::time_point end)
+{
+   return std::chrono::duration< float, std::milli >(end - start).count();
+}
+
+void
+PublishFrameDiagnostics(const FrameDiagnostics& frame)
+{
+   static FrameDiagnostics totals{};
+   constexpr uint32_t SAMPLE_WINDOW = 60;
+
+   totals.totalMs += frame.totalMs;
+   totals.fenceWaitMs += frame.fenceWaitMs;
+   totals.imageAcquireMs += frame.imageAcquireMs;
+   totals.fenceResetMs += frame.fenceResetMs;
+   totals.guiUploadMs += frame.guiUploadMs;
+   totals.commandRecordMs += frame.commandRecordMs;
+   totals.uniformUpdateMs += frame.uniformUpdateMs;
+   totals.queueSubmitMs += frame.queueSubmitMs;
+   totals.presentMs += frame.presentMs;
+   totals.queueIdleMs += frame.queueIdleMs;
+   ++totals.sampleCount;
+
+   if (totals.sampleCount < SAMPLE_WINDOW)
+   {
+      return;
+   }
+
+   const auto sampleCount = static_cast< float >(totals.sampleCount);
+   Data::m_frameDiagnostics = {
+      .totalMs = totals.totalMs / sampleCount,
+      .fenceWaitMs = totals.fenceWaitMs / sampleCount,
+      .imageAcquireMs = totals.imageAcquireMs / sampleCount,
+      .fenceResetMs = totals.fenceResetMs / sampleCount,
+      .guiUploadMs = totals.guiUploadMs / sampleCount,
+      .commandRecordMs = totals.commandRecordMs / sampleCount,
+      .uniformUpdateMs = totals.uniformUpdateMs / sampleCount,
+      .queueSubmitMs = totals.queueSubmitMs / sampleCount,
+      .presentMs = totals.presentMs / sampleCount,
+      .queueIdleMs = totals.queueIdleMs / sampleCount,
+      .sampleCount = totals.sampleCount,
+   };
+
+   totals = {};
+}
+
+} // namespace
 
 void
 Renderer::MeshLoaded(const std::vector< Vertex >& vertices, const std::vector< uint32_t >& indicies,
@@ -553,6 +607,8 @@ Renderer::CreateRenderPipeline()
 void
 Renderer::UpdateUniformBuffer(const scene::Camera* camera, const scene::Light* light)
 {
+   const auto updateStart = FrameClock::now();
+
    UniformBufferObject ubo{};
 
    ubo.proj = camera->GetViewProjection();
@@ -570,6 +626,7 @@ Renderer::UpdateUniformBuffer(const scene::Camera* camera, const scene::Light* l
    vkUnmapMemory(Data::vk_device, Data::m_ssboMemory[0]);
 
    DeferredPipeline::UpdateDeferred(camera, light);
+   Data::m_uniformUpdateMs = ElapsedMilliseconds(updateStart, FrameClock::now());
 }
 
 void
@@ -606,13 +663,17 @@ Renderer::CreateDepthResources()
 void
 Renderer::Draw()
 {
+   const auto frameStart = FrameClock::now();
+
    // Always recreate the command buffers for composition, mostly due to imgui
    CreateCommandBufferForDeferred();
+   const auto commandRecordEnd = FrameClock::now();
 
    // vkWaitForFences(Data::vk_device, 1, &m_inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
    vkAcquireNextImageKHR(Data::vk_device, m_swapChain, UINT64_MAX,
                          m_imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &m_imageIndex);
+   const auto imageAcquireEnd = FrameClock::now();
 
    // UpdateUniformBuffer();
    // if (m_imagesInFlight[imageIndex] != VK_NULL_HANDLE)
@@ -634,6 +695,7 @@ Renderer::Draw()
    offscreenSubmitInfo.pCommandBuffers = &DeferredPipeline::GetOffscreenCmdBuffer();
    VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &offscreenSubmitInfo, VK_NULL_HANDLE),
             "failed to submit offscreen draw command buffer!");
+   const auto offscreenSubmitEnd = FrameClock::now();
 
 
    //
@@ -664,6 +726,7 @@ Renderer::Draw()
 
    VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &sceneSubmitInfo, VK_NULL_HANDLE),
             "failed to submit draw command buffer!");
+   const auto sceneSubmitEnd = FrameClock::now();
 
    VkPresentInfoKHR presentInfo{};
    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -674,8 +737,22 @@ Renderer::Draw()
    presentInfo.pImageIndices = &m_imageIndex;
 
    vkQueuePresentKHR(Data::m_presentQueue, &presentInfo);
+   const auto presentEnd = FrameClock::now();
 
    vkQueueWaitIdle(Data::vk_graphicsQueue);
+   const auto queueIdleEnd = FrameClock::now();
+
+   PublishFrameDiagnostics({
+      .totalMs = ElapsedMilliseconds(frameStart, queueIdleEnd),
+      .imageAcquireMs = ElapsedMilliseconds(commandRecordEnd, imageAcquireEnd),
+      .guiUploadMs = Data::m_guiUploadMs,
+      .commandRecordMs = ElapsedMilliseconds(frameStart, commandRecordEnd),
+      .uniformUpdateMs = Data::m_uniformUpdateMs,
+      .queueSubmitMs = ElapsedMilliseconds(imageAcquireEnd, offscreenSubmitEnd)
+                       + ElapsedMilliseconds(offscreenSubmitEnd, sceneSubmitEnd),
+      .presentMs = ElapsedMilliseconds(sceneSubmitEnd, presentEnd),
+      .queueIdleMs = ElapsedMilliseconds(presentEnd, queueIdleEnd),
+   });
 
    currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }

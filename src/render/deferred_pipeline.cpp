@@ -1,6 +1,7 @@
 #include "deferred_pipeline.hpp"
 #include "buffer.hpp"
 #include "common.hpp"
+#include "profiler.hpp"
 #include "scene/perspective_camera.hpp"
 #include "shader.hpp"
 #include "texture.hpp"
@@ -705,14 +706,13 @@ DeferredPipeline::BuildDeferredCommandBuffer()
 
    VK_CHECK(vkBeginCommandBuffer(m_offscreenCommandBuffer, &cmdBufInfo), "");
 
-   const auto timestampQueryPool = Data::m_timestampQueryPools.front();
-   vkCmdResetQueryPool(m_offscreenCommandBuffer, timestampQueryPool, 0, TIMESTAMP_QUERY_COUNT);
-   vkCmdWriteTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                       timestampQueryPool, TimestampQueryIndex(TimestampQuery::FrameStart));
-   vkCmdWriteTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                       timestampQueryPool, TimestampQueryIndex(TimestampQuery::OffscreenStart));
-   vkCmdWriteTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                       timestampQueryPool, TimestampQueryIndex(TimestampQuery::ShadowStart));
+   Profiler::ResetGpuTimestamps(m_offscreenCommandBuffer);
+   Profiler::WriteGpuTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                               TimestampQuery::FrameStart);
+   Profiler::WriteGpuTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                               TimestampQuery::OffscreenStart);
+   Profiler::WriteGpuTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                               TimestampQuery::ShadowStart);
 
    VkViewport viewport{};
    viewport.width = static_cast< float >(m_shadowMap.GetSize().x);
@@ -754,8 +754,8 @@ DeferredPipeline::BuildDeferredCommandBuffer()
    }
 
    vkCmdEndRenderPass(m_offscreenCommandBuffer);
-   vkCmdWriteTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                       timestampQueryPool, TimestampQueryIndex(TimestampQuery::ShadowEnd));
+   Profiler::WriteGpuTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                               TimestampQuery::ShadowEnd);
 
    // Second pass: Deferred calculations
    // -------------------------------------------------------------------------------------------------------
@@ -810,11 +810,11 @@ DeferredPipeline::BuildDeferredCommandBuffer()
                                  Data::m_numMeshes, sizeof(VkDrawIndexedIndirectCommand));
 
    vkCmdEndRenderPass(m_offscreenCommandBuffer);
-   vkCmdWriteTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                       timestampQueryPool, TimestampQueryIndex(TimestampQuery::GBufferEnd));
+   Profiler::WriteGpuTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                               TimestampQuery::GBufferEnd);
 
-   vkCmdWriteTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                       timestampQueryPool, TimestampQueryIndex(TimestampQuery::OffscreenEnd));
+   Profiler::WriteGpuTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                               TimestampQuery::OffscreenEnd);
 
    VK_CHECK(vkEndCommandBuffer(m_offscreenCommandBuffer), "");
 }

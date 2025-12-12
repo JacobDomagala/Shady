@@ -41,6 +41,7 @@ add_executable(${PROJECT_NAME}
     "src/render/command.hpp" "src/render/command.cpp" "src/render/common.hpp" "src/render/common.cpp"
     "src/render/vertex.hpp" "src/render/types.hpp" "src/render/framebuffer.hpp" "src/render/framebuffer.cpp"
     "src/render/deferred_pipeline.hpp" "src/render/deferred_pipeline.cpp"
+    "src/render/profiler.hpp" "src/render/profiler.cpp"
 
     # scene
     src/scene/mesh.hpp src/scene/mesh.cpp src/scene/model.hpp src/scene/model.cpp src/scene/light.hpp src/scene/light.cpp

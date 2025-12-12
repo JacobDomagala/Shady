@@ -1,15 +1,13 @@
 #include "app/shady.hpp"
 #include "app/input/input_manager.hpp"
 #include "gui/gui.hpp"
-#include "render/common.hpp"
+#include "render/profiler.hpp"
 #include "scene/light.hpp"
 #include "scene/perspective_camera.hpp"
-#include "time/timer.hpp"
 #include "trace/logger.hpp"
 
 #include "render/renderer.hpp"
 #include <GLFW/glfw3.h>
-#include <chrono>
 
 namespace shady::app {
 
@@ -34,11 +32,6 @@ Shady::Init()
 void
 Shady::MainLoop()
 {
-   int32_t frames = 0;
-   time::duration frameInterval = {};
-
-   time::Timer t;
-
    while (m_active)
    {
       m_window.Clear();
@@ -54,20 +47,7 @@ Shady::MainLoop()
       }
 
       m_currentScene.Render(m_windowWidth, m_windowHeight);
-
-      // FPS counter
-      frames++;
-      frameInterval += t.ToggleTimer().GetDuration();
-
-      if (frameInterval >= time::seconds{1})
-      {
-         const auto elapsedSeconds = std::chrono::duration< double >(frameInterval).count();
-         render::Data::m_fps =
-            static_cast< int32_t >(static_cast< double >(frames) / elapsedSeconds);
-
-         frames = 0;
-         frameInterval = {};
-      }
+      render::Profiler::UpdateFps();
    }
 }
 

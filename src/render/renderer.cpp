@@ -5,6 +5,7 @@
 #include "command.hpp"
 #include "common.hpp"
 #include "deferred_pipeline.hpp"
+#include "profiler.hpp"
 #include "shader.hpp"
 #include "texture.hpp"
 #include "trace/logger.hpp"
@@ -14,9 +15,6 @@
 #include <GLFW/glfw3.h>
 #include <algorithm>
 #include <array>
-#include <chrono>
-#include <cmath>
-#include <deque>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <optional>
@@ -29,195 +27,6 @@ namespace shady::render {
 
 static size_t currentFrame = 0;
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
-
-namespace {
-
-using FrameClock = std::chrono::steady_clock;
-
-struct FramePacingSample
-{
-   std::optional< float > frameIntervalMs;
-   std::optional< float > presentIntervalMs;
-   float queueIdleMs = 0.0f;
-   std::optional< float > gpuFrameMs;
-};
-
-class TimingSampleWindow
-{
- public:
-   void
-   Push(float sample)
-   {
-      samples_.push_back(sample);
-      if (samples_.size() > MAX_SAMPLES)
-      {
-         samples_.pop_front();
-      }
-   }
-
-   [[nodiscard]] TimingPercentiles
-   Percentiles() const
-   {
-      TimingPercentiles result{};
-      if (samples_.empty())
-      {
-         return result;
-      }
-
-      std::vector< float > sorted(samples_.begin(), samples_.end());
-      std::sort(sorted.begin(), sorted.end());
-
-      const auto percentile = [&sorted](float value) {
-         const float position = value * static_cast< float >(sorted.size() - 1);
-         const auto lower = static_cast< size_t >(std::floor(position));
-         const auto upper = static_cast< size_t >(std::ceil(position));
-         const float weight = position - static_cast< float >(lower);
-         return sorted[lower] + ((sorted[upper] - sorted[lower]) * weight);
-      };
-
-      result.p50 = percentile(0.50f);
-      result.p95 = percentile(0.95f);
-      result.p99 = percentile(0.99f);
-      result.maximum = sorted.back();
-      return result;
-   }
-
-   [[nodiscard]] uint32_t
-   Size() const
-   {
-      return static_cast< uint32_t >(samples_.size());
-   }
-
- private:
-   static constexpr size_t MAX_SAMPLES = 240;
-   std::deque< float > samples_;
-};
-
-float
-ElapsedMilliseconds(FrameClock::time_point start, FrameClock::time_point end)
-{
-   return std::chrono::duration< float, std::milli >(end - start).count();
-}
-
-uint64_t
-TimestampDelta(uint64_t start, uint64_t end, uint32_t validBits)
-{
-   if (validBits == 64)
-   {
-      return end - start;
-   }
-
-   const uint64_t mask = (uint64_t{1} << validBits) - 1;
-   return (end - start) & mask;
-}
-
-float
-TimestampMilliseconds(uint64_t start, uint64_t end, uint32_t validBits, float timestampPeriod)
-{
-   constexpr float NANOSECONDS_PER_MILLISECOND = 1'000'000.0f;
-   const auto ticks = TimestampDelta(start, end, validBits);
-   return static_cast< float >(ticks) * timestampPeriod / NANOSECONDS_PER_MILLISECOND;
-}
-
-void
-PublishFrameDiagnostics(const FrameDiagnostics& frame, const FramePacingSample& pacing)
-{
-   static FrameDiagnostics totals{};
-   static TimingSampleWindow frameIntervals;
-   static TimingSampleWindow presentIntervals;
-   static TimingSampleWindow queueIdles;
-   static TimingSampleWindow gpuFrames;
-   constexpr uint32_t SAMPLE_WINDOW = 60;
-
-   Data::m_frameDiagnostics.currentFrameIndex = frame.currentFrameIndex;
-   Data::m_frameDiagnostics.acquiredImageIndex = frame.acquiredImageIndex;
-   Data::m_frameDiagnostics.acquireResult = frame.acquireResult;
-   Data::m_frameDiagnostics.presentResult = frame.presentResult;
-
-   if (pacing.frameIntervalMs)
-   {
-      frameIntervals.Push(*pacing.frameIntervalMs);
-   }
-   if (pacing.presentIntervalMs)
-   {
-      presentIntervals.Push(*pacing.presentIntervalMs);
-   }
-   queueIdles.Push(pacing.queueIdleMs);
-   if (pacing.gpuFrameMs)
-   {
-      gpuFrames.Push(*pacing.gpuFrameMs);
-   }
-
-   totals.totalMs += frame.totalMs;
-   totals.fenceWaitMs += frame.fenceWaitMs;
-   totals.imageAcquireMs += frame.imageAcquireMs;
-   totals.fenceResetMs += frame.fenceResetMs;
-   totals.guiUploadMs += frame.guiUploadMs;
-   totals.commandRecordMs += frame.commandRecordMs;
-   totals.uniformUpdateMs += frame.uniformUpdateMs;
-   totals.queueSubmitMs += frame.queueSubmitMs;
-   totals.presentMs += frame.presentMs;
-   totals.queueIdleMs += frame.queueIdleMs;
-   if (frame.gpuSampleCount > 0)
-   {
-      totals.gpuFrameMs += frame.gpuFrameMs;
-      totals.gpuOffscreenMs += frame.gpuOffscreenMs;
-      totals.gpuShadowMs += frame.gpuShadowMs;
-      totals.gpuGBufferMs += frame.gpuGBufferMs;
-      totals.gpuBarrierMs += frame.gpuBarrierMs;
-      totals.gpuCompositionMs += frame.gpuCompositionMs;
-      totals.gpuImGuiMs += frame.gpuImGuiMs;
-      ++totals.gpuSampleCount;
-   }
-   ++totals.sampleCount;
-
-   if (totals.sampleCount < SAMPLE_WINDOW)
-   {
-      return;
-   }
-
-   const auto sampleCount = static_cast< float >(totals.sampleCount);
-   Data::m_frameDiagnostics = {
-      .totalMs = totals.totalMs / sampleCount,
-      .fenceWaitMs = totals.fenceWaitMs / sampleCount,
-      .imageAcquireMs = totals.imageAcquireMs / sampleCount,
-      .fenceResetMs = totals.fenceResetMs / sampleCount,
-      .guiUploadMs = totals.guiUploadMs / sampleCount,
-      .commandRecordMs = totals.commandRecordMs / sampleCount,
-      .uniformUpdateMs = totals.uniformUpdateMs / sampleCount,
-      .queueSubmitMs = totals.queueSubmitMs / sampleCount,
-      .presentMs = totals.presentMs / sampleCount,
-      .queueIdleMs = totals.queueIdleMs / sampleCount,
-      .sampleCount = totals.sampleCount,
-      .currentFrameIndex = frame.currentFrameIndex,
-      .acquiredImageIndex = frame.acquiredImageIndex,
-      .acquireResult = frame.acquireResult,
-      .presentResult = frame.presentResult,
-   };
-
-   if (totals.gpuSampleCount > 0)
-   {
-      const auto gpuSampleCount = static_cast< float >(totals.gpuSampleCount);
-      Data::m_frameDiagnostics.gpuFrameMs = totals.gpuFrameMs / gpuSampleCount;
-      Data::m_frameDiagnostics.gpuOffscreenMs = totals.gpuOffscreenMs / gpuSampleCount;
-      Data::m_frameDiagnostics.gpuShadowMs = totals.gpuShadowMs / gpuSampleCount;
-      Data::m_frameDiagnostics.gpuGBufferMs = totals.gpuGBufferMs / gpuSampleCount;
-      Data::m_frameDiagnostics.gpuBarrierMs = totals.gpuBarrierMs / gpuSampleCount;
-      Data::m_frameDiagnostics.gpuCompositionMs = totals.gpuCompositionMs / gpuSampleCount;
-      Data::m_frameDiagnostics.gpuImGuiMs = totals.gpuImGuiMs / gpuSampleCount;
-      Data::m_frameDiagnostics.gpuSampleCount = totals.gpuSampleCount;
-   }
-
-   Data::m_frameDiagnostics.frameInterval = frameIntervals.Percentiles();
-   Data::m_frameDiagnostics.presentInterval = presentIntervals.Percentiles();
-   Data::m_frameDiagnostics.queueIdle = queueIdles.Percentiles();
-   Data::m_frameDiagnostics.gpuFrame = gpuFrames.Percentiles();
-   Data::m_frameDiagnostics.pacingSampleCount = frameIntervals.Size();
-
-   totals = {};
-}
-
-} // namespace
 
 void
 Renderer::MeshLoaded(const std::vector< Vertex >& vertices, const std::vector< uint32_t >& indicies,
@@ -732,7 +541,8 @@ Renderer::CreateRenderPipeline()
    CreateDepthResources();
    CreateFramebuffers();
    CreatePipelineCache();
-   CreateTimestampQueryPools();
+   const auto queueFamilyIndices = findQueueFamilies(Data::vk_physicalDevice, Data::m_surface);
+   Profiler::Initialize(queueFamilyIndices.graphicsFamily.value());
 
 
    DeferredPipeline::Initialize(Data::m_renderPass, Data::m_pipelineCache);
@@ -747,7 +557,7 @@ Renderer::CreateRenderPipeline()
 void
 Renderer::UpdateUniformBuffer(const scene::Camera* camera, const scene::Light* light)
 {
-   const auto updateStart = FrameClock::now();
+   Profiler::BeginUniformUpdate();
 
    UniformBufferObject ubo{};
 
@@ -766,7 +576,7 @@ Renderer::UpdateUniformBuffer(const scene::Camera* camera, const scene::Light* l
    vkUnmapMemory(Data::vk_device, Data::m_ssboMemory[0]);
 
    DeferredPipeline::UpdateDeferred(camera, light);
-   Data::m_uniformUpdateMs = ElapsedMilliseconds(updateStart, FrameClock::now());
+   Profiler::EndUniformUpdate();
 }
 
 void
@@ -803,65 +613,18 @@ Renderer::CreateDepthResources()
 void
 Renderer::Draw()
 {
-   static std::optional< FrameClock::time_point > previousFrameStart;
-   static std::optional< FrameClock::time_point > previousPresentReturn;
-
-   const auto frameStart = FrameClock::now();
-   std::optional< float > frameIntervalMs;
-   if (previousFrameStart)
-   {
-      frameIntervalMs = ElapsedMilliseconds(*previousFrameStart, frameStart);
-   }
-   previousFrameStart = frameStart;
-
-   FrameDiagnostics gpuDiagnostics{};
-   if (m_timestampResultsReady)
-   {
-      std::array< uint64_t, TIMESTAMP_QUERY_COUNT > timestamps{};
-      const auto result = vkGetQueryPoolResults(
-         Data::vk_device, Data::m_timestampQueryPools.front(), 0, TIMESTAMP_QUERY_COUNT,
-         sizeof(timestamps), timestamps.data(), sizeof(uint64_t), VK_QUERY_RESULT_64_BIT);
-
-      if (result == VK_SUCCESS)
-      {
-         const auto milliseconds = [&timestamps](TimestampQuery start, TimestampQuery end) {
-            return TimestampMilliseconds(timestamps[TimestampQueryIndex(start)],
-                                         timestamps[TimestampQueryIndex(end)], m_timestampValidBits,
-                                         m_timestampPeriod);
-         };
-
-         gpuDiagnostics.gpuFrameMs =
-            milliseconds(TimestampQuery::FrameStart, TimestampQuery::FrameEnd);
-         gpuDiagnostics.gpuOffscreenMs =
-            milliseconds(TimestampQuery::OffscreenStart, TimestampQuery::OffscreenEnd);
-         gpuDiagnostics.gpuShadowMs =
-            milliseconds(TimestampQuery::ShadowStart, TimestampQuery::ShadowEnd);
-         gpuDiagnostics.gpuGBufferMs =
-            milliseconds(TimestampQuery::ShadowEnd, TimestampQuery::GBufferEnd);
-         gpuDiagnostics.gpuBarrierMs =
-            milliseconds(TimestampQuery::OffscreenEnd, TimestampQuery::CompositionStart);
-         gpuDiagnostics.gpuCompositionMs =
-            milliseconds(TimestampQuery::CompositionStart, TimestampQuery::CompositionEnd);
-         gpuDiagnostics.gpuImGuiMs =
-            milliseconds(TimestampQuery::ImGuiStart, TimestampQuery::ImGuiEnd);
-         gpuDiagnostics.gpuSampleCount = 1;
-      }
-      else if (result != VK_NOT_READY)
-      {
-         VK_CHECK(result, "failed to read GPU timestamp queries!");
-      }
-   }
+   Profiler::BeginFrame(static_cast< uint32_t >(currentFrame));
 
    // Always recreate the command buffers for composition, mostly due to imgui
    CreateCommandBufferForDeferred();
-   const auto commandRecordEnd = FrameClock::now();
+   Profiler::EndCommandRecording();
 
    // vkWaitForFences(Data::vk_device, 1, &m_inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
-   const VkResult acquireResult = vkAcquireNextImageKHR(
-      Data::vk_device, m_swapChain, UINT64_MAX, m_imageAvailableSemaphores[currentFrame],
-      VK_NULL_HANDLE, &m_imageIndex);
-   const auto imageAcquireEnd = FrameClock::now();
+   const VkResult acquireResult = vkAcquireNextImageKHR(Data::vk_device, m_swapChain, UINT64_MAX,
+                                                        m_imageAvailableSemaphores[currentFrame],
+                                                        VK_NULL_HANDLE, &m_imageIndex);
+   Profiler::EndImageAcquire(acquireResult, m_imageIndex);
 
    // UpdateUniformBuffer();
    // if (m_imagesInFlight[imageIndex] != VK_NULL_HANDLE)
@@ -883,7 +646,7 @@ Renderer::Draw()
    offscreenSubmitInfo.pCommandBuffers = &DeferredPipeline::GetOffscreenCmdBuffer();
    VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &offscreenSubmitInfo, VK_NULL_HANDLE),
             "failed to submit offscreen draw command buffer!");
-   const auto offscreenSubmitEnd = FrameClock::now();
+   Profiler::EndOffscreenSubmit();
 
 
    //
@@ -914,7 +677,7 @@ Renderer::Draw()
 
    VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &sceneSubmitInfo, VK_NULL_HANDLE),
             "failed to submit draw command buffer!");
-   const auto sceneSubmitEnd = FrameClock::now();
+   Profiler::EndSceneSubmit();
 
    VkPresentInfoKHR presentInfo{};
    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -925,52 +688,10 @@ Renderer::Draw()
    presentInfo.pImageIndices = &m_imageIndex;
 
    const VkResult presentResult = vkQueuePresentKHR(Data::m_presentQueue, &presentInfo);
-   const auto presentEnd = FrameClock::now();
+   Profiler::EndPresent(presentResult);
 
    vkQueueWaitIdle(Data::vk_graphicsQueue);
-   const auto queueIdleEnd = FrameClock::now();
-   m_timestampResultsReady = true;
-
-   std::optional< float > presentIntervalMs;
-   if (previousPresentReturn)
-   {
-      presentIntervalMs = ElapsedMilliseconds(*previousPresentReturn, presentEnd);
-   }
-   previousPresentReturn = presentEnd;
-
-   const float queueIdleMs = ElapsedMilliseconds(presentEnd, queueIdleEnd);
-   PublishFrameDiagnostics(
-      {
-         .totalMs = ElapsedMilliseconds(frameStart, queueIdleEnd),
-         .imageAcquireMs = ElapsedMilliseconds(commandRecordEnd, imageAcquireEnd),
-         .guiUploadMs = Data::m_guiUploadMs,
-         .commandRecordMs = ElapsedMilliseconds(frameStart, commandRecordEnd),
-         .uniformUpdateMs = Data::m_uniformUpdateMs,
-         .queueSubmitMs = ElapsedMilliseconds(imageAcquireEnd, offscreenSubmitEnd)
-                          + ElapsedMilliseconds(offscreenSubmitEnd, sceneSubmitEnd),
-         .presentMs = ElapsedMilliseconds(sceneSubmitEnd, presentEnd),
-         .queueIdleMs = queueIdleMs,
-         .gpuFrameMs = gpuDiagnostics.gpuFrameMs,
-         .gpuOffscreenMs = gpuDiagnostics.gpuOffscreenMs,
-         .gpuShadowMs = gpuDiagnostics.gpuShadowMs,
-         .gpuGBufferMs = gpuDiagnostics.gpuGBufferMs,
-         .gpuBarrierMs = gpuDiagnostics.gpuBarrierMs,
-         .gpuCompositionMs = gpuDiagnostics.gpuCompositionMs,
-         .gpuImGuiMs = gpuDiagnostics.gpuImGuiMs,
-         .gpuSampleCount = gpuDiagnostics.gpuSampleCount,
-         .currentFrameIndex = static_cast< uint32_t >(currentFrame),
-         .acquiredImageIndex = m_imageIndex,
-         .acquireResult = static_cast< int32_t >(acquireResult),
-         .presentResult = static_cast< int32_t >(presentResult),
-      },
-      {
-         .frameIntervalMs = frameIntervalMs,
-         .presentIntervalMs = presentIntervalMs,
-         .queueIdleMs = queueIdleMs,
-         .gpuFrameMs = gpuDiagnostics.gpuSampleCount > 0
-                          ? std::optional< float >(gpuDiagnostics.gpuFrameMs)
-                          : std::nullopt,
-      });
+   Profiler::EndFrame();
 
    currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
@@ -1357,10 +1078,8 @@ Renderer::CreateCommandBufferForDeferred()
 
       VK_CHECK(vkBeginCommandBuffer(m_commandBuffers[i], &beginInfo), "");
 
-      const auto timestampQueryPool = Data::m_timestampQueryPools.front();
-      vkCmdWriteTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                          timestampQueryPool,
-                          TimestampQueryIndex(TimestampQuery::CompositionStart));
+      Profiler::WriteGpuTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                                  TimestampQuery::CompositionStart);
 
       vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -1398,59 +1117,27 @@ Renderer::CreateCommandBufferForDeferred()
       // Final composition as full screen quad
       vkCmdDraw(m_commandBuffers[i], 3, 1, 0, 0);
 
-      vkCmdWriteTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                          timestampQueryPool,
-                          TimestampQueryIndex(TimestampQuery::CompositionEnd));
+      Profiler::WriteGpuTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                                  TimestampQuery::CompositionEnd);
 
       /*
        * STAGE 4 - DRAW UI
        */
-      vkCmdWriteTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                          timestampQueryPool, TimestampQueryIndex(TimestampQuery::ImGuiStart));
+      Profiler::WriteGpuTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                                  TimestampQuery::ImGuiStart);
 
       app::gui::Gui::Render(m_commandBuffers[i]);
 
-      vkCmdWriteTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                          timestampQueryPool, TimestampQueryIndex(TimestampQuery::ImGuiEnd));
+      Profiler::WriteGpuTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                                  TimestampQuery::ImGuiEnd);
 
       vkCmdEndRenderPass(m_commandBuffers[i]);
 
-      vkCmdWriteTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                          timestampQueryPool, TimestampQueryIndex(TimestampQuery::FrameEnd));
+      Profiler::WriteGpuTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                                  TimestampQuery::FrameEnd);
 
       VK_CHECK(vkEndCommandBuffer(m_commandBuffers[i]), "");
    }
-}
-
-void
-Renderer::CreateTimestampQueryPools()
-{
-   VkPhysicalDeviceProperties properties{};
-   vkGetPhysicalDeviceProperties(Data::vk_physicalDevice, &properties);
-   m_timestampPeriod = properties.limits.timestampPeriod;
-
-   uint32_t queueFamilyCount = 0;
-   vkGetPhysicalDeviceQueueFamilyProperties(Data::vk_physicalDevice, &queueFamilyCount, nullptr);
-
-   std::vector< VkQueueFamilyProperties > queueFamilies(queueFamilyCount);
-   vkGetPhysicalDeviceQueueFamilyProperties(Data::vk_physicalDevice, &queueFamilyCount,
-                                            queueFamilies.data());
-
-   const auto queueFamilyIndices = findQueueFamilies(Data::vk_physicalDevice, Data::m_surface);
-   m_timestampValidBits =
-      queueFamilies.at(queueFamilyIndices.graphicsFamily.value()).timestampValidBits;
-   utils::Assert(m_timestampValidBits > 0, "graphics queue does not support timestamp queries!");
-
-   Data::m_timestampQueryPools.resize(1);
-
-   VkQueryPoolCreateInfo queryPoolInfo{};
-   queryPoolInfo.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
-   queryPoolInfo.queryType = VK_QUERY_TYPE_TIMESTAMP;
-   queryPoolInfo.queryCount = TIMESTAMP_QUERY_COUNT;
-
-   VK_CHECK(vkCreateQueryPool(Data::vk_device, &queryPoolInfo, nullptr,
-                              &Data::m_timestampQueryPools.front()),
-            "failed to create timestamp query pool!");
 }
 
 void

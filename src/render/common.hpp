@@ -82,14 +82,7 @@ struct Data
    inline static VkPipeline m_graphicsPipeline = {};
    inline static VkRenderPass m_renderPass = {};
    inline static VkRenderPass m_deferredRenderPass = {};
-   inline static std::vector< VkQueryPool > m_timestampQueryPools = {};
-
-   inline static int32_t m_fps = 0;
-   inline static float m_guiUploadMs = 0.0f;
-   inline static float m_uniformUpdateMs = 0.0f;
-
    inline static DebugData m_debugData = {};
-   inline static FrameDiagnostics m_frameDiagnostics = {};
 };
 
 uint32_t

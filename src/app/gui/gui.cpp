@@ -2,6 +2,7 @@
 #include "app/input/input_manager.hpp"
 #include "buffer.hpp"
 #include "render/common.hpp"
+#include "render/profiler.hpp"
 #include "renderer.hpp"
 #include "scene/scene.hpp"
 #include "shader.hpp"
@@ -10,7 +11,6 @@
 
 #include <GLFW/glfw3.h>
 #include <array>
-#include <chrono>
 #include <fmt/format.h>
 #include <imgui.h>
 
@@ -314,114 +314,15 @@ Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
       ImGui::Text("(%.1f, %.1f)", static_cast< double >(mousePos[0]),
                   static_cast< double >(mousePos[1]));
 
-      ImGui::TextUnformatted("FPS");
-      ImGui::SameLine(valueColumn);
-      ImGui::Text("%d", render::Data::m_fps);
-
-      const auto& diagnostics = render::Data::m_frameDiagnostics;
-      if (diagnostics.sampleCount > 0)
-      {
-         ImGui::Separator();
-         ImGui::Text("Frame diagnostics (%u-frame CPU average)", diagnostics.sampleCount);
-
-         const auto timingValueColumn = ImGui::GetCursorPosX()
-                                        + ImGui::CalcTextSize("Command recording").x
-                                        + ImGui::GetStyle().ItemSpacing.x;
-         const auto timingRow = [timingValueColumn](const char* label, float milliseconds) {
-            ImGui::TextUnformatted(label);
-            ImGui::SameLine(timingValueColumn);
-            ImGui::Text("%.3f ms", static_cast< double >(milliseconds));
-         };
-
-         timingRow("Total Draw", diagnostics.totalMs);
-         timingRow("Fence wait", diagnostics.fenceWaitMs);
-         timingRow("Image acquire", diagnostics.imageAcquireMs);
-         timingRow("Fence reset", diagnostics.fenceResetMs);
-         timingRow("GUI upload", diagnostics.guiUploadMs);
-         timingRow("Command recording", diagnostics.commandRecordMs);
-         timingRow("Uniform updates", diagnostics.uniformUpdateMs);
-         timingRow("Queue submit", diagnostics.queueSubmitMs);
-         timingRow("Present", diagnostics.presentMs);
-         timingRow("Queue idle", diagnostics.queueIdleMs);
-
-         if (diagnostics.pacingSampleCount > 0)
-         {
-            ImGui::Spacing();
-            ImGui::Separator();
-            ImGui::Spacing();
-            ImGui::Text("Frame pacing (%u-sample rolling window, ms)",
-                        diagnostics.pacingSampleCount);
-
-            const auto pacingValueColumn = ImGui::GetCursorPosX()
-                                           + ImGui::CalcTextSize("Present interval").x
-                                           + ImGui::GetStyle().ItemSpacing.x;
-            const auto pacingColumnWidth =
-               ImGui::CalcTextSize("999.999").x + (ImGui::GetStyle().ItemSpacing.x * 2.0f);
-            const auto pacingHeader = [pacingValueColumn, pacingColumnWidth]() {
-               ImGui::TextUnformatted("Metric");
-               ImGui::SameLine(pacingValueColumn);
-               ImGui::TextUnformatted("p50");
-               ImGui::SameLine(pacingValueColumn + pacingColumnWidth);
-               ImGui::TextUnformatted("p95");
-               ImGui::SameLine(pacingValueColumn + (pacingColumnWidth * 2.0f));
-               ImGui::TextUnformatted("p99");
-               ImGui::SameLine(pacingValueColumn + (pacingColumnWidth * 3.0f));
-               ImGui::TextUnformatted("max");
-            };
-            const auto pacingRow = [pacingValueColumn, pacingColumnWidth](
-                                      const char* label,
-                                      const render::TimingPercentiles& percentiles) {
-               ImGui::TextUnformatted(label);
-               ImGui::SameLine(pacingValueColumn);
-               ImGui::Text("%.3f", static_cast< double >(percentiles.p50));
-               ImGui::SameLine(pacingValueColumn + pacingColumnWidth);
-               ImGui::Text("%.3f", static_cast< double >(percentiles.p95));
-               ImGui::SameLine(pacingValueColumn + (pacingColumnWidth * 2.0f));
-               ImGui::Text("%.3f", static_cast< double >(percentiles.p99));
-               ImGui::SameLine(pacingValueColumn + (pacingColumnWidth * 3.0f));
-               ImGui::Text("%.3f", static_cast< double >(percentiles.maximum));
-            };
-
-            pacingHeader();
-            pacingRow("Frame interval", diagnostics.frameInterval);
-            pacingRow("Present interval", diagnostics.presentInterval);
-            pacingRow("Queue idle", diagnostics.queueIdle);
-            pacingRow("GPU frame", diagnostics.gpuFrame);
-
-            ImGui::Spacing();
-            ImGui::Text("Frame slot: %u    Image index: %u", diagnostics.currentFrameIndex,
-                        diagnostics.acquiredImageIndex);
-            ImGui::Text("Acquire: %s",
-                        string_VkResult(static_cast< VkResult >(diagnostics.acquireResult)));
-            ImGui::Text("Present: %s",
-                        string_VkResult(static_cast< VkResult >(diagnostics.presentResult)));
-         }
-
-         if (diagnostics.gpuSampleCount > 0)
-         {
-            ImGui::Spacing();
-            ImGui::Separator();
-            ImGui::Spacing();
-            ImGui::Text("GPU diagnostics (%u-frame average)", diagnostics.gpuSampleCount);
-            timingRow("GPU frame", diagnostics.gpuFrameMs);
-            timingRow("GPU offscreen", diagnostics.gpuOffscreenMs);
-            timingRow("GPU shadow", diagnostics.gpuShadowMs);
-            timingRow("GPU G-buffer", diagnostics.gpuGBufferMs);
-            timingRow("GPU queue gap", diagnostics.gpuBarrierMs);
-            timingRow("GPU composition", diagnostics.gpuCompositionMs);
-            timingRow("GPU ImGui", diagnostics.gpuImGuiMs);
-         }
-      }
+      Profiler::DrawDebugUi(valueColumn);
    }
 
    ImGui::End();
    ImGui::Render();
 
-   const auto uploadStart = std::chrono::steady_clock::now();
+   Profiler::BeginGuiUpload();
    UpdateBuffers();
-   const auto uploadEnd = std::chrono::steady_clock::now();
-   Data::m_guiUploadMs =
-      std::chrono::duration< float, std::milli >(uploadEnd - uploadStart).count();
+   Profiler::EndGuiUpload();
 
    return io_handle.WantCaptureMouse;
 }

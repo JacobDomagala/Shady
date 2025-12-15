@@ -44,9 +44,9 @@ struct UboComposition
 };
 
 VkDescriptorSet&
-DeferredPipeline::GetDescriptorSet()
+DeferredPipeline::GetDescriptorSet(int32_t frame)
 {
-   return m_descriptorSet;
+   return m_descriptorSets.at(frame);
 }
 
 VkPipeline
@@ -56,9 +56,9 @@ DeferredPipeline::GetCompositionPipeline()
 }
 
 void
-DeferredPipeline::DrawSkybox(VkCommandBuffer commandBuffer)
+DeferredPipeline::DrawSkybox(VkCommandBuffer commandBuffer, int32_t frame)
 {
-   m_skybox.Draw(commandBuffer);
+   m_skybox.Draw(commandBuffer, frame);
 }
 
 VkPipelineLayout
@@ -67,35 +67,29 @@ DeferredPipeline::GetPipelineLayout()
    return m_pipelineLayout;
 }
 
-VkSemaphore&
-DeferredPipeline::GetOffscreenSemaphore()
-{
-   return m_offscreenSemaphore;
-}
-
 // Update matrices used for the offscreen rendering of the scene
 void
-DeferredPipeline::UpdateUniformBufferOffscreen(const scene::Camera* camera)
+DeferredPipeline::UpdateUniformBufferOffscreen(const scene::Camera* camera, int32_t frame)
 {
    UboOffscreenVS uboOffscreenVS{};
    uboOffscreenVS.projection = camera->GetProjection();
    uboOffscreenVS.view = camera->GetView();
    uboOffscreenVS.model = glm::mat4(1.0f);
 
-   m_offscreenBuffer.CopyData(&uboOffscreenVS);
-   m_skybox.UpdateBuffers(camera);
+   m_offscreenBuffer.at(frame).CopyData(&uboOffscreenVS);
+   m_skybox.UpdateBuffers(camera, frame);
 }
 
 VkCommandBuffer&
-DeferredPipeline::GetOffscreenCmdBuffer()
+DeferredPipeline::GetOffscreenCmdBuffer(int32_t frame)
 {
-   return m_offscreenCommandBuffer;
+   return m_offscreenCommandBuffer.at(frame);
 }
 
 // Update lights and parameters passed to the composition shaders
 void
 DeferredPipeline::UpdateUniformBufferComposition(const scene::Camera* camera,
-                                                 const scene::Light* light)
+                                                 const scene::Light* light, int32_t frame)
 {
    UboComposition uboComposition{};
    uboComposition.light.position = glm::vec4(light->GetPosition(), 1.0f);
@@ -105,12 +99,14 @@ DeferredPipeline::UpdateUniformBufferComposition(const scene::Camera* camera,
    uboComposition.viewPos = glm::vec4(camera->GetPosition(), 0.0f);
    uboComposition.debugData = Data::m_debugData;
 
-   memcpy(m_compositionBuffer.GetMappedMemory(), &uboComposition, sizeof(uboComposition));
+   memcpy(m_compositionBuffer.at(frame).GetMappedMemory(), &uboComposition, sizeof(uboComposition));
 }
 
 void
 DeferredPipeline::Initialize(VkRenderPass mainRenderPass, VkPipelineCache pipelineCache)
 {
+   m_offscreenCommandBuffer.resize(MAX_FRAMES_IN_FLIGHT);
+
    m_pipelineCache = pipelineCache;
    m_mainRenderPass = mainRenderPass;
    ShadowSetup();
@@ -125,14 +121,20 @@ DeferredPipeline::Initialize(VkRenderPass mainRenderPass, VkPipelineCache pipeli
    SetupDescriptorPool();
    SetupDescriptorSet();
 
-
-   BuildDeferredCommandBuffer();
+   for (int32_t frame = 0; frame < MAX_FRAMES_IN_FLIGHT; ++frame)
+   {
+      BuildDeferredCommandBuffer(frame);
+   }
 }
 
 void
 DeferredPipeline::ShadowSetup()
 {
-   m_shadowMap.CreateShadowMap(4096, 4096, 1);
+   m_shadowMaps.resize(MAX_FRAMES_IN_FLIGHT);
+   for (auto& shadowMap : m_shadowMaps)
+   {
+      shadowMap.CreateShadowMap(4096, 4096, 1);
+   }
 }
 
 void
@@ -140,27 +142,33 @@ DeferredPipeline::PrepareOffscreenFramebuffer()
 {
    const auto width = static_cast< int32_t >(Data::m_swapChainExtent.width);
    const auto height = static_cast< int32_t >(Data::m_swapChainExtent.height);
-   m_offscreenFrameBuffer.Create(width, height);
-   Data::m_deferredRenderPass = m_offscreenFrameBuffer.GetRenderPass();
+   m_offscreenFrameBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+   for (auto& framebuffer : m_offscreenFrameBuffers)
+   {
+      framebuffer.Create(width, height);
+   }
+   Data::m_deferredRenderPass = m_offscreenFrameBuffers.front().GetRenderPass();
    Data::m_deferredExtent = Data::m_swapChainExtent;
 }
 
 void
 DeferredPipeline::PrepareUniformBuffers()
 {
-   // Offscreen vertex shader
-   m_offscreenBuffer = Buffer::CreateBuffer(
-      sizeof(UboOffscreenVS), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+   m_offscreenBuffer.reserve(MAX_FRAMES_IN_FLIGHT);
+   m_compositionBuffer.reserve(MAX_FRAMES_IN_FLIGHT);
 
-   // Deferred fragment shader
-   m_compositionBuffer = Buffer::CreateBuffer(
-      sizeof(UboComposition), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+   for (int32_t frame = 0; frame < MAX_FRAMES_IN_FLIGHT; ++frame)
+   {
+      m_offscreenBuffer.push_back(Buffer::CreateBuffer(
+         sizeof(UboOffscreenVS), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
+      m_compositionBuffer.push_back(Buffer::CreateBuffer(
+         sizeof(UboComposition), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
 
-   // Map persistent
-   m_compositionBuffer.Map();
-   m_offscreenBuffer.Map();
+      m_compositionBuffer.back().Map();
+      m_offscreenBuffer.back().Map();
+   }
 }
 
 void
@@ -359,6 +367,8 @@ DeferredPipeline::PreparePipelines()
 
    // Final fullscreen composition pass pipeline
    rasterizer.cullMode = VK_CULL_MODE_FRONT_BIT;
+   depthStencil.depthTestEnable = VK_FALSE;
+   depthStencil.depthWriteEnable = VK_FALSE;
 
 
    // Empty vertex input state, vertices are generated by the vertex shader
@@ -392,6 +402,8 @@ DeferredPipeline::PreparePipelines()
    pipelineInfo.pVertexInputState = &vertexInputInfo;
    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
    rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+   depthStencil.depthTestEnable = VK_TRUE;
+   depthStencil.depthWriteEnable = VK_TRUE;
 
    // Offscreen pipeline
    std::tie(vertexInfo, fragmentInfo) =
@@ -414,7 +426,7 @@ DeferredPipeline::PreparePipelines()
    pipelineInfo.pStages = shaderStages.data();
 
    // Separate render pass
-   pipelineInfo.renderPass = m_offscreenFrameBuffer.GetRenderPass();
+   pipelineInfo.renderPass = m_offscreenFrameBuffers.front().GetRenderPass();
 
    // Blend attachment states required for all color attachments
    // This is important, as color write mask will otherwise be 0x0 and you
@@ -478,7 +490,7 @@ DeferredPipeline::PreparePipelines()
    pipelineDynamicStateCreateInfo.flags = 0;
 
    // Reset blend attachment state
-   pipelineInfo.renderPass = m_shadowMap.GetRenderPass();
+   pipelineInfo.renderPass = m_shadowMaps.front().GetRenderPass();
    VK_CHECK(vkCreateGraphicsPipelines(Data::vk_device, m_pipelineCache, 1, &pipelineInfo, nullptr,
                                       &m_shadowMapPipeline),
             "");
@@ -492,22 +504,22 @@ DeferredPipeline::SetupDescriptorPool()
 
    std::array< VkDescriptorPoolSize, 5 > poolSizes{};
    poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-   poolSizes[0].descriptorCount = 8; // 3 * numfrabuffers in swapchain?
+   poolSizes[0].descriptorCount = 2 * MAX_FRAMES_IN_FLIGHT;
    poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-   poolSizes[1].descriptorCount = 9; // 3 * numfrabuffers in swapchain?
+   poolSizes[1].descriptorCount = 4 * MAX_FRAMES_IN_FLIGHT;
    poolSizes[2].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-   poolSizes[2].descriptorCount = 3; // 1 * numfrabuffers in swapchain?
+   poolSizes[2].descriptorCount = MAX_FRAMES_IN_FLIGHT;
    poolSizes[3].type = VK_DESCRIPTOR_TYPE_SAMPLER;
-   poolSizes[3].descriptorCount = 3; // 1 * numfrabuffers in swapchain?
+   poolSizes[3].descriptorCount = MAX_FRAMES_IN_FLIGHT;
    poolSizes[4].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-   poolSizes[4].descriptorCount = textureDescriptorCount;
+   poolSizes[4].descriptorCount = textureDescriptorCount * MAX_FRAMES_IN_FLIGHT;
 
 
    VkDescriptorPoolCreateInfo poolInfo{};
    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
    poolInfo.poolSizeCount = static_cast< uint32_t >(poolSizes.size());
    poolInfo.pPoolSizes = poolSizes.data();
-   poolInfo.maxSets = 4; // Should be 1?
+   poolInfo.maxSets = MAX_FRAMES_IN_FLIGHT;
 
    VK_CHECK(vkCreateDescriptorPool(Data::vk_device, &poolInfo, nullptr, &m_descriptorPool), "");
 }
@@ -515,101 +527,20 @@ DeferredPipeline::SetupDescriptorPool()
 void
 DeferredPipeline::SetupDescriptorSet()
 {
-   std::array< VkWriteDescriptorSet, 5 > descriptorWrites{};
+   m_descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+   const std::vector< VkDescriptorSetLayout > layouts(MAX_FRAMES_IN_FLIGHT, m_descriptorSetLayout);
 
    VkDescriptorSetAllocateInfo allocInfo{};
    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
    allocInfo.descriptorPool = m_descriptorPool;
-   allocInfo.descriptorSetCount = 1;
-   allocInfo.pSetLayouts = &m_descriptorSetLayout;
+   allocInfo.descriptorSetCount = static_cast< uint32_t >(m_descriptorSets.size());
+   allocInfo.pSetLayouts = layouts.data();
 
-   // Image descriptors for the offscreen color attachments
-   VkDescriptorImageInfo positionsImageInfo{};
-   positionsImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-   positionsImageInfo.imageView = m_offscreenFrameBuffer.GetPositionsImageView();
-   positionsImageInfo.sampler = m_offscreenFrameBuffer.GetSampler();
+   VK_CHECK(vkAllocateDescriptorSets(Data::vk_device, &allocInfo, m_descriptorSets.data()), "");
 
-   VkDescriptorImageInfo normalsImageInfo{};
-   normalsImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-   normalsImageInfo.imageView = m_offscreenFrameBuffer.GetNormalsImageView();
-   normalsImageInfo.sampler = m_offscreenFrameBuffer.GetSampler();
-
-   VkDescriptorImageInfo albedoImageInfo{};
-   albedoImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-   albedoImageInfo.imageView = m_offscreenFrameBuffer.GetAlbedoImageView();
-   albedoImageInfo.sampler = m_offscreenFrameBuffer.GetSampler();
-
-   VkDescriptorImageInfo shadowMapInfo{};
-   shadowMapInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-   shadowMapInfo.imageView = m_shadowMap.GetShadowMapView();
-   shadowMapInfo.sampler = m_shadowMap.GetSampler();
-
-   // Deferred composition
-   VK_CHECK(vkAllocateDescriptorSets(Data::vk_device, &allocInfo, &m_descriptorSet), "");
-
-   // Binding 5 : Position texture target
-   descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-   descriptorWrites[0].dstSet = m_descriptorSet;
-   descriptorWrites[0].dstBinding = 5;
-   descriptorWrites[0].dstArrayElement = 0;
-   descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-   descriptorWrites[0].descriptorCount = 1;
-   descriptorWrites[0].pImageInfo = &positionsImageInfo;
-
-   // Binding 6 : Normals texture target
-   descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-   descriptorWrites[1].dstSet = m_descriptorSet;
-   descriptorWrites[1].dstBinding = 6;
-   descriptorWrites[1].dstArrayElement = 0;
-   descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-   descriptorWrites[1].descriptorCount = 1;
-   descriptorWrites[1].pImageInfo = &normalsImageInfo;
-
-   // Binding 4 : Albedo texture target
-   descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-   descriptorWrites[2].dstSet = m_descriptorSet;
-   descriptorWrites[2].dstBinding = 4;
-   descriptorWrites[2].dstArrayElement = 0;
-   descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-   descriptorWrites[2].descriptorCount = 1;
-   descriptorWrites[2].pImageInfo = &albedoImageInfo;
-
-   // Binding 7 : Fragment shader uniform buffer
-   descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-   descriptorWrites[3].dstSet = m_descriptorSet;
-   descriptorWrites[3].dstBinding = 7;
-   descriptorWrites[3].dstArrayElement = 0;
-   descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-   descriptorWrites[3].descriptorCount = 1;
-   descriptorWrites[3].pBufferInfo = &m_compositionBuffer.GetDescriptor();
-
-   // Binding 8 : Shadowmap texture
-   descriptorWrites[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-   descriptorWrites[4].dstSet = m_descriptorSet;
-   descriptorWrites[4].dstBinding = 8;
-   descriptorWrites[4].dstArrayElement = 0;
-   descriptorWrites[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-   descriptorWrites[4].descriptorCount = 1;
-   descriptorWrites[4].pImageInfo = &shadowMapInfo;
-
-   vkUpdateDescriptorSets(Data::vk_device, static_cast< uint32_t >(descriptorWrites.size()),
-                          descriptorWrites.data(), 0, nullptr);
-
-   // Offscreen (scene)
-
-   const auto [imageView, sampler] =
+   const auto [unusedImageView, sampler] =
       TextureLibrary::GetTexture(TextureType::DIFFUSE_MAP, "196.png").GetImageViewAndSampler();
-
-   VkDescriptorBufferInfo bufferInfo{};
-   bufferInfo.buffer = Data::m_uniformBuffers[0];
-   bufferInfo.offset = 0;
-   bufferInfo.range = sizeof(UniformBufferObject);
-
-
-   VkDescriptorBufferInfo instanceBufferInfo;
-   instanceBufferInfo.buffer = Data::m_ssbo[0];
-   instanceBufferInfo.offset = 0;
-   instanceBufferInfo.range = Data::perInstance.size() * sizeof(PerInstanceBuffer);
+   (void)unusedImageView;
 
    std::vector< VkDescriptorImageInfo > descriptorImageInfos;
 
@@ -623,49 +554,122 @@ DeferredPipeline::SetupDescriptorSet()
                      return descriptorInfo;
                   });
 
-   descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-   descriptorWrites[0].dstSet = m_descriptorSet;
-   descriptorWrites[0].dstBinding = 0;
-   descriptorWrites[0].dstArrayElement = 0;
-   descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-   descriptorWrites[0].descriptorCount = 1;
-   descriptorWrites[0].pBufferInfo = &bufferInfo;
-
-   descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-   descriptorWrites[1].dstSet = m_descriptorSet;
-   descriptorWrites[1].dstBinding = 1;
-   descriptorWrites[1].dstArrayElement = 0;
-   descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-   descriptorWrites[1].descriptorCount = 1;
-   descriptorWrites[1].pBufferInfo = &instanceBufferInfo;
-
    VkDescriptorImageInfo samplerInfo = {};
    samplerInfo.sampler = sampler;
 
-   descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-   descriptorWrites[2].dstSet = m_descriptorSet;
-   descriptorWrites[2].dstBinding = 2;
-   descriptorWrites[2].dstArrayElement = 0;
-   descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
-   descriptorWrites[2].descriptorCount = 1;
-   descriptorWrites[2].pImageInfo = &samplerInfo;
+   for (int32_t frame = 0; frame < MAX_FRAMES_IN_FLIGHT; ++frame)
+   {
+      const auto& offscreenFramebuffer = m_offscreenFrameBuffers.at(frame);
+      const auto& shadowMap = m_shadowMaps.at(frame);
 
-   descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-   descriptorWrites[3].dstSet = m_descriptorSet;
-   descriptorWrites[3].dstBinding = 3;
-   descriptorWrites[3].dstArrayElement = 0;
-   descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-   descriptorWrites[3].descriptorCount = static_cast< uint32_t >(Data::textures.size());
-   descriptorWrites[3].pImageInfo = descriptorImageInfos.data();
+      VkDescriptorImageInfo positionsImageInfo{};
+      positionsImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      positionsImageInfo.imageView = offscreenFramebuffer.GetPositionsImageView();
+      positionsImageInfo.sampler = offscreenFramebuffer.GetSampler();
 
-   vkUpdateDescriptorSets(Data::vk_device, static_cast< uint32_t >(descriptorWrites.size()),
-                          descriptorWrites.data(), 0, nullptr);
+      VkDescriptorImageInfo normalsImageInfo{};
+      normalsImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      normalsImageInfo.imageView = offscreenFramebuffer.GetNormalsImageView();
+      normalsImageInfo.sampler = offscreenFramebuffer.GetSampler();
+
+      VkDescriptorImageInfo albedoImageInfo{};
+      albedoImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      albedoImageInfo.imageView = offscreenFramebuffer.GetAlbedoImageView();
+      albedoImageInfo.sampler = offscreenFramebuffer.GetSampler();
+
+      VkDescriptorImageInfo shadowMapInfo{};
+      shadowMapInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+      shadowMapInfo.imageView = shadowMap.GetShadowMapView();
+      shadowMapInfo.sampler = shadowMap.GetSampler();
+
+      VkDescriptorBufferInfo uniformBufferInfo{};
+      uniformBufferInfo.buffer = Data::m_uniformBuffers.at(frame);
+      uniformBufferInfo.offset = 0;
+      uniformBufferInfo.range = sizeof(UniformBufferObject);
+
+      VkDescriptorBufferInfo instanceBufferInfo{};
+      instanceBufferInfo.buffer = Data::m_ssbo.at(frame);
+      instanceBufferInfo.offset = 0;
+      instanceBufferInfo.range = Data::perInstance.size() * sizeof(PerInstanceBuffer);
+
+      std::array< VkWriteDescriptorSet, 9 > descriptorWrites{};
+      const VkDescriptorSet descriptorSet = m_descriptorSets.at(frame);
+
+      descriptorWrites[0] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+      descriptorWrites[0].dstSet = descriptorSet;
+      descriptorWrites[0].dstBinding = 0;
+      descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      descriptorWrites[0].descriptorCount = 1;
+      descriptorWrites[0].pBufferInfo = &uniformBufferInfo;
+
+      descriptorWrites[1] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+      descriptorWrites[1].dstSet = descriptorSet;
+      descriptorWrites[1].dstBinding = 1;
+      descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+      descriptorWrites[1].descriptorCount = 1;
+      descriptorWrites[1].pBufferInfo = &instanceBufferInfo;
+
+      descriptorWrites[2] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+      descriptorWrites[2].dstSet = descriptorSet;
+      descriptorWrites[2].dstBinding = 2;
+      descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+      descriptorWrites[2].descriptorCount = 1;
+      descriptorWrites[2].pImageInfo = &samplerInfo;
+
+      descriptorWrites[3] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+      descriptorWrites[3].dstSet = descriptorSet;
+      descriptorWrites[3].dstBinding = 3;
+      descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+      descriptorWrites[3].descriptorCount = static_cast< uint32_t >(descriptorImageInfos.size());
+      descriptorWrites[3].pImageInfo = descriptorImageInfos.data();
+
+      descriptorWrites[4] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+      descriptorWrites[4].dstSet = descriptorSet;
+      descriptorWrites[4].dstBinding = 4;
+      descriptorWrites[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      descriptorWrites[4].descriptorCount = 1;
+      descriptorWrites[4].pImageInfo = &albedoImageInfo;
+
+      descriptorWrites[5] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+      descriptorWrites[5].dstSet = descriptorSet;
+      descriptorWrites[5].dstBinding = 5;
+      descriptorWrites[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      descriptorWrites[5].descriptorCount = 1;
+      descriptorWrites[5].pImageInfo = &positionsImageInfo;
+
+      descriptorWrites[6] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+      descriptorWrites[6].dstSet = descriptorSet;
+      descriptorWrites[6].dstBinding = 6;
+      descriptorWrites[6].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      descriptorWrites[6].descriptorCount = 1;
+      descriptorWrites[6].pImageInfo = &normalsImageInfo;
+
+      descriptorWrites[7] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+      descriptorWrites[7].dstSet = descriptorSet;
+      descriptorWrites[7].dstBinding = 7;
+      descriptorWrites[7].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      descriptorWrites[7].descriptorCount = 1;
+      descriptorWrites[7].pBufferInfo = &m_compositionBuffer.at(frame).GetDescriptor();
+
+      descriptorWrites[8] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+      descriptorWrites[8].dstSet = descriptorSet;
+      descriptorWrites[8].dstBinding = 8;
+      descriptorWrites[8].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      descriptorWrites[8].descriptorCount = 1;
+      descriptorWrites[8].pImageInfo = &shadowMapInfo;
+
+      vkUpdateDescriptorSets(Data::vk_device, static_cast< uint32_t >(descriptorWrites.size()),
+                             descriptorWrites.data(), 0, nullptr);
+   }
 }
 
 void
-DeferredPipeline::BuildDeferredCommandBuffer()
+DeferredPipeline::BuildDeferredCommandBuffer(int32_t frame)
 {
-   if (m_offscreenCommandBuffer == VK_NULL_HANDLE)
+   auto& shadowMap = m_shadowMaps.at(frame);
+   auto& offscreenFramebuffer = m_offscreenFrameBuffers.at(frame);
+
+   if (m_offscreenCommandBuffer.at(frame) == VK_NULL_HANDLE)
    {
       VkCommandBufferAllocateInfo allocInfo{};
       allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -673,16 +677,11 @@ DeferredPipeline::BuildDeferredCommandBuffer()
       allocInfo.commandPool = Data::vk_commandPool;
       allocInfo.commandBufferCount = 1;
 
-      VK_CHECK(vkAllocateCommandBuffers(Data::vk_device, &allocInfo, &m_offscreenCommandBuffer),
-               "");
+      VK_CHECK(
+         vkAllocateCommandBuffers(Data::vk_device, &allocInfo, &m_offscreenCommandBuffer[frame]),
+         "");
    }
-
-   // Create a semaphore used to synchronize offscreen rendering and usage
-   VkSemaphoreCreateInfo semaphoreCreateInfo{};
-   semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-   VK_CHECK(
-      vkCreateSemaphore(Data::vk_device, &semaphoreCreateInfo, nullptr, &m_offscreenSemaphore), "");
+   const VkCommandBuffer commandBuffer = m_offscreenCommandBuffer.at(frame);
 
    VkCommandBufferBeginInfo cmdBufInfo{};
    cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -697,65 +696,64 @@ DeferredPipeline::BuildDeferredCommandBuffer()
 
    clearValues[0].depthStencil = {1.0f, 0};
 
-   renderPassBeginInfo.renderPass = m_shadowMap.GetRenderPass();
-   renderPassBeginInfo.framebuffer = m_shadowMap.GetFramebuffer();
-   renderPassBeginInfo.renderArea.extent.width = static_cast< uint32_t >(m_shadowMap.GetSize().x);
-   renderPassBeginInfo.renderArea.extent.height = static_cast< uint32_t >(m_shadowMap.GetSize().y);
+   renderPassBeginInfo.renderPass = shadowMap.GetRenderPass();
+   renderPassBeginInfo.framebuffer = shadowMap.GetFramebuffer();
+   renderPassBeginInfo.renderArea.extent.width = static_cast< uint32_t >(shadowMap.GetSize().x);
+   renderPassBeginInfo.renderArea.extent.height = static_cast< uint32_t >(shadowMap.GetSize().y);
    renderPassBeginInfo.clearValueCount = 1;
    renderPassBeginInfo.pClearValues = clearValues.data();
 
-   VK_CHECK(vkBeginCommandBuffer(m_offscreenCommandBuffer, &cmdBufInfo), "");
+   VK_CHECK(vkBeginCommandBuffer(commandBuffer, &cmdBufInfo), "");
 
-   Profiler::ResetGpuTimestamps(m_offscreenCommandBuffer);
-   Profiler::WriteGpuTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                               TimestampQuery::FrameStart);
-   Profiler::WriteGpuTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                               TimestampQuery::OffscreenStart);
-   Profiler::WriteGpuTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                               TimestampQuery::ShadowStart);
+   Profiler::ResetGpuTimestamps(commandBuffer, frame);
+   Profiler::WriteGpuTimestamp(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                               TimestampQuery::FrameStart, frame);
+   Profiler::WriteGpuTimestamp(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                               TimestampQuery::OffscreenStart, frame);
+   Profiler::WriteGpuTimestamp(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                               TimestampQuery::ShadowStart, frame);
 
    VkViewport viewport{};
-   viewport.width = static_cast< float >(m_shadowMap.GetSize().x);
-   viewport.height = static_cast< float >(m_shadowMap.GetSize().y);
+   viewport.width = static_cast< float >(shadowMap.GetSize().x);
+   viewport.height = static_cast< float >(shadowMap.GetSize().y);
    viewport.minDepth = 0.0f;
    viewport.maxDepth = 1.0f;
 
-   vkCmdSetViewport(m_offscreenCommandBuffer, 0, 1, &viewport);
+   vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
    VkRect2D scissor{};
-   scissor.extent.width = static_cast< uint32_t >(m_shadowMap.GetSize().x);
-   scissor.extent.height = static_cast< uint32_t >(m_shadowMap.GetSize().y);
+   scissor.extent.width = static_cast< uint32_t >(shadowMap.GetSize().x);
+   scissor.extent.height = static_cast< uint32_t >(shadowMap.GetSize().y);
    scissor.offset.x = 0;
    scissor.offset.y = 0;
 
-   vkCmdSetScissor(m_offscreenCommandBuffer, 0, 1, &scissor);
+   vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
    // Set depth bias (aka "Polygon offset")
-   vkCmdSetDepthBias(m_offscreenCommandBuffer, depthBiasConstant, 0.0f, depthBiasSlope);
+   vkCmdSetDepthBias(commandBuffer, depthBiasConstant, 0.0f, depthBiasSlope);
 
-   vkCmdBeginRenderPass(m_offscreenCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-   vkCmdBindPipeline(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                     m_shadowMapPipeline);
+   vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+   vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_shadowMapPipeline);
 
    {
       std::array< VkDeviceSize, 1 > offsets = {0};
-      vkCmdBindVertexBuffers(m_offscreenCommandBuffer, 0, 1, &Data::m_vertexBuffer, offsets.data());
+      vkCmdBindVertexBuffers(commandBuffer, 0, 1, &Data::m_vertexBuffer, offsets.data());
 
-      vkCmdBindIndexBuffer(m_offscreenCommandBuffer, Data::m_indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+      vkCmdBindIndexBuffer(commandBuffer, Data::m_indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
-      vkCmdBindDescriptorSets(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                              m_pipelineLayout, 0, 1, &m_descriptorSet, 0, nullptr);
+      vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0,
+                              1, &m_descriptorSets[frame], 0, nullptr);
 
 
-      vkCmdDrawIndexedIndirectCount(m_offscreenCommandBuffer, Data::m_indirectDrawsBuffer, 0,
+      vkCmdDrawIndexedIndirectCount(commandBuffer, Data::m_indirectDrawsBuffer, 0,
                                     Data::m_indirectDrawsBuffer,
                                     sizeof(VkDrawIndexedIndirectCommand) * Data::m_numMeshes,
                                     Data::m_numMeshes, sizeof(VkDrawIndexedIndirectCommand));
    }
 
-   vkCmdEndRenderPass(m_offscreenCommandBuffer);
-   Profiler::WriteGpuTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                               TimestampQuery::ShadowEnd);
+   vkCmdEndRenderPass(commandBuffer);
+   Profiler::WriteGpuTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                               TimestampQuery::ShadowEnd, frame);
 
    // Second pass: Deferred calculations
    // -------------------------------------------------------------------------------------------------------
@@ -766,64 +764,64 @@ DeferredPipeline::BuildDeferredCommandBuffer()
    clearValues[3].depthStencil = {1.0f, 0};
 
 
-   renderPassBeginInfo.renderPass = m_offscreenFrameBuffer.GetRenderPass();
-   renderPassBeginInfo.framebuffer = m_offscreenFrameBuffer.GetFramebuffer();
+   renderPassBeginInfo.renderPass = offscreenFramebuffer.GetRenderPass();
+   renderPassBeginInfo.framebuffer = offscreenFramebuffer.GetFramebuffer();
    renderPassBeginInfo.renderArea.extent.width =
-      static_cast< uint32_t >(m_offscreenFrameBuffer.GetSize().x);
+      static_cast< uint32_t >(offscreenFramebuffer.GetSize().x);
    renderPassBeginInfo.renderArea.extent.height =
-      static_cast< uint32_t >(m_offscreenFrameBuffer.GetSize().y);
+      static_cast< uint32_t >(offscreenFramebuffer.GetSize().y);
    renderPassBeginInfo.clearValueCount = static_cast< uint32_t >(clearValues.size());
    renderPassBeginInfo.pClearValues = clearValues.data();
 
-   vkCmdBeginRenderPass(m_offscreenCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+   vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-   viewport.width = static_cast< float >(m_offscreenFrameBuffer.GetSize().x);
-   viewport.height = static_cast< float >(m_offscreenFrameBuffer.GetSize().y);
+   viewport.width = static_cast< float >(offscreenFramebuffer.GetSize().x);
+   viewport.height = static_cast< float >(offscreenFramebuffer.GetSize().y);
    viewport.minDepth = 0.0f;
    viewport.maxDepth = 1.0f;
 
-   vkCmdSetViewport(m_offscreenCommandBuffer, 0, 1, &viewport);
+   vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-   scissor.extent.width = static_cast< uint32_t >(m_offscreenFrameBuffer.GetSize().x);
-   scissor.extent.height = static_cast< uint32_t >(m_offscreenFrameBuffer.GetSize().y);
+   scissor.extent.width = static_cast< uint32_t >(offscreenFramebuffer.GetSize().x);
+   scissor.extent.height = static_cast< uint32_t >(offscreenFramebuffer.GetSize().y);
    scissor.offset.x = 0;
    scissor.offset.y = 0;
 
-   vkCmdSetScissor(m_offscreenCommandBuffer, 0, 1, &scissor);
+   vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-   vkCmdBindPipeline(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                     m_offscreenPipeline);
+   vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_offscreenPipeline);
 
 
    std::array< VkDeviceSize, 1 > offsets = {0};
-   vkCmdBindVertexBuffers(m_offscreenCommandBuffer, 0, 1, &Data::m_vertexBuffer, offsets.data());
+   vkCmdBindVertexBuffers(commandBuffer, 0, 1, &Data::m_vertexBuffer, offsets.data());
 
-   vkCmdBindIndexBuffer(m_offscreenCommandBuffer, Data::m_indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+   vkCmdBindIndexBuffer(commandBuffer, Data::m_indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
-   vkCmdBindDescriptorSets(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                           m_pipelineLayout, 0, 1, &m_descriptorSet, 0, nullptr);
+   vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1,
+                           &m_descriptorSets[frame], 0, nullptr);
 
 
-   vkCmdDrawIndexedIndirectCount(m_offscreenCommandBuffer, Data::m_indirectDrawsBuffer, 0,
+   vkCmdDrawIndexedIndirectCount(commandBuffer, Data::m_indirectDrawsBuffer, 0,
                                  Data::m_indirectDrawsBuffer,
                                  sizeof(VkDrawIndexedIndirectCommand) * Data::m_numMeshes,
                                  Data::m_numMeshes, sizeof(VkDrawIndexedIndirectCommand));
 
-   vkCmdEndRenderPass(m_offscreenCommandBuffer);
-   Profiler::WriteGpuTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                               TimestampQuery::GBufferEnd);
+   vkCmdEndRenderPass(commandBuffer);
+   Profiler::WriteGpuTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                               TimestampQuery::GBufferEnd, frame);
 
-   Profiler::WriteGpuTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                               TimestampQuery::OffscreenEnd);
+   Profiler::WriteGpuTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                               TimestampQuery::OffscreenEnd, frame);
 
-   VK_CHECK(vkEndCommandBuffer(m_offscreenCommandBuffer), "");
+   VK_CHECK(vkEndCommandBuffer(commandBuffer), "");
 }
 
 void
-DeferredPipeline::UpdateDeferred(const scene::Camera* camera, const scene::Light* light)
+DeferredPipeline::UpdateDeferred(const scene::Camera* camera, const scene::Light* light,
+                                 int32_t frame)
 {
-   UpdateUniformBufferOffscreen(camera);
-   UpdateUniformBufferComposition(camera, light);
+   UpdateUniformBufferOffscreen(camera, frame);
+   UpdateUniformBufferComposition(camera, light, frame);
 }
 
 

@@ -23,7 +23,7 @@ class DeferredPipeline
    Initialize(VkRenderPass mainRenderPass, VkPipelineCache pipelineCache);
 
    static VkDescriptorSet&
-   GetDescriptorSet();
+   GetDescriptorSet(int32_t frame);
 
    static VkPipelineLayout
    GetPipelineLayout();
@@ -32,16 +32,16 @@ class DeferredPipeline
    GetCompositionPipeline();
 
    static void
-   DrawSkybox(VkCommandBuffer commandBuffer);
+   DrawSkybox(VkCommandBuffer commandBuffer, int32_t frame);
 
    static VkCommandBuffer&
-   GetOffscreenCmdBuffer();
-
-   static VkSemaphore&
-   GetOffscreenSemaphore();
+   GetOffscreenCmdBuffer(int32_t frame);
 
    static void
-   UpdateDeferred(const scene::Camera* camera, const scene::Light* light);
+   UpdateDeferred(const scene::Camera* camera, const scene::Light* light, int32_t frame);
+
+   static void
+   BuildDeferredCommandBuffer(int32_t frame);
 
  private:
    static void
@@ -67,20 +67,17 @@ class DeferredPipeline
    SetupDescriptorSet();
 
    static void
-   BuildDeferredCommandBuffer();
+   UpdateUniformBufferComposition(const scene::Camera* camera, const scene::Light* light,
+                                  int32_t frame);
 
    static void
-   UpdateUniformBufferComposition(const scene::Camera* camera, const scene::Light* light);
-
-   static void
-   UpdateUniformBufferOffscreen(const scene::Camera* camera);
+   UpdateUniformBufferOffscreen(const scene::Camera* camera, int32_t frame);
 
    inline static VkRenderPass m_mainRenderPass = {};
    inline static VkPipeline m_graphicsPipeline = {};
 
-   inline static Framebuffer m_shadowMap = {};
-   inline static Framebuffer m_offscreenFrameBuffer = {};
-   inline static Framebuffer m_compositionFrameBuffer = {};
+   inline static std::vector< Framebuffer > m_shadowMaps = {};
+   inline static std::vector< Framebuffer > m_offscreenFrameBuffers = {};
 
    inline static VkPipelineCache m_pipelineCache = {};
    inline static VkPipeline m_shadowMapPipeline = {};
@@ -89,19 +86,17 @@ class DeferredPipeline
 
    inline static VkPipelineLayout m_pipelineLayout = {};
    inline static std::vector< VkDescriptorSet > m_descriptorSets = {};
-   inline static VkDescriptorSet m_descriptorSet = {};
    inline static VkDescriptorSetLayout m_descriptorSetLayout = {};
    inline static VkDescriptorPool m_descriptorPool = {};
 
-   inline static Buffer m_offscreenBuffer = {};
-   inline static Buffer m_compositionBuffer = {};
+   inline static std::vector< Buffer > m_offscreenBuffer = {};
+   inline static std::vector< Buffer > m_compositionBuffer = {};
    inline static VkDescriptorSet m_shadowMapDescriptor = {};
    inline static int32_t m_debugDisplayTarget = 0;
 
    inline static VkSampler m_colorSampler = {};
 
-   inline static VkCommandBuffer m_offscreenCommandBuffer = {};
-   inline static VkSemaphore m_offscreenSemaphore = {};
+   inline static std::vector< VkCommandBuffer > m_offscreenCommandBuffer = {};
 
    inline static VkViewport m_viewport = {};
    inline static scene::Skybox m_skybox = {};

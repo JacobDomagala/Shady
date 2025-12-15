@@ -52,7 +52,7 @@ struct FrameDiagnostics
    float gpuImGuiMs = 0.0f;
    TimingPercentiles frameInterval = {};
    TimingPercentiles presentInterval = {};
-   TimingPercentiles queueIdle = {};
+   TimingPercentiles fenceWait = {};
    TimingPercentiles gpuFrame = {};
    uint32_t sampleCount = 0;
    uint32_t gpuSampleCount = 0;
@@ -67,7 +67,7 @@ struct FramePacingSample
 {
    std::optional< float > frameIntervalMs;
    std::optional< float > presentIntervalMs;
-   float queueIdleMs = 0.0f;
+   float fenceWaitMs = 0.0f;
    std::optional< float > gpuFrameMs;
 };
 
@@ -124,14 +124,24 @@ class TimingSampleWindow
 struct CurrentFrame
 {
    FrameClock::time_point frameStart = {};
-   FrameClock::time_point commandRecordEnd = {};
+   FrameClock::time_point fenceWaitEnd = {};
+   FrameClock::time_point imageAcquireStart = {};
    FrameClock::time_point imageAcquireEnd = {};
+   FrameClock::time_point fenceResetStart = {};
+   FrameClock::time_point fenceResetEnd = {};
+   FrameClock::time_point offscreenSubmitStart = {};
    FrameClock::time_point offscreenSubmitEnd = {};
+   FrameClock::time_point commandRecordStart = {};
+   FrameClock::time_point commandRecordEnd = {};
+   FrameClock::time_point sceneSubmitStart = {};
    FrameClock::time_point sceneSubmitEnd = {};
+   FrameClock::time_point presentStart = {};
    FrameClock::time_point presentEnd = {};
    std::optional< float > frameIntervalMs;
    std::optional< float > presentIntervalMs;
    FrameDiagnostics gpuDiagnostics = {};
+   float uniformUpdateMs = 0.0f;
+   float guiUploadMs = 0.0f;
    uint32_t currentFrameIndex = 0;
    uint32_t acquiredImageIndex = 0;
    VkResult acquireResult = VK_SUCCESS;
@@ -140,10 +150,10 @@ struct CurrentFrame
 
 struct ProfilerState
 {
-   VkQueryPool timestampQueryPool = VK_NULL_HANDLE;
+   std::vector< VkQueryPool > timestampQueryPools;
+   std::vector< bool > timestampResultsReady;
    float timestampPeriod = 0.0f;
    uint32_t timestampValidBits = 0;
-   bool timestampResultsReady = false;
 
    FrameClock::time_point fpsPreviousTick = FrameClock::now();
    FrameClock::duration fpsInterval = {};
@@ -152,9 +162,6 @@ struct ProfilerState
 
    FrameClock::time_point uniformUpdateStart = {};
    FrameClock::time_point guiUploadStart = {};
-   float uniformUpdateMs = 0.0f;
-   float guiUploadMs = 0.0f;
-
    std::optional< FrameClock::time_point > previousFrameStart;
    std::optional< FrameClock::time_point > previousPresentReturn;
    CurrentFrame currentFrame = {};
@@ -163,7 +170,7 @@ struct ProfilerState
    FrameDiagnostics published = {};
    TimingSampleWindow frameIntervals;
    TimingSampleWindow presentIntervals;
-   TimingSampleWindow queueIdles;
+   TimingSampleWindow fenceWaits;
    TimingSampleWindow gpuFrames;
 };
 
@@ -207,19 +214,19 @@ TimestampMilliseconds(uint64_t start, uint64_t end, uint32_t validBits, float ti
 }
 
 FrameDiagnostics
-ReadGpuDiagnostics()
+ReadGpuDiagnostics(uint32_t frameIndex)
 {
    auto& state = State();
    FrameDiagnostics diagnostics{};
-   if (!state.timestampResultsReady)
+   if (!state.timestampResultsReady.at(frameIndex))
    {
       return diagnostics;
    }
 
    std::array< uint64_t, TIMESTAMP_QUERY_COUNT > timestamps{};
    const auto result = vkGetQueryPoolResults(
-      Data::vk_device, state.timestampQueryPool, 0, TIMESTAMP_QUERY_COUNT, sizeof(timestamps),
-      timestamps.data(), sizeof(uint64_t), VK_QUERY_RESULT_64_BIT);
+      Data::vk_device, state.timestampQueryPools.at(frameIndex), 0, TIMESTAMP_QUERY_COUNT,
+      sizeof(timestamps), timestamps.data(), sizeof(uint64_t), VK_QUERY_RESULT_64_BIT);
 
    if (result == VK_NOT_READY)
    {
@@ -266,7 +273,7 @@ PublishFrameDiagnostics(const FrameDiagnostics& frame, const FramePacingSample& 
    {
       state.presentIntervals.Push(*pacing.presentIntervalMs);
    }
-   state.queueIdles.Push(pacing.queueIdleMs);
+   state.fenceWaits.Push(pacing.fenceWaitMs);
    if (pacing.gpuFrameMs)
    {
       state.gpuFrames.Push(*pacing.gpuFrameMs);
@@ -334,7 +341,7 @@ PublishFrameDiagnostics(const FrameDiagnostics& frame, const FramePacingSample& 
 
    state.published.frameInterval = state.frameIntervals.Percentiles();
    state.published.presentInterval = state.presentIntervals.Percentiles();
-   state.published.queueIdle = state.queueIdles.Percentiles();
+   state.published.fenceWait = state.fenceWaits.Percentiles();
    state.published.gpuFrame = state.gpuFrames.Percentiles();
    state.published.pacingSampleCount = state.frameIntervals.Size();
 
@@ -370,8 +377,13 @@ Profiler::Initialize(uint32_t graphicsQueueFamilyIndex)
    queryPoolInfo.queryType = VK_QUERY_TYPE_TIMESTAMP;
    queryPoolInfo.queryCount = TIMESTAMP_QUERY_COUNT;
 
-   VK_CHECK(vkCreateQueryPool(Data::vk_device, &queryPoolInfo, nullptr, &state.timestampQueryPool),
-            "failed to create timestamp query pool!");
+   state.timestampQueryPools.resize(MAX_FRAMES_IN_FLIGHT);
+   state.timestampResultsReady.resize(MAX_FRAMES_IN_FLIGHT, false);
+   for (auto& queryPool : state.timestampQueryPools)
+   {
+      VK_CHECK(vkCreateQueryPool(Data::vk_device, &queryPoolInfo, nullptr, &queryPool),
+               "failed to create timestamp query pool!");
+   }
 }
 
 void
@@ -476,7 +488,7 @@ Profiler::DrawDebugUi(float valueColumn)
       pacingHeader();
       pacingRow("Frame interval", diagnostics.frameInterval);
       pacingRow("Present interval", diagnostics.presentInterval);
-      pacingRow("Queue idle", diagnostics.queueIdle);
+      pacingRow("Fence wait", diagnostics.fenceWait);
       pacingRow("GPU frame", diagnostics.gpuFrame);
 
       ImGui::Spacing();
@@ -514,7 +526,8 @@ void
 Profiler::EndUniformUpdate()
 {
    auto& state = State();
-   state.uniformUpdateMs = ElapsedMilliseconds(state.uniformUpdateStart, FrameClock::now());
+   state.currentFrame.uniformUpdateMs =
+      ElapsedMilliseconds(state.uniformUpdateStart, FrameClock::now());
 }
 
 void
@@ -527,7 +540,7 @@ void
 Profiler::EndGuiUpload()
 {
    auto& state = State();
-   state.guiUploadMs = ElapsedMilliseconds(state.guiUploadStart, FrameClock::now());
+   state.currentFrame.guiUploadMs = ElapsedMilliseconds(state.guiUploadStart, FrameClock::now());
 }
 
 void
@@ -545,7 +558,26 @@ Profiler::BeginFrame(uint32_t currentFrameIndex)
          ElapsedMilliseconds(*state.previousFrameStart, frameStart);
    }
    state.previousFrameStart = frameStart;
-   state.currentFrame.gpuDiagnostics = ReadGpuDiagnostics();
+}
+
+void
+Profiler::EndFenceWait()
+{
+   auto& frame = State().currentFrame;
+   frame.fenceWaitEnd = FrameClock::now();
+   frame.gpuDiagnostics = ReadGpuDiagnostics(frame.currentFrameIndex);
+}
+
+void
+Profiler::BeginImageAcquire()
+{
+   State().currentFrame.imageAcquireStart = FrameClock::now();
+}
+
+void
+Profiler::BeginCommandRecording()
+{
+   State().currentFrame.commandRecordStart = FrameClock::now();
 }
 
 void
@@ -564,15 +596,45 @@ Profiler::EndImageAcquire(VkResult result, uint32_t imageIndex)
 }
 
 void
+Profiler::BeginFenceReset()
+{
+   State().currentFrame.fenceResetStart = FrameClock::now();
+}
+
+void
+Profiler::EndFenceReset()
+{
+   State().currentFrame.fenceResetEnd = FrameClock::now();
+}
+
+void
+Profiler::BeginOffscreenSubmit()
+{
+   State().currentFrame.offscreenSubmitStart = FrameClock::now();
+}
+
+void
 Profiler::EndOffscreenSubmit()
 {
    State().currentFrame.offscreenSubmitEnd = FrameClock::now();
 }
 
 void
+Profiler::BeginSceneSubmit()
+{
+   State().currentFrame.sceneSubmitStart = FrameClock::now();
+}
+
+void
 Profiler::EndSceneSubmit()
 {
    State().currentFrame.sceneSubmitEnd = FrameClock::now();
+}
+
+void
+Profiler::BeginPresent()
+{
+   State().currentFrame.presentStart = FrameClock::now();
 }
 
 void
@@ -590,26 +652,34 @@ Profiler::EndPresent(VkResult result)
 }
 
 void
-Profiler::EndFrame()
+Profiler::EndFrame(bool gpuTimestampsComplete)
 {
    auto& state = State();
    auto& frame = state.currentFrame;
    const auto frameEnd = FrameClock::now();
-   state.timestampResultsReady = true;
+   state.timestampResultsReady.at(frame.currentFrameIndex) = gpuTimestampsComplete;
+   if (frame.presentEnd == FrameClock::time_point{})
+   {
+      frame.presentResult = VK_NOT_READY;
+   }
 
-   const float queueIdleMs = ElapsedMilliseconds(frame.presentEnd, frameEnd);
+   const float fenceWaitMs = ElapsedMilliseconds(frame.frameStart, frame.fenceWaitEnd);
+   const float presentMs = frame.presentEnd == FrameClock::time_point{}
+                              ? 0.0f
+                              : ElapsedMilliseconds(frame.presentStart, frame.presentEnd);
    const auto& gpu = frame.gpuDiagnostics;
    PublishFrameDiagnostics(
       {
          .totalMs = ElapsedMilliseconds(frame.frameStart, frameEnd),
-         .imageAcquireMs = ElapsedMilliseconds(frame.commandRecordEnd, frame.imageAcquireEnd),
-         .guiUploadMs = state.guiUploadMs,
-         .commandRecordMs = ElapsedMilliseconds(frame.frameStart, frame.commandRecordEnd),
-         .uniformUpdateMs = state.uniformUpdateMs,
-         .queueSubmitMs = ElapsedMilliseconds(frame.imageAcquireEnd, frame.offscreenSubmitEnd)
-                          + ElapsedMilliseconds(frame.offscreenSubmitEnd, frame.sceneSubmitEnd),
-         .presentMs = ElapsedMilliseconds(frame.sceneSubmitEnd, frame.presentEnd),
-         .queueIdleMs = queueIdleMs,
+         .fenceWaitMs = fenceWaitMs,
+         .imageAcquireMs = ElapsedMilliseconds(frame.imageAcquireStart, frame.imageAcquireEnd),
+         .fenceResetMs = ElapsedMilliseconds(frame.fenceResetStart, frame.fenceResetEnd),
+         .guiUploadMs = frame.guiUploadMs,
+         .commandRecordMs = ElapsedMilliseconds(frame.commandRecordStart, frame.commandRecordEnd),
+         .uniformUpdateMs = frame.uniformUpdateMs,
+         .queueSubmitMs = ElapsedMilliseconds(frame.offscreenSubmitStart, frame.offscreenSubmitEnd)
+                          + ElapsedMilliseconds(frame.sceneSubmitStart, frame.sceneSubmitEnd),
+         .presentMs = presentMs,
          .gpuFrameMs = gpu.gpuFrameMs,
          .gpuOffscreenMs = gpu.gpuOffscreenMs,
          .gpuShadowMs = gpu.gpuShadowMs,
@@ -626,23 +696,24 @@ Profiler::EndFrame()
       {
          .frameIntervalMs = frame.frameIntervalMs,
          .presentIntervalMs = frame.presentIntervalMs,
-         .queueIdleMs = queueIdleMs,
+         .fenceWaitMs = fenceWaitMs,
          .gpuFrameMs =
             gpu.gpuSampleCount > 0 ? std::optional< float >(gpu.gpuFrameMs) : std::nullopt,
       });
 }
 
 void
-Profiler::ResetGpuTimestamps(VkCommandBuffer commandBuffer)
+Profiler::ResetGpuTimestamps(VkCommandBuffer commandBuffer, uint32_t frameIndex)
 {
-   vkCmdResetQueryPool(commandBuffer, State().timestampQueryPool, 0, TIMESTAMP_QUERY_COUNT);
+   vkCmdResetQueryPool(commandBuffer, State().timestampQueryPools.at(frameIndex), 0,
+                       TIMESTAMP_QUERY_COUNT);
 }
 
 void
 Profiler::WriteGpuTimestamp(VkCommandBuffer commandBuffer, VkPipelineStageFlagBits pipelineStage,
-                            TimestampQuery query)
+                            TimestampQuery query, uint32_t frameIndex)
 {
-   vkCmdWriteTimestamp(commandBuffer, pipelineStage, State().timestampQueryPool,
+   vkCmdWriteTimestamp(commandBuffer, pipelineStage, State().timestampQueryPools.at(frameIndex),
                        TimestampQueryIndex(query));
 }
 

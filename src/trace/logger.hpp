@@ -71,11 +71,11 @@ class Logger
 
 #if defined(_WIN32)
    static const inline std::unordered_map< TYPE, WORD, LoggerTypeHash > s_typeStyles = {
-      {TYPE::TRACE, FOREGROUND_BLUE},
-      {TYPE::DEBUG, FOREGROUND_GREEN | FOREGROUND_BLUE},
-      {TYPE::INFO, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED},
-      {TYPE::WARNING, FOREGROUND_GREEN | FOREGROUND_RED},
-      {TYPE::FATAL, FOREGROUND_RED}};
+      {TYPE::TRACE, WORD{FOREGROUND_BLUE}},
+      {TYPE::DEBUG, WORD{FOREGROUND_GREEN | FOREGROUND_BLUE}},
+      {TYPE::INFO, WORD{FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED}},
+      {TYPE::WARNING, WORD{FOREGROUND_GREEN | FOREGROUND_RED}},
+      {TYPE::FATAL, WORD{FOREGROUND_RED}}};
 #else
    // NOLINTNEXTLINE
    static const inline std::unordered_map< TYPE, fmt::color, LoggerTypeHash > s_typeStyles = {

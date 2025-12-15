@@ -34,10 +34,10 @@ class Gui
    UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene);
 
    static bool
-   UpdateBuffers();
+   UpdateBuffers(uint32_t frameIndex);
 
    static void
-   Render(VkCommandBuffer commandBuffer);
+   Render(VkCommandBuffer commandBuffer, uint32_t frameIndex);
 
  private:
    static void
@@ -60,10 +60,10 @@ class Gui
    inline static uint32_t m_subpass = 0;
 
    inline static PushConstBlock m_pushConstant = {};
-   inline static render::Buffer m_vertexBuffer = {};
-   inline static render::Buffer m_indexBuffer = {};
-   inline static int32_t m_vertexCount = 0;
-   inline static int32_t m_indexCount = 0;
+   inline static std::vector< render::Buffer > m_vertexBuffers = {};
+   inline static std::vector< render::Buffer > m_indexBuffers = {};
+   inline static std::vector< int32_t > m_vertexCounts = {};
+   inline static std::vector< int32_t > m_indexCounts = {};
 };
 
 } // namespace shady::app::gui

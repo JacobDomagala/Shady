@@ -126,6 +126,11 @@ Gui::Init(const glm::ivec2& windowSize)
 
    SetStyle();
 
+   m_vertexBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+   m_indexBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+   m_vertexCounts.resize(MAX_FRAMES_IN_FLIGHT);
+   m_indexCounts.resize(MAX_FRAMES_IN_FLIGHT);
+
    PrepareResources();
    PreparePipeline(Data::m_pipelineCache, Data::m_renderPass);
 }
@@ -137,7 +142,7 @@ Gui::Shutdown()
 }
 
 bool
-Gui::UpdateBuffers()
+Gui::UpdateBuffers(uint32_t frameIndex)
 {
    ImDrawData* imDrawData = ImGui::GetDrawData();
    bool updateCmdBuffers = false;
@@ -159,38 +164,42 @@ Gui::UpdateBuffers()
       return false;
    }
 
-   // Vertex buffer
-   if ((m_vertexBuffer.GetBuffer() == VK_NULL_HANDLE)
-       || (m_vertexCount != imDrawData->TotalVtxCount))
-   {
-      m_vertexBuffer.Unmap();
-      m_vertexBuffer.Destroy();
+   auto& vertexBuffer = m_vertexBuffers.at(frameIndex);
+   auto& indexBuffer = m_indexBuffers.at(frameIndex);
+   auto& vertexCount = m_vertexCounts.at(frameIndex);
+   auto& indexCount = m_indexCounts.at(frameIndex);
 
-      m_vertexBuffer = Buffer::CreateBuffer(vertexBufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-                                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-      m_vertexCount = imDrawData->TotalVtxCount;
-      m_vertexBuffer.Map();
+   // Vertex buffer
+   if ((vertexBuffer.GetBuffer() == VK_NULL_HANDLE) || (vertexCount != imDrawData->TotalVtxCount))
+   {
+      vertexBuffer.Unmap();
+      vertexBuffer.Destroy();
+
+      vertexBuffer = Buffer::CreateBuffer(vertexBufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+      vertexCount = imDrawData->TotalVtxCount;
+      vertexBuffer.Map();
 
       updateCmdBuffers = true;
    }
 
    // Index buffer
-   if ((m_indexBuffer.GetBuffer() == VK_NULL_HANDLE) || (m_indexCount < imDrawData->TotalIdxCount))
+   if ((indexBuffer.GetBuffer() == VK_NULL_HANDLE) || (indexCount < imDrawData->TotalIdxCount))
    {
-      m_indexBuffer.Unmap();
-      m_indexBuffer.Destroy();
+      indexBuffer.Unmap();
+      indexBuffer.Destroy();
 
-      m_indexBuffer = Buffer::CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-                                           VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-      m_indexCount = imDrawData->TotalIdxCount;
-      m_indexBuffer.Map();
+      indexBuffer = Buffer::CreateBuffer(indexBufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+      indexCount = imDrawData->TotalIdxCount;
+      indexBuffer.Map();
 
       updateCmdBuffers = true;
    }
 
    // Upload data
-   auto* vtxDst = static_cast< ImDrawVert* >(m_vertexBuffer.GetMappedMemory());
-   auto* idxDst = static_cast< ImDrawIdx* >(m_indexBuffer.GetMappedMemory());
+   auto* vtxDst = static_cast< ImDrawVert* >(vertexBuffer.GetMappedMemory());
+   auto* idxDst = static_cast< ImDrawIdx* >(indexBuffer.GetMappedMemory());
 
    for (int cmd_idx = 0; cmd_idx < imDrawData->CmdListsCount; cmd_idx++)
    {
@@ -204,8 +213,8 @@ Gui::UpdateBuffers()
    }
 
    // Flush to make writes visible to GPU
-   m_vertexBuffer.Flush();
-   m_indexBuffer.Flush();
+   vertexBuffer.Flush();
+   indexBuffer.Flush();
 
    return updateCmdBuffers;
 }
@@ -320,15 +329,11 @@ Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
    ImGui::End();
    ImGui::Render();
 
-   Profiler::BeginGuiUpload();
-   UpdateBuffers();
-   Profiler::EndGuiUpload();
-
    return io_handle.WantCaptureMouse;
 }
 
 void
-Gui::Render(VkCommandBuffer commandBuffer)
+Gui::Render(VkCommandBuffer commandBuffer, uint32_t frameIndex)
 {
    auto* imDrawData = ImGui::GetDrawData();
    int32_t vertexOffset = 0;
@@ -350,9 +355,12 @@ Gui::Render(VkCommandBuffer commandBuffer)
    vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0,
                       sizeof(PushConstBlock), &m_pushConstant);
 
+   auto& vertexBuffer = m_vertexBuffers.at(frameIndex);
+   auto& indexBuffer = m_indexBuffers.at(frameIndex);
+
    std::array< VkDeviceSize, 1 > offsets = {0};
-   vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.GetBuffer(), offsets.data());
-   vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.GetBuffer(), 0, VK_INDEX_TYPE_UINT16);
+   vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer.GetBuffer(), offsets.data());
+   vkCmdBindIndexBuffer(commandBuffer, indexBuffer.GetBuffer(), 0, VK_INDEX_TYPE_UINT16);
 
    for (int32_t i = 0; i < imDrawData->CmdListsCount; i++)
    {

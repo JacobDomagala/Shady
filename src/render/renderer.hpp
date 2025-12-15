@@ -22,7 +22,7 @@ class Renderer
    CreateRenderPipeline();
 
    static void
-   Draw();
+   Draw(const scene::Camera* camera, const scene::Light* light);
 
    static void
    MeshLoaded(const std::vector< Vertex >& vertices, const std::vector< uint32_t >& indicies,
@@ -75,9 +75,6 @@ class Renderer
    CreateUniformBuffers();
 
    static void
-   CreateDepthResources();
-
-   static void
    CreateColorResources();
 
  private:
@@ -99,13 +96,9 @@ class Renderer
    inline static std::vector< VkCommandBuffer > m_commandBuffers = {};
 
    inline static std::vector< VkSemaphore > m_imageAvailableSemaphores = {};
+   inline static std::vector< VkSemaphore > m_offscreenFinishedSemaphores = {};
    inline static std::vector< VkSemaphore > m_renderFinishedSemaphores = {};
    inline static std::vector< VkFence > m_inFlightFences = {};
-   inline static std::vector< VkFence > m_imagesInFlight = {};
-
-   inline static VkImage m_depthImage = {};
-   inline static VkDeviceMemory m_depthImageMemory = {};
-   inline static VkImageView m_depthImageView = {};
 
    inline static VkImage m_colorImage = {};
    inline static VkDeviceMemory m_colorImageMemory = {};

@@ -31,8 +31,7 @@ Scene::GetLight()
 void
 Scene::Render(int32_t /*windowWidth*/, int32_t /*windowHeight*/)
 {
-   render::Renderer::UpdateUniformBuffer(m_camera.get(), m_light.get());
-   render::Renderer::Draw();
+   render::Renderer::Draw(m_camera.get(), m_light.get());
 }
 
 void

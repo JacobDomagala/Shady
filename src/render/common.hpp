@@ -46,7 +46,9 @@ struct Data
    inline static VkDevice vk_device = {};
    inline static VkPhysicalDevice vk_physicalDevice = VK_NULL_HANDLE;
    inline static VkQueue vk_graphicsQueue = {};
+   inline static uint32_t vk_graphicQueueIndex = {};
    inline static VkQueue m_presentQueue = {};
+   inline static uint32_t vk_presentQueueIndex = {};
    inline static VkExtent2D m_swapChainExtent = {};
    inline static VkExtent2D m_deferredExtent = {};
    inline static VkCommandPool vk_commandPool = {};

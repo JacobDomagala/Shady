@@ -539,9 +539,7 @@ Renderer::CreateRenderPipeline()
    CreateColorResources();
    CreateFramebuffers();
    CreatePipelineCache();
-   const auto queueFamilyIndices = findQueueFamilies(Data::vk_physicalDevice, Data::m_surface);
-   Profiler::Initialize(queueFamilyIndices.graphicsFamily.value());
-
+   Profiler::Initialize(Data::vk_graphicQueueIndex);
 
    DeferredPipeline::Initialize(Data::m_renderPass, Data::m_pipelineCache);
    app::gui::Gui::Init({Data::m_swapChainExtent.width, Data::m_swapChainExtent.height});
@@ -779,10 +777,12 @@ Renderer::CreateDevice()
 
    // indices.isComplete() is called in findQueueFamilies
    // NOLINTBEGIN
-   const std::set< uint32_t > uniqueQueueFamilies = {indices.graphicsFamily.value(),
-                                                     indices.presentFamily.value()};
+   Data::vk_graphicQueueIndex = indices.graphicsFamily.value();
+   Data::vk_presentQueueIndex = indices.presentFamily.value();
    // NOLINTEND
 
+   const std::set< uint32_t > uniqueQueueFamilies = {Data::vk_graphicQueueIndex,
+                                                     Data::vk_presentQueueIndex};
    const auto queuePriority = 1.0f;
    for (auto queueFamily : uniqueQueueFamilies)
    {
@@ -825,12 +825,8 @@ Renderer::CreateDevice()
    VK_CHECK(vkCreateDevice(Data::vk_physicalDevice, &createInfo, nullptr, &Data::vk_device),
             "failed to create logical device!");
 
-   // indices.isComplete() is called in findQueueFamilies
-
-   // NOLINTBEGIN
-   vkGetDeviceQueue(Data::vk_device, indices.graphicsFamily.value(), 0, &Data::vk_graphicsQueue);
-   vkGetDeviceQueue(Data::vk_device, indices.presentFamily.value(), 0, &Data::m_presentQueue);
-   // NOLINTEND
+   vkGetDeviceQueue(Data::vk_device, Data::vk_graphicQueueIndex, 0, &Data::vk_graphicsQueue);
+   vkGetDeviceQueue(Data::vk_device, Data::vk_presentQueueIndex, 0, &Data::m_presentQueue);
 }
 
 void
@@ -861,15 +857,10 @@ Renderer::CreateSwapchain(GLFWwindow* windowHandle)
    swapChainCreateInfo.imageArrayLayers = 1;
    swapChainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-   const auto indicesSecond = findQueueFamilies(Data::vk_physicalDevice, Data::m_surface);
-   // indices.isComplete() is called in findQueueFamilies
+   const std::array< uint32_t, 2 > queueFamilyIndices = {Data::vk_graphicQueueIndex,
+                                                         Data::vk_presentQueueIndex};
 
-   // NOLINTBEGIN
-   const std::array< uint32_t, 2 > queueFamilyIndices = {indicesSecond.graphicsFamily.value(),
-                                                         indicesSecond.presentFamily.value()};
-   // NOLINTEND
-
-   if (indicesSecond.graphicsFamily != indicesSecond.presentFamily)
+   if (Data::vk_graphicsQueue != Data::m_presentQueue)
    {
       swapChainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
       swapChainCreateInfo.queueFamilyIndexCount = 2;
@@ -1014,17 +1005,10 @@ Renderer::CreateFramebuffers()
 void
 Renderer::CreateCommandPool()
 {
-   QueueFamilyIndices queueFamilyIndicesTwo =
-      findQueueFamilies(Data::vk_physicalDevice, Data::m_surface);
-
    VkCommandPoolCreateInfo poolInfo{};
    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
    poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-
-   // indices.isComplete() is called in findQueueFamilies
-
-   // NOLINTNEXTLINE
-   poolInfo.queueFamilyIndex = queueFamilyIndicesTwo.graphicsFamily.value();
+   poolInfo.queueFamilyIndex = Data::vk_graphicQueueIndex;
 
    VK_CHECK(vkCreateCommandPool(Data::vk_device, &poolInfo, nullptr, &Data::vk_commandPool),
             "failed to create command pool!");

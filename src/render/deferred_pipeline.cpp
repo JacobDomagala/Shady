@@ -595,63 +595,63 @@ DeferredPipeline::SetupDescriptorSet()
       std::array< VkWriteDescriptorSet, 9 > descriptorWrites{};
       const VkDescriptorSet descriptorSet = m_descriptorSets.at(frame);
 
-      descriptorWrites[0] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+      descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
       descriptorWrites[0].dstSet = descriptorSet;
       descriptorWrites[0].dstBinding = 0;
       descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
       descriptorWrites[0].descriptorCount = 1;
       descriptorWrites[0].pBufferInfo = &uniformBufferInfo;
 
-      descriptorWrites[1] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+      descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
       descriptorWrites[1].dstSet = descriptorSet;
       descriptorWrites[1].dstBinding = 1;
       descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
       descriptorWrites[1].descriptorCount = 1;
       descriptorWrites[1].pBufferInfo = &instanceBufferInfo;
 
-      descriptorWrites[2] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+      descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
       descriptorWrites[2].dstSet = descriptorSet;
       descriptorWrites[2].dstBinding = 2;
       descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
       descriptorWrites[2].descriptorCount = 1;
       descriptorWrites[2].pImageInfo = &samplerInfo;
 
-      descriptorWrites[3] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+      descriptorWrites[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
       descriptorWrites[3].dstSet = descriptorSet;
       descriptorWrites[3].dstBinding = 3;
       descriptorWrites[3].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
       descriptorWrites[3].descriptorCount = static_cast< uint32_t >(descriptorImageInfos.size());
       descriptorWrites[3].pImageInfo = descriptorImageInfos.data();
 
-      descriptorWrites[4] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+      descriptorWrites[4].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
       descriptorWrites[4].dstSet = descriptorSet;
       descriptorWrites[4].dstBinding = 4;
       descriptorWrites[4].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
       descriptorWrites[4].descriptorCount = 1;
       descriptorWrites[4].pImageInfo = &albedoImageInfo;
 
-      descriptorWrites[5] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+      descriptorWrites[5].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
       descriptorWrites[5].dstSet = descriptorSet;
       descriptorWrites[5].dstBinding = 5;
       descriptorWrites[5].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
       descriptorWrites[5].descriptorCount = 1;
       descriptorWrites[5].pImageInfo = &positionsImageInfo;
 
-      descriptorWrites[6] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+      descriptorWrites[6].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
       descriptorWrites[6].dstSet = descriptorSet;
       descriptorWrites[6].dstBinding = 6;
       descriptorWrites[6].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
       descriptorWrites[6].descriptorCount = 1;
       descriptorWrites[6].pImageInfo = &normalsImageInfo;
 
-      descriptorWrites[7] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+      descriptorWrites[7].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
       descriptorWrites[7].dstSet = descriptorSet;
       descriptorWrites[7].dstBinding = 7;
       descriptorWrites[7].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
       descriptorWrites[7].descriptorCount = 1;
       descriptorWrites[7].pBufferInfo = &m_compositionBuffer.at(frame).GetDescriptor();
 
-      descriptorWrites[8] = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+      descriptorWrites[8].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
       descriptorWrites[8].dstSet = descriptorSet;
       descriptorWrites[8].dstBinding = 8;
       descriptorWrites[8].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;

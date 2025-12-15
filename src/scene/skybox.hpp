@@ -4,6 +4,7 @@
 
 #include <glm/glm.hpp>
 #include <string_view>
+#include <vector>
 #include <vulkan/vulkan.h>
 
 namespace shady::scene {
@@ -36,13 +37,13 @@ class Skybox
     *  Draw commands for 'commandBuffer'
     */
    void
-   Draw(VkCommandBuffer commandBuffer);
+   Draw(VkCommandBuffer commandBuffer, int32_t frame);
 
    /*
     *  Update uniform buffer (SkyboxUBO)
     */
    void
-   UpdateBuffers(const scene::Camera* camera);
+   UpdateBuffers(const scene::Camera* camera, int32_t frame);
 
  private:
    void
@@ -61,7 +62,7 @@ class Skybox
    VkPipeline m_pipeline = {};
    VkPipelineLayout m_pipelineLayout = {};
    VkDescriptorSetLayout m_descriptorSetLayout = {};
-   VkDescriptorSet m_descriptorSet = {};
+   std::vector< VkDescriptorSet > m_descriptorSets = {};
    VkDescriptorPool m_descriptorPool = {};
 
    VkImage m_image = {};
@@ -71,7 +72,7 @@ class Skybox
 
    render::Buffer m_vertexBuffer = {};
    render::Buffer m_indexBuffer = {};
-   render::Buffer m_uniformBuffer = {};
+   std::vector< render::Buffer > m_uniformBuffers = {};
 };
 
 } // namespace shady::scene

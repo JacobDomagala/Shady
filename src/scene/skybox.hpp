@@ -37,13 +37,13 @@ class Skybox
     *  Draw commands for 'commandBuffer'
     */
    void
-   Draw(VkCommandBuffer commandBuffer, int32_t frame);
+   Draw(VkCommandBuffer commandBuffer, uint32_t frame);
 
    /*
     *  Update uniform buffer (SkyboxUBO)
     */
    void
-   UpdateBuffers(const scene::Camera* camera, int32_t frame);
+   UpdateBuffers(const scene::Camera* camera, uint32_t frame);
 
  private:
    void

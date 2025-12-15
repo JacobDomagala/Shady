@@ -112,7 +112,7 @@ void
 Skybox::CreateBuffers()
 {
    m_uniformBuffers.reserve(MAX_FRAMES_IN_FLIGHT);
-   for (int32_t frame = 0; frame < MAX_FRAMES_IN_FLIGHT; ++frame)
+   for (uint32_t frame = 0; frame < MAX_FRAMES_IN_FLIGHT; ++frame)
    {
       m_uniformBuffers.push_back(Buffer::CreateBuffer(
          sizeof(SkyboxUBO), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
@@ -123,7 +123,7 @@ Skybox::CreateBuffers()
 }
 
 void
-Skybox::UpdateBuffers(const scene::Camera* camera, int32_t frame)
+Skybox::UpdateBuffers(const scene::Camera* camera, uint32_t frame)
 {
    SkyboxUBO buffer{};
    buffer.viewProjection = camera->GetProjection() * glm::mat4(glm::mat3(camera->GetView()));
@@ -192,7 +192,7 @@ Skybox::CreateDescriptorSet()
    descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
    descriptorImageInfo.imageView = m_imageView;
 
-   for (int32_t frame = 0; frame < MAX_FRAMES_IN_FLIGHT; ++frame)
+   for (uint32_t frame = 0; frame < MAX_FRAMES_IN_FLIGHT; ++frame)
    {
       VkDescriptorBufferInfo bufferInfo{};
       bufferInfo.buffer = m_uniformBuffers.at(frame).GetBuffer();
@@ -329,7 +329,7 @@ Skybox::CreatePipeline(VkRenderPass renderPass)
 }
 
 void
-Skybox::Draw(VkCommandBuffer commandBuffer, int32_t frame)
+Skybox::Draw(VkCommandBuffer commandBuffer, uint32_t frame)
 {
    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1,
                            &m_descriptorSets.at(frame), 0, nullptr);

@@ -23,7 +23,7 @@ class DeferredPipeline
    Initialize(VkRenderPass mainRenderPass, VkPipelineCache pipelineCache);
 
    static VkDescriptorSet&
-   GetDescriptorSet(int32_t frame);
+   GetDescriptorSet(uint32_t frame);
 
    static VkPipelineLayout
    GetPipelineLayout();
@@ -32,16 +32,16 @@ class DeferredPipeline
    GetCompositionPipeline();
 
    static void
-   DrawSkybox(VkCommandBuffer commandBuffer, int32_t frame);
+   DrawSkybox(VkCommandBuffer commandBuffer, uint32_t frame);
 
    static VkCommandBuffer&
-   GetOffscreenCmdBuffer(int32_t frame);
+   GetOffscreenCmdBuffer(uint32_t frame);
 
    static void
-   UpdateDeferred(const scene::Camera* camera, const scene::Light* light, int32_t frame);
+   UpdateDeferred(const scene::Camera* camera, const scene::Light* light, uint32_t frame);
 
    static void
-   BuildDeferredCommandBuffer(int32_t frame);
+   BuildDeferredCommandBuffer(uint32_t frame);
 
  private:
    static void
@@ -68,10 +68,10 @@ class DeferredPipeline
 
    static void
    UpdateUniformBufferComposition(const scene::Camera* camera, const scene::Light* light,
-                                  int32_t frame);
+                                   uint32_t frame);
 
    static void
-   UpdateUniformBufferOffscreen(const scene::Camera* camera, int32_t frame);
+   UpdateUniformBufferOffscreen(const scene::Camera* camera, uint32_t frame);
 
    inline static VkRenderPass m_mainRenderPass = {};
    inline static VkPipeline m_graphicsPipeline = {};

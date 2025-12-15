@@ -44,7 +44,7 @@ struct UboComposition
 };
 
 VkDescriptorSet&
-DeferredPipeline::GetDescriptorSet(int32_t frame)
+DeferredPipeline::GetDescriptorSet(uint32_t frame)
 {
    return m_descriptorSets.at(frame);
 }
@@ -56,7 +56,7 @@ DeferredPipeline::GetCompositionPipeline()
 }
 
 void
-DeferredPipeline::DrawSkybox(VkCommandBuffer commandBuffer, int32_t frame)
+DeferredPipeline::DrawSkybox(VkCommandBuffer commandBuffer, uint32_t frame)
 {
    m_skybox.Draw(commandBuffer, frame);
 }
@@ -69,7 +69,7 @@ DeferredPipeline::GetPipelineLayout()
 
 // Update matrices used for the offscreen rendering of the scene
 void
-DeferredPipeline::UpdateUniformBufferOffscreen(const scene::Camera* camera, int32_t frame)
+DeferredPipeline::UpdateUniformBufferOffscreen(const scene::Camera* camera, uint32_t frame)
 {
    UboOffscreenVS uboOffscreenVS{};
    uboOffscreenVS.projection = camera->GetProjection();
@@ -81,7 +81,7 @@ DeferredPipeline::UpdateUniformBufferOffscreen(const scene::Camera* camera, int3
 }
 
 VkCommandBuffer&
-DeferredPipeline::GetOffscreenCmdBuffer(int32_t frame)
+DeferredPipeline::GetOffscreenCmdBuffer(uint32_t frame)
 {
    return m_offscreenCommandBuffer.at(frame);
 }
@@ -89,7 +89,7 @@ DeferredPipeline::GetOffscreenCmdBuffer(int32_t frame)
 // Update lights and parameters passed to the composition shaders
 void
 DeferredPipeline::UpdateUniformBufferComposition(const scene::Camera* camera,
-                                                 const scene::Light* light, int32_t frame)
+                                                 const scene::Light* light, uint32_t frame)
 {
    UboComposition uboComposition{};
    uboComposition.light.position = glm::vec4(light->GetPosition(), 1.0f);
@@ -121,7 +121,7 @@ DeferredPipeline::Initialize(VkRenderPass mainRenderPass, VkPipelineCache pipeli
    SetupDescriptorPool();
    SetupDescriptorSet();
 
-   for (int32_t frame = 0; frame < MAX_FRAMES_IN_FLIGHT; ++frame)
+   for (uint32_t frame = 0; frame < MAX_FRAMES_IN_FLIGHT; ++frame)
    {
       BuildDeferredCommandBuffer(frame);
    }
@@ -157,7 +157,7 @@ DeferredPipeline::PrepareUniformBuffers()
    m_offscreenBuffer.reserve(MAX_FRAMES_IN_FLIGHT);
    m_compositionBuffer.reserve(MAX_FRAMES_IN_FLIGHT);
 
-   for (int32_t frame = 0; frame < MAX_FRAMES_IN_FLIGHT; ++frame)
+   for (uint32_t frame = 0; frame < MAX_FRAMES_IN_FLIGHT; ++frame)
    {
       m_offscreenBuffer.push_back(Buffer::CreateBuffer(
          sizeof(UboOffscreenVS), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
@@ -557,7 +557,7 @@ DeferredPipeline::SetupDescriptorSet()
    VkDescriptorImageInfo samplerInfo = {};
    samplerInfo.sampler = sampler;
 
-   for (int32_t frame = 0; frame < MAX_FRAMES_IN_FLIGHT; ++frame)
+   for (uint32_t frame = 0; frame < MAX_FRAMES_IN_FLIGHT; ++frame)
    {
       const auto& offscreenFramebuffer = m_offscreenFrameBuffers.at(frame);
       const auto& shadowMap = m_shadowMaps.at(frame);
@@ -664,7 +664,7 @@ DeferredPipeline::SetupDescriptorSet()
 }
 
 void
-DeferredPipeline::BuildDeferredCommandBuffer(int32_t frame)
+DeferredPipeline::BuildDeferredCommandBuffer(uint32_t frame)
 {
    auto& shadowMap = m_shadowMaps.at(frame);
    auto& offscreenFramebuffer = m_offscreenFrameBuffers.at(frame);
@@ -818,7 +818,7 @@ DeferredPipeline::BuildDeferredCommandBuffer(int32_t frame)
 
 void
 DeferredPipeline::UpdateDeferred(const scene::Camera* camera, const scene::Light* light,
-                                 int32_t frame)
+                                  uint32_t frame)
 {
    UpdateUniformBufferOffscreen(camera, frame);
    UpdateUniformBufferComposition(camera, light, frame);

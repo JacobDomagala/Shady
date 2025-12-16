@@ -11,6 +11,8 @@ class Texture
 {
  public:
    Texture(TextureType type, std::string_view textureName);
+   Texture(TextureType type, std::string_view textureName, const uint8_t* pixels, uint32_t width,
+           uint32_t height);
 
    Texture() = default;
 
@@ -19,6 +21,10 @@ class Texture
 
    void
    CreateTextureImage(TextureType type, std::string_view textureName);
+
+   void
+   CreateTextureImage(TextureType type, std::string_view textureName, const uint8_t* pixels,
+                      uint32_t width, uint32_t height);
 
    static std::pair< VkImage, VkDeviceMemory >
    CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels,
@@ -41,7 +47,7 @@ class Texture
                          uint32_t mipLevels, bool cubemap = false);
 
    static void
-   CopyBufferToImage(VkImage image, uint32_t texWidth, uint32_t texHeight, uint8_t* data);
+   CopyBufferToImage(VkImage image, uint32_t texWidth, uint32_t texHeight, const uint8_t* data);
 
    static void
    CopyBufferToCubemapImage(VkImage image, uint32_t texWidth, uint32_t texHeight, uint8_t* data);
@@ -63,7 +69,7 @@ class Texture
    TransitionImageLayout(VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
 
    void
-   CopyBufferToImage(uint8_t* data);
+   CopyBufferToImage(const uint8_t* data);
 
  private:
    TextureType m_type = {};
@@ -90,6 +96,10 @@ class TextureLibrary
 
    static void
    CreateTexture(TextureType type, const std::string& textureName);
+
+   static void
+   CreateTexture(TextureType type, const std::string& textureName, const uint8_t* pixels,
+                 uint32_t width, uint32_t height);
 
    static void
    Clear();

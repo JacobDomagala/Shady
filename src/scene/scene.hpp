@@ -17,7 +17,7 @@ class Scene
    GetCamera();
 
    void
-   AddModel(const std::string& fileName, LoadFlags additionalFlags = LoadFlags::None);
+   AddModel(const std::string& fileName);
 
    Light&
    GetLight();

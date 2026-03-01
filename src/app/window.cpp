@@ -3,10 +3,15 @@
 #include "utils/assert.hpp"
 
 #include <GLFW/glfw3.h>
-#include <functional>
-#include <glm/gtc/matrix_transform.hpp>
+#include <cstdint>
+#include <string>
+#include <glm/mat4x4.hpp>
+#include <glm/vec2.hpp>
 
-
+namespace {
+constexpr int32_t CURSOR_ICON_SIZE = 16;
+constexpr float HALF_SCREEN_DIVISOR = 2.0F;
+} // namespace
 
 namespace shady::app {
 
@@ -34,8 +39,8 @@ Window::Create(int32_t width, int32_t height, const std::string& title)
    utils::Assert(glfwInit(), "GLFW Init failed!");
 
    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-   glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
-   glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+   glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
+   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
    m_pWindow = glfwCreateWindow(m_width, m_height, title.c_str(), nullptr, nullptr);
 
@@ -57,8 +62,8 @@ void
 Window::SetIcon(const std::string& /*file*/)
 {
    GLFWimage image;
-   image.width = 16;
-   image.height = 16;
+   image.width = CURSOR_ICON_SIZE;
+   image.height = CURSOR_ICON_SIZE;
    // image.pixels = TextureLibrary::GetTexture(file)->GetData();
 
    auto* cursor = glfwCreateCursor(&image, 0, 0);
@@ -100,8 +105,8 @@ Window::GetCursorScreenPosition(const glm::mat4& /*projectionMatrix*/)
 {
    auto cursorPos = GetCursor();
 
-   cursorPos -=
-      glm::vec2((static_cast< float >(m_width) / 2.0f), (static_cast< float >(m_height) / 2.0f));
+   cursorPos -= glm::vec2(static_cast< float >(m_width) / HALF_SCREEN_DIVISOR,
+                          static_cast< float >(m_height) / HALF_SCREEN_DIVISOR);
    // glm::vec2 tmpCursor = projectionMatrix * glm::vec4(cursorPos, 0.0f, 1.0f);
 
    return cursorPos;
@@ -112,8 +117,8 @@ Window::GetCursorNormalized()
 {
    auto cursorPos = GetCursor();
 
-   const glm::vec2 centerOfScreen(static_cast< float >(m_width) / 2.0f,
-                            static_cast< float >(m_height) / 2.0f);
+   const glm::vec2 centerOfScreen(static_cast< float >(m_width) / HALF_SCREEN_DIVISOR,
+                                  static_cast< float >(m_height) / HALF_SCREEN_DIVISOR);
 
    cursorPos -= centerOfScreen;
    cursorPos /= centerOfScreen;

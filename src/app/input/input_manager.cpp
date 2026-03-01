@@ -3,7 +3,8 @@
 #include "trace/logger.hpp"
 
 #include <GLFW/glfw3.h>
-#include <iostream>
+#include <cstdint>
+#include <glm/vec2.hpp>
 
 namespace shady::app::input {
 

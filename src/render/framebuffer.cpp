@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <fmt/format.h>
 #include <numeric>
-
+#include <iterator>
 
 namespace shady::render {
 

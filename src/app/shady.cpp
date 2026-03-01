@@ -58,7 +58,7 @@ Shady::OnUpdate()
    auto& light = m_currentScene.GetLight();
 
    constexpr auto cameraMoveBy = 0.05f;
-   constexpr auto lightMoveBy = 0.02f;
+   constexpr auto lightMoveBy = 0.6f;
 
    /*
     *  Camera movement

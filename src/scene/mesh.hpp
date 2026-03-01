@@ -11,6 +11,7 @@ namespace shady::scene {
 class Mesh
 {
  public:
+   Mesh() = default;
    Mesh(const std::string& name, std::vector< render::Vertex >&& vertices,
         std::vector< uint32_t >&& indices, render::TextureMaps&& textures);
 

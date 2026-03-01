@@ -7,6 +7,7 @@
 #include "vertex.hpp"
 
 #include <algorithm>
+#include <iterator>
 #include <fmt/format.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -269,8 +270,8 @@ DeferredPipeline::PreparePipelines()
    rasterizer.rasterizerDiscardEnable = VK_FALSE;
    rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
    rasterizer.lineWidth = 1.0f;
+
    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-   // rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
    rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
    rasterizer.depthBiasEnable = VK_FALSE;
 
@@ -383,6 +384,7 @@ DeferredPipeline::PreparePipelines()
 
    pipelineInfo.pVertexInputState = &vertexInputInfo;
    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+   rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
 
    // Offscreen pipeline
    std::tie(vertexInfo, fragmentInfo) =

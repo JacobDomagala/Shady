@@ -1,6 +1,6 @@
 #pragma once
 
-#include "logger.hpp"
+#include <utility>
 
 namespace shady::trace {
 

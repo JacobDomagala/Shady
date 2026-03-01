@@ -33,6 +33,7 @@ Texture::Texture(TextureType type, std::string_view textureName)
 void
 Texture::CreateTextureImage(TextureType type, std::string_view textureName)
 {
+   m_name = textureName;
    m_type = type;
    auto textureData = utils::FileManager::ReadTexture(textureName);
    m_width = textureData.m_size.x;
@@ -254,6 +255,11 @@ TextureType
 Texture::GetType() const
 {
    return m_type;
+}
+
+[[nodiscard]] std::string
+Texture::GetName() const {
+   return m_name;
 }
 
 void

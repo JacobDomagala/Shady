@@ -7,28 +7,17 @@
 #include <string>
 #include <vector>
 
-#include <assimp/material.h>
-#include <assimp/postprocess.h>
-
 #include <glm/glm.hpp>
 
-struct aiNode;
-struct aiMesh;
-struct aiScene;
 
 namespace shady::scene {
 
-enum class LoadFlags
-{
-   None = 0,
-   FlipUV = aiProcess_FlipUVs
-};
 
 class Model
 {
  public:
    Model() = default;
-   explicit Model(const std::string& path, LoadFlags additionalAssimpFlags = LoadFlags::None);
+   explicit Model(const std::string& path);
 
    void
    ScaleModel(const glm::vec3& scale);
@@ -56,10 +45,13 @@ class Model
 
  private:
    void
-   ProcessNode(aiNode* node, const aiScene* scene);
+   ProcessNode(void* node, const void* scene);
 
    [[nodiscard]] Mesh
-   ProcessMesh(aiMesh* mesh, const aiScene* scene);
+   ProcessMesh(void* mesh, const void* scene);
+
+   void
+   LoadModel(const std::string& path);
 
  private:
    std::vector< Mesh > meshes_ = {};

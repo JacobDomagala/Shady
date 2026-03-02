@@ -142,7 +142,7 @@ class Framebuffer
    int32_t m_width = {};
    int32_t m_height = {};
    VkFramebuffer m_framebuffer = {};
-   std::vector< FramebufferAttachment > m_attachments = {};
+   std::vector< FramebufferAttachment > m_attachments;
    VkRenderPass m_renderPass = {};
    VkSampler m_sampler = {};
 };

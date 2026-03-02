@@ -4,9 +4,8 @@
 
 #include <GLFW/glfw3.h>
 #include <cstdint>
+#include <glm/glm.hpp>
 #include <string>
-#include <glm/mat4x4.hpp>
-#include <glm/vec2.hpp>
 
 namespace {
 constexpr int32_t CURSOR_ICON_SIZE = 16;

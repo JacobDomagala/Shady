@@ -4,6 +4,7 @@
 #include "trace/formatter_types.hpp"
 
 #include <fmt/color.h>
+#include <cstdint>
 #include <string_view>
 #include <unordered_map>
 
@@ -13,7 +14,7 @@
 
 namespace shady::trace {
 
-enum class TYPE
+enum class TYPE : std::uint8_t
 {
    TRACE,
    DEBUG,

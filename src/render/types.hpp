@@ -1,12 +1,13 @@
 #pragma once
 
 #include <array>
+#include <cstdint>
 #include <string>
 #include <glm/glm.hpp>
 
 namespace shady::render {
 
-enum class TextureType
+enum class TextureType : std::uint8_t
 {
    DIFFUSE_MAP = 0,
    SPECULAR_MAP = 1,

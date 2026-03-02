@@ -12,7 +12,7 @@ struct Event
    Event& operator=(Event&&) = default;
    virtual ~Event() = default;
 
-   enum class EventType
+   enum class EventType : std::uint8_t
    {
       KEY,
       MOUSE_BUTTON,

@@ -54,7 +54,7 @@ class Model
    LoadModel(const std::string& path);
 
  private:
-   std::vector< Mesh > meshes_ = {};
+   std::vector< Mesh > meshes_;
    uint32_t numVertices_ = 0;
    uint32_t numIndices_ = 0;
 

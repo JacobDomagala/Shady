@@ -119,6 +119,9 @@ Shady::KeyCallback(const input::KeyEvent& event)
          m_active = false;
       }
       break;
+
+      default:
+         break;
    }
 }
 

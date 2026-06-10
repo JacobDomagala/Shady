@@ -13,7 +13,9 @@ ubo;
 struct BufferData
 {
    mat4 modelMat;
-   vec4 textureIDs;
+   ivec4 textureIDs;
+   vec4 baseColorFactor;
+   vec4 materialFactors;
 };
 
 layout(std430, set = 0, binding = 1) readonly buffer Block
@@ -24,18 +26,20 @@ layout(std430, set = 0, binding = 1) readonly buffer Block
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec3 a_normal;
 layout(location = 2) in vec2 a_texCoord;
-layout(location = 3) in vec3 a_tangent;
+layout(location = 3) in vec4 a_tangent;
 
 layout(location = 0) out VS_OUT
 {
    vec3 fPosition;
    vec2 fTexCoord;
    vec3 fNorm;
-   vec3 fTangent;
+   vec4 fTangent;
 
-   flat int fDiffSampl;
+   flat int fBaseColorSampl;
+   flat int fMaterialSampl;
    flat int fNormSampl;
-   flat int fSpecSampl;
+   flat vec4 fBaseColorFactor;
+   flat vec3 fMaterialFactors;
 }
 vs_out;
 
@@ -45,18 +49,20 @@ main()
    BufferData bufferData = Transforms[gl_InstanceIndex];
    mat4 modelMat = bufferData.modelMat;
 
-   gl_Position = ubo.u_viewProjectionMat * modelMat * vec4(a_position, 1.0f);
+   gl_Position = ubo.u_viewProjectionMat * modelMat * vec4(a_position, 1.0);
 
+   vs_out.fPosition = vec3(modelMat * vec4(a_position, 1.0));
    vs_out.fTexCoord = a_texCoord;
 
-   // Vertex position in world space
-   vs_out.fPosition = vec3(modelMat * vec4(a_position, 1.0f));
+   mat3 normalMatrix = transpose(inverse(mat3(modelMat)));
+   float orientation = determinant(mat3(modelMat)) < 0.0 ? -1.0 : 1.0;
+   vs_out.fNorm = normalMatrix * normalize(a_normal);
+   vs_out.fTangent =
+      vec4(mat3(modelMat) * normalize(a_tangent.xyz), a_tangent.w * orientation);
 
-   // Normal in world space
-   mat3 mNormal = transpose(inverse(mat3(modelMat)));
-   vs_out.fNorm = mNormal * normalize(a_normal);
-   vs_out.fTangent = mNormal * normalize(a_tangent);
-   vs_out.fDiffSampl = int(bufferData.textureIDs.x);
-   vs_out.fNormSampl = int(bufferData.textureIDs.y);
-   vs_out.fSpecSampl = int(bufferData.textureIDs.z);
+   vs_out.fBaseColorSampl = bufferData.textureIDs.x;
+   vs_out.fMaterialSampl = bufferData.textureIDs.y;
+   vs_out.fNormSampl = bufferData.textureIDs.z;
+   vs_out.fBaseColorFactor = bufferData.baseColorFactor;
+   vs_out.fMaterialFactors = bufferData.materialFactors.xyz;
 }

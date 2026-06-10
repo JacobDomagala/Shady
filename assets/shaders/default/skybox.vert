@@ -1,3 +1,16 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:9b775e237fec0324a38d978faafc654e335ac6e6c99648e094985c4f711b2e9c
-size 266
+#version 460
+
+layout (location = 0) in vec3 inPos;
+
+layout (binding = 0) uniform UBO
+{
+	mat4 view_projection;
+} ubo;
+
+layout (location = 0) out vec3 outUVW;
+
+void main()
+{
+	outUVW = inPos;
+	gl_Position = ubo.view_projection * vec4(inPos.xyz, 1.0);
+}

@@ -35,4 +35,4 @@ class Shader
    CreateShader(VkDevice device, std::string_view vertex, std::string_view fragment);
 };
 
-} // namespace shady::render::vulkan
+} // namespace shady::render

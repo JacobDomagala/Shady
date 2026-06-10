@@ -6,12 +6,12 @@
 
 #include <cstdint>
 #include <functional>
+#include <glm/gtc/quaternion.hpp>
 #include <limits>
-#include <string_view>
 #include <stdexcept>
+#include <string_view>
 #include <utility>
 #include <vector>
-#include <glm/gtc/quaternion.hpp>
 
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
@@ -20,37 +20,6 @@
 #include <tiny_gltf.h>
 
 namespace shady::scene {
-
-// static render::TextureType
-// GetShadyTexFromAssimpTex(aiTextureType assimpTex)
-// {
-//    switch (assimpTex)
-//    {
-//       case aiTextureType_SPECULAR:
-//       case aiTextureType_UNKNOWN:
-//          return render::TextureType::SPECULAR_MAP;
-//       case aiTextureType_NORMALS:
-//          return render::TextureType::NORMAL_MAP;
-//       case aiTextureType_DIFFUSE:
-//       default: {
-//          return render::TextureType::DIFFUSE_MAP;
-//       }
-//    }
-// }
-
-// static void
-// LoadMaterialTextures(aiMaterial* mat, aiTextureType type, render::TextureMaps& textures)
-// {
-//    for (uint32_t i = 0; i < mat->GetTextureCount(type); i++)
-//    {
-//       aiString str;
-//       mat->GetTexture(type, i, &str);
-
-//       const auto texType = GetShadyTexFromAssimpTex(type);
-//       render::TextureLibrary::CreateTexture(texType, str.C_Str());
-//       textures[static_cast< uint32_t >(texType)] = str.C_Str();
-//    }
-// }
 
 void
 Model::LoadModel(const std::string& file)
@@ -88,6 +57,11 @@ Model::LoadModel(const std::string& file)
       const render::Texture* baseColor{};
       const render::Texture* normal{};
       const render::Texture* mr{};
+      glm::vec4 baseColorFactor = glm::vec4(1.0F);
+      float metallicFactor = 1.0F;
+      float roughnessFactor = 1.0F;
+      float normalScale = 1.0F;
+      bool alphaBlend = false;
    };
 
    std::vector< MaterialGPU > gpuMaterials(model.materials.size());
@@ -102,7 +76,7 @@ Model::LoadModel(const std::string& file)
       const auto imgIdx = checkedIndex(tex.source, model.images.size(), "image");
       const auto& img = model.images[imgIdx];
       std::string id = img.uri.empty() ? ("embed_" + std::to_string(imgIdx)) : img.uri;
-      
+
       render::TextureLibrary::CreateTexture(type, id);
       return &render::TextureLibrary::GetTexture(id);
    };
@@ -110,11 +84,23 @@ Model::LoadModel(const std::string& file)
    for (size_t i = 0; i < model.materials.size(); ++i)
    {
       const auto& m = model.materials[i];
-          
+
       gpuMaterials[i].baseColor =
          texOf(m.pbrMetallicRoughness.baseColorTexture.index, render::TextureType::DIFFUSE_MAP);
-      gpuMaterials[i].mr = texOf(m.pbrMetallicRoughness.metallicRoughnessTexture.index, render::TextureType::SPECULAR_MAP);
+      gpuMaterials[i].mr = texOf(m.pbrMetallicRoughness.metallicRoughnessTexture.index,
+                                 render::TextureType::METALLIC_ROUGHNESS_MAP);
       gpuMaterials[i].normal = texOf(m.normalTexture.index, render::TextureType::NORMAL_MAP);
+
+      for (size_t channel = 0; channel < m.pbrMetallicRoughness.baseColorFactor.size(); ++channel)
+      {
+         gpuMaterials[i].baseColorFactor[static_cast< glm::length_t >(channel)] =
+            static_cast< float >(m.pbrMetallicRoughness.baseColorFactor[channel]);
+      }
+      gpuMaterials[i].metallicFactor = static_cast< float >(m.pbrMetallicRoughness.metallicFactor);
+      gpuMaterials[i].roughnessFactor =
+         static_cast< float >(m.pbrMetallicRoughness.roughnessFactor);
+      gpuMaterials[i].normalScale = static_cast< float >(m.normalTexture.scale);
+      gpuMaterials[i].alphaBlend = m.alphaMode == "BLEND";
    }
 
    auto fetch = [&](const tinygltf::Accessor& acc, const tinygltf::Model& m) -> const uint8_t* {
@@ -189,18 +175,16 @@ Model::LoadModel(const std::string& file)
       auto local = glm::mat4(1.0F);
       if (node.translation.size() == 3)
       {
-         local = glm::translate(local,
-                                glm::vec3(static_cast< float >(node.translation[0]),
-                                          static_cast< float >(node.translation[1]),
-                                          static_cast< float >(node.translation[2])));
+         local = glm::translate(local, glm::vec3(static_cast< float >(node.translation[0]),
+                                                 static_cast< float >(node.translation[1]),
+                                                 static_cast< float >(node.translation[2])));
       }
 
       if (node.rotation.size() == 4)
       {
-         const glm::quat rotation(static_cast< float >(node.rotation[3]),
-                                  static_cast< float >(node.rotation[0]),
-                                  static_cast< float >(node.rotation[1]),
-                                  static_cast< float >(node.rotation[2]));
+         const glm::quat rotation(
+            static_cast< float >(node.rotation[3]), static_cast< float >(node.rotation[0]),
+            static_cast< float >(node.rotation[1]), static_cast< float >(node.rotation[2]));
          local *= glm::mat4_cast(rotation);
       }
 
@@ -230,18 +214,27 @@ Model::LoadModel(const std::string& file)
          return;
       }
 
-      render::TextureMaps texts = {};
-      texts[0] = "196.png";
-      texts[1] = texts[0];
-      texts[2] = texts[0];
+      render::MaterialData material{};
 
       if (prim.material >= 0)
       {
          const auto materialIdx = checkedIndex(prim.material, gpuMaterials.size(), "material");
          const auto& materials = gpuMaterials[materialIdx];
-         texts[0] = materials.baseColor ? materials.baseColor->GetName() : texts[0];
-         texts[1] = materials.mr ? materials.mr->GetName() : texts[0];
-         texts[2] = materials.normal ? materials.normal->GetName() : texts[0];
+         if (materials.alphaBlend)
+         {
+            trace::Logger::Warn(
+               "Skipping blended primitive in mesh {}: deferred transparency is unsupported",
+               meshName);
+            return;
+         }
+
+         material.textures[0] = materials.baseColor ? materials.baseColor->GetName() : "";
+         material.textures[1] = materials.mr ? materials.mr->GetName() : "";
+         material.textures[2] = materials.normal ? materials.normal->GetName() : "";
+         material.baseColorFactor = materials.baseColorFactor;
+         material.metallicFactor = materials.metallicFactor;
+         material.roughnessFactor = materials.roughnessFactor;
+         material.normalScale = materials.normalScale;
       }
 
       const auto posAccessorIdx =
@@ -273,6 +266,8 @@ Model::LoadModel(const std::string& file)
 
       std::vector< render::Vertex > vertices(posAcc.count);
       const glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(worldMat)));
+      const glm::mat3 tangentMat = glm::mat3(worldMat);
+      const float tangentOrientation = glm::determinant(tangentMat) < 0.0F ? -1.0F : 1.0F;
 
       for (size_t i = 0; i < posAcc.count; ++i)
       {
@@ -302,11 +297,12 @@ Model::LoadModel(const std::string& file)
          if (tanAcc != nullptr)
          {
             const auto tangent = readVec4(*tanAcc, i);
-            v.m_tangent = glm::normalize(normalMat * glm::vec3(tangent));
+            v.m_tangent = glm::vec4(glm::normalize(tangentMat * glm::vec3(tangent)),
+                                    tangent.w * tangentOrientation);
          }
          else
          {
-            v.m_tangent = glm::vec3(0.0F);
+            v.m_tangent = glm::vec4(0.0F);
          }
 
          vertices[i] = v;
@@ -322,8 +318,8 @@ Model::LoadModel(const std::string& file)
             checkedIndex(idxAcc.bufferView, model.bufferViews.size(), "indices bufferView");
          const auto& idxView = model.bufferViews[idxViewIdx];
          const auto* idxPtr = fetch(idxAcc, model);
-         const auto componentSize = tinygltf::GetComponentSizeInBytes(
-            static_cast< uint32_t >(idxAcc.componentType));
+         const auto componentSize =
+            tinygltf::GetComponentSizeInBytes(static_cast< uint32_t >(idxAcc.componentType));
          utils::Assert(componentSize > 0, "Invalid component size for index accessor");
 
          const auto rawStride = idxAcc.ByteStride(idxView);
@@ -331,8 +327,8 @@ Model::LoadModel(const std::string& file)
          {
             utils::Assert(rawStride > 0, "Invalid byte stride for index accessor");
          }
-         const auto stride =
-            rawStride == 0 ? static_cast< size_t >(componentSize) : static_cast< size_t >(rawStride);
+         const auto stride = rawStride == 0 ? static_cast< size_t >(componentSize)
+                                            : static_cast< size_t >(rawStride);
 
          indices.resize(idxAcc.count);
          for (size_t i = 0; i < idxAcc.count; ++i)
@@ -366,31 +362,31 @@ Model::LoadModel(const std::string& file)
 
       numVertices_ += static_cast< uint32_t >(vertices.size());
       numIndices_ += static_cast< uint32_t >(indices.size());
-      meshes_.emplace_back(meshName, std::move(vertices), std::move(indices), std::move(texts));
+      meshes_.emplace_back(meshName, std::move(vertices), std::move(indices), std::move(material));
    };
 
-   std::function< void(int, const glm::mat4&) > processNode =
-      [&](int nodeIndex, const glm::mat4& parentMat) {
-         const auto nodeIdx = checkedIndex(nodeIndex, model.nodes.size(), "node");
-         const auto& node = model.nodes[nodeIdx];
-         const auto worldMat = parentMat * nodeLocalMat(node);
+   std::function< void(int, const glm::mat4&) > processNode = [&](int nodeIndex,
+                                                                  const glm::mat4& parentMat) {
+      const auto nodeIdx = checkedIndex(nodeIndex, model.nodes.size(), "node");
+      const auto& node = model.nodes[nodeIdx];
+      const auto worldMat = parentMat * nodeLocalMat(node);
 
-         if (node.mesh >= 0)
+      if (node.mesh >= 0)
+      {
+         const auto meshIdx = checkedIndex(node.mesh, model.meshes.size(), "mesh");
+         const auto& mesh = model.meshes[meshIdx];
+         for (const auto& prim : mesh.primitives)
          {
-            const auto meshIdx = checkedIndex(node.mesh, model.meshes.size(), "mesh");
-            const auto& mesh = model.meshes[meshIdx];
-            for (const auto& prim : mesh.primitives)
-            {
-               processPrimitive(prim, worldMat, mesh.name);
-            }
-            trace::Logger::Debug("Loaded mesh {} from node {}", mesh.name, node.name);
+            processPrimitive(prim, worldMat, mesh.name);
          }
+         trace::Logger::Debug("Loaded mesh {} from node {}", mesh.name, node.name);
+      }
 
-         for (const auto childNode : node.children)
-         {
-            processNode(childNode, worldMat);
-         }
-      };
+      for (const auto childNode : node.children)
+      {
+         processNode(childNode, worldMat);
+      }
+   };
 
    int sceneIndex = model.defaultScene;
    if (sceneIndex < 0)
@@ -492,145 +488,34 @@ Model::GetMeshes()
    return meshes_;
 }
 
-void
-Model::ProcessNode(void*, const void*)
-{
-   // for (uint32_t i = 0; i < node->mNumMeshes; i++)
-   // {
-   //    // The node object only contains indices to index the actual objects in the scene.
-   //    // The scene contains all the data, node is just to keep stuff organized (like relations
-   //    // between nodes).
-   //    auto* mesh = scene->mMeshes[node->mMeshes[i]];
-   //    meshes_.push_back(ProcessMesh(mesh, scene));
-   // }
-
-   // trace::Logger::Debug("Processed node: {}", node->mName.C_Str());
-
-   // // After we've processed all of the meshes (if any) we then recursively process each of the
-   // // children nodes
-   // for (uint32_t i = 0; i < node->mNumChildren; i++)
-   // {
-   //    ProcessNode(node->mChildren[i], scene);
-   // }
-}
-
-Mesh
-Model::ProcessMesh(void*, const void*)
-{
-   // Data to fill
-   // std::vector< render::Vertex > vertices;
-
-   // // Walk through each of the mesh's vertices
-   // for (uint32_t i = 0; i < mesh->mNumVertices; i++)
-   // {
-   //    render::Vertex vertex{};
-   //    glm::vec3 vector{};
-   //    // Positions
-   //    vector.x = mesh->mVertices[i].x;
-   //    vector.y = mesh->mVertices[i].y;
-   //    vector.z = mesh->mVertices[i].z;
-   //    vertex.m_position = vector;
-
-   //    // Normals
-   //    if (mesh->HasNormals())
-   //    {
-   //       vector.x = mesh->mNormals[i].x;
-   //       vector.y = mesh->mNormals[i].y;
-   //       vector.z = mesh->mNormals[i].z;
-   //       vertex.m_normal = vector;
-   //    }
-
-   //    // Texture Coordinates
-   //    if (mesh->HasTextureCoords(0))
-   //    {
-   //       glm::vec2 vec{};
-   //       // A vertex can contain up to 8 different texture coordinates. We thus make the
-   //       assumption
-   //       // that we won't use models where a vertex can have multiple texture coordinates so we
-   //       // always take the first set (0).
-   //       vec.x = mesh->mTextureCoords[0][i].x;
-   //       vec.y = mesh->mTextureCoords[0][i].y;
-   //       vertex.m_texCoords = vec;
-   //    }
-   //    else
-   //    {
-   //       vertex.m_texCoords = glm::vec2(0.0f, 0.0f);
-   //    }
-
-   //    if (mesh->HasTangentsAndBitangents())
-   //    {
-   //       // Tangents
-   //       vector.x = mesh->mTangents[i].x;
-   //       vector.y = mesh->mTangents[i].y;
-   //       vector.z = mesh->mTangents[i].z;
-   //       vertex.m_tangent = vector;
-   //    }
-
-   //    vertices.push_back(vertex);
-   // }
-
-   // std::vector< uint32_t > indices{};
-   // // Now walk through each of the mesh's faces (a face is a mesh its triangle) and retrieve the
-   // // corresponding vertex indices.
-   // for (uint32_t i = 0; i < mesh->mNumFaces; i++)
-   // {
-   //    const auto face = mesh->mFaces[i];
-   //    // Retrieve all indices of the face and store them in the indices vector
-   //    for (uint32_t j = 0; j < face.mNumIndices; j++)
-   //    {
-   //       indices.push_back(face.mIndices[j]);
-   //    }
-   // }
-
-   // // render::TexturePtrVec textures;
-   // render::TextureMaps textures = {};
-
-   // // Process materials
-   // aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-   // LoadMaterialTextures(material, aiTextureType_DIFFUSE, textures);
-   // // LoadMaterialTextures(material, aiTextureType_SPECULAR, textures);
-   // LoadMaterialTextures(material, aiTextureType_UNKNOWN, textures);
-   // LoadMaterialTextures(material, aiTextureType_NORMALS, textures);
-
-
-   // trace::Logger::Debug("Processed mesh: {}", mesh->mName.C_Str());
-   // numVertices_ += mesh->mNumVertices;
-   // numIndices_ += static_cast< uint32_t >(indices.size());
-
-   // // NOLINTNEXTLINE
-   // return Mesh(mesh->mName.C_Str(), std::move(vertices), std::move(indices),
-   // std::move(textures));
-   return {};
-}
-
 std::unique_ptr< Model >
 Model::CreatePlane()
 {
    auto model = std::make_unique< Model >();
    model->GetMeshes().push_back({"Plane",
                                  {{
-                                     {25.0F, -0.5F, 25.0F}, // Position
-                                     {0.0F, 1.0F, 0.0F},    // Normal
-                                     {25.0F, 0.0F},         // Texcoord
-                                     {50.0F, 0.0F, 0.0F}    // Tangent
+                                     {25.0F, -0.5F, 25.0F},    // Position
+                                     {0.0F, 1.0F, 0.0F},       // Normal
+                                     {25.0F, 0.0F},            // Texcoord
+                                     {50.0F, 0.0F, 0.0F, 1.0F} // Tangent
                                   },
                                   {
-                                     {-25.0F, -0.5F, 25.0F}, // Position
-                                     {0.0F, 1.0F, 0.0F},     // Normal
-                                     {0.0F, 0.0F},           // Texcoord
-                                     {50.0F, 0.0F, 0.0F}     // Tangent
+                                     {-25.0F, -0.5F, 25.0F},   // Position
+                                     {0.0F, 1.0F, 0.0F},       // Normal
+                                     {0.0F, 0.0F},             // Texcoord
+                                     {50.0F, 0.0F, 0.0F, 1.0F} // Tangent
                                   },
                                   {
-                                     {-25.0F, -0.5F, -25.0F}, // Position
-                                     {0.0F, 1.0F, 0.0F},      // Normal
-                                     {0.0F, 25.0F},           // Texcoord
-                                     {50.0F, 0.0F, 0.0F}      // Tangent
+                                     {-25.0F, -0.5F, -25.0F},  // Position
+                                     {0.0F, 1.0F, 0.0F},       // Normal
+                                     {0.0F, 25.0F},            // Texcoord
+                                     {50.0F, 0.0F, 0.0F, 1.0F} // Tangent
                                   },
                                   {
-                                     {25.0F, -0.5F, -25.0F}, // Position
-                                     {0.0F, 1.0F, 0.0F},     // Normal
-                                     {25.0F, 25.0F},         // Texcoord
-                                     {50.0F, 0.0F, 0.0F}     // Tangent
+                                     {25.0F, -0.5F, -25.0F},   // Position
+                                     {0.0F, 1.0F, 0.0F},       // Normal
+                                     {25.0F, 25.0F},           // Texcoord
+                                     {50.0F, 0.0F, 0.0F, 1.0F} // Tangent
                                   }},
                                  {2, 1, 0, 3, 2, 0}, // Indices
                                  {}});

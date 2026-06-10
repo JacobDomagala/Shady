@@ -13,7 +13,7 @@ namespace shady::scene {
 using namespace render;
 
 void
-Skybox::LoadCubeMap(std::string_view skyboxName)
+Skybox::LoadCubeMap(std::string_view skyboxName, VkRenderPass renderPass)
 {
    // Positions
    std::array< float, 24 > vertices = {
@@ -57,7 +57,7 @@ Skybox::LoadCubeMap(std::string_view skyboxName)
    CreateBuffers();
    CreateImageAndSampler(skyboxName);
    CreateDescriptorSet();
-   CreatePipeline();
+   CreatePipeline(renderPass);
 }
 
 void
@@ -213,7 +213,7 @@ Skybox::CreateDescriptorSet()
 }
 
 void
-Skybox::CreatePipeline()
+Skybox::CreatePipeline(VkRenderPass renderPass)
 {
    VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -247,24 +247,17 @@ Skybox::CreatePipeline()
    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
    inputAssembly.primitiveRestartEnable = VK_FALSE;
 
-   VkViewport viewport{};
-   viewport.x = 0.0f;
-   viewport.y = 0.0f;
-   viewport.width = static_cast< float >(Data::m_deferredExtent.width);
-   viewport.height = static_cast< float >(Data::m_deferredExtent.height);
-   viewport.minDepth = 0.0f;
-   viewport.maxDepth = 1.0f;
-
-   VkRect2D scissor{};
-   scissor.offset = {0, 0};
-   scissor.extent = Data::m_deferredExtent;
-
    VkPipelineViewportStateCreateInfo viewportState{};
    viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
    viewportState.viewportCount = 1;
-   viewportState.pViewports = &viewport;
    viewportState.scissorCount = 1;
-   viewportState.pScissors = &scissor;
+
+   const std::array< VkDynamicState, 2 > dynamicStates = {VK_DYNAMIC_STATE_VIEWPORT,
+                                                          VK_DYNAMIC_STATE_SCISSOR};
+   VkPipelineDynamicStateCreateInfo dynamicState{};
+   dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+   dynamicState.dynamicStateCount = static_cast< uint32_t >(dynamicStates.size());
+   dynamicState.pDynamicStates = dynamicStates.data();
 
    VkPipelineRasterizationStateCreateInfo rasterizer{};
    rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -290,26 +283,17 @@ Skybox::CreatePipeline()
    depthStencil.depthBoundsTestEnable = VK_FALSE;
    depthStencil.stencilTestEnable = VK_FALSE;
 
-   std::array< VkPipelineColorBlendAttachmentState, 3 > colorBlendAttachment{};
-
-   colorBlendAttachment[0].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT
-                                            | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-   colorBlendAttachment[0].blendEnable = VK_FALSE;
-
-   colorBlendAttachment[1].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT
-                                            | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-   colorBlendAttachment[1].blendEnable = VK_FALSE;
-
-   colorBlendAttachment[2].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT
-                                            | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-   colorBlendAttachment[2].blendEnable = VK_FALSE;
+   VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+   colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT
+                                         | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+   colorBlendAttachment.blendEnable = VK_FALSE;
 
    VkPipelineColorBlendStateCreateInfo colorBlending{};
    colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
    colorBlending.logicOpEnable = VK_FALSE;
    colorBlending.logicOp = VK_LOGIC_OP_COPY;
-   colorBlending.attachmentCount = 3;
-   colorBlending.pAttachments = colorBlendAttachment.data();
+   colorBlending.attachmentCount = 1;
+   colorBlending.pAttachments = &colorBlendAttachment;
    colorBlending.blendConstants[0] = 0.0f;
    colorBlending.blendConstants[1] = 0.0f;
    colorBlending.blendConstants[2] = 0.0f;
@@ -326,8 +310,9 @@ Skybox::CreatePipeline()
    pipelineInfo.pMultisampleState = &multisampling;
    pipelineInfo.pDepthStencilState = &depthStencil;
    pipelineInfo.pColorBlendState = &colorBlending;
+   pipelineInfo.pDynamicState = &dynamicState;
    pipelineInfo.layout = m_pipelineLayout;
-   pipelineInfo.renderPass = Data::m_deferredRenderPass;
+   pipelineInfo.renderPass = renderPass;
    pipelineInfo.subpass = 0;
    pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
@@ -343,7 +328,7 @@ Skybox::Draw(VkCommandBuffer commandBuffer)
                            &m_descriptorSet, 0, nullptr);
    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 
-   std::array<VkDeviceSize, 1> offsets = {0};
+   std::array< VkDeviceSize, 1 > offsets = {0};
    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &m_vertexBuffer.GetBuffer(), offsets.data());
    vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer.GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
 

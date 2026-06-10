@@ -81,7 +81,7 @@ Window::Resize(int32_t newWidth, int32_t newHeight)
 void
 Window::Clear()
 {
-  //  glfwMakeContextCurrent(m_pWindow);
+   //  glfwMakeContextCurrent(m_pWindow);
 
    // render::RenderCommand::Clear();
 }

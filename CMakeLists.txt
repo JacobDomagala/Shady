@@ -9,10 +9,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_PATH})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${OUTPUT_PATH})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_PATH})
 
-set(ASSETS_PATH ${CMAKE_CURRENT_SOURCE_DIR}/assets)
-set(SHADERS_PATH ${ASSETS_PATH}/shaders)
-
-
 add_definitions( -DCMAKE_ROOT_DIR="${CMAKE_CURRENT_SOURCE_DIR}" )
 
 # Link this 'library' to use the warnings specified in CompilerWarnings.cmake
@@ -73,9 +69,10 @@ target_link_libraries_system (${PROJECT_NAME} PRIVATE fmt::fmt glfw imgui::imgui
 target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE FMT_USE_CONSTEXPR_CONSTRUCTION=0)
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    FMT_USE_CONSTEXPR_CONSTRUCTION=0
+    GLM_FORCE_DEPTH_ZERO_TO_ONE
+)
 target_compile_options(${PROJECT_NAME} PRIVATE -O0 -g3 -fno-omit-frame-pointer)
-# include(cmake/compile_shaders.cmake)
-# compile_shader(SOURCE_FILE "${SHADERS_PATH}/default/default.vert"  OUTPUT_FILE_NAME "${SHADERS_PATH}/default/vert.spv")
-# compile_shader(SOURCE_FILE "${SHADERS_PATH}/default/default.frag"  OUTPUT_FILE_NAME "${SHADERS_PATH}/default/frag.spv")
 
+include(cmake/compile_shaders.cmake)

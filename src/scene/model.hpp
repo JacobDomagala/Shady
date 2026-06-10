@@ -40,16 +40,8 @@ class Model
    [[nodiscard]] static std::unique_ptr< Model >
    CreatePlane();
 
-   //  void
-   //  ReloadModel();
 
  private:
-   void
-   ProcessNode(void* node, const void* scene);
-
-   [[nodiscard]] Mesh
-   ProcessMesh(void* mesh, const void* scene);
-
    void
    LoadModel(const std::string& path);
 

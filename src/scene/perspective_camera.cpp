@@ -12,7 +12,7 @@ PerspectiveCamera::PerspectiveCamera(const glm::mat4& projection, const glm::vec
 
 PerspectiveCamera::PerspectiveCamera(float fieldOfView, float aspectRatio, float nearClip,
                                      float farClip, const glm::vec3& position)
-   : Camera(glm::perspective(fieldOfView, aspectRatio, nearClip, farClip), position)
+   : Camera(glm::perspective(glm::radians(fieldOfView), aspectRatio, nearClip, farClip), position)
 {
 }
 

@@ -4,6 +4,10 @@ function(add_clang_format_target target)
         set(clang_format_hints)
 
         if(WIN32)
+            list(APPEND clang_format_hints
+                "$ENV{ProgramFiles}/LLVM/bin"
+                "$ENV{ProgramFiles\(x86\)}/LLVM/bin")
+
             file(GLOB clang_format_visual_studio_paths
                 "$ENV{ProgramFiles}/Microsoft Visual Studio/*/*/VC/Tools/Llvm/x64/bin")
             list(APPEND clang_format_hints ${clang_format_visual_studio_paths})

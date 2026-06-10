@@ -3,8 +3,8 @@
 #include "time/utils.hpp"
 #include "trace/formatter_types.hpp"
 
-#include <fmt/color.h>
 #include <cstdint>
+#include <fmt/color.h>
 #include <string_view>
 #include <unordered_map>
 
@@ -37,27 +37,27 @@ class Logger
  public:
    template < typename... Args >
    static constexpr void
-   Trace(fmt::format_string<Args ...> buffer, Args&&... args);
+   Trace(fmt::format_string< Args... > buffer, Args&&... args);
 
    template < typename... Args >
    static constexpr void
-   Debug(fmt::format_string<Args ...> buffer, Args&&... args);
+   Debug(fmt::format_string< Args... > buffer, Args&&... args);
 
    template < typename... Args >
    static constexpr void
-   Info(fmt::format_string<Args ...> buffer, Args&&... args);
+   Info(fmt::format_string< Args... > buffer, Args&&... args);
 
    template < typename... Args >
    static constexpr void
-   Warn(fmt::format_string<Args ...> buffer, Args&&... args);
+   Warn(fmt::format_string< Args... > buffer, Args&&... args);
 
    template < typename... Args >
    static constexpr void
-   Fatal(fmt::format_string<Args ...> buffer, Args&&... args);
+   Fatal(fmt::format_string< Args... > buffer, Args&&... args);
 
    template < TYPE LogLevel, typename... Args >
    static constexpr void
-   Log(fmt::format_string<Args ...> buffer, Args&&... args);
+   Log(fmt::format_string< Args... > buffer, Args&&... args);
 
    static void
    SetType(TYPE newType);
@@ -77,7 +77,7 @@ class Logger
       {TYPE::WARNING, FOREGROUND_GREEN | FOREGROUND_RED},
       {TYPE::FATAL, FOREGROUND_RED}};
 #else
-   //NOLINTNEXTLINE
+   // NOLINTNEXTLINE
    static const inline std::unordered_map< TYPE, fmt::color, LoggerTypeHash > s_typeStyles = {
       {TYPE::TRACE, fmt::color::azure},
       {TYPE::DEBUG, fmt::color::blanched_almond},

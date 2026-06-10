@@ -58,7 +58,7 @@ Texture::CreateTextureImage(TextureType type, std::string_view textureName)
    CopyBufferToImage(textureData.m_bytes.get());
 
    // transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
-   GenerateMipmaps(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB, static_cast< int32_t >(m_width),
+   GenerateMipmaps(m_textureImage, m_format, static_cast< int32_t >(m_width),
                    static_cast< int32_t >(m_height), m_mips);
 }
 
@@ -124,7 +124,7 @@ Texture::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspe
 }
 
 VkSampler
-Texture::CreateSampler(uint32_t mipLevels)
+Texture::CreateSampler(uint32_t /*mipLevels*/)
 {
    VkSampler sampler{};
 
@@ -146,7 +146,7 @@ Texture::CreateSampler(uint32_t mipLevels)
    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
    samplerInfo.minLod = 0.0f;
-   samplerInfo.maxLod = static_cast< float >(mipLevels);
+   samplerInfo.maxLod = VK_LOD_CLAMP_NONE;
    samplerInfo.mipLodBias = 0.0f;
 
    VK_CHECK(vkCreateSampler(Data::vk_device, &samplerInfo, nullptr, &sampler),
@@ -258,7 +258,8 @@ Texture::GetType() const
 }
 
 [[nodiscard]] std::string
-Texture::GetName() const {
+Texture::GetName() const
+{
    return m_name;
 }
 

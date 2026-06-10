@@ -32,6 +32,9 @@ class DeferredPipeline
    static VkPipeline
    GetCompositionPipeline();
 
+   static void
+   DrawSkybox(VkCommandBuffer commandBuffer);
+
    static VkCommandBuffer&
    GetOffscreenCmdBuffer();
 

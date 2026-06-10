@@ -1,3 +1,10 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:feff00e837cc2b0d98ba59a038d3231ce3259ae9d1e0e86875b7fa7a0997ed73
-size 198
+#version 460
+
+layout(location = 0) out vec2 outUV;
+
+void
+main()
+{
+   outUV = vec2((gl_VertexIndex << 1) & 2, gl_VertexIndex & 2);
+   gl_Position = vec4(outUV * 2.0f - 1.0f, 0.0f, 1.0f);
+}

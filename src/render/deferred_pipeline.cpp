@@ -7,10 +7,10 @@
 #include "vertex.hpp"
 
 #include <algorithm>
-#include <iterator>
 #include <fmt/format.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <iterator>
 
 
 namespace shady::render {
@@ -54,6 +54,12 @@ DeferredPipeline::GetCompositionPipeline()
    return m_compositionPipeline;
 }
 
+void
+DeferredPipeline::DrawSkybox(VkCommandBuffer commandBuffer)
+{
+   m_skybox.Draw(commandBuffer);
+}
+
 VkPipelineLayout
 DeferredPipeline::GetPipelineLayout()
 {
@@ -91,7 +97,7 @@ DeferredPipeline::UpdateUniformBufferComposition(const scene::Camera* camera,
                                                  const scene::Light* light)
 {
    UboComposition uboComposition{};
-   uboComposition.light.position = glm::vec4(camera->GetPosition(), 1.0f);
+   uboComposition.light.position = glm::vec4(light->GetPosition(), 1.0f);
    uboComposition.light.target = glm::vec4(light->GetLookAt(), 1.0);
    uboComposition.light.color = glm::vec4{light->GetColor(), 1.0f};
    uboComposition.light.viewMatrix = light->GetLightSpaceMat();
@@ -111,7 +117,7 @@ DeferredPipeline::Initialize(VkRenderPass mainRenderPass,
    ShadowSetup();
    PrepareOffscreenFramebuffer();
 
-   m_skybox.LoadCubeMap("default");
+   m_skybox.LoadCubeMap("default", mainRenderPass);
 
    PrepareUniformBuffers();
    SetupDescriptorSetLayout();
@@ -133,9 +139,11 @@ DeferredPipeline::ShadowSetup()
 void
 DeferredPipeline::PrepareOffscreenFramebuffer()
 {
-   m_offscreenFrameBuffer.Create(2048, 2048);
+   const auto width = static_cast< int32_t >(Data::m_swapChainExtent.width);
+   const auto height = static_cast< int32_t >(Data::m_swapChainExtent.height);
+   m_offscreenFrameBuffer.Create(width, height);
    Data::m_deferredRenderPass = m_offscreenFrameBuffer.GetRenderPass();
-   Data::m_deferredExtent = {2048, 2048};
+   Data::m_deferredExtent = Data::m_swapChainExtent;
 }
 
 void
@@ -480,6 +488,9 @@ DeferredPipeline::PreparePipelines()
 void
 DeferredPipeline::SetupDescriptorPool()
 {
+   const auto textureDescriptorCount = static_cast< uint32_t >(Data::textures.size());
+   utils::Assert(textureDescriptorCount > 0, "Descriptor pool requires at least one texture");
+
    std::array< VkDescriptorPoolSize, 5 > poolSizes{};
    poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
    poolSizes[0].descriptorCount = 8; // 3 * numfrabuffers in swapchain?
@@ -490,7 +501,7 @@ DeferredPipeline::SetupDescriptorPool()
    poolSizes[3].type = VK_DESCRIPTOR_TYPE_SAMPLER;
    poolSizes[3].descriptorCount = 3; // 1 * numfrabuffers in swapchain?
    poolSizes[4].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-   poolSizes[4].descriptorCount = 3; // 1 * numfrabuffers in swapchain?
+   poolSizes[4].descriptorCount = textureDescriptorCount;
 
 
    VkDescriptorPoolCreateInfo poolInfo{};
@@ -773,13 +784,11 @@ DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& s
 
    vkCmdSetScissor(m_offscreenCommandBuffer, 0, 1, &scissor);
 
-   m_skybox.Draw(m_offscreenCommandBuffer);
-
    vkCmdBindPipeline(m_offscreenCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                      m_offscreenPipeline);
 
 
-   std::array<VkDeviceSize, 1> offsets = {0};
+   std::array< VkDeviceSize, 1 > offsets = {0};
    vkCmdBindVertexBuffers(m_offscreenCommandBuffer, 0, 1, &Data::m_vertexBuffer, offsets.data());
 
    vkCmdBindIndexBuffer(m_offscreenCommandBuffer, Data::m_indexBuffer, 0, VK_INDEX_TYPE_UINT32);

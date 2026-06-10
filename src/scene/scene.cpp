@@ -28,7 +28,8 @@ Scene::GetLight()
    return *m_light;
 }
 
-void Scene::Render(int32_t /*windowWidth*/, int32_t /*windowHeight*/)
+void
+Scene::Render(int32_t /*windowWidth*/, int32_t /*windowHeight*/)
 {
    render::Renderer::UpdateUniformBuffer(m_camera.get(), m_light.get());
    render::Renderer::Draw();
@@ -39,7 +40,8 @@ Scene::LoadDefault()
 {
    const time::ScopedTimer loadScope("Scene::LoadDefault");
 
-   AddModel((utils::FileManager::MODELS_DIR / "new_sponza" / "NewSponza_Main_glTF_003.gltf").string());
+   AddModel(
+      (utils::FileManager::MODELS_DIR / "new_sponza" / "NewSponza_Main_glTF_003.gltf").string());
 
    m_models.back()->Submit();
 

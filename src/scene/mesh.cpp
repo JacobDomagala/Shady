@@ -4,12 +4,12 @@
 
 namespace shady::scene {
 
-//NOLINTNEXTLINE
+// NOLINTNEXTLINE
 Mesh::Mesh(const std::string& name, std::vector< render::Vertex >&& vertices,
-           std::vector< uint32_t >&& indices, render::TextureMaps&& textures)
+           std::vector< uint32_t >&& indices, render::MaterialData&& material)
    : vertices_(std::move(vertices)),
      indices_(std::move(indices)),
-     textures_(std::move(textures)),
+     material_(std::move(material)),
      name_(name)
 {
 }
@@ -23,7 +23,7 @@ Mesh::Mesh(const std::string& name, std::vector< render::Vertex >&& vertices,
 void
 Mesh::Submit()
 {
-   render::Renderer::MeshLoaded(vertices_, indices_, textures_, modelMat_);
+   render::Renderer::MeshLoaded(vertices_, indices_, material_, modelMat_);
 }
 
 void
@@ -31,7 +31,7 @@ Mesh::Draw(const std::string& /*modelName*/, const glm::mat4& /*modelMat*/,
            const glm::vec4& /*tintColor*/)
 {
    // render::Renderer3D::DrawMesh(name_, modelMat, textures_, tintColor);
-   render::Renderer::MeshLoaded(vertices_, indices_, textures_, modelMat_);
+   render::Renderer::MeshLoaded(vertices_, indices_, material_, modelMat_);
 }
 
 void

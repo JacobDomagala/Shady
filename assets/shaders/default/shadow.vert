@@ -1,3 +1,29 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:24a2f97ac67fc7adcac39f9be8030ae38f7fffb3d7f14d8b7a35feb8eef2b08b
-size 499
+#version 460
+
+layout (location = 0) in vec4 inPos;
+
+layout (binding = 0) uniform UBO
+{
+   mat4 u_projectionMat;
+   mat4 u_viewMat;
+   mat4 u_lightMat;
+} ubo;
+
+struct BufferData
+{
+   mat4 modelMat;
+   vec4 textureIDs;
+};
+
+layout(std430, set = 0, binding = 1) readonly buffer Block
+{
+   BufferData Transforms[];
+};
+
+void main()
+{
+	BufferData bufferData = Transforms[gl_InstanceIndex];
+    mat4 modelMat = bufferData.modelMat;
+
+	gl_Position = ubo.u_lightMat * modelMat * inPos;
+}

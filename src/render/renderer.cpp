@@ -5,6 +5,7 @@
 #include "command.hpp"
 #include "common.hpp"
 #include "deferred_pipeline.hpp"
+#include "profiler.hpp"
 #include "shader.hpp"
 #include "texture.hpp"
 #include "trace/logger.hpp"
@@ -12,6 +13,7 @@
 #include "utils/file_manager.hpp"
 
 #include <GLFW/glfw3.h>
+#include <algorithm>
 #include <array>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -539,9 +541,11 @@ Renderer::CreateRenderPipeline()
    CreateDepthResources();
    CreateFramebuffers();
    CreatePipelineCache();
+   const auto queueFamilyIndices = findQueueFamilies(Data::vk_physicalDevice, Data::m_surface);
+   Profiler::Initialize(queueFamilyIndices.graphicsFamily.value());
 
 
-   DeferredPipeline::Initialize(Data::m_renderPass, m_swapChainImageViews, Data::m_pipelineCache);
+   DeferredPipeline::Initialize(Data::m_renderPass, Data::m_pipelineCache);
    app::gui::Gui::Init({Data::m_swapChainExtent.width, Data::m_swapChainExtent.height});
    //  app::gui::Gui::UpdateUI({Data::m_swapChainExtent.width, Data::m_swapChainExtent.height});
    CreateCommandBufferForDeferred();
@@ -553,6 +557,8 @@ Renderer::CreateRenderPipeline()
 void
 Renderer::UpdateUniformBuffer(const scene::Camera* camera, const scene::Light* light)
 {
+   Profiler::BeginUniformUpdate();
+
    UniformBufferObject ubo{};
 
    ubo.proj = camera->GetViewProjection();
@@ -570,6 +576,7 @@ Renderer::UpdateUniformBuffer(const scene::Camera* camera, const scene::Light* l
    vkUnmapMemory(Data::vk_device, Data::m_ssboMemory[0]);
 
    DeferredPipeline::UpdateDeferred(camera, light);
+   Profiler::EndUniformUpdate();
 }
 
 void
@@ -606,13 +613,18 @@ Renderer::CreateDepthResources()
 void
 Renderer::Draw()
 {
+   Profiler::BeginFrame(static_cast< uint32_t >(currentFrame));
+
    // Always recreate the command buffers for composition, mostly due to imgui
    CreateCommandBufferForDeferred();
+   Profiler::EndCommandRecording();
 
    // vkWaitForFences(Data::vk_device, 1, &m_inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
-   vkAcquireNextImageKHR(Data::vk_device, m_swapChain, UINT64_MAX,
-                         m_imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &m_imageIndex);
+   const VkResult acquireResult = vkAcquireNextImageKHR(Data::vk_device, m_swapChain, UINT64_MAX,
+                                                        m_imageAvailableSemaphores[currentFrame],
+                                                        VK_NULL_HANDLE, &m_imageIndex);
+   Profiler::EndImageAcquire(acquireResult, m_imageIndex);
 
    // UpdateUniformBuffer();
    // if (m_imagesInFlight[imageIndex] != VK_NULL_HANDLE)
@@ -634,6 +646,7 @@ Renderer::Draw()
    offscreenSubmitInfo.pCommandBuffers = &DeferredPipeline::GetOffscreenCmdBuffer();
    VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &offscreenSubmitInfo, VK_NULL_HANDLE),
             "failed to submit offscreen draw command buffer!");
+   Profiler::EndOffscreenSubmit();
 
 
    //
@@ -664,6 +677,7 @@ Renderer::Draw()
 
    VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &sceneSubmitInfo, VK_NULL_HANDLE),
             "failed to submit draw command buffer!");
+   Profiler::EndSceneSubmit();
 
    VkPresentInfoKHR presentInfo{};
    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -673,9 +687,11 @@ Renderer::Draw()
    presentInfo.pSwapchains = &m_swapChain;
    presentInfo.pImageIndices = &m_imageIndex;
 
-   vkQueuePresentKHR(Data::m_presentQueue, &presentInfo);
+   const VkResult presentResult = vkQueuePresentKHR(Data::m_presentQueue, &presentInfo);
+   Profiler::EndPresent(presentResult);
 
    vkQueueWaitIdle(Data::vk_graphicsQueue);
+   Profiler::EndFrame();
 
    currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
@@ -1062,6 +1078,9 @@ Renderer::CreateCommandBufferForDeferred()
 
       VK_CHECK(vkBeginCommandBuffer(m_commandBuffers[i], &beginInfo), "");
 
+      Profiler::WriteGpuTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                                  TimestampQuery::CompositionStart);
+
       vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
       VkViewport viewport{};
@@ -1098,12 +1117,24 @@ Renderer::CreateCommandBufferForDeferred()
       // Final composition as full screen quad
       vkCmdDraw(m_commandBuffers[i], 3, 1, 0, 0);
 
+      Profiler::WriteGpuTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                                  TimestampQuery::CompositionEnd);
+
       /*
        * STAGE 4 - DRAW UI
        */
+      Profiler::WriteGpuTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                                  TimestampQuery::ImGuiStart);
+
       app::gui::Gui::Render(m_commandBuffers[i]);
 
+      Profiler::WriteGpuTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                                  TimestampQuery::ImGuiEnd);
+
       vkCmdEndRenderPass(m_commandBuffers[i]);
+
+      Profiler::WriteGpuTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                                  TimestampQuery::FrameEnd);
 
       VK_CHECK(vkEndCommandBuffer(m_commandBuffers[i]), "");
    }

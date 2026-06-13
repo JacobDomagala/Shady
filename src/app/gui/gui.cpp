@@ -2,6 +2,7 @@
 #include "app/input/input_manager.hpp"
 #include "buffer.hpp"
 #include "render/common.hpp"
+#include "render/profiler.hpp"
 #include "renderer.hpp"
 #include "scene/scene.hpp"
 #include "shader.hpp"
@@ -295,7 +296,7 @@ Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
 
       auto& light = scene.GetLight();
       auto lightPos = light.GetPosition();
-      ImGui::InputFloat3("Position", &lightPos[0], "%.3f", ImGuiInputTextFlags_ReadOnly);
+      ImGui::InputFloat3("Position##2", &lightPos[0], "%.3f", ImGuiInputTextFlags_ReadOnly);
 
       auto light_color = light.GetColor();
 
@@ -305,13 +306,23 @@ Gui::UpdateUI(const glm::ivec2& windowSize, scene::Scene& scene)
 
    if (ImGui::CollapsingHeader("Debug"))
    {
-      ImGui::InputFloat2("Mouse Position", &mousePos[0], "%.1f", ImGuiInputTextFlags_ReadOnly);
+      const auto valueColumn = ImGui::GetCursorPosX() + ImGui::CalcTextSize("Mouse Position").x
+                               + ImGui::GetStyle().ItemSpacing.x;
+
+      ImGui::TextUnformatted("Mouse Position");
+      ImGui::SameLine(valueColumn);
+      ImGui::Text("(%.1f, %.1f)", static_cast< double >(mousePos[0]),
+                  static_cast< double >(mousePos[1]));
+
+      Profiler::DrawDebugUi(valueColumn);
    }
 
    ImGui::End();
    ImGui::Render();
 
+   Profiler::BeginGuiUpload();
    UpdateBuffers();
+   Profiler::EndGuiUpload();
 
    return io_handle.WantCaptureMouse;
 }

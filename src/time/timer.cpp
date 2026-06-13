@@ -4,14 +4,20 @@
 
 namespace shady::time {
 
-TimeStep::TimeStep(milliseconds time) : time_(time)
+TimeStep::TimeStep(duration time) : time_(time)
 {
 }
 
 std::string
 TimeStep::ToString() const
 {
-   return fmt::format("{}ms", time_.count());
+   return fmt::format("{}ms", GetMilliseconds().count());
+}
+
+duration
+TimeStep::GetDuration() const
+{
+   return time_;
 }
 
 seconds
@@ -23,7 +29,7 @@ TimeStep::GetSeconds() const
 milliseconds
 TimeStep::GetMilliseconds() const
 {
-   return time_;
+   return std::chrono::duration_cast< milliseconds >(time_);
 }
 
 
@@ -35,11 +41,18 @@ TimeStep
 Timer::ToggleTimer()
 {
    const auto timeNow = std::chrono::steady_clock::now();
-   const auto step = std::chrono::duration_cast< milliseconds >(timeNow - lastTimeStamp_);
+   const auto step = timeNow - lastTimeStamp_;
 
    lastTimeStamp_ = timeNow;
+   elapsed_ += step;
 
    return TimeStep{step};
+}
+
+TimeStep
+Timer::Elapsed() const
+{
+   return TimeStep{elapsed_};
 }
 
 } // namespace shady::time

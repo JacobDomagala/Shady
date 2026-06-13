@@ -1,6 +1,7 @@
 #include "app/shady.hpp"
 #include "app/input/input_manager.hpp"
 #include "gui/gui.hpp"
+#include "render/profiler.hpp"
 #include "scene/light.hpp"
 #include "scene/perspective_camera.hpp"
 #include "trace/logger.hpp"
@@ -46,8 +47,7 @@ Shady::MainLoop()
       }
 
       m_currentScene.Render(m_windowWidth, m_windowHeight);
-
-      m_window.SwapBuffers();
+      render::Profiler::UpdateFps();
    }
 }
 

@@ -82,7 +82,6 @@ struct Data
    inline static VkPipeline m_graphicsPipeline = {};
    inline static VkRenderPass m_renderPass = {};
    inline static VkRenderPass m_deferredRenderPass = {};
-
    inline static DebugData m_debugData = {};
 };
 

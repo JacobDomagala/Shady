@@ -1,6 +1,7 @@
 #include "deferred_pipeline.hpp"
 #include "buffer.hpp"
 #include "common.hpp"
+#include "profiler.hpp"
 #include "scene/perspective_camera.hpp"
 #include "shader.hpp"
 #include "texture.hpp"
@@ -108,9 +109,7 @@ DeferredPipeline::UpdateUniformBufferComposition(const scene::Camera* camera,
 }
 
 void
-DeferredPipeline::Initialize(VkRenderPass mainRenderPass,
-                             const std::vector< VkImageView >& swapChainImageViews,
-                             VkPipelineCache pipelineCache)
+DeferredPipeline::Initialize(VkRenderPass mainRenderPass, VkPipelineCache pipelineCache)
 {
    m_pipelineCache = pipelineCache;
    m_mainRenderPass = mainRenderPass;
@@ -127,7 +126,7 @@ DeferredPipeline::Initialize(VkRenderPass mainRenderPass,
    SetupDescriptorSet();
 
 
-   BuildDeferredCommandBuffer(swapChainImageViews);
+   BuildDeferredCommandBuffer();
 }
 
 void
@@ -664,17 +663,15 @@ DeferredPipeline::SetupDescriptorSet()
 }
 
 void
-DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& swapChainImageViews)
+DeferredPipeline::BuildDeferredCommandBuffer()
 {
    if (m_offscreenCommandBuffer == VK_NULL_HANDLE)
    {
-      m_commandBuffers.resize(swapChainImageViews.size());
-
       VkCommandBufferAllocateInfo allocInfo{};
       allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
       allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
       allocInfo.commandPool = Data::vk_commandPool;
-      allocInfo.commandBufferCount = static_cast< uint32_t >(m_commandBuffers.size());
+      allocInfo.commandBufferCount = 1;
 
       VK_CHECK(vkAllocateCommandBuffers(Data::vk_device, &allocInfo, &m_offscreenCommandBuffer),
                "");
@@ -708,6 +705,14 @@ DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& s
    renderPassBeginInfo.pClearValues = clearValues.data();
 
    VK_CHECK(vkBeginCommandBuffer(m_offscreenCommandBuffer, &cmdBufInfo), "");
+
+   Profiler::ResetGpuTimestamps(m_offscreenCommandBuffer);
+   Profiler::WriteGpuTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                               TimestampQuery::FrameStart);
+   Profiler::WriteGpuTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                               TimestampQuery::OffscreenStart);
+   Profiler::WriteGpuTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                               TimestampQuery::ShadowStart);
 
    VkViewport viewport{};
    viewport.width = static_cast< float >(m_shadowMap.GetSize().x);
@@ -749,6 +754,8 @@ DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& s
    }
 
    vkCmdEndRenderPass(m_offscreenCommandBuffer);
+   Profiler::WriteGpuTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                               TimestampQuery::ShadowEnd);
 
    // Second pass: Deferred calculations
    // -------------------------------------------------------------------------------------------------------
@@ -803,6 +810,11 @@ DeferredPipeline::BuildDeferredCommandBuffer(const std::vector< VkImageView >& s
                                  Data::m_numMeshes, sizeof(VkDrawIndexedIndirectCommand));
 
    vkCmdEndRenderPass(m_offscreenCommandBuffer);
+   Profiler::WriteGpuTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                               TimestampQuery::GBufferEnd);
+
+   Profiler::WriteGpuTimestamp(m_offscreenCommandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                               TimestampQuery::OffscreenEnd);
 
    VK_CHECK(vkEndCommandBuffer(m_offscreenCommandBuffer), "");
 }

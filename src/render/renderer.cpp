@@ -25,8 +25,7 @@
 
 namespace shady::render {
 
-static size_t currentFrame = 0;
-constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+static uint32_t currentFrame = 0;
 
 void
 Renderer::MeshLoaded(const std::vector< Vertex >& vertices, const std::vector< uint32_t >& indicies,
@@ -538,18 +537,12 @@ Renderer::CreateRenderPipeline()
 
    CreateRenderPass();
    CreateColorResources();
-   CreateDepthResources();
    CreateFramebuffers();
    CreatePipelineCache();
-   const auto queueFamilyIndices = findQueueFamilies(Data::vk_physicalDevice, Data::m_surface);
-   Profiler::Initialize(queueFamilyIndices.graphicsFamily.value());
-
+   Profiler::Initialize(Data::vk_graphicQueueIndex);
 
    DeferredPipeline::Initialize(Data::m_renderPass, Data::m_pipelineCache);
    app::gui::Gui::Init({Data::m_swapChainExtent.width, Data::m_swapChainExtent.height});
-   //  app::gui::Gui::UpdateUI({Data::m_swapChainExtent.width, Data::m_swapChainExtent.height});
-   CreateCommandBufferForDeferred();
-
 
    CreateSyncObjects();
 }
@@ -565,17 +558,18 @@ Renderer::UpdateUniformBuffer(const scene::Camera* camera, const scene::Light* l
    ubo.lightView = light->GetLightSpaceMat();
 
    void* data = nullptr;
-   vkMapMemory(Data::vk_device, Data::m_uniformBuffersMemory[0], 0, sizeof(ubo), 0, &data);
+   vkMapMemory(Data::vk_device, Data::m_uniformBuffersMemory[currentFrame], 0, sizeof(ubo), 0,
+               &data);
    memcpy(data, &ubo, sizeof(ubo));
-   vkUnmapMemory(Data::vk_device, Data::m_uniformBuffersMemory[0]);
+   vkUnmapMemory(Data::vk_device, Data::m_uniformBuffersMemory[currentFrame]);
 
    void* data2 = nullptr;
-   vkMapMemory(Data::vk_device, Data::m_ssboMemory[0], 0,
+   vkMapMemory(Data::vk_device, Data::m_ssboMemory[currentFrame], 0,
                Data::perInstance.size() * sizeof(PerInstanceBuffer), 0, &data2);
    memcpy(data2, Data::perInstance.data(), Data::perInstance.size() * sizeof(PerInstanceBuffer));
-   vkUnmapMemory(Data::vk_device, Data::m_ssboMemory[0]);
+   vkUnmapMemory(Data::vk_device, Data::m_ssboMemory[currentFrame]);
 
-   DeferredPipeline::UpdateDeferred(camera, light);
+   DeferredPipeline::UpdateDeferred(camera, light, currentFrame);
    Profiler::EndUniformUpdate();
 }
 
@@ -594,103 +588,119 @@ Renderer::CreateColorResources()
 }
 
 void
-Renderer::CreateDepthResources()
+Renderer::Draw(const scene::Camera* camera, const scene::Light* light)
 {
-   const VkFormat depthFormat = FindDepthFormat();
+   Profiler::BeginFrame(currentFrame);
 
-   const auto [depthImage, depthImageMemory] = Texture::CreateImage(
-      Data::m_swapChainExtent.width, Data::m_swapChainExtent.height, 1,
-      VK_SAMPLE_COUNT_1_BIT /*Data::m_msaaSamples*/, depthFormat, VK_IMAGE_TILING_OPTIMAL,
-      VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+   VK_CHECK(
+      vkWaitForFences(Data::vk_device, 1, &m_inFlightFences[currentFrame], VK_TRUE, UINT64_MAX),
+      "failed to wait for frame fence!");
+   Profiler::EndFenceWait();
 
-   m_depthImage = depthImage;
-   m_depthImageMemory = depthImageMemory;
+   UpdateUniformBuffer(camera, light);
 
-   m_depthImageView =
-      Texture::CreateImageView(m_depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
-}
+   const VkCommandBuffer offscreenCommandBuffer =
+      DeferredPipeline::GetOffscreenCmdBuffer(currentFrame);
 
-void
-Renderer::Draw()
-{
-   Profiler::BeginFrame(static_cast< uint32_t >(currentFrame));
+   VkSubmitInfo offscreenSubmitInfo{};
+   offscreenSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+   offscreenSubmitInfo.commandBufferCount = 1;
+   offscreenSubmitInfo.pCommandBuffers = &offscreenCommandBuffer;
+   offscreenSubmitInfo.signalSemaphoreCount = 1;
+   offscreenSubmitInfo.pSignalSemaphores = &m_offscreenFinishedSemaphores[currentFrame];
 
-   // Always recreate the command buffers for composition, mostly due to imgui
-   CreateCommandBufferForDeferred();
-   Profiler::EndCommandRecording();
+   Profiler::BeginOffscreenSubmit();
+   VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &offscreenSubmitInfo, VK_NULL_HANDLE),
+            "failed to submit offscreen draw command buffer!");
+   Profiler::EndOffscreenSubmit();
 
-   // vkWaitForFences(Data::vk_device, 1, &m_inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
-
+   Profiler::BeginImageAcquire();
    const VkResult acquireResult = vkAcquireNextImageKHR(Data::vk_device, m_swapChain, UINT64_MAX,
                                                         m_imageAvailableSemaphores[currentFrame],
                                                         VK_NULL_HANDLE, &m_imageIndex);
    Profiler::EndImageAcquire(acquireResult, m_imageIndex);
 
-   // UpdateUniformBuffer();
-   // if (m_imagesInFlight[imageIndex] != VK_NULL_HANDLE)
-   //{
-   //   vkWaitForFences(Data::vk_device, 1, &m_imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
-   //}
-   // m_imagesInFlight[imageIndex] = m_inFlightFences[currentFrame];
+   if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR)
+   {
+      if (acquireResult != VK_ERROR_OUT_OF_DATE_KHR)
+      {
+         VK_CHECK(acquireResult, "failed to acquire swapchain image!");
+      }
 
+      Profiler::BeginFenceReset();
+      VK_CHECK(vkResetFences(Data::vk_device, 1, &m_inFlightFences[currentFrame]),
+               "failed to reset frame fence!");
+      Profiler::EndFenceReset();
 
-   //
-   // Offscreen rendering
-   //
+      const VkPipelineStageFlags drainWaitStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+      VkSubmitInfo drainSubmitInfo{};
+      drainSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+      drainSubmitInfo.waitSemaphoreCount = 1;
+      drainSubmitInfo.pWaitSemaphores = &m_offscreenFinishedSemaphores[currentFrame];
+      drainSubmitInfo.pWaitDstStageMask = &drainWaitStage;
 
-   VkSubmitInfo offscreenSubmitInfo{};
-   offscreenSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-   offscreenSubmitInfo.pSignalSemaphores = &DeferredPipeline::GetOffscreenSemaphore();
-   offscreenSubmitInfo.signalSemaphoreCount = 1;
-   offscreenSubmitInfo.commandBufferCount = 1;
-   offscreenSubmitInfo.pCommandBuffers = &DeferredPipeline::GetOffscreenCmdBuffer();
-   VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &offscreenSubmitInfo, VK_NULL_HANDLE),
-            "failed to submit offscreen draw command buffer!");
-   Profiler::EndOffscreenSubmit();
+      Profiler::BeginSceneSubmit();
+      VK_CHECK(
+         vkQueueSubmit(Data::vk_graphicsQueue, 1, &drainSubmitInfo, m_inFlightFences[currentFrame]),
+         "failed to drain offscreen submission!");
+      Profiler::EndSceneSubmit();
+      Profiler::EndFrame(false);
 
+      currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+      return;
+   }
 
-   //
-   // Scene rendering
-   //
+   Profiler::BeginFenceReset();
+   VK_CHECK(vkResetFences(Data::vk_device, 1, &m_inFlightFences[currentFrame]),
+            "failed to reset frame fence!");
+   Profiler::EndFenceReset();
 
-   const std::array< VkSemaphore, 2 > waitSemaphores = {m_imageAvailableSemaphores[currentFrame],
-                                                        DeferredPipeline::GetOffscreenSemaphore()};
+   Profiler::BeginGuiUpload();
+   app::gui::Gui::UpdateBuffers(currentFrame);
+   Profiler::EndGuiUpload();
+
+   // Always recreate the command buffers for composition, mostly due to imgui
+   Profiler::BeginCommandRecording();
+   CreateCommandBufferForDeferred();
+   Profiler::EndCommandRecording();
+
+   const std::array< VkSemaphore, 2 > waitSemaphores = {m_offscreenFinishedSemaphores[currentFrame],
+                                                        m_imageAvailableSemaphores[currentFrame]};
    const std::array< VkPipelineStageFlags, 2 > waitStages = {
-      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT};
+      VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
-   VkSubmitInfo sceneSubmitInfo{};
-   sceneSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-   sceneSubmitInfo.waitSemaphoreCount = static_cast< uint32_t >(waitSemaphores.size());
-   sceneSubmitInfo.pWaitSemaphores = waitSemaphores.data();
-   sceneSubmitInfo.pWaitDstStageMask = waitStages.data();
-   sceneSubmitInfo.pSignalSemaphores = &m_renderFinishedSemaphores[currentFrame];
-   sceneSubmitInfo.signalSemaphoreCount = 1;
-   sceneSubmitInfo.pCommandBuffers = &m_commandBuffers[m_imageIndex];
-   sceneSubmitInfo.commandBufferCount = 1;
+   VkSubmitInfo submitInfo{};
+   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+   submitInfo.waitSemaphoreCount = static_cast< uint32_t >(waitSemaphores.size());
+   submitInfo.pWaitSemaphores = waitSemaphores.data();
+   submitInfo.pWaitDstStageMask = waitStages.data();
+   submitInfo.commandBufferCount = 1;
+   submitInfo.pCommandBuffers = &m_commandBuffers[currentFrame];
+   submitInfo.signalSemaphoreCount = 1;
+   submitInfo.pSignalSemaphores = &m_renderFinishedSemaphores[m_imageIndex];
 
-
-   // vkResetFences(Data::vk_device, 1, &m_inFlightFences[currentFrame]);
-
-   // VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &submitInfo,
-   // m_inFlightFences[currentFrame]),
-   //         "failed to submit draw command buffer!");
-
-   VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &sceneSubmitInfo, VK_NULL_HANDLE),
+   Profiler::BeginSceneSubmit();
+   VK_CHECK(vkQueueSubmit(Data::vk_graphicsQueue, 1, &submitInfo, m_inFlightFences[currentFrame]),
             "failed to submit draw command buffer!");
    Profiler::EndSceneSubmit();
 
    VkPresentInfoKHR presentInfo{};
    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
    presentInfo.waitSemaphoreCount = 1;
-   presentInfo.pWaitSemaphores = &m_renderFinishedSemaphores[currentFrame];
+   presentInfo.pWaitSemaphores = &m_renderFinishedSemaphores[m_imageIndex];
    presentInfo.swapchainCount = 1;
    presentInfo.pSwapchains = &m_swapChain;
    presentInfo.pImageIndices = &m_imageIndex;
 
+   Profiler::BeginPresent();
    const VkResult presentResult = vkQueuePresentKHR(Data::m_presentQueue, &presentInfo);
    Profiler::EndPresent(presentResult);
+   if (presentResult != VK_SUCCESS && presentResult != VK_SUBOPTIMAL_KHR
+       && presentResult != VK_ERROR_OUT_OF_DATE_KHR)
+   {
+      VK_CHECK(presentResult, "failed to present swapchain image!");
+   }
 
-   vkQueueWaitIdle(Data::vk_graphicsQueue);
    Profiler::EndFrame();
 
    currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
@@ -767,10 +777,12 @@ Renderer::CreateDevice()
 
    // indices.isComplete() is called in findQueueFamilies
    // NOLINTBEGIN
-   const std::set< uint32_t > uniqueQueueFamilies = {indices.graphicsFamily.value(),
-                                                     indices.presentFamily.value()};
+   Data::vk_graphicQueueIndex = indices.graphicsFamily.value();
+   Data::vk_presentQueueIndex = indices.presentFamily.value();
    // NOLINTEND
 
+   const std::set< uint32_t > uniqueQueueFamilies = {Data::vk_graphicQueueIndex,
+                                                     Data::vk_presentQueueIndex};
    const auto queuePriority = 1.0f;
    for (auto queueFamily : uniqueQueueFamilies)
    {
@@ -813,12 +825,8 @@ Renderer::CreateDevice()
    VK_CHECK(vkCreateDevice(Data::vk_physicalDevice, &createInfo, nullptr, &Data::vk_device),
             "failed to create logical device!");
 
-   // indices.isComplete() is called in findQueueFamilies
-
-   // NOLINTBEGIN
-   vkGetDeviceQueue(Data::vk_device, indices.graphicsFamily.value(), 0, &Data::vk_graphicsQueue);
-   vkGetDeviceQueue(Data::vk_device, indices.presentFamily.value(), 0, &Data::m_presentQueue);
-   // NOLINTEND
+   vkGetDeviceQueue(Data::vk_device, Data::vk_graphicQueueIndex, 0, &Data::vk_graphicsQueue);
+   vkGetDeviceQueue(Data::vk_device, Data::vk_presentQueueIndex, 0, &Data::m_presentQueue);
 }
 
 void
@@ -849,15 +857,10 @@ Renderer::CreateSwapchain(GLFWwindow* windowHandle)
    swapChainCreateInfo.imageArrayLayers = 1;
    swapChainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-   const auto indicesSecond = findQueueFamilies(Data::vk_physicalDevice, Data::m_surface);
-   // indices.isComplete() is called in findQueueFamilies
+   const std::array< uint32_t, 2 > queueFamilyIndices = {Data::vk_graphicQueueIndex,
+                                                         Data::vk_presentQueueIndex};
 
-   // NOLINTBEGIN
-   const std::array< uint32_t, 2 > queueFamilyIndices = {indicesSecond.graphicsFamily.value(),
-                                                         indicesSecond.presentFamily.value()};
-   // NOLINTEND
-
-   if (indicesSecond.graphicsFamily != indicesSecond.presentFamily)
+   if (Data::vk_graphicsQueue != Data::m_presentQueue)
    {
       swapChainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
       swapChainCreateInfo.queueFamilyIndexCount = 2;
@@ -910,17 +913,6 @@ Renderer::CreateRenderPass()
    colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-   VkAttachmentDescription depthAttachment{};
-   depthAttachment.format = FindDepthFormat();
-   depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-   // depthAttachment.samples = Data::m_msaaSamples;
-   depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-   depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-   depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-   depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-   depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-   depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
    /*VkAttachmentDescription colorAttachmentResolve{};
    colorAttachmentResolve.format = m_swapChainImageFormat;
    colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -935,10 +927,6 @@ Renderer::CreateRenderPass()
    colorAttachmentRef.attachment = 0;
    colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-   VkAttachmentReference depthAttachmentRef{};
-   depthAttachmentRef.attachment = 1;
-   depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
    /*VkAttachmentReference colorAttachmentResolveRef{};
    colorAttachmentResolveRef.attachment = 2;
    colorAttachmentResolveRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;*/
@@ -947,27 +935,24 @@ Renderer::CreateRenderPass()
    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
    subpass.colorAttachmentCount = 1;
    subpass.pColorAttachments = &colorAttachmentRef;
-   subpass.pDepthStencilAttachment = &depthAttachmentRef;
    // subpass.pResolveAttachments = &colorAttachmentResolveRef;
 
    std::array< VkSubpassDependency, 2 > dependencies{};
 
    dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
    dependencies[0].dstSubpass = 0;
-   dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+   dependencies[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
    dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-   dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-   dependencies[0].dstAccessMask =
-      VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+   dependencies[0].srcAccessMask = 0;
+   dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
    dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
    dependencies[1].srcSubpass = 0;
    dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
    dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
    dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-   dependencies[1].srcAccessMask =
-      VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-   dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+   dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+   dependencies[1].dstAccessMask = 0;
    dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
    // VkSubpassDependency dependency{};
@@ -978,9 +963,7 @@ Renderer::CreateRenderPass()
    // dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
    // dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-   std::array< VkAttachmentDescription, 2 > attachments = {colorAttachment,
-                                                           depthAttachment,
-                                                           /*colorAttachmentResolve*/};
+   std::array< VkAttachmentDescription, 1 > attachments = {colorAttachment};
    VkRenderPassCreateInfo renderPassInfo{};
    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
    renderPassInfo.attachmentCount = static_cast< uint32_t >(attachments.size());
@@ -1001,9 +984,7 @@ Renderer::CreateFramebuffers()
 
    for (size_t i = 0; i < m_swapChainImageViews.size(); i++)
    {
-      std::array< VkImageView, 2 > attachments = {m_swapChainImageViews[i],
-                                                  m_depthImageView,
-                                                  /*m_swapChainImageViews[i]*/};
+      std::array< VkImageView, 1 > attachments = {m_swapChainImageViews[i]};
 
 
       VkFramebufferCreateInfo framebufferInfo{};
@@ -1024,17 +1005,10 @@ Renderer::CreateFramebuffers()
 void
 Renderer::CreateCommandPool()
 {
-   QueueFamilyIndices queueFamilyIndicesTwo =
-      findQueueFamilies(Data::vk_physicalDevice, Data::m_surface);
-
    VkCommandPoolCreateInfo poolInfo{};
    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
    poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-
-   // indices.isComplete() is called in findQueueFamilies
-
-   // NOLINTNEXTLINE
-   poolInfo.queueFamilyIndex = queueFamilyIndicesTwo.graphicsFamily.value();
+   poolInfo.queueFamilyIndex = Data::vk_graphicQueueIndex;
 
    VK_CHECK(vkCreateCommandPool(Data::vk_device, &poolInfo, nullptr, &Data::vk_commandPool),
             "failed to create command pool!");
@@ -1045,7 +1019,7 @@ Renderer::CreateCommandBufferForDeferred()
 {
    if (m_commandBuffers.empty())
    {
-      m_commandBuffers.resize(m_swapChainFramebuffers.size());
+      m_commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 
       VkCommandBufferAllocateInfo allocInfo{};
       allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -1060,9 +1034,8 @@ Renderer::CreateCommandBufferForDeferred()
    VkCommandBufferBeginInfo beginInfo{};
    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-   std::array< VkClearValue, 2 > clearValues{};
+   std::array< VkClearValue, 1 > clearValues{};
    clearValues[0].color = {{0.3f, 0.5f, 0.1f, 1.0f}};
-   clearValues[1].depthStencil = {1.0f, 0};
 
    VkRenderPassBeginInfo renderPassInfo{};
    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -1072,81 +1045,81 @@ Renderer::CreateCommandBufferForDeferred()
    renderPassInfo.clearValueCount = static_cast< uint32_t >(clearValues.size());
    renderPassInfo.pClearValues = clearValues.data();
 
-   for (uint32_t i = 0; i < m_commandBuffers.size(); ++i)
-   {
-      renderPassInfo.framebuffer = m_swapChainFramebuffers[i];
+   renderPassInfo.framebuffer = m_swapChainFramebuffers[m_imageIndex];
 
-      VK_CHECK(vkBeginCommandBuffer(m_commandBuffers[i], &beginInfo), "");
+   VK_CHECK(vkResetCommandBuffer(m_commandBuffers[currentFrame], 0),
+            "failed to reset command buffer!");
+   VK_CHECK(vkBeginCommandBuffer(m_commandBuffers[currentFrame], &beginInfo), "");
 
-      Profiler::WriteGpuTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                                  TimestampQuery::CompositionStart);
+   Profiler::WriteGpuTimestamp(m_commandBuffers[currentFrame], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                               TimestampQuery::CompositionStart, currentFrame);
 
-      vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+   vkCmdBeginRenderPass(m_commandBuffers[currentFrame], &renderPassInfo,
+                        VK_SUBPASS_CONTENTS_INLINE);
 
-      VkViewport viewport{};
-      viewport.width = static_cast< float >(Data::m_swapChainExtent.width);
-      viewport.height = static_cast< float >(Data::m_swapChainExtent.height);
-      viewport.minDepth = 0.0f;
-      viewport.maxDepth = 1.0f;
+   VkViewport viewport{};
+   viewport.width = static_cast< float >(Data::m_swapChainExtent.width);
+   viewport.height = static_cast< float >(Data::m_swapChainExtent.height);
+   viewport.minDepth = 0.0f;
+   viewport.maxDepth = 1.0f;
 
-      vkCmdSetViewport(m_commandBuffers[i], 0, 1, &viewport);
+   vkCmdSetViewport(m_commandBuffers[currentFrame], 0, 1, &viewport);
 
-      VkRect2D scissor{};
-      scissor.extent.width = Data::m_swapChainExtent.width;
-      scissor.extent.height = Data::m_swapChainExtent.height;
-      scissor.offset.x = 0;
-      scissor.offset.y = 0;
+   VkRect2D scissor{};
+   scissor.extent.width = Data::m_swapChainExtent.width;
+   scissor.extent.height = Data::m_swapChainExtent.height;
+   scissor.offset.x = 0;
+   scissor.offset.y = 0;
 
-      vkCmdSetScissor(m_commandBuffers[i], 0, 1, &scissor);
+   vkCmdSetScissor(m_commandBuffers[currentFrame], 0, 1, &scissor);
 
-      /*
-       * STAGE 2 - SKYBOX
-       */
-      DeferredPipeline::DrawSkybox(m_commandBuffers[i]);
+   /*
+    * STAGE 2 - SKYBOX
+    */
+   DeferredPipeline::DrawSkybox(m_commandBuffers[currentFrame], currentFrame);
 
-      /*
-       * STAGE 3 - COMPOSITION
-       */
-      vkCmdBindDescriptorSets(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                              DeferredPipeline::GetPipelineLayout(), 0, 1,
-                              &DeferredPipeline::GetDescriptorSet(), 0, nullptr);
+   /*
+    * STAGE 3 - COMPOSITION
+    */
+   vkCmdBindDescriptorSets(m_commandBuffers[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS,
+                           DeferredPipeline::GetPipelineLayout(), 0, 1,
+                           &DeferredPipeline::GetDescriptorSet(currentFrame), 0, nullptr);
 
-      vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                        DeferredPipeline::GetCompositionPipeline());
+   vkCmdBindPipeline(m_commandBuffers[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS,
+                     DeferredPipeline::GetCompositionPipeline());
 
-      // Final composition as full screen quad
-      vkCmdDraw(m_commandBuffers[i], 3, 1, 0, 0);
+   // Final composition as full screen quad
+   vkCmdDraw(m_commandBuffers[currentFrame], 3, 1, 0, 0);
 
-      Profiler::WriteGpuTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                                  TimestampQuery::CompositionEnd);
+   Profiler::WriteGpuTimestamp(m_commandBuffers[currentFrame], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                               TimestampQuery::CompositionEnd, currentFrame);
 
-      /*
-       * STAGE 4 - DRAW UI
-       */
-      Profiler::WriteGpuTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                                  TimestampQuery::ImGuiStart);
+   /*
+    * STAGE 4 - DRAW UI
+    */
+   Profiler::WriteGpuTimestamp(m_commandBuffers[currentFrame], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                               TimestampQuery::ImGuiStart, currentFrame);
 
-      app::gui::Gui::Render(m_commandBuffers[i]);
+   app::gui::Gui::Render(m_commandBuffers[currentFrame], currentFrame);
 
-      Profiler::WriteGpuTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                                  TimestampQuery::ImGuiEnd);
+   Profiler::WriteGpuTimestamp(m_commandBuffers[currentFrame], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                               TimestampQuery::ImGuiEnd, currentFrame);
 
-      vkCmdEndRenderPass(m_commandBuffers[i]);
+   vkCmdEndRenderPass(m_commandBuffers[currentFrame]);
 
-      Profiler::WriteGpuTimestamp(m_commandBuffers[i], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                                  TimestampQuery::FrameEnd);
+   Profiler::WriteGpuTimestamp(m_commandBuffers[currentFrame], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                               TimestampQuery::FrameEnd, currentFrame);
 
-      VK_CHECK(vkEndCommandBuffer(m_commandBuffers[i]), "");
-   }
+   VK_CHECK(vkEndCommandBuffer(m_commandBuffers[currentFrame]), "");
 }
 
 void
 Renderer::CreateSyncObjects()
 {
    m_imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-   m_renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+   m_offscreenFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+   m_renderFinishedSemaphores.resize(m_swapChainImages.size());
    m_inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-   m_imagesInFlight.resize(m_swapChainImages.size(), VK_NULL_HANDLE);
 
    VkSemaphoreCreateInfo semaphoreInfo{};
    semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -1161,10 +1134,17 @@ Renderer::CreateSyncObjects()
                                  &m_imageAvailableSemaphores[i]),
                fmt::format("Failed to create m_imageAvailableSemaphores[{}]!", i));
       VK_CHECK(vkCreateSemaphore(Data::vk_device, &semaphoreInfo, nullptr,
-                                 &m_renderFinishedSemaphores[i]),
-               fmt::format("Failed to create m_renderFinishedSemaphores[{}]!", i));
+                                 &m_offscreenFinishedSemaphores[i]),
+               fmt::format("Failed to create m_offscreenFinishedSemaphores[{}]!", i));
       VK_CHECK(vkCreateFence(Data::vk_device, &fenceInfo, nullptr, &m_inFlightFences[i]),
                fmt::format("Failed to create m_inFlightFences[{}]!", i));
+   }
+
+   for (size_t i = 0; i < m_swapChainImages.size(); i++)
+   {
+      VK_CHECK(vkCreateSemaphore(Data::vk_device, &semaphoreInfo, nullptr,
+                                 &m_renderFinishedSemaphores[i]),
+               fmt::format("Failed to create m_renderFinishedSemaphores[{}]!", i));
    }
 }
 

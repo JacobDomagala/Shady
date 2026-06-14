@@ -111,20 +111,24 @@ Skybox::CreateImageAndSampler(std::string_view skyboxName)
 void
 Skybox::CreateBuffers()
 {
-   m_uniformBuffer = Buffer::CreateBuffer(sizeof(SkyboxUBO), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
-                                             | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+   m_uniformBuffers.reserve(MAX_FRAMES_IN_FLIGHT);
+   for (uint32_t frame = 0; frame < MAX_FRAMES_IN_FLIGHT; ++frame)
+   {
+      m_uniformBuffers.push_back(Buffer::CreateBuffer(
+         sizeof(SkyboxUBO), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT));
 
-   m_uniformBuffer.Map();
+      m_uniformBuffers.back().Map();
+   }
 }
 
 void
-Skybox::UpdateBuffers(const scene::Camera* camera)
+Skybox::UpdateBuffers(const scene::Camera* camera, uint32_t frame)
 {
    SkyboxUBO buffer{};
    buffer.viewProjection = camera->GetProjection() * glm::mat4(glm::mat3(camera->GetView()));
 
-   m_uniformBuffer.CopyData(&buffer);
+   m_uniformBuffers.at(frame).CopyData(&buffer);
 }
 
 void
@@ -132,15 +136,15 @@ Skybox::CreateDescriptorSet()
 {
    std::array< VkDescriptorPoolSize, 2 > poolSizes{};
    poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-   poolSizes[0].descriptorCount = 1;
+   poolSizes[0].descriptorCount = MAX_FRAMES_IN_FLIGHT;
    poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-   poolSizes[1].descriptorCount = 1;
+   poolSizes[1].descriptorCount = MAX_FRAMES_IN_FLIGHT;
 
    VkDescriptorPoolCreateInfo poolInfo{};
    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
    poolInfo.poolSizeCount = static_cast< uint32_t >(poolSizes.size());
    poolInfo.pPoolSizes = poolSizes.data();
-   poolInfo.maxSets = 1;
+   poolInfo.maxSets = MAX_FRAMES_IN_FLIGHT;
 
    VK_CHECK(vkCreateDescriptorPool(Data::vk_device, &poolInfo, nullptr, &m_descriptorPool),
             "failed to create descriptor pool!");
@@ -171,45 +175,48 @@ Skybox::CreateDescriptorSet()
       vkCreateDescriptorSetLayout(Data::vk_device, &layoutInfo, nullptr, &m_descriptorSetLayout),
       "Failed to create Skybox's descriptor set layout!");
 
+   m_descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+   const std::vector< VkDescriptorSetLayout > layouts(MAX_FRAMES_IN_FLIGHT, m_descriptorSetLayout);
+
    VkDescriptorSetAllocateInfo allocateInfo = {};
    allocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-   allocateInfo.pSetLayouts = &m_descriptorSetLayout;
+   allocateInfo.pSetLayouts = layouts.data();
    allocateInfo.descriptorPool = m_descriptorPool;
-   allocateInfo.descriptorSetCount = 1;
+   allocateInfo.descriptorSetCount = static_cast< uint32_t >(m_descriptorSets.size());
 
-   VK_CHECK(vkAllocateDescriptorSets(Data::vk_device, &allocateInfo, &m_descriptorSet),
+   VK_CHECK(vkAllocateDescriptorSets(Data::vk_device, &allocateInfo, m_descriptorSets.data()),
             "Skybox's vkAllocateDescriptorSets failed!");
-
-
-   VkDescriptorBufferInfo bufferInfo{};
-   bufferInfo.buffer = m_uniformBuffer.GetBuffer();
-   bufferInfo.offset = 0;
-   bufferInfo.range = sizeof(SkyboxUBO);
-
-   std::array< VkWriteDescriptorSet, 2 > descriptorWrites{};
-   descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-   descriptorWrites[0].dstSet = m_descriptorSet;
-   descriptorWrites[0].dstBinding = 0;
-   descriptorWrites[0].dstArrayElement = 0;
-   descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-   descriptorWrites[0].descriptorCount = 1;
-   descriptorWrites[0].pBufferInfo = &bufferInfo;
 
    VkDescriptorImageInfo descriptorImageInfo = {};
    descriptorImageInfo.sampler = m_sampler;
    descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
    descriptorImageInfo.imageView = m_imageView;
 
-   descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-   descriptorWrites[1].dstSet = m_descriptorSet;
-   descriptorWrites[1].dstBinding = 1;
-   descriptorWrites[1].dstArrayElement = 0;
-   descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-   descriptorWrites[1].descriptorCount = 1;
-   descriptorWrites[1].pImageInfo = &descriptorImageInfo;
+   for (uint32_t frame = 0; frame < MAX_FRAMES_IN_FLIGHT; ++frame)
+   {
+      VkDescriptorBufferInfo bufferInfo{};
+      bufferInfo.buffer = m_uniformBuffers.at(frame).GetBuffer();
+      bufferInfo.offset = 0;
+      bufferInfo.range = sizeof(SkyboxUBO);
 
-   vkUpdateDescriptorSets(Data::vk_device, static_cast< uint32_t >(descriptorWrites.size()),
-                          descriptorWrites.data(), 0, nullptr);
+      std::array< VkWriteDescriptorSet, 2 > descriptorWrites{};
+      descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+      descriptorWrites[0].dstSet = m_descriptorSets.at(frame);
+      descriptorWrites[0].dstBinding = 0;
+      descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+      descriptorWrites[0].descriptorCount = 1;
+      descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+      descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+      descriptorWrites[1].dstSet = m_descriptorSets.at(frame);
+      descriptorWrites[1].dstBinding = 1;
+      descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      descriptorWrites[1].descriptorCount = 1;
+      descriptorWrites[1].pImageInfo = &descriptorImageInfo;
+
+      vkUpdateDescriptorSets(Data::vk_device, static_cast< uint32_t >(descriptorWrites.size()),
+                             descriptorWrites.data(), 0, nullptr);
+   }
 }
 
 void
@@ -322,10 +329,10 @@ Skybox::CreatePipeline(VkRenderPass renderPass)
 }
 
 void
-Skybox::Draw(VkCommandBuffer commandBuffer)
+Skybox::Draw(VkCommandBuffer commandBuffer, uint32_t frame)
 {
    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1,
-                           &m_descriptorSet, 0, nullptr);
+                           &m_descriptorSets.at(frame), 0, nullptr);
    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
 
    std::array< VkDeviceSize, 1 > offsets = {0};

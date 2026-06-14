@@ -33,6 +33,7 @@ VK_CHECK(VkResult result, std::string_view errorMessage)
 static constexpr bool ENABLE_VALIDATION = true;
 static constexpr std::array< const char*, 1 > VALIDATION_LAYERS = {"VK_LAYER_KHRONOS_validation"};
 static constexpr std::array< const char*, 1 > DEVICE_EXTENSIONS = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
 /*
  * This is storage for common Vulkan objects that are needed for numerous
@@ -45,7 +46,9 @@ struct Data
    inline static VkDevice vk_device = {};
    inline static VkPhysicalDevice vk_physicalDevice = VK_NULL_HANDLE;
    inline static VkQueue vk_graphicsQueue = {};
+   inline static uint32_t vk_graphicQueueIndex = {};
    inline static VkQueue m_presentQueue = {};
+   inline static uint32_t vk_presentQueueIndex = {};
    inline static VkExtent2D m_swapChainExtent = {};
    inline static VkExtent2D m_deferredExtent = {};
    inline static VkCommandPool vk_commandPool = {};

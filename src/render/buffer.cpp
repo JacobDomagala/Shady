@@ -172,14 +172,21 @@ Buffer::Flush(VkDeviceSize size, VkDeviceSize offset) const
 void
 Buffer::Destroy()
 {
+   Unmap();
+
    if (buffer_)
    {
       vkDestroyBuffer(Data::vk_device, buffer_, nullptr);
+      buffer_ = VK_NULL_HANDLE;
    }
    if (bufferMemory_)
    {
       vkFreeMemory(Data::vk_device, bufferMemory_, nullptr);
+      bufferMemory_ = VK_NULL_HANDLE;
    }
+
+   bufferSize_ = 0;
+   descriptor_ = {};
 }
 
 VkBuffer&

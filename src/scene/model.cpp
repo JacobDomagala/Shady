@@ -4,7 +4,10 @@
 #include "trace/logger.hpp"
 #include "utils/assert.hpp"
 
+#include <algorithm>
+#include <cctype>
 #include <cstdint>
+#include <filesystem>
 #include <functional>
 #include <glm/gtc/quaternion.hpp>
 #include <limits>
@@ -28,9 +31,24 @@ Model::LoadModel(const std::string& file)
    tinygltf::TinyGLTF loader;
    std::string err, warn;
 
+   auto extension = std::filesystem::path(file).extension().string();
+   std::ranges::transform(extension, extension.begin(),
+                          [](unsigned char c) { return static_cast< char >(std::tolower(c)); });
 
-   const bool ok = (file.ends_with(".glb") ? loader.LoadBinaryFromFile(&model, &err, &warn, file)
-                                           : loader.LoadASCIIFromFile(&model, &err, &warn, file));
+   bool ok = false;
+   if (extension == ".glb")
+   {
+      ok = loader.LoadBinaryFromFile(&model, &err, &warn, file);
+   }
+   else if (extension == ".gltf")
+   {
+      ok = loader.LoadASCIIFromFile(&model, &err, &warn, file);
+   }
+   else
+   {
+      utils::Assert(false, fmt::format("Unsupported model format: {}", extension));
+   }
+
    utils::Assert(ok, fmt::format("tinygltf load error: {}\n", err));
    if (!warn.empty())
    {
@@ -75,9 +93,25 @@ Model::LoadModel(const std::string& file)
 
       const auto imgIdx = checkedIndex(tex.source, model.images.size(), "image");
       const auto& img = model.images[imgIdx];
-      std::string id = img.uri.empty() ? ("embed_" + std::to_string(imgIdx)) : img.uri;
+      utils::Assert(img.bits == 8 && img.pixel_type == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE,
+                    fmt::format("glTF image {} must contain 8-bit unsigned pixels", imgIdx));
+      utils::Assert(img.component == 4,
+                    fmt::format("glTF image {} must decode to RGBA pixels", imgIdx));
+      utils::Assert(
+         img.width > 0 && img.height > 0,
+         fmt::format("glTF image {} has invalid dimensions {}x{}", imgIdx, img.width, img.height));
 
-      render::TextureLibrary::CreateTexture(type, id);
+      const auto width = static_cast< uint32_t >(img.width);
+      const auto height = static_cast< uint32_t >(img.height);
+      const auto expectedSize =
+         static_cast< size_t >(width) * static_cast< size_t >(height) * size_t{4};
+      utils::Assert(img.image.size() == expectedSize,
+                    fmt::format("glTF image {} contains {} bytes, expected {}", imgIdx,
+                                img.image.size(), expectedSize));
+
+      const auto id =
+         fmt::format("{}#image_{}#type_{}", file, imgIdx, static_cast< uint32_t >(type));
+      render::TextureLibrary::CreateTexture(type, id, img.image.data(), width, height);
       return &render::TextureLibrary::GetTexture(id);
    };
 

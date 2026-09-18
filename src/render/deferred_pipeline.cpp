@@ -818,7 +818,7 @@ DeferredPipeline::BuildDeferredCommandBuffer(uint32_t frame)
 
 void
 DeferredPipeline::UpdateDeferred(const scene::Camera* camera, const scene::Light* light,
-                                  uint32_t frame)
+                                 uint32_t frame)
 {
    UpdateUniformBufferOffscreen(camera, frame);
    UpdateUniformBufferComposition(camera, light, frame);

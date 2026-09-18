@@ -68,7 +68,7 @@ class DeferredPipeline
 
    static void
    UpdateUniformBufferComposition(const scene::Camera* camera, const scene::Light* light,
-                                   uint32_t frame);
+                                  uint32_t frame);
 
    static void
    UpdateUniformBufferOffscreen(const scene::Camera* camera, uint32_t frame);

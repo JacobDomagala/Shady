@@ -41,6 +41,9 @@ struct Vertex
    glm::vec3 m_normal;
    glm::vec2 m_texCoords;
    glm::vec4 m_tangent;
+   glm::vec2 m_materialTexCoords = glm::vec2(0);
+   glm::vec2 m_normalTexCoords = glm::vec2(0);
+   glm::vec4 m_color = glm::vec4(1);
 
    static auto
    getBindingDescription()
@@ -56,7 +59,7 @@ struct Vertex
    static auto
    getAttributeDescriptions()
    {
-      std::array< VkVertexInputAttributeDescription, 4 > attributeDescriptions{};
+      std::array< VkVertexInputAttributeDescription, 7 > attributeDescriptions{};
 
       attributeDescriptions[0].binding = 0;
       attributeDescriptions[0].location = 0;
@@ -77,6 +80,12 @@ struct Vertex
       attributeDescriptions[3].location = 3;
       attributeDescriptions[3].format = VK_FORMAT_R32G32B32A32_SFLOAT;
       attributeDescriptions[3].offset = offsetof(Vertex, m_tangent);
+
+      attributeDescriptions[4] = {4, 0, VK_FORMAT_R32G32_SFLOAT,
+                                  offsetof(Vertex, m_materialTexCoords)};
+      attributeDescriptions[5] = {5, 0, VK_FORMAT_R32G32_SFLOAT,
+                                  offsetof(Vertex, m_normalTexCoords)};
+      attributeDescriptions[6] = {6, 0, VK_FORMAT_R32G32B32A32_SFLOAT, offsetof(Vertex, m_color)};
 
       return attributeDescriptions;
    }

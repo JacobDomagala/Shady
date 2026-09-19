@@ -48,6 +48,8 @@ struct MaterialData
    float metallicFactor = 1.0F;
    float roughnessFactor = 1.0F;
    float normalScale = 1.0F;
+   // Negative means OPAQUE; otherwise discard fragments below this alpha.
+   float alphaCutoff = -1.0F;
 };
 
 } // namespace shady::render

@@ -9,6 +9,9 @@ layout(location = 0) in VS_OUT
 {
    vec3 fPosition;
    vec2 fTexCoord;
+   vec2 fMaterialTexCoord;
+   vec2 fNormalTexCoord;
+   vec4 fColor;
    vec3 fNorm;
    vec4 fTangent;
 
@@ -31,20 +34,41 @@ main()
 
    vec3 N = normalize(fs_in.fNorm);
    vec3 tangent = fs_in.fTangent.xyz - N * dot(fs_in.fTangent.xyz, N);
-   if (length(tangent) >= 0.0001 && fs_in.fNormSampl >= 0)
+   if (fs_in.fNormSampl >= 0)
    {
-      vec3 T = normalize(tangent);
-      vec3 B = normalize(cross(N, T)) * fs_in.fTangent.w;
-      mat3 TBN = mat3(T, B, N);
-
-      vec3 tangentNormal =
-         texture(sampler2D(textures[fs_in.fNormSampl], samp), fs_in.fTexCoord).xyz * 2.0
-         - vec3(1.0);
-      tangentNormal.xy *= fs_in.fMaterialFactors.z;
-      N = normalize(TBN * normalize(tangentNormal));
+      vec3 T;
+      vec3 B;
+      if (length(tangent) >= 0.0001)
+      {
+         T = normalize(tangent);
+         B = normalize(cross(N, T)) * fs_in.fTangent.w;
+      }
+      else
+      {
+         // Derive a frame for assets without tangents and transformed normal UVs.
+         vec3 dx = dFdx(fs_in.fPosition);
+         vec3 dy = dFdy(fs_in.fPosition);
+         vec2 du = dFdx(fs_in.fNormalTexCoord);
+         vec2 dv = dFdy(fs_in.fNormalTexCoord);
+         vec3 dyPerp = cross(dy, N);
+         vec3 dxPerp = cross(N, dx);
+         T = dyPerp * du.x + dxPerp * dv.x;
+         B = dyPerp * du.y + dxPerp * dv.y;
+         float norm = max(dot(T, T), dot(B, B));
+         float invNorm = norm > 1e-20 ? inversesqrt(norm) : 0.0;
+         T *= invNorm;
+         B *= invNorm;
+      }
+      if (dot(T, T) > 0.0 && dot(B, B) > 0.0)
+      {
+         vec3 tangentNormal =
+            texture(sampler2D(textures[fs_in.fNormSampl], samp), fs_in.fNormalTexCoord).xyz * 2.0 - 1.0;
+         tangentNormal.xy *= fs_in.fMaterialFactors.z;
+         N = normalize(mat3(T, B, N) * tangentNormal);
+      }
    }
 
-   vec4 baseColor = fs_in.fBaseColorFactor;
+   vec4 baseColor = fs_in.fBaseColorFactor * fs_in.fColor;
    if (fs_in.fBaseColorSampl >= 0)
    {
       baseColor *=
@@ -56,7 +80,7 @@ main()
    if (fs_in.fMaterialSampl >= 0)
    {
       vec4 materialSample =
-         texture(sampler2D(textures[fs_in.fMaterialSampl], samp), fs_in.fTexCoord);
+         texture(sampler2D(textures[fs_in.fMaterialSampl], samp), fs_in.fMaterialTexCoord);
       roughness *= materialSample.g;
       metallic *= materialSample.b;
    }

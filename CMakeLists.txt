@@ -74,6 +74,8 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
     FMT_USE_CONSTEXPR_CONSTRUCTION=0
     GLM_FORCE_DEPTH_ZERO_TO_ONE
 )
-target_compile_options(${PROJECT_NAME} PRIVATE -O0 -g3 -fno-omit-frame-pointer)
+if(NOT MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:-O0;-g3;-fno-omit-frame-pointer>)
+endif()
 
 include(cmake/compile_shaders.cmake)

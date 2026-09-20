@@ -19,7 +19,7 @@ layout(location = 0) in VS_OUT
    flat int fMaterialSampl;
    flat int fNormSampl;
    flat vec4 fBaseColorFactor;
-   flat vec3 fMaterialFactors;
+   flat vec4 fMaterialFactors;
 }
 fs_in;
 
@@ -74,6 +74,8 @@ main()
       baseColor *=
          texture(sampler2D(textures[fs_in.fBaseColorSampl], samp), fs_in.fTexCoord);
    }
+
+   if (fs_in.fMaterialFactors.w >= 0.0 && baseColor.a < fs_in.fMaterialFactors.w) discard;
 
    float metallic = fs_in.fMaterialFactors.x;
    float roughness = fs_in.fMaterialFactors.y;

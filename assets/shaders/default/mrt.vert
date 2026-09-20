@@ -45,7 +45,7 @@ layout(location = 0) out VS_OUT
    flat int fMaterialSampl;
    flat int fNormSampl;
    flat vec4 fBaseColorFactor;
-   flat vec3 fMaterialFactors;
+   flat vec4 fMaterialFactors;
 }
 vs_out;
 
@@ -73,5 +73,5 @@ main()
    vs_out.fMaterialSampl = bufferData.textureIDs.y;
    vs_out.fNormSampl = bufferData.textureIDs.z;
    vs_out.fBaseColorFactor = bufferData.baseColorFactor;
-   vs_out.fMaterialFactors = bufferData.materialFactors.xyz;
+   vs_out.fMaterialFactors = bufferData.materialFactors;
 }

@@ -463,13 +463,13 @@ DeferredPipeline::PreparePipelines()
    // The shadow mapping pipeline uses geometry shader instancing (invocations layout modifier) to
    // output shadow maps for multiple lights sources into the different shadow map layers in one
    // single render pass
-   std::array< VkPipelineShaderStageCreateInfo, 1 > shadowStages{};
+   std::array< VkPipelineShaderStageCreateInfo, 2 > shadowStages{};
 
    shadowStages[0] =
       Shader::LoadShader("default/shadow.vert.spv", VK_SHADER_STAGE_VERTEX_BIT).shaderInfo;
-   /*shadowStages[1] =
-      Shader::LoadShader("default/shadow.geom.spv",
-      VK_SHADER_STAGE_GEOMETRY_BIT).shaderInfo;*/
+   shadowStages[1] =
+      Shader::LoadShader("default/shadow.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT).shaderInfo;
+   shadowStages[1].pSpecializationInfo = &specializationInfo;
 
    pipelineInfo.pStages = shadowStages.data();
    pipelineInfo.stageCount = static_cast< uint32_t >(shadowStages.size());

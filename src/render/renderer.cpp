@@ -48,8 +48,8 @@ Renderer::MeshLoaded(const std::vector< Vertex >& vertices, const std::vector< u
    PerInstanceBuffer newInstance{};
    newInstance.model = modelMat;
    newInstance.baseColorFactor = material.baseColorFactor;
-   newInstance.materialFactors =
-      glm::vec4(material.metallicFactor, material.roughnessFactor, material.normalScale, 0.0F);
+   newInstance.materialFactors = glm::vec4(material.metallicFactor, material.roughnessFactor,
+                                           material.normalScale, material.alphaCutoff);
 
    for (size_t textureSlot = 0; textureSlot < material.textures.size(); ++textureSlot)
    {

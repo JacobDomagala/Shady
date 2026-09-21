@@ -107,6 +107,18 @@ DeferredPipeline::Initialize(VkRenderPass mainRenderPass, VkPipelineCache pipeli
 {
    m_offscreenCommandBuffer.resize(MAX_FRAMES_IN_FLIGHT);
 
+   // A valid descriptor array is required even for an entirely untextured GLB.
+   // This also supplies the shared sampler without depending on an unrelated disk image.
+   constexpr const char* fallbackName = "__shady_white_fallback";
+   const uint8_t white[] = {255, 255, 255, 255};
+   TextureLibrary::CreateTexture(TextureType::DIFFUSE_MAP, fallbackName, white, 1, 1);
+   if (Data::textures.empty())
+   {
+      const auto view = TextureLibrary::GetTexture(fallbackName).GetImageViewAndSampler().first;
+      Data::textures[fallbackName] = {Data::currTexIdx++, view};
+      Data::texturesVec.push_back(view);
+   }
+
    m_pipelineCache = pipelineCache;
    m_mainRenderPass = mainRenderPass;
    ShadowSetup();
@@ -539,7 +551,7 @@ DeferredPipeline::SetupDescriptorSet()
    VK_CHECK(vkAllocateDescriptorSets(Data::vk_device, &allocInfo, m_descriptorSets.data()), "");
 
    const auto [unusedImageView, sampler] =
-      TextureLibrary::GetTexture(TextureType::DIFFUSE_MAP, "196.png").GetImageViewAndSampler();
+      TextureLibrary::GetTexture("__shady_white_fallback").GetImageViewAndSampler();
    (void)unusedImageView;
 
    std::vector< VkDescriptorImageInfo > descriptorImageInfos;

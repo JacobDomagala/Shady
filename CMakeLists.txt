@@ -68,6 +68,7 @@ find_package(Vulkan REQUIRED)
 add_library(shady_tinygltf STATIC src/scene/tinygltf.cpp)
 target_link_libraries(shady_tinygltf PUBLIC TinyGLTF::TinyGLTF)
 target_compile_features(shady_tinygltf PUBLIC cxx_std_20)
+target_compile_definitions(shady_tinygltf PUBLIC TINYGLTF_NOEXCEPTION JSON_NOEXCEPTION)
 
 add_library(shady_gltf STATIC src/scene/gltf_loader.cpp src/scene/gltf_loader.hpp)
 target_include_directories(shady_gltf PUBLIC src)
@@ -88,5 +89,19 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 if(NOT MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:-O0;-g3;-fno-omit-frame-pointer>)
 endif()
+
+if(MSVC)
+    # Remove CMake's default /EHsc before applying the engine's no-exception policy.
+    string(REGEX REPLACE "(^|[ \t])[-/]EH[a-zA-Z-]+" "\\1" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+endif()
+
+foreach(target ${PROJECT_NAME} shady_gltf shady_tinygltf)
+    if(MSVC)
+        target_compile_options(${target} PRIVATE /EHs-c-)
+        target_compile_definitions(${target} PRIVATE _HAS_EXCEPTIONS=0)
+    else()
+        target_compile_options(${target} PRIVATE -fno-exceptions)
+    endif()
+endforeach()
 
 include(cmake/compile_shaders.cmake)

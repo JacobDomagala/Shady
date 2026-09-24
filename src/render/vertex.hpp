@@ -37,10 +37,10 @@ struct SkyboxVertex
 
 struct Vertex
 {
-   glm::vec3 m_position;
-   glm::vec3 m_normal;
-   glm::vec2 m_texCoords;
-   glm::vec4 m_tangent;
+   glm::vec3 m_position = glm::vec3(0.0F);
+   glm::vec3 m_normal = glm::vec3(0.0F);
+   glm::vec2 m_texCoords = glm::vec2(0.0F);
+   glm::vec4 m_tangent = glm::vec4(0.0F);
    glm::vec2 m_materialTexCoords = glm::vec2(0);
    glm::vec2 m_normalTexCoords = glm::vec2(0);
    glm::vec4 m_color = glm::vec4(1);

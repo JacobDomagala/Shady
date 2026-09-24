@@ -10,12 +10,15 @@
 #include <fstream>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <iterator>
 #include <limits>
 #include <nlohmann/json.hpp>
 #include <numeric>
 #include <optional>
+#include <ranges>
 #include <string_view>
 #include <system_error>
+#include <utility>
 
 namespace shady::scene {
 namespace {
@@ -39,7 +42,7 @@ At(const std::vector< T >& values, int index, std::string_view label)
 size_t
 Product(size_t a, size_t b)
 {
-   Require(b == 0 || a <= (std::numeric_limits< size_t >::max)() / b, "size overflow");
+   Require(b == 0 || a <= std::numeric_limits< size_t >::max() / b, "size overflow");
    return a * b;
 }
 
@@ -80,7 +83,7 @@ CheckedFile(const std::string& path, bool binary)
    std::ifstream file(std::filesystem::path(path), std::ios::binary | std::ios::ate);
    Require(file.is_open(), "cannot open file");
    const auto length = file.tellg();
-   Require(length > 0 && static_cast< uint64_t >(length) <= UINT32_MAX,
+   Require(length > 0 && std::cmp_less_equal(static_cast< std::streamoff >(length), UINT32_MAX),
            "empty file or file exceeds 4 GiB limit");
    std::vector< unsigned char > bytes(static_cast< size_t >(length));
    file.seekg(0);
@@ -110,7 +113,9 @@ CheckedFile(const std::string& path, bool binary)
             jsonLength = size;
          }
          else
+         {
             Require(type != 0x4e4f534a, "duplicate GLB JSON chunk");
+         }
          if (type == 0x004e4942)
          {
             Require(chunkIndex == 1 && !hasBinary, "GLB BIN chunk must be second and unique");
@@ -141,7 +146,7 @@ CheckedFile(const std::string& path, bool binary)
    auto unsignedValue = [](const nlohmann::json& value) -> size_t {
       Require(value.is_number_unsigned(), "byte sizes and indices must be non-negative integers");
       const auto number = value.get< uint64_t >();
-      Require(number <= (std::numeric_limits< size_t >::max)(), "byte size overflow");
+      Require(number <= std::numeric_limits< size_t >::max(), "byte size overflow");
       return static_cast< size_t >(number);
    };
    std::vector< size_t > bufferSizes;
@@ -192,21 +197,14 @@ CheckedFile(const std::string& path, bool binary)
 class Accessor
 {
  public:
-   Accessor(const tinygltf::Model& model, int index) : info(At(model.accessors, index, "accessor"))
+   Accessor(const tinygltf::Model& model, int index)
+      : info(At(model.accessors, index, "accessor")),
+        componentSize(ComponentSize(info)),
+        components(ComponentCount(info)),
+        elementSize(Product(componentSize, components))
    {
-      Require(info.type == TINYGLTF_TYPE_SCALAR || info.type == TINYGLTF_TYPE_VEC2
-                 || info.type == TINYGLTF_TYPE_VEC3 || info.type == TINYGLTF_TYPE_VEC4,
-              "unsupported accessor shape");
-      const int size =
-         tinygltf::GetComponentSizeInBytes(static_cast< uint32_t >(info.componentType));
-      Require(size > 0 && info.componentType != TINYGLTF_COMPONENT_TYPE_DOUBLE,
-              "invalid component type");
-      componentSize = static_cast< size_t >(size);
-      components = static_cast< size_t >(
-         tinygltf::GetNumComponentsInType(static_cast< uint32_t >(info.type)));
-      elementSize = Product(componentSize, components);
       Require(info.count > 0
-                 && info.count <= static_cast< size_t >((std::numeric_limits< int32_t >::max)()),
+                 && info.count <= static_cast< size_t >(std::numeric_limits< int32_t >::max()),
               "accessor count exceeds engine limits or is zero");
       Require(!info.normalized || info.componentType == TINYGLTF_COMPONENT_TYPE_BYTE
                  || info.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE
@@ -223,7 +221,7 @@ class Accessor
                                   elementSize, componentSize);
          bytes.resize(Product(info.count, elementSize));
          for (size_t i = 0; i < info.count; ++i)
-            std::memcpy(bytes.data() + i * elementSize, base + i * stride, elementSize);
+            std::memcpy(bytes.data() + (i * elementSize), base + (i * stride), elementSize);
       }
       else
       {
@@ -238,7 +236,7 @@ class Accessor
       if (info.sparse.isSparse)
       {
          const auto& sparse = info.sparse;
-         Require(sparse.count > 0 && static_cast< size_t >(sparse.count) <= info.count,
+         Require(sparse.count > 0 && std::cmp_less_equal(sparse.count, info.count),
                  "invalid sparse count");
          Require(sparse.indices.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE
                     || sparse.indices.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT
@@ -259,24 +257,24 @@ class Accessor
          for (size_t i = 0; i < count; ++i)
          {
             const auto destination =
-               ReadIndex(indices + i * indexSize, sparse.indices.componentType);
+               ReadIndex(indices + (i * indexSize), sparse.indices.componentType);
             Require(destination < info.count && (i == 0 || destination > previous),
                     "sparse indices must be ordered, unique and in range");
-            std::memcpy(bytes.data() + destination * elementSize, values + i * elementSize,
+            std::memcpy(bytes.data() + (destination * elementSize), values + (i * elementSize),
                         elementSize);
             previous = destination;
          }
       }
    }
 
-   glm::vec4
+   [[nodiscard]] glm::vec4
    Vector(size_t index) const
    {
       Require(index < info.count, "vertex attribute count mismatch");
       glm::vec4 result(0.0F);
       for (size_t channel = 0; channel < components; ++channel)
       {
-         const auto* ptr = bytes.data() + index * elementSize + channel * componentSize;
+         const auto* ptr = bytes.data() + (index * elementSize) + (channel * componentSize);
          float value = 0;
          switch (info.componentType)
          {
@@ -313,12 +311,20 @@ class Accessor
       return result;
    }
 
-   uint32_t
+   [[nodiscard]] uint32_t
    Index(size_t index) const
    {
       Require(info.type == TINYGLTF_TYPE_SCALAR && !info.normalized, "invalid indices accessor");
-      const auto value = ReadIndex(bytes.data() + index * elementSize, info.componentType);
-      const uint32_t maximum = componentSize == 1 ? 255U : componentSize == 2 ? 65535U : UINT32_MAX;
+      const auto value = ReadIndex(bytes.data() + (index * elementSize), info.componentType);
+      uint32_t maximum = UINT32_MAX;
+      if (componentSize == 1)
+      {
+         maximum = 255U;
+      }
+      else if (componentSize == 2)
+      {
+         maximum = 65535U;
+      }
       Require(value != maximum, "primitive restart index is forbidden");
       return value;
    }
@@ -326,6 +332,26 @@ class Accessor
    tinygltf::Accessor info;
 
  private:
+   static size_t
+   ComponentSize(const tinygltf::Accessor& accessor)
+   {
+      const int size =
+         tinygltf::GetComponentSizeInBytes(static_cast< uint32_t >(accessor.componentType));
+      Require(size > 0 && accessor.componentType != TINYGLTF_COMPONENT_TYPE_DOUBLE,
+              "invalid component type");
+      return static_cast< size_t >(size);
+   }
+
+   static size_t
+   ComponentCount(const tinygltf::Accessor& accessor)
+   {
+      Require(accessor.type == TINYGLTF_TYPE_SCALAR || accessor.type == TINYGLTF_TYPE_VEC2
+                 || accessor.type == TINYGLTF_TYPE_VEC3 || accessor.type == TINYGLTF_TYPE_VEC4,
+              "unsupported accessor shape");
+      return static_cast< size_t >(
+         tinygltf::GetNumComponentsInType(static_cast< uint32_t >(accessor.type)));
+   }
+
    static const unsigned char*
    Range(const tinygltf::Model& model, int viewIndex, size_t offset, size_t count, size_t stride,
          size_t size, size_t alignment)
@@ -365,7 +391,7 @@ LocalMatrix(const tinygltf::Node& node)
       return values.empty() || (values.size() == size && std::ranges::all_of(values, [](double v) {
                                    return std::isfinite(v)
                                           && std::abs(v) <= static_cast< double >(
-                                                (std::numeric_limits< float >::max)());
+                                                std::numeric_limits< float >::max());
                                 }));
    };
    Require(valid(node.matrix, 16) && valid(node.translation, 3) && valid(node.rotation, 4)
@@ -597,7 +623,7 @@ Primitive(GltfAsset& asset, const tinygltf::Primitive& primitive, const glm::mat
          const auto c = std::cos(bindings[slot].rotation);
          const auto s = std::sin(bindings[slot].rotation);
          *destinations[slot] =
-            glm::vec2(c * uv.x - s * uv.y, s * uv.x + c * uv.y) + bindings[slot].offset;
+            glm::vec2((c * uv.x) - (s * uv.y), (s * uv.x) + (c * uv.y)) + bindings[slot].offset;
       }
       if (colors)
       {
@@ -631,7 +657,9 @@ Primitive(GltfAsset& asset, const tinygltf::Primitive& primitive, const glm::mat
               && (mode != TINYGLTF_MODE_TRIANGLES || sourceIndices.size() % 3 == 0),
            "invalid triangle index count");
    if (mode == TINYGLTF_MODE_TRIANGLES)
+   {
       mesh.indices = std::move(sourceIndices);
+   }
    else
    {
       for (size_t i = 2; i < sourceIndices.size(); ++i)
@@ -719,28 +747,26 @@ ImportGltf(tinygltf::Model model)
       if (extension != "KHR_texture_transform")
          asset.warnings.push_back("Ignoring optional extension: " + extension);
    if (!source.animations.empty())
-      asset.warnings.push_back("Animations are not evaluated; loading the static scene");
-   for (const auto& material : source.materials)
+      asset.warnings.emplace_back("Animations are not evaluated; loading the static scene");
+   if (std::ranges::any_of(source.materials, [](const auto& material) {
+          return material.occlusionTexture.index >= 0 || material.emissiveTexture.index >= 0
+                 || std::ranges::any_of(material.emissiveFactor, [](double v) { return v != 0; });
+       }))
    {
-      if (material.occlusionTexture.index >= 0 || material.emissiveTexture.index >= 0
-          || std::ranges::any_of(material.emissiveFactor, [](double v) { return v != 0; }))
-      {
-         asset.warnings.push_back("Occlusion/emissive channels are not supported "
+      asset.warnings.emplace_back("Occlusion/emissive channels are not supported "
                                   "by the deferred renderer");
-         break;
-      }
    }
-   for (const auto& sampler : source.samplers)
-      if ((sampler.magFilter != -1 && sampler.magFilter != TINYGLTF_TEXTURE_FILTER_LINEAR)
-          || (sampler.minFilter != -1
-              && sampler.minFilter != TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_LINEAR)
-          || sampler.wrapS != TINYGLTF_TEXTURE_WRAP_REPEAT
-          || sampler.wrapT != TINYGLTF_TEXTURE_WRAP_REPEAT)
-      {
-         asset.warnings.push_back("Custom texture samplers are approximated by "
+   if (std::ranges::any_of(source.samplers, [](const auto& sampler) {
+          return (sampler.magFilter != -1 && sampler.magFilter != TINYGLTF_TEXTURE_FILTER_LINEAR)
+                 || (sampler.minFilter != -1
+                     && sampler.minFilter != TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_LINEAR)
+                 || sampler.wrapS != TINYGLTF_TEXTURE_WRAP_REPEAT
+                 || sampler.wrapT != TINYGLTF_TEXTURE_WRAP_REPEAT;
+       }))
+   {
+      asset.warnings.emplace_back("Custom texture samplers are approximated by "
                                   "linear mipmapped repeat sampling");
-         break;
-      }
+   }
    for (auto& image : source.images)
    {
       Require(image.width > 0 && image.height > 0 && image.component == 4 && !image.as_is,
@@ -753,7 +779,7 @@ ImportGltf(tinygltf::Model model)
          std::vector< unsigned char > converted(components);
          for (size_t i = 0; i < components; ++i)
             converted[i] =
-               static_cast< unsigned char >(Read< uint16_t >(image.image.data() + i * 2) >> 8);
+               static_cast< unsigned char >(Read< uint16_t >(image.image.data() + (i * 2)) >> 8);
          image.image = std::move(converted);
          image.bits = 8;
          image.pixel_type = TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE;
@@ -792,11 +818,11 @@ ImportGltf(tinygltf::Model model)
    else
       Require(source.defaultScene == -1, "default scene does not exist");
    std::vector< std::pair< int, glm::mat4 > > pending;
-   for (auto it = roots.rbegin(); it != roots.rend(); ++it)
+   for (const int root : std::views::reverse(roots))
    {
-      At(source.nodes, *it, "scene root");
-      Require(parents[static_cast< size_t >(*it)] == -1, "scene root has a parent");
-      pending.emplace_back(*it, glm::mat4(1));
+      At(source.nodes, root, "scene root");
+      Require(parents[static_cast< size_t >(root)] == -1, "scene root has a parent");
+      pending.emplace_back(root, glm::mat4(1));
    }
    std::vector< bool > visited(source.nodes.size(), false);
    size_t vertexCount = 0;
@@ -816,8 +842,8 @@ ImportGltf(tinygltf::Model model)
          for (const auto& primitive : mesh.primitives)
             Primitive(asset, primitive, world, mesh.name);
       }
-      for (auto it = node.children.rbegin(); it != node.children.rend(); ++it)
-         pending.emplace_back(*it, world);
+      std::ranges::transform(std::views::reverse(node.children), std::back_inserter(pending),
+                             [&world](int child) { return std::pair{child, world}; });
    }
    for (const auto& mesh : asset.meshes)
    {

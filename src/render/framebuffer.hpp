@@ -56,7 +56,7 @@ struct FramebufferAttachment
    VkImageView view_ = {};
    VkFormat format_ = {};
    VkImageSubresourceRange subresourceRange_ = {};
-   VkAttachmentDescription description_ = {};
+   VkAttachmentDescription description_ = {.samples = VK_SAMPLE_COUNT_1_BIT};
 };
 
 /**

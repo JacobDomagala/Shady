@@ -88,7 +88,7 @@ Texture::CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels,
    VkImage image{};
    VkDeviceMemory imageMemory{};
 
-   VkImageCreateInfo imageInfo{};
+   VkImageCreateInfo imageInfo{.samples = numSamples};
    imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
    imageInfo.imageType = VK_IMAGE_TYPE_2D;
    imageInfo.extent.width = width;
@@ -100,7 +100,6 @@ Texture::CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels,
    imageInfo.tiling = tiling;
    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
    imageInfo.usage = usage;
-   imageInfo.samples = numSamples;
    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
    if (cubemap)
    {

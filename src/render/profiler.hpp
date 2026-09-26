@@ -5,7 +5,7 @@
 
 namespace shady::render {
 
-enum class TimestampQuery : uint32_t
+enum class TimestampQuery : uint8_t
 {
    FrameStart,
    OffscreenStart,

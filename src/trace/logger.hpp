@@ -8,7 +8,7 @@
 #include <string_view>
 #include <unordered_map>
 
-#if defined(_WIN32)
+#ifdef _WIN32
 #include <Windows.h>
 #endif //  WIN
 
@@ -69,7 +69,7 @@ class Logger
  private:
    static inline TYPE s_currentLogType = TYPE::DEBUG;
 
-#if defined(_WIN32)
+#ifdef _WIN32
    static const inline std::unordered_map< TYPE, WORD, LoggerTypeHash > s_typeStyles = {
       {TYPE::TRACE, WORD{FOREGROUND_BLUE}},
       {TYPE::DEBUG, WORD{FOREGROUND_GREEN | FOREGROUND_BLUE}},

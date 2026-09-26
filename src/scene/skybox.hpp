@@ -62,7 +62,7 @@ class Skybox
    VkPipeline m_pipeline = {};
    VkPipelineLayout m_pipelineLayout = {};
    VkDescriptorSetLayout m_descriptorSetLayout = {};
-   std::vector< VkDescriptorSet > m_descriptorSets = {};
+   std::vector< VkDescriptorSet > m_descriptorSets;
    VkDescriptorPool m_descriptorPool = {};
 
    VkImage m_image = {};
@@ -72,7 +72,7 @@ class Skybox
 
    render::Buffer m_vertexBuffer = {};
    render::Buffer m_indexBuffer = {};
-   std::vector< render::Buffer > m_uniformBuffers = {};
+   std::vector< render::Buffer > m_uniformBuffers;
 };
 
 } // namespace shady::scene

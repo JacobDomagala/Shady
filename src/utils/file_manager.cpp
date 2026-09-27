@@ -4,9 +4,11 @@
 
 #define STB_IMAGE_STATIC
 #define STB_IMAGE_IMPLEMENTATION
+#include <cstdint>
 #include <fstream>
 #include <stb_image.h>
 #include <string>
+#include <utility>
 
 namespace shady::utils {
 
@@ -50,18 +52,24 @@ FileManager::ReadBinaryFile(const std::filesystem::path& path)
 std::vector< char >
 FileManager::ReadBinaryFile(std::string_view fileName)
 {
-   std::ifstream fileHandle(fileName.data(), std::ios::binary);
+   std::ifstream fileHandle(std::string(fileName), std::ios::binary | std::ios::ate);
 
    utils::Assert(fileHandle.is_open(),
                  fmt::format("FileManager::ReadBinaryFile -> {} can't be opened!", fileName));
 
-   const auto size = std::filesystem::file_size(fileName);
+   const auto size = static_cast< std::streamoff >(fileHandle.tellg());
 
-   utils::Assert(size, fmt::format("FileManager::ReadBinaryFile -> {} is empty!", fileName));
+   utils::Assert(
+      size > 0 && std::cmp_less_equal(size, SIZE_MAX),
+      fmt::format("FileManager::ReadBinaryFile -> {} has an invalid or empty size!", fileName));
 
-   std::vector< char > buffer(size);
+   std::vector< char > buffer(static_cast< size_t >(size));
 
+   fileHandle.seekg(0);
    fileHandle.read(buffer.data(), static_cast< std::streamsize >(size));
+   utils::Assert(
+      static_cast< bool >(fileHandle),
+      fmt::format("FileManager::ReadBinaryFile -> {} could not be read completely!", fileName));
 
    return buffer;
 }

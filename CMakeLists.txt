@@ -53,8 +53,6 @@ add_executable(${PROJECT_NAME}
     src/utils/file_manager.hpp src/utils/file_manager.cpp src/utils/assert.hpp src/utils/assert.cpp
 )
 
-add_clang_format_target(${PROJECT_NAME})
-
 find_package(fmt REQUIRED)
 find_package(glm REQUIRED)
 find_package(glfw3 REQUIRED)
@@ -75,6 +73,8 @@ target_include_directories(shady_gltf PUBLIC src)
 target_link_libraries(shady_gltf PUBLIC shady_tinygltf glm::glm Vulkan::Headers)
 target_link_libraries(shady_gltf PRIVATE project_warnings)
 target_compile_definitions(shady_gltf PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE)
+
+add_clang_format_target(${PROJECT_NAME} shady_gltf shady_tinygltf)
 
 target_include_directories(${PROJECT_NAME}
                     PRIVATE src src/app src/app/input src/trace src/render src/utils src/scene src/time)

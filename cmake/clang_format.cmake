@@ -14,7 +14,7 @@ function(add_clang_format_target target)
         endif()
 
         find_program(CLANG_FORMAT_EXECUTABLE
-            NAMES clang-format clang-format-22
+            NAMES clang-format-22 clang-format
             HINTS ${clang_format_hints}
             DOC "Path to the clang-format executable")
     endif()
@@ -26,7 +26,12 @@ function(add_clang_format_target target)
         return()
     endif()
 
-    get_target_property(target_sources ${target} SOURCES)
+    set(target_sources)
+    foreach(source_target IN ITEMS ${target} ${ARGN})
+        get_target_property(sources ${source_target} SOURCES)
+        list(APPEND target_sources ${sources})
+    endforeach()
+    list(REMOVE_DUPLICATES target_sources)
     list(FILTER target_sources INCLUDE REGEX "\\.(c|cc|cpp|cxx|h|hh|hpp|hxx)$")
 
     set(source_files)

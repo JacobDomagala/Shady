@@ -200,11 +200,7 @@ populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
          }
          break;
 
-         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: {
-            trace::Logger::Fatal("validation layer: {}", pCallbackData->pMessage);
-         }
-         break;
-
+         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
          default: {
             trace::Logger::Fatal("validation layer: {}", pCallbackData->pMessage);
          }

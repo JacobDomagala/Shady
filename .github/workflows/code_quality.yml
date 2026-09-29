@@ -25,7 +25,7 @@ jobs:
           | sudo tee /etc/apt/sources.list.d/llvm-22.list
         sudo apt-get update
         sudo apt-get install -y clang-22 clang-tidy-22 clang-format-22 cppcheck \
-          ninja-build xorg-dev libgl-dev libvulkan-dev glslc python3-venv
+          ninja-build xorg-dev libgl-dev libvulkan-dev vulkan-utility-libraries-dev glslc python3-venv
         python3 -m venv build/venv
         build/venv/bin/pip install conan
 

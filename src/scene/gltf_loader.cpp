@@ -618,8 +618,10 @@ Primitive(GltfAsset& asset, const tinygltf::Primitive& primitive, const glm::mat
                                                   &vertex.m_normalTexCoords};
       for (size_t slot = 0; slot < bindings.size(); ++slot)
       {
-         const auto uv =
-            (uvs[slot] ? glm::vec2(uvs[slot]->Vector(i)) : glm::vec2(0)) * bindings[slot].scale;
+         glm::vec2 uv(0);
+         if (const auto& accessor = uvs[slot]; accessor.has_value())
+            uv = glm::vec2(accessor->Vector(i));
+         uv *= bindings[slot].scale;
          const auto c = std::cos(bindings[slot].rotation);
          const auto s = std::sin(bindings[slot].rotation);
          *destinations[slot] =

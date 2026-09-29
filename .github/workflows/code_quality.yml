@@ -2,57 +2,57 @@ name: Code quality check
 
 on: [pull_request]
 
+permissions:
+  contents: read
+
+env:
+  CC: clang-22
+  CXX: clang++-22
+
 jobs:
   code-quality:
-    runs-on: ubuntu-latest
-
+    runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
-    - name: setup init_script
+    - name: Install analysis tools and dependencies
       shell: bash
       run: |
-        echo "#!/bin/bash
+        set -euo pipefail
+        curl -fsSL https://apt.llvm.org/llvm-snapshot.gpg.key \
+          | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc > /dev/null
+        echo "deb https://apt.llvm.org/noble/ llvm-toolchain-noble-22 main" \
+          | sudo tee /etc/apt/sources.list.d/llvm-22.list
+        sudo apt-get update
+        sudo apt-get install -y clang-22 clang-tidy-22 clang-format-22 cppcheck \
+          ninja-build xorg-dev libgl-dev libvulkan-dev glslc python3-venv
+        python3 -m venv build/venv
+        build/venv/bin/pip install conan
 
-        root_dir=\${1}
-        build_dir=\${2}
-
-        python3 -m venv "$HOME/venv"
-        source "$HOME/venv/bin/activate"
-        pip install --upgrade pip
-        pip install conan PyGithub
-
+    - name: Configure compilation database
+      shell: bash
+      run: |
+        set -euo pipefail
+        source build/venv/bin/activate
         conan profile detect
-        conan install \$root_dir --output-folder=build --build=missing \
-            -s:h "build_type=Release" \
-            -s:h "compiler=clang" \
-            -s:h "compiler.version=22" \
-            -s:h "compiler.cppstd=20" \
-            -s:b "compiler=clang" \
-            -s:b "compiler.version=22" \
-            -s:b "compiler.cppstd=20" \
-            -c tools.system.package_manager:mode=install
-
-
-        wget https://sdk.lunarg.com/sdk/download/1.4.313.0/linux/vulkansdk-linux-x86_64-1.4.313.0.tar.xz
-        mkdir vulkan
-        tar xf vulkansdk-linux-x86_64-1.4.313.0.tar.xz -C \$root_dir/vulkan
-        source \$root_dir/vulkan/1.4.313.0/setup-env.sh" > init_script.sh
+        conan install . --output-folder=build --build=missing \
+          -s:h build_type=Release -s:h compiler.cppstd=20 \
+          -s:b build_type=Release -s:b compiler.cppstd=20 \
+          -c tools.cmake.cmaketoolchain:generator=Ninja \
+          -c tools.system.package_manager:mode=install \
+          -c tools.system.package_manager:sudo=True
+        cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake \
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+          -DCLANG_FORMAT_EXECUTABLE=/usr/bin/clang-format-22
 
     - name: Run static analysis
-      uses: JacobDomagala/StaticAnalysis@master
+      run: python3 scripts/code_quality.py build --clang-tidy clang-tidy-22
+
+    - name: Upload complete analysis logs
+      if: always()
+      uses: actions/upload-artifact@v7
       with:
-        exclude_dir: lib vulkan
-        init_script: init_script.sh
-        apt_pckgs: xorg-dev python3-pip python3.12-venv wget
-        report_pr_changes_only: false
-        cmake_args: -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
-        verbose: false
-        clang_tidy_args: "-extra-arg=-DFMT_USE_CONSTEVAL=0"
-        cppcheck_args: >-
-            --enable=warning,style,performance,portability
-            --suppress=functionStatic
-            --suppress=functionConst
-            --suppress=constParameterPointer
-            --suppress=returnByReference
-            --suppress=funcArgNamesDifferent
+        name: code-quality
+        path: build/code-quality/
+        if-no-files-found: ignore

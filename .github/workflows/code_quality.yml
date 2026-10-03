@@ -8,6 +8,7 @@ permissions:
 env:
   CC: clang-22
   CXX: clang++-22
+  VULKAN_HEADER_VERSION: 1.4.341
 
 jobs:
   code-quality:
@@ -25,9 +26,17 @@ jobs:
           | sudo tee /etc/apt/sources.list.d/llvm-22.list
         sudo apt-get update
         sudo apt-get install -y clang-22 clang-tidy-22 clang-format-22 cppcheck \
-          ninja-build xorg-dev libgl-dev libvulkan-dev vulkan-utility-libraries-dev glslc python3-venv
+          ninja-build xorg-dev libgl-dev libvulkan-dev glslc python3-venv
         python3 -m venv build/venv
         build/venv/bin/pip install conan
+
+        # Match the build workflows' SDK headers with a small, headers-only download.
+        curl -fsSL --retry 3 \
+          "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/v${VULKAN_HEADER_VERSION}.tar.gz" \
+          | tar -xz -C build
+        curl -fsSL --retry 3 \
+          "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Utility-Libraries/v${VULKAN_HEADER_VERSION}/include/vulkan/vk_enum_string_helper.h" \
+          -o "build/Vulkan-Headers-${VULKAN_HEADER_VERSION}/include/vulkan/vk_enum_string_helper.h"
 
     - name: Configure compilation database
       shell: bash
@@ -44,6 +53,7 @@ jobs:
         cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake \
           -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+          -DVulkan_INCLUDE_DIR="$PWD/build/Vulkan-Headers-${VULKAN_HEADER_VERSION}/include" \
           -DCLANG_FORMAT_EXECUTABLE=/usr/bin/clang-format-22
 
     - name: Run static analysis

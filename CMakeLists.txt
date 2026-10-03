@@ -60,7 +60,7 @@ find_package(imgui REQUIRED)
 find_package(stb REQUIRED)
 find_package(TinyGLTF 2.9 CONFIG REQUIRED)
 
-find_package(Vulkan REQUIRED)
+find_package(Vulkan 1.4 REQUIRED)
 
 # Conan supplies header-only TinyGLTF; isolate its implementation and STB from engine warnings.
 add_library(shady_tinygltf STATIC src/scene/tinygltf.cpp)

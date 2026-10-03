@@ -48,8 +48,8 @@ Renderer::MeshLoaded(const std::vector< Vertex >& vertices, const std::vector< u
    PerInstanceBuffer newInstance{};
    newInstance.model = modelMat;
    newInstance.baseColorFactor = material.baseColorFactor;
-   newInstance.materialFactors =
-      glm::vec4(material.metallicFactor, material.roughnessFactor, material.normalScale, 0.0F);
+   newInstance.materialFactors = glm::vec4(material.metallicFactor, material.roughnessFactor,
+                                           material.normalScale, material.alphaCutoff);
 
    for (size_t textureSlot = 0; textureSlot < material.textures.size(); ++textureSlot)
    {
@@ -131,7 +131,8 @@ struct QueueFamilyIndices
 
 struct SwapChainSupportDetails
 {
-   VkSurfaceCapabilitiesKHR capabilities = {};
+   VkSurfaceCapabilitiesKHR capabilities = {.currentTransform =
+                                               VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR};
    std::vector< VkSurfaceFormatKHR > formats;
    std::vector< VkPresentModeKHR > presentModes;
 };
@@ -199,11 +200,7 @@ populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
          }
          break;
 
-         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: {
-            trace::Logger::Fatal("validation layer: {}", pCallbackData->pMessage);
-         }
-         break;
-
+         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
          default: {
             trace::Logger::Fatal("validation layer: {}", pCallbackData->pMessage);
          }
@@ -599,8 +596,7 @@ Renderer::Draw(const scene::Camera* camera, const scene::Light* light)
 
    UpdateUniformBuffer(camera, light);
 
-   const VkCommandBuffer offscreenCommandBuffer =
-      DeferredPipeline::GetOffscreenCmdBuffer(currentFrame);
+   auto* const offscreenCommandBuffer = DeferredPipeline::GetOffscreenCmdBuffer(currentFrame);
 
    VkSubmitInfo offscreenSubmitInfo{};
    offscreenSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -846,7 +842,9 @@ Renderer::CreateSwapchain(GLFWwindow* windowHandle)
    }
 
 
-   VkSwapchainCreateInfoKHR swapChainCreateInfo{};
+   VkSwapchainCreateInfoKHR swapChainCreateInfo{
+      .preTransform = swapChainSupport.capabilities.currentTransform,
+      .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR};
    swapChainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
    swapChainCreateInfo.surface = Data::m_surface;
 
@@ -871,8 +869,6 @@ Renderer::CreateSwapchain(GLFWwindow* windowHandle)
       swapChainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
    }
 
-   swapChainCreateInfo.preTransform = swapChainSupport.capabilities.currentTransform;
-   swapChainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
    swapChainCreateInfo.presentMode = presentMode;
    swapChainCreateInfo.clipped = VK_TRUE;
 
@@ -902,9 +898,8 @@ Renderer::CreateImageViews()
 void
 Renderer::CreateRenderPass()
 {
-   VkAttachmentDescription colorAttachment{};
+   VkAttachmentDescription colorAttachment{.samples = VK_SAMPLE_COUNT_1_BIT};
    colorAttachment.format = m_swapChainImageFormat;
-   colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
    // colorAttachment.samples = Data::m_msaaSamples;
    colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
    colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;

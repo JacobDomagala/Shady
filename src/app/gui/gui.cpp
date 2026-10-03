@@ -556,11 +556,10 @@ Gui::PreparePipeline(VkPipelineCache pipelineCache, VkRenderPass renderPass)
    pipelineViewportStateCreateInfo.scissorCount = 1;
    pipelineViewportStateCreateInfo.flags = 0;
 
-   VkPipelineMultisampleStateCreateInfo pipelineMultisampleStateCreateInfo{};
+   VkPipelineMultisampleStateCreateInfo pipelineMultisampleStateCreateInfo{
+      .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT};
    pipelineMultisampleStateCreateInfo.sType =
       VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-   pipelineMultisampleStateCreateInfo.rasterizationSamples =
-      VK_SAMPLE_COUNT_1_BIT; /*Data::m_msaaSamples*/
    pipelineMultisampleStateCreateInfo.flags = 0;
 
 

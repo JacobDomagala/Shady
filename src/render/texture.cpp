@@ -30,14 +30,32 @@ Texture::Texture(TextureType type, std::string_view textureName)
    CreateTextureImage(type, textureName);
 }
 
+Texture::Texture(TextureType type, std::string_view textureName, const uint8_t* pixels,
+                 uint32_t width, uint32_t height)
+{
+   CreateTextureImage(type, textureName, pixels, width, height);
+}
+
 void
 Texture::CreateTextureImage(TextureType type, std::string_view textureName)
 {
+   auto textureData = utils::FileManager::ReadTexture(textureName);
+   CreateTextureImage(type, textureName, textureData.m_bytes.get(), textureData.m_size.x,
+                      textureData.m_size.y);
+}
+
+void
+Texture::CreateTextureImage(TextureType type, std::string_view textureName, const uint8_t* pixels,
+                            uint32_t width, uint32_t height)
+{
+   utils::Assert(pixels != nullptr, fmt::format("Texture {} has no pixel data", textureName));
+   utils::Assert(width > 0 && height > 0, fmt::format("Texture {} has invalid dimensions {}x{}",
+                                                      textureName, width, height));
+
    m_name = textureName;
    m_type = type;
-   auto textureData = utils::FileManager::ReadTexture(textureName);
-   m_width = textureData.m_size.x;
-   m_height = textureData.m_size.y;
+   m_width = width;
+   m_height = height;
 
    m_format = type == TextureType::DIFFUSE_MAP ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8A8_UNORM;
    m_mips = static_cast< uint32_t >(std::floor(std::log2(std::max(m_width, m_height)))) + 1;
@@ -55,7 +73,7 @@ Texture::CreateTextureImage(TextureType type, std::string_view textureName)
 
    TransitionImageLayout(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_mips);
 
-   CopyBufferToImage(textureData.m_bytes.get());
+   CopyBufferToImage(pixels);
 
    // transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
    GenerateMipmaps(m_textureImage, m_format, static_cast< int32_t >(m_width),
@@ -70,7 +88,7 @@ Texture::CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels,
    VkImage image{};
    VkDeviceMemory imageMemory{};
 
-   VkImageCreateInfo imageInfo{};
+   VkImageCreateInfo imageInfo{.samples = numSamples};
    imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
    imageInfo.imageType = VK_IMAGE_TYPE_2D;
    imageInfo.extent.width = width;
@@ -82,7 +100,6 @@ Texture::CreateImage(uint32_t width, uint32_t height, uint32_t mipLevels,
    imageInfo.tiling = tiling;
    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
    imageInfo.usage = usage;
-   imageInfo.samples = numSamples;
    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
    if (cubemap)
    {
@@ -270,7 +287,8 @@ Texture::CreateTextureSampler()
 }
 
 void
-Texture::CopyBufferToImage(VkImage image, uint32_t texWidth, uint32_t texHeight, uint8_t* data)
+Texture::CopyBufferToImage(VkImage image, uint32_t texWidth, uint32_t texHeight,
+                           const uint8_t* data)
 {
    VkBufferImageCopy region{};
    region.bufferOffset = 0;
@@ -324,7 +342,7 @@ Texture::CopyBufferToCubemapImage(VkImage image, uint32_t texWidth, uint32_t tex
 }
 
 void
-Texture::CopyBufferToImage(uint8_t* data)
+Texture::CopyBufferToImage(const uint8_t* data)
 {
    CopyBufferToImage(m_textureImage, m_width, m_height, data);
 }
@@ -414,6 +432,21 @@ TextureLibrary::CreateTexture(TextureType type, const std::string& textureName)
    {
       trace::Logger::Debug("Creating texture {}", textureName);
       LoadTexture(type, textureName);
+   }
+   else
+   {
+      trace::Logger::Debug("Texture {} already loaded!", textureName);
+   }
+}
+
+void
+TextureLibrary::CreateTexture(TextureType type, const std::string& textureName,
+                              const uint8_t* pixels, uint32_t width, uint32_t height)
+{
+   if (s_loadedTextures.find(textureName) == s_loadedTextures.end())
+   {
+      trace::Logger::Debug("Creating in-memory texture {}", textureName);
+      s_loadedTextures[textureName] = {type, textureName, pixels, width, height};
    }
    else
    {

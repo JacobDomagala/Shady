@@ -46,8 +46,8 @@ Logger::Log(fmt::format_string< Args... > buffer, Args&&... args)
 {
    if (LogLevel >= s_currentLogType)
    {
-#if defined(_WIN32)
-      auto hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+#ifdef _WIN32
+      auto* hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
       SetConsoleTextAttribute(hConsole, s_typeStyles.at(LogLevel));
 
       fmt::print("[{}]{} {}\n", time::GetTime(), ToString(LogLevel),

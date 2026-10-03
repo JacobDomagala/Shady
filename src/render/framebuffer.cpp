@@ -191,7 +191,7 @@ Framebuffer::AddAttachment(AttachmentCreateInfo createinfo)
 
    utils::Assert(aspectMask > 0, "Framebuffer::AddAttachment: aspectMask > 0 failed!\n");
 
-   VkImageCreateInfo image = {};
+   VkImageCreateInfo image = {.samples = createinfo.imageSampleCount_};
    image.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
    image.imageType = VK_IMAGE_TYPE_2D;
    image.format = createinfo.format_;
@@ -200,7 +200,6 @@ Framebuffer::AddAttachment(AttachmentCreateInfo createinfo)
    image.extent.depth = 1;
    image.mipLevels = 1;
    image.arrayLayers = createinfo.layerCount_;
-   image.samples = createinfo.imageSampleCount_;
    image.tiling = VK_IMAGE_TILING_OPTIMAL;
    image.usage = createinfo.usage_;
 
@@ -235,8 +234,7 @@ Framebuffer::AddAttachment(AttachmentCreateInfo createinfo)
    VK_CHECK(vkCreateImageView(Data::vk_device, &imageView, nullptr, &attachment.view_), "");
 
    // Fill attachment description
-   attachment.description_ = {};
-   attachment.description_.samples = createinfo.imageSampleCount_;
+   attachment.description_ = {.samples = createinfo.imageSampleCount_};
    attachment.description_.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
    attachment.description_.storeOp = (createinfo.usage_ & VK_IMAGE_USAGE_SAMPLED_BIT)
                                         ? VK_ATTACHMENT_STORE_OP_STORE

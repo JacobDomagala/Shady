@@ -35,7 +35,7 @@ struct PerInstanceBuffer
    glm::mat4 model = {};
    glm::ivec4 textures = glm::ivec4(-1);
    glm::vec4 baseColorFactor = glm::vec4(1.0F);
-   glm::vec4 materialFactors = glm::vec4(1.0F, 1.0F, 1.0F, 0.0F);
+   glm::vec4 materialFactors = glm::vec4(1.0F, 1.0F, 1.0F, -1.0F);
 };
 
 // Base color, metallic-roughness, normal.
@@ -48,6 +48,8 @@ struct MaterialData
    float metallicFactor = 1.0F;
    float roughnessFactor = 1.0F;
    float normalScale = 1.0F;
+   // Negative means OPAQUE; otherwise discard fragments below this alpha.
+   float alphaCutoff = -1.0F;
 };
 
 } // namespace shady::render

@@ -276,10 +276,10 @@ Skybox::CreatePipeline(VkRenderPass renderPass)
    rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
    rasterizer.depthBiasEnable = VK_FALSE;
 
-   VkPipelineMultisampleStateCreateInfo multisampling{};
+   VkPipelineMultisampleStateCreateInfo multisampling{.rasterizationSamples =
+                                                         VK_SAMPLE_COUNT_1_BIT};
    multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
    multisampling.sampleShadingEnable = VK_FALSE;
-   multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
    VkPipelineDepthStencilStateCreateInfo depthStencil{};
    depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;

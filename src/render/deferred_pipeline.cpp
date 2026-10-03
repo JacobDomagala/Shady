@@ -107,6 +107,18 @@ DeferredPipeline::Initialize(VkRenderPass mainRenderPass, VkPipelineCache pipeli
 {
    m_offscreenCommandBuffer.resize(MAX_FRAMES_IN_FLIGHT);
 
+   // A valid descriptor array is required even for an entirely untextured GLB.
+   // This also supplies the shared sampler without depending on an unrelated disk image.
+   constexpr const char* fallbackName = "__shady_white_fallback";
+   constexpr std::array< uint8_t, 4 > white = {255, 255, 255, 255};
+   TextureLibrary::CreateTexture(TextureType::DIFFUSE_MAP, fallbackName, white.data(), 1, 1);
+   if (Data::textures.empty())
+   {
+      auto* const view = TextureLibrary::GetTexture(fallbackName).GetImageViewAndSampler().first;
+      Data::textures[fallbackName] = {Data::currTexIdx++, view};
+      Data::texturesVec.push_back(view);
+   }
+
    m_pipelineCache = pipelineCache;
    m_mainRenderPass = mainRenderPass;
    ShadowSetup();
@@ -312,9 +324,9 @@ DeferredPipeline::PreparePipelines()
    viewportState.viewportCount = 1;
    viewportState.scissorCount = 1;
 
-   VkPipelineMultisampleStateCreateInfo multisampling{};
+   VkPipelineMultisampleStateCreateInfo multisampling{.rasterizationSamples =
+                                                         VK_SAMPLE_COUNT_1_BIT};
    multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-   multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
 
    std::vector< VkDynamicState > dynamicStateEnables = {VK_DYNAMIC_STATE_VIEWPORT,
@@ -327,9 +339,9 @@ DeferredPipeline::PreparePipelines()
       static_cast< uint32_t >(dynamicStateEnables.size());
    pipelineDynamicStateCreateInfo.flags = 0;
 
-   std::array< VkPipelineShaderStageCreateInfo, 2 > shaderStages{};
    auto [vertexInfo, fragmentInfo] = Shader::CreateShader(
       Data::vk_device, "default/deferred.vert.spv", "default/deferred.frag.spv");
+   std::array shaderStages = {vertexInfo.shaderInfo, fragmentInfo.shaderInfo};
 
    VkSpecializationMapEntry specializationEntry{};
    specializationEntry.constantID = 0;
@@ -344,8 +356,6 @@ DeferredPipeline::PreparePipelines()
    specializationInfo.dataSize = sizeof(specializationData);
    specializationInfo.pData = &specializationData;
 
-   shaderStages[0] = vertexInfo.shaderInfo;
-   shaderStages[1] = fragmentInfo.shaderInfo;
    shaderStages[1].pSpecializationInfo = &specializationInfo;
 
    VkGraphicsPipelineCreateInfo pipelineInfo{};
@@ -463,13 +473,10 @@ DeferredPipeline::PreparePipelines()
    // The shadow mapping pipeline uses geometry shader instancing (invocations layout modifier) to
    // output shadow maps for multiple lights sources into the different shadow map layers in one
    // single render pass
-   std::array< VkPipelineShaderStageCreateInfo, 1 > shadowStages{};
-
-   shadowStages[0] =
-      Shader::LoadShader("default/shadow.vert.spv", VK_SHADER_STAGE_VERTEX_BIT).shaderInfo;
-   /*shadowStages[1] =
-      Shader::LoadShader("default/shadow.geom.spv",
-      VK_SHADER_STAGE_GEOMETRY_BIT).shaderInfo;*/
+   std::array shadowStages = {
+      Shader::LoadShader("default/shadow.vert.spv", VK_SHADER_STAGE_VERTEX_BIT).shaderInfo,
+      Shader::LoadShader("default/shadow.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT).shaderInfo};
+   shadowStages[1].pSpecializationInfo = &specializationInfo;
 
    pipelineInfo.pStages = shadowStages.data();
    pipelineInfo.stageCount = static_cast< uint32_t >(shadowStages.size());
@@ -539,7 +546,7 @@ DeferredPipeline::SetupDescriptorSet()
    VK_CHECK(vkAllocateDescriptorSets(Data::vk_device, &allocInfo, m_descriptorSets.data()), "");
 
    const auto [unusedImageView, sampler] =
-      TextureLibrary::GetTexture(TextureType::DIFFUSE_MAP, "196.png").GetImageViewAndSampler();
+      TextureLibrary::GetTexture("__shady_white_fallback").GetImageViewAndSampler();
    (void)unusedImageView;
 
    std::vector< VkDescriptorImageInfo > descriptorImageInfos;
@@ -593,7 +600,7 @@ DeferredPipeline::SetupDescriptorSet()
       instanceBufferInfo.range = Data::perInstance.size() * sizeof(PerInstanceBuffer);
 
       std::array< VkWriteDescriptorSet, 9 > descriptorWrites{};
-      const VkDescriptorSet descriptorSet = m_descriptorSets.at(frame);
+      auto* const descriptorSet = m_descriptorSets.at(frame);
 
       descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
       descriptorWrites[0].dstSet = descriptorSet;
@@ -666,8 +673,8 @@ DeferredPipeline::SetupDescriptorSet()
 void
 DeferredPipeline::BuildDeferredCommandBuffer(uint32_t frame)
 {
-   auto& shadowMap = m_shadowMaps.at(frame);
-   auto& offscreenFramebuffer = m_offscreenFrameBuffers.at(frame);
+   const auto& shadowMap = m_shadowMaps.at(frame);
+   const auto& offscreenFramebuffer = m_offscreenFrameBuffers.at(frame);
 
    if (m_offscreenCommandBuffer.at(frame) == VK_NULL_HANDLE)
    {
@@ -681,7 +688,7 @@ DeferredPipeline::BuildDeferredCommandBuffer(uint32_t frame)
          vkAllocateCommandBuffers(Data::vk_device, &allocInfo, &m_offscreenCommandBuffer[frame]),
          "");
    }
-   const VkCommandBuffer commandBuffer = m_offscreenCommandBuffer.at(frame);
+   auto* const commandBuffer = m_offscreenCommandBuffer.at(frame);
 
    VkCommandBufferBeginInfo cmdBufInfo{};
    cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -818,7 +825,7 @@ DeferredPipeline::BuildDeferredCommandBuffer(uint32_t frame)
 
 void
 DeferredPipeline::UpdateDeferred(const scene::Camera* camera, const scene::Light* light,
-                                  uint32_t frame)
+                                 uint32_t frame)
 {
    UpdateUniformBufferOffscreen(camera, frame);
    UpdateUniformBufferComposition(camera, light, frame);

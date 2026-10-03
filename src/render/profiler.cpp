@@ -123,20 +123,20 @@ class TimingSampleWindow
 
 struct CurrentFrame
 {
-   FrameClock::time_point frameStart = {};
-   FrameClock::time_point fenceWaitEnd = {};
-   FrameClock::time_point imageAcquireStart = {};
-   FrameClock::time_point imageAcquireEnd = {};
-   FrameClock::time_point fenceResetStart = {};
-   FrameClock::time_point fenceResetEnd = {};
-   FrameClock::time_point offscreenSubmitStart = {};
-   FrameClock::time_point offscreenSubmitEnd = {};
-   FrameClock::time_point commandRecordStart = {};
-   FrameClock::time_point commandRecordEnd = {};
-   FrameClock::time_point sceneSubmitStart = {};
-   FrameClock::time_point sceneSubmitEnd = {};
-   FrameClock::time_point presentStart = {};
-   FrameClock::time_point presentEnd = {};
+   FrameClock::time_point frameStart;
+   FrameClock::time_point fenceWaitEnd;
+   FrameClock::time_point imageAcquireStart;
+   FrameClock::time_point imageAcquireEnd;
+   FrameClock::time_point fenceResetStart;
+   FrameClock::time_point fenceResetEnd;
+   FrameClock::time_point offscreenSubmitStart;
+   FrameClock::time_point offscreenSubmitEnd;
+   FrameClock::time_point commandRecordStart;
+   FrameClock::time_point commandRecordEnd;
+   FrameClock::time_point sceneSubmitStart;
+   FrameClock::time_point sceneSubmitEnd;
+   FrameClock::time_point presentStart;
+   FrameClock::time_point presentEnd;
    std::optional< float > frameIntervalMs;
    std::optional< float > presentIntervalMs;
    FrameDiagnostics gpuDiagnostics = {};
@@ -160,8 +160,8 @@ struct ProfilerState
    uint32_t fpsFrames = 0;
    int32_t fps = 0;
 
-   FrameClock::time_point uniformUpdateStart = {};
-   FrameClock::time_point guiUploadStart = {};
+   FrameClock::time_point uniformUpdateStart;
+   FrameClock::time_point guiUploadStart;
    std::optional< FrameClock::time_point > previousFrameStart;
    std::optional< FrameClock::time_point > previousPresentReturn;
    CurrentFrame currentFrame = {};

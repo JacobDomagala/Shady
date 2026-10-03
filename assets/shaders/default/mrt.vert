@@ -27,11 +27,17 @@ layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec3 a_normal;
 layout(location = 2) in vec2 a_texCoord;
 layout(location = 3) in vec4 a_tangent;
+layout(location = 4) in vec2 a_materialTexCoord;
+layout(location = 5) in vec2 a_normalTexCoord;
+layout(location = 6) in vec4 a_color;
 
 layout(location = 0) out VS_OUT
 {
    vec3 fPosition;
    vec2 fTexCoord;
+   vec2 fMaterialTexCoord;
+   vec2 fNormalTexCoord;
+   vec4 fColor;
    vec3 fNorm;
    vec4 fTangent;
 
@@ -39,7 +45,7 @@ layout(location = 0) out VS_OUT
    flat int fMaterialSampl;
    flat int fNormSampl;
    flat vec4 fBaseColorFactor;
-   flat vec3 fMaterialFactors;
+   flat vec4 fMaterialFactors;
 }
 vs_out;
 
@@ -53,16 +59,19 @@ main()
 
    vs_out.fPosition = vec3(modelMat * vec4(a_position, 1.0));
    vs_out.fTexCoord = a_texCoord;
+   vs_out.fMaterialTexCoord = a_materialTexCoord;
+   vs_out.fNormalTexCoord = a_normalTexCoord;
+   vs_out.fColor = a_color;
 
    mat3 normalMatrix = transpose(inverse(mat3(modelMat)));
    float orientation = determinant(mat3(modelMat)) < 0.0 ? -1.0 : 1.0;
    vs_out.fNorm = normalMatrix * normalize(a_normal);
    vs_out.fTangent =
-      vec4(mat3(modelMat) * normalize(a_tangent.xyz), a_tangent.w * orientation);
+      vec4(mat3(modelMat) * a_tangent.xyz, a_tangent.w * orientation);
 
    vs_out.fBaseColorSampl = bufferData.textureIDs.x;
    vs_out.fMaterialSampl = bufferData.textureIDs.y;
    vs_out.fNormSampl = bufferData.textureIDs.z;
    vs_out.fBaseColorFactor = bufferData.baseColorFactor;
-   vs_out.fMaterialFactors = bufferData.materialFactors.xyz;
+   vs_out.fMaterialFactors = bufferData.materialFactors;
 }

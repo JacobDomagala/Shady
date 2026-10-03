@@ -32,6 +32,20 @@ cmake -G "Ninja" -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake ..
 cmake --build .
 ```
 
+## glTF and GLB import
+
+The engine uses tinygltf for glTF 2.0 and GLB. CPU import is validated before GPU
+upload, and invalid assets use the engine's fatal assertion path. See
+[supported features and limitations](docs/gltf.md).
+
+## Code quality
+
+CI uses Clang/Clang-Tidy 22 and Cppcheck. Configure CMake with
+`-DCMAKE_EXPORT_COMPILE_COMMANDS=ON` using Ninja or Makefiles, then run
+`python scripts/code_quality.py build --clang-tidy clang-tidy-22`.
+Both tools analyze headers through the compiled source files. Complete reports
+are saved under `build/code-quality` and uploaded as CI artifacts.
+
 ## Youtube
 For past and future video logs, please visit my [Youtube](https://www.youtube.com/@Jacob.Domagala) channel. <br>
 [![Playlist](https://img.youtube.com/vi/LZlHqkR0CQ0/0.jpg)](https://www.youtube.com/watch?v=LZlHqkR0CQ0&list=PLRLVUsGGaSH8GcSjxOiAQBRWuFpVtWVOp "YouTube Playlist")

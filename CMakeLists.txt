@@ -53,27 +53,55 @@ add_executable(${PROJECT_NAME}
     src/utils/file_manager.hpp src/utils/file_manager.cpp src/utils/assert.hpp src/utils/assert.cpp
 )
 
-add_clang_format_target(${PROJECT_NAME})
-
 find_package(fmt REQUIRED)
 find_package(glm REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(imgui REQUIRED)
 find_package(stb REQUIRED)
-find_package(TinyGLTF)
+find_package(TinyGLTF 2.9 CONFIG REQUIRED)
 
-find_package(Vulkan REQUIRED)
+find_package(Vulkan 1.4 REQUIRED)
+
+# Conan supplies header-only TinyGLTF; isolate its implementation and STB from engine warnings.
+add_library(shady_tinygltf STATIC src/scene/tinygltf.cpp)
+target_link_libraries(shady_tinygltf PUBLIC TinyGLTF::TinyGLTF)
+target_compile_features(shady_tinygltf PUBLIC cxx_std_20)
+target_compile_definitions(shady_tinygltf PUBLIC TINYGLTF_NOEXCEPTION JSON_NOEXCEPTION)
+
+add_library(shady_gltf STATIC src/scene/gltf_loader.cpp src/scene/gltf_loader.hpp)
+target_include_directories(shady_gltf PUBLIC src)
+target_link_libraries(shady_gltf PUBLIC shady_tinygltf glm::glm Vulkan::Headers)
+target_link_libraries(shady_gltf PRIVATE project_warnings)
+target_compile_definitions(shady_gltf PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE)
+
+add_clang_format_target(${PROJECT_NAME} shady_gltf shady_tinygltf)
 
 target_include_directories(${PROJECT_NAME}
                     PRIVATE src src/app src/app/input src/trace src/render src/utils src/scene src/time)
-target_link_libraries_system (${PROJECT_NAME} PRIVATE fmt::fmt glfw imgui::imgui glm::glm Vulkan::Vulkan stb::stb TinyGLTF::TinyGLTF)
-target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings)
+target_link_libraries_system (${PROJECT_NAME} PRIVATE fmt::fmt glfw imgui::imgui glm::glm Vulkan::Vulkan stb::stb)
+target_link_libraries(${PROJECT_NAME} PRIVATE project_warnings shady_gltf)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     FMT_USE_CONSTEXPR_CONSTRUCTION=0
     GLM_FORCE_DEPTH_ZERO_TO_ONE
 )
-target_compile_options(${PROJECT_NAME} PRIVATE -O0 -g3 -fno-omit-frame-pointer)
+if(NOT MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:-O0;-g3;-fno-omit-frame-pointer>)
+endif()
+
+if(MSVC)
+    # Remove CMake's default /EHsc before applying the engine's no-exception policy.
+    string(REGEX REPLACE "(^|[ \t])[-/]EH[a-zA-Z-]+" "\\1" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+endif()
+
+foreach(target ${PROJECT_NAME} shady_gltf shady_tinygltf)
+    if(MSVC)
+        target_compile_options(${target} PRIVATE /EHs-c-)
+        target_compile_definitions(${target} PRIVATE _HAS_EXCEPTIONS=0)
+    else()
+        target_compile_options(${target} PRIVATE -fno-exceptions)
+    endif()
+endforeach()
 
 include(cmake/compile_shaders.cmake)

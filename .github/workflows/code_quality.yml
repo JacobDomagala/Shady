@@ -4,10 +4,9 @@ on: [pull_request]
 
 permissions:
   contents: read
+  pull-requests: write
 
 env:
-  CC: clang-22
-  CXX: clang++-22
   VULKAN_HEADER_VERSION: 1.4.341
 
 jobs:
@@ -16,53 +15,51 @@ jobs:
     steps:
     - uses: actions/checkout@v7
 
-    - name: Install analysis tools and dependencies
+    - name: Set up init script
       shell: bash
       run: |
-        set -euo pipefail
-        curl -fsSL https://apt.llvm.org/llvm-snapshot.gpg.key \
-          | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc > /dev/null
-        echo "deb https://apt.llvm.org/noble/ llvm-toolchain-noble-22 main" \
-          | sudo tee /etc/apt/sources.list.d/llvm-22.list
-        sudo apt-get update
-        sudo apt-get install -y clang-22 clang-tidy-22 clang-format-22 cppcheck \
-          ninja-build xorg-dev libgl-dev libvulkan-dev glslc python3-venv
-        python3 -m venv build/venv
-        build/venv/bin/pip install conan
+        cat > init_script.sh <<'EOF'
+        #!/bin/bash
+        set -eo pipefail
+        root_dir="$1"
+        build_dir="$2"
 
-        # Match the build workflows' SDK headers with a small, headers-only download.
-        curl -fsSL --retry 3 \
-          "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/v${VULKAN_HEADER_VERSION}.tar.gz" \
-          | tar -xz -C build
-        curl -fsSL --retry 3 \
-          "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Utility-Libraries/v${VULKAN_HEADER_VERSION}/include/vulkan/vk_enum_string_helper.h" \
-          -o "build/Vulkan-Headers-${VULKAN_HEADER_VERSION}/include/vulkan/vk_enum_string_helper.h"
+        python3 -m venv "$build_dir/venv"
+        source "$build_dir/venv/bin/activate"
+        pip install conan PyGithub
 
-    - name: Configure compilation database
-      shell: bash
-      run: |
-        set -euo pipefail
-        source build/venv/bin/activate
         conan profile detect
-        conan install . --output-folder=build --build=missing \
+        conan install "$root_dir" --output-folder="$build_dir" --build=missing \
           -s:h build_type=Release -s:h compiler.cppstd=20 \
           -s:b build_type=Release -s:b compiler.cppstd=20 \
-          -c tools.cmake.cmaketoolchain:generator=Ninja \
-          -c tools.system.package_manager:mode=install \
-          -c tools.system.package_manager:sudo=True
-        cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake \
-          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-          -DVulkan_INCLUDE_DIR="$PWD/build/Vulkan-Headers-${VULKAN_HEADER_VERSION}/include" \
-          -DCLANG_FORMAT_EXECUTABLE=/usr/bin/clang-format-22
+          -c tools.system.package_manager:mode=install
+
+        # Match the build workflows' SDK headers without downloading the full SDK.
+        curl -fsSL --retry 3 \
+          "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/v${VULKAN_HEADER_VERSION}.tar.gz" \
+          | tar -xz -C "$build_dir"
+        curl -fsSL --retry 3 \
+          "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Utility-Libraries/v${VULKAN_HEADER_VERSION}/include/vulkan/vk_enum_string_helper.h" \
+          -o "$build_dir/Vulkan-Headers-${VULKAN_HEADER_VERSION}/include/vulkan/vk_enum_string_helper.h"
+        EOF
 
     - name: Run static analysis
-      run: python3 scripts/code_quality.py build --clang-tidy clang-tidy-22
-
-    - name: Upload complete analysis logs
-      if: always()
-      uses: actions/upload-artifact@v7
+      uses: JacobDomagala/StaticAnalysis@master
       with:
-        name: code-quality
-        path: build/code-quality/
-        if-no-files-found: ignore
+        exclude_dir: lib build
+        init_script: init_script.sh
+        apt_pckgs: xorg-dev libgl-dev libvulkan-dev glslc python3-venv curl
+        report_pr_changes_only: false
+        cmake_args: >-
+            -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake
+            -DCMAKE_BUILD_TYPE=Release
+            -DVulkan_INCLUDE_DIR="$GITHUB_WORKSPACE/build/Vulkan-Headers-${VULKAN_HEADER_VERSION}/include"
+        verbose: false
+        clang_tidy_args: "-extra-arg=-DFMT_USE_CONSTEVAL=0"
+        cppcheck_args: >-
+            --enable=warning,style,performance,portability
+            --suppress=functionStatic
+            --suppress=functionConst
+            --suppress=constParameterPointer
+            --suppress=returnByReference
+            --suppress=funcArgNamesDifferent

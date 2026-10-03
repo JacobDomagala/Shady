@@ -2,58 +2,51 @@ name: Code quality check
 
 on: [pull_request]
 
-permissions:
-  contents: read
-  pull-requests: write
-
-env:
-  VULKAN_HEADER_VERSION: 1.4.341
-
 jobs:
   code-quality:
-    runs-on: ubuntu-24.04
-    steps:
-    - uses: actions/checkout@v7
+    runs-on: ubuntu-latest
 
-    - name: Set up init script
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: setup init_script
       shell: bash
       run: |
-        cat > init_script.sh <<'EOF'
-        #!/bin/bash
-        set -eo pipefail
-        root_dir="$1"
-        build_dir="$2"
+        echo "#!/bin/bash
 
-        python3 -m venv "$build_dir/venv"
-        source "$build_dir/venv/bin/activate"
+        root_dir=\${1}
+        build_dir=\${2}
+
+        python3 -m venv "$HOME/venv"
+        source "$HOME/venv/bin/activate"
+        pip install --upgrade pip
         pip install conan PyGithub
 
         conan profile detect
-        conan install "$root_dir" --output-folder="$build_dir" --build=missing \
-          -s:h build_type=Release -s:h compiler.cppstd=20 \
-          -s:b build_type=Release -s:b compiler.cppstd=20 \
-          -c tools.system.package_manager:mode=install
+        conan install \$root_dir --output-folder=build --build=missing \
+            -s:h "build_type=Release" \
+            -s:h "compiler=clang" \
+            -s:h "compiler.version=22" \
+            -s:h "compiler.cppstd=20" \
+            -s:b "compiler=clang" \
+            -s:b "compiler.version=22" \
+            -s:b "compiler.cppstd=20" \
+            -c tools.system.package_manager:mode=install
 
-        # Match the build workflows' SDK headers without downloading the full SDK.
-        curl -fsSL --retry 3 \
-          "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/v${VULKAN_HEADER_VERSION}.tar.gz" \
-          | tar -xz -C "$build_dir"
-        curl -fsSL --retry 3 \
-          "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Utility-Libraries/v${VULKAN_HEADER_VERSION}/include/vulkan/vk_enum_string_helper.h" \
-          -o "$build_dir/Vulkan-Headers-${VULKAN_HEADER_VERSION}/include/vulkan/vk_enum_string_helper.h"
-        EOF
+
+        wget https://sdk.lunarg.com/sdk/download/1.4.313.0/linux/vulkansdk-linux-x86_64-1.4.313.0.tar.xz
+        mkdir vulkan
+        tar xf vulkansdk-linux-x86_64-1.4.313.0.tar.xz -C \$root_dir/vulkan
+        source \$root_dir/vulkan/1.4.313.0/setup-env.sh" > init_script.sh
 
     - name: Run static analysis
       uses: JacobDomagala/StaticAnalysis@master
       with:
-        exclude_dir: lib build
+        exclude_dir: lib vulkan
         init_script: init_script.sh
-        apt_pckgs: xorg-dev libgl-dev libvulkan-dev glslc python3-venv curl
+        apt_pckgs: xorg-dev python3-pip python3.12-venv wget
         report_pr_changes_only: false
-        cmake_args: >-
-            -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake
-            -DCMAKE_BUILD_TYPE=Release
-            -DVulkan_INCLUDE_DIR="$GITHUB_WORKSPACE/build/Vulkan-Headers-${VULKAN_HEADER_VERSION}/include"
+        cmake_args: -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
         verbose: false
         clang_tidy_args: "-extra-arg=-DFMT_USE_CONSTEVAL=0"
         cppcheck_args: >-
